@@ -298,7 +298,7 @@ function Dashboard({ stats, reviews, navigate }: { stats: any, reviews: Review[]
                 <div style={{ flex: 1, height: '10px', background: '#f3f4f6', borderRadius: '5px', overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: `${row.pct}%`, background: row.color, borderRadius: '5px', transition: 'width 0.3s' }} />
                 </div>
-                <div style={{ width: '20px', fontSize: '13px', color: '#374151', textAlign: 'right', flexShrink: 0 }}>{row.count}</div>
+                <div style={{ width: '36px', fontSize: '13px', color: '#374151', textAlign: 'right', flexShrink: 0 }}>{row.pct}%</div>
               </div>
             ))}
           </div>
