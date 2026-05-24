@@ -65,7 +65,7 @@ function App() {
         .sidebar { width: 215px; background: #0f172a; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
         .mobile-header { display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 200; background: #0f172a; height: 56px; align-items: center; padding: 0 16px; gap: 12px; }
         .mobile-dropdown { display: none; }
-        .main-pad { padding: 28px 32px; max-width: 860px; }
+        .main-pad { padding: 28px 32px; }
         .grid4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
         .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .grid2i { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
