@@ -62,7 +62,7 @@ function App() {
     <div style={{ display: 'flex', height: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', background: '#f3f4f6' }}>
       <style>{`
         * { box-sizing: border-box; }
-        .sidebar { width: 215px; background: #0f172a; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+        .sidebar { width: 255px; background: #0f172a; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
         .mobile-header { display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 200; background: #0f172a; height: 56px; align-items: center; padding: 0 16px; gap: 12px; }
         .mobile-dropdown { display: none; }
         .main-pad { padding: 28px 130px; }
