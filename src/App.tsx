@@ -185,7 +185,7 @@ function Dashboard({ stats, reviews, navigate }: { stats: any, reviews: Review[]
     stars: s,
     count: reviews.filter(r => r.stars === s).length,
     pct: reviews.length ? Math.round(reviews.filter(r => r.stars === s).length / reviews.length * 100) : 0,
-    color: ['#22c55e','#84cc16','#eab308','#f97316','#ef4444'][5-s],
+    color: '#f59e0b',
   }))
 
   return (
@@ -263,10 +263,10 @@ function Dashboard({ stats, reviews, navigate }: { stats: any, reviews: Review[]
                     <Avatar name={r.name} initials={r.initials} photoUrl={r.photoUrl} size={36} />
                     <div>
                       <div style={{ fontWeight: '600', fontSize: '13px', color: '#111827' }}>{r.name}</div>
-                      <div style={{ fontSize: '11px', color: '#9ca3af' }}>{r.date}</div>
+                      <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>{r.date}</div>
                     </div>
                   </div>
-                  <StatusBadge status={r.status} />
+                  <div style={{ flexShrink: 0 }}><StatusBadge status={r.status} /></div>
                 </div>
                 <Stars n={r.stars} />
                 <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px', lineHeight: '1.5' }}>{r.text.length > 100 ? r.text.slice(0, 100) + '…' : r.text}</div>
@@ -445,7 +445,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
   const distrib = [5,4,3,2,1].map(s => ({
     stars: s, count: reviews.filter(r => r.stars === s).length,
     pct: reviews.length ? Math.round(reviews.filter(r => r.stars === s).length / reviews.length * 100) : 0,
-    color: ['#22c55e','#84cc16','#eab308','#f97316','#ef4444'][5-s],
+    color: '#f59e0b',
   }))
 
   const startAI = () => { setAiStarted(true); setAiLoading(true); setTimeout(() => { setAiLoading(false); setAiDone(true) }, 3000) }
