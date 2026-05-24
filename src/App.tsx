@@ -380,7 +380,15 @@ function Reviews({ reviews, onStatusChange, onDelete }: { reviews: Review[], onS
             </div>
           </div>
 
-          <div style={{ fontSize: '13px', color: '#374151', lineHeight: '1.6', marginBottom: '14px' }}>{review.text}</div>
+          <div style={{ fontSize: '16px', color: '#374151', lineHeight: '1.6', marginBottom: '14px' }}>{review.text}</div>
+
+          {/* Ausgewählte Antwort Box — grün wie Replit */}
+          {review.status === 'Beantwortet' && selected[review.id] !== undefined && (
+            <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '8px', padding: '12px 14px', marginBottom: '14px' }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#166534', marginBottom: '6px' }}>Ausgewählte Antwort:</div>
+              <div style={{ fontSize: '13px', color: '#166534', lineHeight: '1.6' }}>{AI_RESPONSES[selected[review.id]].text(review.name.split(' ')[0])}</div>
+            </div>
+          )}
 
           {/* Actions */}
           <div className="review-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -389,17 +397,32 @@ function Reviews({ reviews, onStatusChange, onDelete }: { reviews: Review[], onS
               style={{ padding: '7px 14px', background: '#fff', border: '1px solid #d1d5db', borderRadius: '7px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', color: '#374151', fontWeight: '500' }}>
               Details anzeigen
             </button>
-            <button
-              onClick={() => setOpenAI(openAI === review.id ? null : review.id)}
-              style={{ padding: '7px 14px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '7px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              ✨ Antworten generieren
-            </button>
-            <button
-              onClick={() => onStatusChange(review.id, 'Abgelehnt')}
-              disabled={review.status === 'Abgelehnt'}
-              style={{ padding: '7px 14px', background: 'transparent', border: 'none', borderRadius: '7px', cursor: review.status === 'Abgelehnt' ? 'default' : 'pointer', fontSize: '13px', fontFamily: 'inherit', color: review.status === 'Abgelehnt' ? '#9ca3af' : '#6b7280', display: 'flex', alignItems: 'center', gap: '5px' }}>
-              ⊗ Ablehnen
-            </button>
+
+            {/* Antworten generieren — nur wenn noch nicht beantwortet */}
+            {review.status !== 'Beantwortet' && (
+              <button
+                onClick={() => setOpenAI(openAI === review.id ? null : review.id)}
+                style={{ padding: '7px 14px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '7px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                ✨ Antworten generieren
+              </button>
+            )}
+
+            {/* Antwort ausgewählt Badge */}
+            {review.status === 'Beantwortet' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#16a34a', fontSize: '13px', fontWeight: '500' }}>
+                ✅ Antwort ausgewählt
+              </div>
+            )}
+
+            {review.status !== 'Beantwortet' && (
+              <button
+                onClick={() => onStatusChange(review.id, 'Abgelehnt')}
+                disabled={review.status === 'Abgelehnt'}
+                style={{ padding: '7px 14px', background: 'transparent', border: 'none', borderRadius: '7px', cursor: review.status === 'Abgelehnt' ? 'default' : 'pointer', fontSize: '13px', fontFamily: 'inherit', color: review.status === 'Abgelehnt' ? '#9ca3af' : '#6b7280', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                ⊗ Ablehnen
+              </button>
+            )}
+
             <div style={{ flex: 1 }} />
             {confirmDelete === review.id ? (
               <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
@@ -413,9 +436,9 @@ function Reviews({ reviews, onStatusChange, onDelete }: { reviews: Review[], onS
           </div>
 
           {/* AI Responses */}
-          {openAI === review.id && (
+          {openAI === review.id && review.status !== 'Beantwortet' && (
             <div style={{ marginTop: '14px', padding: '14px', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-              <div style={{ fontSize: '12px', fontWeight: '600', color: '#374151', marginBottom: '10px' }}>3 KI-Antwortvorschläge — bitte auswählen:</div>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '10px' }}>3 KI-Antwortvorschläge — bitte auswählen:</div>
               {AI_RESPONSES.map((a, i) => (
                 <div key={i} onClick={() => setSelected({...selected, [review.id]: i})}
                   style={{ padding: '12px', borderRadius: '8px', border: `1.5px solid ${selected[review.id] === i ? '#4f46e5' : '#e5e7eb'}`, background: selected[review.id] === i ? '#eef2ff' : '#fff', cursor: 'pointer', marginBottom: '8px', fontSize: '13px', lineHeight: '1.6' }}>
