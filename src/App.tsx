@@ -65,7 +65,7 @@ function App() {
         .sidebar { width: 215px; background: #0f172a; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
         .mobile-header { display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 200; background: #0f172a; height: 56px; align-items: center; padding: 0 16px; gap: 12px; }
         .mobile-dropdown { display: none; }
-        .main-pad { padding: 28px 32px; }
+        .main-pad { padding: 28px 32px; max-width: 821px; }
         .grid4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
         .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .grid2i { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -154,10 +154,11 @@ function Avatar({ name, initials, photoUrl, size = 40 }: { name: string, initial
 
 // ─── STARS ───────────────────────────────────────────────────────────────────
 
-function Stars({ n, size = 14 }: { n: number, size?: number }) {
+function Stars({ n, size = 18 }: { n: number, size?: number }) {
   return (
-    <span style={{ color: '#F0B100', fontSize: size }}>
-      {'★'.repeat(n)}{'☆'.repeat(5 - n)}
+    <span style={{ fontSize: size, letterSpacing: '2px' }}>
+      <span style={{ color: '#F0B100' }}>{'★'.repeat(n)}</span>
+      <span style={{ color: '#d1d5db' }}>{'☆'.repeat(5 - n)}</span>
     </span>
   )
 }
@@ -263,10 +264,13 @@ function Dashboard({ stats, reviews, navigate }: { stats: any, reviews: Review[]
                     <Avatar name={r.name} initials={r.initials} photoUrl={r.photoUrl} size={36} />
                     <div>
                       <div style={{ fontWeight: '600', fontSize: '13px', color: '#111827' }}>{r.name}</div>
-                      <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>{r.date}</div>
+                      <Stars n={r.stars} size={12} />
                     </div>
                   </div>
-                  <div style={{ flexShrink: 0 }}><StatusBadge status={r.status} /></div>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', flexShrink: 0 }}>
+                    <div style={{ fontSize: '11px', color: '#9ca3af' }}>{r.date}</div>
+                    <StatusBadge status={r.status} />
+                  </div>
                 </div>
                 <Stars n={r.stars} />
                 <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px', lineHeight: '1.5' }}>{r.text.length > 100 ? r.text.slice(0, 100) + '…' : r.text}</div>
@@ -288,7 +292,7 @@ function Dashboard({ stats, reviews, navigate }: { stats: any, reviews: Review[]
             {distrib.map(row => (
               <div key={row.stars} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
                 <div style={{ width: '28px', fontSize: '12px', color: '#6b7280', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '2px' }}>
-                  {row.stars} <span style={{ color: '#F0B100', fontSize: '11px' }}>☆</span>
+                  {row.stars} <span style={{ color: '#F0B100', fontSize: '11px' }}>★</span>
                 </div>
                 <div style={{ flex: 1, height: '10px', background: '#f3f4f6', borderRadius: '5px', overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: `${row.pct}%`, background: row.color, borderRadius: '5px', transition: 'width 0.3s' }} />
@@ -365,11 +369,13 @@ function Reviews({ reviews, onStatusChange, onDelete }: { reviews: Review[], onS
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', flexWrap: 'wrap' }}>
                 <div>
                   <div style={{ fontWeight: '600', fontSize: '14px', color: '#111827' }}>{review.name}</div>
-                  <div style={{ fontSize: '12px', color: '#9ca3af' }}>{review.date}</div>
+                  <div style={{ marginTop: '3px' }}><Stars n={review.stars} /></div>
                 </div>
-                <StatusBadge status={review.status} />
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', flexShrink: 0 }}>
+                  <div style={{ fontSize: '12px', color: '#9ca3af' }}>{review.date}</div>
+                  <StatusBadge status={review.status} />
+                </div>
               </div>
-              <div style={{ marginTop: '4px' }}><Stars n={review.stars} /></div>
             </div>
           </div>
 
@@ -485,7 +491,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
           <div style={{ padding: '16px 18px' }}>
             {distrib.map(row => (
               <div key={row.stars} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                <div style={{ width: '28px', fontSize: '12px', color: '#6b7280', flexShrink: 0 }}>{row.stars} ☆</div>
+                <div style={{ width: '28px', fontSize: '12px', color: '#6b7280', flexShrink: 0 }}>{row.stars} ★</div>
                 <div style={{ flex: 1, height: '10px', background: '#f3f4f6', borderRadius: '5px', overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: `${row.pct}%`, background: row.color, borderRadius: '5px' }} />
                 </div>
