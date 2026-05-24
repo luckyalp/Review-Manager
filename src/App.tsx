@@ -68,6 +68,7 @@ function App() {
         .main-pad { padding: 28px 130px; }
         .grid4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
         .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .grid-dashboard { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
         .grid2i { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .grid3i { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
         .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; cursor: pointer; margin-bottom: 2px; font-size: 16px; transition: all 0.15s; }
@@ -79,6 +80,7 @@ function App() {
           .main-pad { padding: 72px 16px 16px; }
           .grid4 { grid-template-columns: 1fr 1fr !important; }
           .grid2 { grid-template-columns: 1fr !important; }
+          .grid-dashboard { grid-template-columns: 1fr !important; }
           .grid2i { grid-template-columns: 1fr !important; }
           .grid3i { grid-template-columns: 1fr 1fr !important; }
           .review-actions { flex-wrap: wrap; }
@@ -249,7 +251,7 @@ function Dashboard({ stats, reviews, navigate }: { stats: any, reviews: Review[]
       </div>
 
       {/* Reviews + Distribution */}
-      <div className="grid2">
+      <div className="grid-dashboard">
         {/* Aktuelle Bewertungen */}
         <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
           <div style={{ padding: '16px 18px', borderBottom: '1px solid #e5e7eb' }}>
