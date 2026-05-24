@@ -70,7 +70,7 @@ function App() {
         .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .grid2i { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .grid3i { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-        .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; cursor: pointer; margin-bottom: 2px; font-size: 14px; transition: all 0.15s; }
+        .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; cursor: pointer; margin-bottom: 2px; font-size: 16px; transition: all 0.15s; }
         .nav-item:hover { background: rgba(255,255,255,0.06); }
         @media (max-width: 768px) {
           .sidebar { display: none !important; }
@@ -122,7 +122,7 @@ function App() {
           </div>
         ))}
         <div style={{ borderTop: '1px solid #1e293b', marginTop: '8px', paddingTop: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', color: '#94a3b8', fontSize: '13px' }}>🔄 Bewertungen synchronisieren</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', color: '#94a3b8', fontSize: '16px' }}>🔄 Bewertungen synchronisieren</div>
         </div>
       </div>
 
