@@ -65,7 +65,7 @@ function App() {
         .sidebar { width: 215px; background: #0f172a; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
         .mobile-header { display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 200; background: #0f172a; height: 56px; align-items: center; padding: 0 16px; gap: 12px; }
         .mobile-dropdown { display: none; }
-        .main-pad { padding: 28px 40px; }
+        .main-pad { padding: 28px 80px; }
         .grid4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
         .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .grid2i { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -206,9 +206,9 @@ function Dashboard({ stats, reviews, navigate }: { stats: any, reviews: Review[]
       <div className="grid4" style={{ marginBottom: '16px' }}>
         {[
           { label: 'Bewertungen gesamt', value: stats.total, icon: '💬', color: '#111827' },
-          { label: 'Ø Bewertung', value: stats.avg, icon: '⭐', color: '#F0B100' },
-          { label: 'Ausstehend', value: stats.pending, icon: '📋', color: '#F0B100' },
-          { label: 'Beantwortet', value: stats.answered, icon: '📊', color: '#22c55e' },
+          { label: 'Ø Bewertung', value: stats.avg, icon: '⭐', color: '#111827' },
+          { label: 'Ausstehend', value: stats.pending, icon: '📋', color: '#111827' },
+          { label: 'Beantwortet', value: stats.answered, icon: '📊', color: '#111827' },
         ].map(s => (
           <div key={s.label} style={{ background: '#fff', borderRadius: '12px', padding: '18px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
@@ -470,9 +470,9 @@ function Analytics({ reviews }: { reviews: Review[] }) {
 
       <div className="grid4" style={{ marginBottom: '20px' }}>
         {[
-          { label: 'Ø Bewertung', value: avg, sub: 'von 5 Sternen', color: '#22c55e', icon: '⭐' },
+          { label: 'Ø Bewertung', value: avg, sub: 'von 5 Sternen', color: '#111827', icon: '⭐' },
           { label: 'Bewertungen gesamt', value: reviews.length, sub: '', color: '#111827', icon: '💬' },
-          { label: 'Antwortrate', value: `${rate}%`, sub: `${answered} beantwortet`, color: '#22c55e', icon: '✅' },
+          { label: 'Antwortrate', value: `${rate}%`, sub: `${answered} beantwortet`, color: '#111827', icon: '✅' },
           { label: 'Ausstehend', value: pending, sub: 'Warten auf Antwort', color: '#F0B100', icon: '⏳' },
         ].map(s => (
           <div key={s.label} style={{ background: '#fff', borderRadius: '12px', padding: '18px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
