@@ -156,7 +156,7 @@ function Avatar({ name, initials, photoUrl, size = 40 }: { name: string, initial
 
 function Stars({ n, size = 14 }: { n: number, size?: number }) {
   return (
-    <span style={{ color: '#f59e0b', fontSize: size }}>
+    <span style={{ color: '#F0B100', fontSize: size }}>
       {'★'.repeat(n)}{'☆'.repeat(5 - n)}
     </span>
   )
@@ -185,7 +185,7 @@ function Dashboard({ stats, reviews, navigate }: { stats: any, reviews: Review[]
     stars: s,
     count: reviews.filter(r => r.stars === s).length,
     pct: reviews.length ? Math.round(reviews.filter(r => r.stars === s).length / reviews.length * 100) : 0,
-    color: '#f59e0b',
+    color: '#F0B100',
   }))
 
   return (
@@ -205,8 +205,8 @@ function Dashboard({ stats, reviews, navigate }: { stats: any, reviews: Review[]
       <div className="grid4" style={{ marginBottom: '16px' }}>
         {[
           { label: 'Bewertungen gesamt', value: stats.total, icon: '💬', color: '#111827' },
-          { label: 'Ø Bewertung', value: stats.avg, icon: '⭐', color: '#eab308' },
-          { label: 'Ausstehend', value: stats.pending, icon: '📋', color: '#f59e0b' },
+          { label: 'Ø Bewertung', value: stats.avg, icon: '⭐', color: '#F0B100' },
+          { label: 'Ausstehend', value: stats.pending, icon: '📋', color: '#F0B100' },
           { label: 'Beantwortet', value: stats.answered, icon: '📊', color: '#22c55e' },
         ].map(s => (
           <div key={s.label} style={{ background: '#fff', borderRadius: '12px', padding: '18px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
@@ -288,7 +288,7 @@ function Dashboard({ stats, reviews, navigate }: { stats: any, reviews: Review[]
             {distrib.map(row => (
               <div key={row.stars} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
                 <div style={{ width: '28px', fontSize: '12px', color: '#6b7280', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '2px' }}>
-                  {row.stars} <span style={{ color: '#f59e0b', fontSize: '11px' }}>☆</span>
+                  {row.stars} <span style={{ color: '#F0B100', fontSize: '11px' }}>☆</span>
                 </div>
                 <div style={{ flex: 1, height: '10px', background: '#f3f4f6', borderRadius: '5px', overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: `${row.pct}%`, background: row.color, borderRadius: '5px', transition: 'width 0.3s' }} />
@@ -445,7 +445,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
   const distrib = [5,4,3,2,1].map(s => ({
     stars: s, count: reviews.filter(r => r.stars === s).length,
     pct: reviews.length ? Math.round(reviews.filter(r => r.stars === s).length / reviews.length * 100) : 0,
-    color: '#f59e0b',
+    color: '#F0B100',
   }))
 
   const startAI = () => { setAiStarted(true); setAiLoading(true); setTimeout(() => { setAiLoading(false); setAiDone(true) }, 3000) }
@@ -467,7 +467,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
           { label: 'Ø Bewertung', value: avg, sub: 'von 5 Sternen', color: '#22c55e', icon: '⭐' },
           { label: 'Bewertungen gesamt', value: reviews.length, sub: '', color: '#111827', icon: '💬' },
           { label: 'Antwortrate', value: `${rate}%`, sub: `${answered} beantwortet`, color: '#22c55e', icon: '✅' },
-          { label: 'Ausstehend', value: pending, sub: 'Warten auf Antwort', color: '#f59e0b', icon: '⏳' },
+          { label: 'Ausstehend', value: pending, sub: 'Warten auf Antwort', color: '#F0B100', icon: '⏳' },
         ].map(s => (
           <div key={s.label} style={{ background: '#fff', borderRadius: '12px', padding: '18px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
