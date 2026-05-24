@@ -108,7 +108,7 @@ function App() {
 
       {/* Mobile Header */}
       <div className="mobile-header">
-        <div style={{ background: '#4f46e5', borderRadius: '8px', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>🏪</div>
+        <div style={{ background: '#4f46e5', borderRadius: '8px', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>🏪</div>
         <span style={{ color: '#fff', fontWeight: '600', fontSize: '15px', flex: 1 }}>ReviewMonitor</span>
         <div onClick={() => setMenuOpen(!menuOpen)} style={{ color: '#fff', fontSize: '22px', cursor: 'pointer', padding: '4px' }}>{menuOpen ? '✕' : '☰'}</div>
       </div>
@@ -237,7 +237,7 @@ function Dashboard({ stats, reviews, navigate }: { stats: any, reviews: Review[]
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
           <span style={{ fontSize: '20px' }}>🧪</span>
           <div>
-            <div style={{ fontWeight: '600', fontSize: '14px', marginBottom: '3px', color: '#111827' }}>System-Test</div>
+            <div style={{ fontWeight: '600', fontSize: '16px', marginBottom: '3px', color: '#111827' }}>System-Test</div>
             <div style={{ fontSize: '13px', color: '#6b7280' }}>Erstellt eine realistische Test-Bewertung, generiert 3 KI-Antworten und sendet (falls konfiguriert) eine Test-E-Mail.</div>
           </div>
         </div>
@@ -253,7 +253,7 @@ function Dashboard({ stats, reviews, navigate }: { stats: any, reviews: Review[]
         {/* Aktuelle Bewertungen */}
         <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
           <div style={{ padding: '16px 18px', borderBottom: '1px solid #e5e7eb' }}>
-            <div style={{ fontWeight: '600', fontSize: '14px', color: '#111827' }}>Aktuelle Bewertungen</div>
+            <div style={{ fontWeight: '600', fontSize: '16px', color: '#111827' }}>Aktuelle Bewertungen</div>
             <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>Neueste Bewertungen Ihrer Kunden</div>
           </div>
           <div style={{ padding: '12px' }}>
@@ -285,7 +285,7 @@ function Dashboard({ stats, reviews, navigate }: { stats: any, reviews: Review[]
         {/* Bewertungsverteilung */}
         <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
           <div style={{ padding: '16px 18px', borderBottom: '1px solid #e5e7eb' }}>
-            <div style={{ fontWeight: '600', fontSize: '14px', color: '#111827' }}>Bewertungsverteilung</div>
+            <div style={{ fontWeight: '600', fontSize: '16px', color: '#111827' }}>Bewertungsverteilung</div>
             <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>Verteilung aller Bewertungen</div>
           </div>
           <div style={{ padding: '18px' }}>
@@ -368,7 +368,7 @@ function Reviews({ reviews, onStatusChange, onDelete }: { reviews: Review[], onS
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', flexWrap: 'wrap' }}>
                 <div>
-                  <div style={{ fontWeight: '600', fontSize: '14px', color: '#111827' }}>{review.name}</div>
+                  <div style={{ fontWeight: '600', fontSize: '16px', color: '#111827' }}>{review.name}</div>
                   <div style={{ marginTop: '3px' }}><Stars n={review.stars} /></div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', flexShrink: 0 }}>
@@ -487,7 +487,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
 
       <div className="grid2" style={{ marginBottom: '20px' }}>
         <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
-          <div style={{ padding: '16px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '14px' }}>Sternverteilung</div>
+          <div style={{ padding: '16px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '16px' }}>Sternverteilung</div>
           <div style={{ padding: '16px 18px' }}>
             {distrib.map(row => (
               <div key={row.stars} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
@@ -502,7 +502,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
         </div>
 
         <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
-          <div style={{ padding: '16px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '14px' }}>Bewertungstrend (6 Monate)</div>
+          <div style={{ padding: '16px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '16px' }}>Bewertungstrend (6 Monate)</div>
           <div style={{ padding: '16px 18px', display: 'flex', alignItems: 'flex-end', gap: '8px', height: '140px' }}>
             {[{ m: 'Dez', v: 3 },{ m: 'Jan', v: 5 },{ m: 'Feb', v: 4 },{ m: 'Mär', v: 7 },{ m: 'Apr', v: 6 },{ m: 'Mai', v: 9 }].map(d => (
               <div key={d.m} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
@@ -526,11 +526,11 @@ function Analytics({ reviews }: { reviews: Review[] }) {
         {aiLoading && <div style={{ padding: '48px', textAlign: 'center' }}><div style={{ fontSize: '32px', marginBottom: '12px' }}>⏳</div><div style={{ fontWeight: '600', fontSize: '15px', color: '#111827' }}>KI analysiert Ihre Bewertungen...</div></div>}
         {aiDone && (
           <div>
-            <div style={{ padding: '16px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '14px' }}>✨ KI-Analyse Ergebnis</div>
+            <div style={{ padding: '16px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '16px' }}>✨ KI-Analyse Ergebnis</div>
             <div style={{ padding: '18px' }}>
               <div style={{ background: '#eef2ff', border: '1px solid #c7d2fe', borderRadius: '10px', padding: '14px 16px', marginBottom: '16px' }}>
                 <div style={{ fontSize: '11px', fontWeight: '600', color: '#4f46e5', marginBottom: '6px' }}>WICHTIGSTE ERKENNTNIS</div>
-                <div style={{ fontSize: '14px', color: '#1e1b4b', lineHeight: '1.6' }}>Ihre Gäste loben besonders das Essen und die Atmosphäre. Häufigster Kritikpunkt ist die Wartezeit beim Service.</div>
+                <div style={{ fontSize: '16px', color: '#1e1b4b', lineHeight: '1.6' }}>Ihre Gäste loben besonders das Essen und die Atmosphäre. Häufigster Kritikpunkt ist die Wartezeit beim Service.</div>
               </div>
               <div className="grid2i" style={{ marginBottom: '16px' }}>
                 <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '10px', padding: '14px' }}>
@@ -582,7 +582,7 @@ function Settings() {
   const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '13px', marginTop: '4px', boxSizing: 'border-box', background: '#f9fafb', fontFamily: 'inherit' }
   const lbl: React.CSSProperties = { fontSize: '13px', fontWeight: '500', display: 'block', color: '#374151' }
   const card: React.CSSProperties = { background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', marginBottom: '16px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }
-  const cardH: React.CSSProperties = { padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '14px', color: '#111827' }
+  const cardH: React.CSSProperties = { padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '16px', color: '#111827' }
   const cardB: React.CSSProperties = { padding: '18px' }
   const hint: React.CSSProperties = { fontSize: '11px', color: '#9ca3af', marginTop: '4px' }
 
@@ -718,8 +718,8 @@ function Settings() {
       </div></div>
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px', paddingBottom: '40px' }}>
-        {saved && <span style={{ color: '#22c55e', fontSize: '14px', fontWeight: '500' }}>✅ Gespeichert!</span>}
-        <button onClick={save} style={{ padding: '10px 28px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontFamily: 'inherit', fontWeight: '500' }}>Profil speichern</button>
+        {saved && <span style={{ color: '#22c55e', fontSize: '16px', fontWeight: '500' }}>✅ Gespeichert!</span>}
+        <button onClick={save} style={{ padding: '10px 28px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', fontFamily: 'inherit', fontWeight: '500' }}>Profil speichern</button>
       </div>
     </div>
   )
