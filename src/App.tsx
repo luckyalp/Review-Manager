@@ -293,13 +293,13 @@ function Dashboard({ stats, reviews, navigate }: { stats: any, reviews: Review[]
           <div style={{ padding: '18px' }}>
             {distrib.map(row => (
               <div key={row.stars} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                <div style={{ width: '28px', fontSize: '16px', color: '#d1d5db', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '2px' }}>
+                <div style={{ width: '28px', fontSize: '16px', color: '#6b7280', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '2px' }}>
                   {row.stars} <span style={{ fontSize: '13px' }}>☆</span>
                 </div>
                 <div style={{ flex: 1, height: '10px', background: '#f3f4f6', borderRadius: '5px', overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: `${row.pct}%`, background: row.color, borderRadius: '5px', transition: 'width 0.3s' }} />
                 </div>
-                <div style={{ width: '20px', fontSize: '12px', color: '#6b7280', textAlign: 'right', flexShrink: 0 }}>{row.count}</div>
+                <div style={{ width: '20px', fontSize: '13px', color: '#374151', textAlign: 'right', flexShrink: 0 }}>{row.count}</div>
               </div>
             ))}
           </div>
@@ -497,7 +497,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
                 <div style={{ flex: 1, height: '10px', background: '#f3f4f6', borderRadius: '5px', overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: `${row.pct}%`, background: row.color, borderRadius: '5px' }} />
                 </div>
-                <div style={{ width: '20px', fontSize: '12px', color: '#6b7280', textAlign: 'right' }}>{row.count}</div>
+                <div style={{ width: '20px', fontSize: '13px', color: '#374151', textAlign: 'right' }}>{row.count}</div>
               </div>
             ))}
           </div>
