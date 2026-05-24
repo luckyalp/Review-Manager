@@ -145,11 +145,9 @@ function App() {
 // ─── AVATAR ──────────────────────────────────────────────────────────────────
 
 function Avatar({ name, initials, photoUrl, size = 40 }: { name: string, initials: string, photoUrl?: string, size?: number }) {
-  const colors = ['#4f46e5','#0891b2','#059669','#d97706','#dc2626','#7c3aed','#db2777']
-  const color = colors[name.charCodeAt(0) % colors.length]
   if (photoUrl) return <img src={photoUrl} alt={name} style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
   return (
-    <div style={{ width: size, height: size, borderRadius: '50%', background: color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: size * 0.35, fontWeight: '600', flexShrink: 0 }}>
+    <div style={{ width: size, height: size, borderRadius: '50%', background: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#374151', fontSize: size * 0.35, fontWeight: '600', flexShrink: 0 }}>
       {initials}
     </div>
   )
