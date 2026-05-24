@@ -285,7 +285,7 @@ function Dashboard({ stats, reviews, navigate }: { stats: any, reviews: Review[]
         </div>
 
         {/* Bewertungsverteilung */}
-        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
+        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden', alignSelf: 'start' }}>
           <div style={{ padding: '16px 18px', borderBottom: '1px solid #e5e7eb' }}>
             <div style={{ fontWeight: '600', fontSize: '16px', color: '#111827' }}>Bewertungsverteilung</div>
             <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>Verteilung aller Bewertungen</div>
@@ -293,8 +293,8 @@ function Dashboard({ stats, reviews, navigate }: { stats: any, reviews: Review[]
           <div style={{ padding: '18px' }}>
             {distrib.map(row => (
               <div key={row.stars} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                <div style={{ width: '28px', fontSize: '12px', color: '#6b7280', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '2px' }}>
-                  {row.stars} <span style={{ color: '#F0B100', fontSize: '11px' }}>★</span>
+                <div style={{ width: '28px', fontSize: '16px', color: '#d1d5db', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '2px' }}>
+                  {row.stars} <span style={{ fontSize: '13px' }}>☆</span>
                 </div>
                 <div style={{ flex: 1, height: '10px', background: '#f3f4f6', borderRadius: '5px', overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: `${row.pct}%`, background: row.color, borderRadius: '5px', transition: 'width 0.3s' }} />
