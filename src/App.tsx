@@ -194,8 +194,8 @@ function Dashboard({ stats, reviews, navigate }: { stats: any, reviews: Review[]
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: '600', marginBottom: '4px', color: '#111827' }}>Dashboard</h1>
-          <p style={{ color: '#6b7280', fontSize: '14px' }}>Übersicht Ihrer Google-Unternehmensbewertungen.</p>
+          <h1 style={{ fontSize: '30px', fontWeight: '600', marginBottom: '4px', color: '#111827' }}>Dashboard</h1>
+          <p style={{ color: '#6b7280', fontSize: '16px' }}>Übersicht Ihrer Google-Unternehmensbewertungen.</p>
         </div>
         <button style={{ padding: '8px 16px', background: '#fff', border: '1px solid #d1d5db', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', color: '#374151', fontWeight: '500' }}>
           🔄 Jetzt synchronisieren
@@ -335,8 +335,8 @@ function Reviews({ reviews, onStatusChange, onDelete }: { reviews: Review[], onS
   return (
     <div>
       <div style={{ marginBottom: '20px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: '600', marginBottom: '4px', color: '#111827' }}>Bewertungen</h1>
-        <p style={{ color: '#6b7280', fontSize: '14px' }}>Verwalten und beantworten Sie alle Kundenbewertungen.</p>
+        <h1 style={{ fontSize: '30px', fontWeight: '600', marginBottom: '4px', color: '#111827' }}>Bewertungen</h1>
+        <p style={{ color: '#6b7280', fontSize: '16px' }}>Verwalten und beantworten Sie alle Kundenbewertungen.</p>
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
@@ -460,8 +460,8 @@ function Analytics({ reviews }: { reviews: Review[] }) {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: '600', marginBottom: '4px', color: '#111827' }}>Analyse</h1>
-          <p style={{ color: '#6b7280', fontSize: '14px' }}>Statistiken & KI-Auswertung Ihrer Bewertungen.</p>
+          <h1 style={{ fontSize: '30px', fontWeight: '600', marginBottom: '4px', color: '#111827' }}>Analyse</h1>
+          <p style={{ color: '#6b7280', fontSize: '16px' }}>Statistiken & KI-Auswertung Ihrer Bewertungen.</p>
         </div>
         <button onClick={startAI} style={{ padding: '9px 18px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', fontWeight: '500' }}>
           ✨ KI-Analyse starten
@@ -594,8 +594,8 @@ function Settings() {
 
   return (
     <div>
-      <h1 style={{ fontSize: '24px', fontWeight: '600', marginBottom: '4px', color: '#111827' }}>Restaurantprofil</h1>
-      <p style={{ color: '#6b7280', marginBottom: '24px', fontSize: '14px' }}>Alle Informationen fließen direkt in die KI-Antwortgenerierung ein.</p>
+      <h1 style={{ fontSize: '30px', fontWeight: '600', marginBottom: '4px', color: '#111827' }}>Restaurantprofil</h1>
+      <p style={{ color: '#6b7280', marginBottom: '24px', fontSize: '16px' }}>Alle Informationen fließen direkt in die KI-Antwortgenerierung ein.</p>
 
       <div style={card}><div style={cardH}>🏢 Basisinformationen</div><div style={cardB}>
         <div style={{ marginBottom: '12px' }}><label style={lbl}>Restaurantname *</label><input style={inp} placeholder="z. B. Trattoria Bella Italia" value={form.businessName} onChange={e => update('businessName', e.target.value)} /></div>
