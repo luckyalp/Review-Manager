@@ -380,11 +380,6 @@ const AI_RESPONSES = [
   { label: '⚡ Kurz & direkt', text: (_: string) => `Vielen Dank für die Bewertung! Ihr Feedback ist uns wichtig. Wir freuen uns auf Ihren nächsten Besuch.` },
 ]
 
-const RECOVERY_RESPONSE = (contactEmail: string) => ({
-  label: '🔴 Persönliche Kontaktaufnahme',
-  text: (_: string) => `Es tut uns aufrichtig leid von Ihrer Erfahrung zu hören. Das entspricht nicht unserem Anspruch. Wir würden uns sehr freuen, das persönlich mit Ihnen zu klären. Bitte melden Sie sich direkt bei uns: ${contactEmail || 'kontakt@meinrestaurant.de'}`,
-})
-
 function Reviews({ reviews, onStatusChange, onDelete }: { reviews: Review[], onStatusChange: (id: number, s: ReviewStatus) => void, onDelete: (id: number) => void }) {
   const [openAI, setOpenAI] = useState<number | null>(null)
   const [selected, setSelected] = useState<{[key: number]: number}>({})
