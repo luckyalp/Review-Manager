@@ -222,6 +222,7 @@ function Dashboard({ stats, reviews, navigate }: { stats: any, reviews: Review[]
       to: email,
       restaurantName: settings.businessName || 'Ihr Restaurant',
       isTest: true,
+      salutation: salutation,
     }
 
     try {

@@ -7,7 +7,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { to, reviewerName, stars, reviewText, answers, restaurantName, isTest } = req.body
+  const { to, reviewerName, stars, reviewText, answers, restaurantName, isTest, salutation } = req.body
 
   if (!RESEND_API_KEY) {
     return res.status(500).json({ error: 'RESEND_API_KEY nicht konfiguriert' })
@@ -103,7 +103,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         <div class="review-text">"${reviewText}"</div>
       </div>
 
-      <div class="section-title">✨ Wählen Sie eine Antwort — 1 Klick genügt:</div>
+      <div class="section-title">✨ ${salutation === 'Du' ? 'Wähle eine Antwort' : 'Wählen Sie eine Antwort'} — 1 Klick genügt:</div>
 
       ${answers.map((a: { label: string, text: string }, i: number) => `
         <div class="answer-box">
