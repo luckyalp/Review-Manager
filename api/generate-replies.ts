@@ -92,7 +92,7 @@ Antworte NUR mit diesem JSON Array, keine Erklärungen:
         'X-Title': 'ReviewMonitor',
       },
       body: JSON.stringify({
-        model: 'deepseek/deepseek-r1:free',
+        model: 'meta-llama/llama-3.3-70b-instruct:free',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
         max_tokens: 1500,
