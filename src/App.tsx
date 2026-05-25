@@ -180,7 +180,7 @@ function StatusBadge({ status }: { status: ReviewStatus }) {
 
 // ─── DASHBOARD ───────────────────────────────────────────────────────────────
 
-function Dashboard({ stats, reviews, navigate, openReview }: { stats: any, reviews: Review[], navigate: (p: string) => void, openReview: (r: Review) => void }) {
+function Dashboard({ stats, reviews, openReview }: { stats: any, reviews: Review[], openReview: (r: Review) => void }) {
   const [testRunning, setTestRunning] = useState(false)
   const [testDone, setTestDone] = useState(false)
   const [testError, setTestError] = useState('')
