@@ -789,7 +789,16 @@ function Settings() {
           <div><label style={lbl}>PLZ & Stadt</label><input style={inp} placeholder="z. B. 80331 München" value={form.city} onChange={e => update('city', e.target.value)} /></div>
           <div><label style={lbl}>Telefon</label><input style={inp} placeholder="z. B. +49 89 12345678" value={form.phone} onChange={e => update('phone', e.target.value)} /></div>
           <div><label style={lbl}>Website</label><input style={inp} placeholder="z. B. https://www.meinrestaurant.de" value={form.website} onChange={e => update('website', e.target.value)} /></div>
-          <div><label style={lbl}>Kontakt-E-Mail für Gäste</label><input style={inp} type="email" placeholder="z. B. kontakt@meinrestaurant.de" value={form.contactEmail} onChange={e => update('contactEmail', e.target.value)} /><div style={hint}>Wird bei 1-2 Sterne Bewertungen in der Recovery-Antwort angezeigt.</div></div>
+          <div>
+            <label style={lbl}>Kontakt-E-Mail für Gäste</label>
+            <input style={inp} type="email" placeholder="z. B. kontakt@meinrestaurant.de" value={form.contactEmail} onChange={e => update('contactEmail', e.target.value)} />
+            <div style={hint}>Wird bei 1-2 Sterne Bewertungen in der Recovery-Antwort angezeigt.</div>
+            {!form.contactEmail && (
+              <div style={{ background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: '8px', padding: '8px 12px', fontSize: '12px', color: '#92400e', marginTop: '6px' }}>
+                ⚠️ Ohne diese E-Mail kann die <strong>Recovery-Antwort</strong> bei 1-2 Sterne Bewertungen nicht verwendet werden.
+              </div>
+            )}
+          </div>
         </div>
       </div></div>
 
