@@ -488,7 +488,7 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview }: { reviews: R
             </div>
           </div>
 
-          <div style={{ fontSize: '16px', color: '#374151', lineHeight: '1.6', marginBottom: '14px' }}>{review.text}</div>
+          <div style={{ fontSize: '16px', color: '#374151', lineHeight: '1.6', marginBottom: '14px', cursor: 'pointer' }} onClick={() => openReview(review)}>{review.text}</div>
 
           {/* Ausgewählte Antwort Box — grün wie Replit */}
           {review.status === 'Beantwortet' && selected[review.id] !== undefined && (
