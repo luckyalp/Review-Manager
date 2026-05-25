@@ -398,6 +398,7 @@ function Reviews({ reviews, onStatusChange, onDelete }: { reviews: Review[], onS
   const contactEmail = settings.contactEmail || ''
 
   const generateReplies = async (review: Review) => {
+    console.log('generateReplies aufgerufen für:', review.id)
     if (aiAnswers[review.id]) {
       setOpenAI(openAI === review.id ? null : review.id)
       return
