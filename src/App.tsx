@@ -721,7 +721,7 @@ function Settings() {
     const { createClient } = await import('@supabase/supabase-js')
     return createClient(
       import.meta.env.VITE_PUBLIC_SUPABASE_URL,
-      import.meta.env.VITE_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+      import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY
     )
   }
 
