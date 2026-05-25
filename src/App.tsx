@@ -376,7 +376,7 @@ function Dashboard({ stats, reviews, navigate }: { stats: any, reviews: Review[]
 
 const AI_RESPONSES = [
   { label: '💬 Herzlich & persönlich', text: (name: string) => `Liebe/r ${name}, vielen herzlichen Dank für Ihre Bewertung! Es freut uns sehr zu hören, dass Sie bei uns waren. Wir heißen Sie jederzeit wieder herzlich willkommen!` },
-  { label: '👔 Professionell & freundlich', text: (name: string) => `Vielen Dank für Ihr Feedback, ${name}! Wir freuen uns über Ihre Rückmeldung und nehmen uns Ihre Anmerkungen zu Herzen. Es ist unser Ziel, jedem Gast ein angenehmes Erlebnis zu bieten. Wir freuen uns auf Ihren nächsten Besuch.` },
+  { label: '👔 Professionell & freundlich', text: (name: string) => `Vielen Dank für Ihr Feedback, ${name}! Wir freuen uns über Ihre Rückmeldung und nehmen uns Ihre Anmerkungen zu Herzen. Wir freuen uns auf Ihren nächsten Besuch.` },
   { label: '⚡ Kurz & direkt', text: (_: string) => `Vielen Dank für die Bewertung! Ihr Feedback ist uns wichtig. Wir freuen uns auf Ihren nächsten Besuch.` },
 ]
 
@@ -391,9 +391,46 @@ function Reviews({ reviews, onStatusChange, onDelete }: { reviews: Review[], onS
   const [filterStatus, setFilterStatus] = useState('alle')
   const [filterStars, setFilterStars] = useState('alle')
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null)
+  const [aiLoading, setAiLoading] = useState<number | null>(null)
+  const [aiAnswers, setAiAnswers] = useState<{[key: number]: {label: string, text: string}[]}>({})
 
   const settings = JSON.parse(localStorage.getItem('reviewManagerSettings') || '{}')
   const contactEmail = settings.contactEmail || ''
+
+  const generateReplies = async (review: Review) => {
+    if (aiAnswers[review.id]) {
+      setOpenAI(openAI === review.id ? null : review.id)
+      return
+    }
+    setAiLoading(review.id)
+    setOpenAI(review.id)
+    try {
+      const response = await fetch('/api/generate-replies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          review: { reviewerName: review.name, stars: review.stars, reviewText: review.text },
+          settings,
+        })
+      })
+      const data = await response.json()
+      if (data.success && data.answers) {
+        const answers = review.stars <= 2
+          ? [...data.answers, { label: '🔴 Persönliche Kontaktaufnahme', text: `Es tut uns aufrichtig leid von Ihrer Erfahrung zu hören. Das entspricht nicht unserem Anspruch. Wir würden uns sehr freuen, das persönlich zu klären. Bitte melden ${settings.salutation === 'Du' ? 'Dich' : 'Sie sich'} direkt bei uns: ${contactEmail || 'kontakt@restaurant.de'}` }]
+          : data.answers
+        setAiAnswers(prev => ({ ...prev, [review.id]: answers }))
+      } else {
+        // Fallback auf statische Antworten
+        const fallback = [...AI_RESPONSES.map(a => ({ label: a.label, text: a.text(review.name.split(' ')[0]) })),
+          ...(review.stars <= 2 ? [{ label: '🔴 Persönliche Kontaktaufnahme', text: `Es tut uns leid. Bitte melden Sie sich: ${contactEmail}` }] : [])]
+        setAiAnswers(prev => ({ ...prev, [review.id]: fallback }))
+      }
+    } catch {
+      const fallback = AI_RESPONSES.map(a => ({ label: a.label, text: a.text(review.name.split(' ')[0]) }))
+      setAiAnswers(prev => ({ ...prev, [review.id]: fallback }))
+    }
+    setAiLoading(null)
+  }
 
   const filtered = reviews.filter(r => {
     if (filterStatus === 'ausstehend' && r.status !== 'Ausstehend') return false
@@ -473,9 +510,9 @@ function Reviews({ reviews, onStatusChange, onDelete }: { reviews: Review[], onS
             {/* Antworten generieren — nur wenn noch nicht beantwortet */}
             {review.status !== 'Beantwortet' && (
               <button
-                onClick={() => setOpenAI(openAI === review.id ? null : review.id)}
+                onClick={() => generateReplies(review)}
                 style={{ padding: '7px 14px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '7px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                ✨ Antworten generieren
+                {aiLoading === review.id ? '⏳ KI generiert...' : '✨ Antworten generieren'}
               </button>
             )}
 
@@ -510,21 +547,29 @@ function Reviews({ reviews, onStatusChange, onDelete }: { reviews: Review[], onS
           {/* AI Responses */}
           {openAI === review.id && review.status !== 'Beantwortet' && (
             <div style={{ marginTop: '14px', padding: '14px', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-              <div style={{ fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '10px' }}>
-                {review.stars <= 2 ? '4 KI-Antwortvorschläge — bitte auswählen:' : '3 KI-Antwortvorschläge — bitte auswählen:'}
-              </div>
-              {[...AI_RESPONSES, ...(review.stars <= 2 ? [RECOVERY_RESPONSE(contactEmail)] : [])].map((a, i) => (
-                <div key={i} onClick={() => setSelected({...selected, [review.id]: i})}
-                  style={{ padding: '12px', borderRadius: '8px', border: `1.5px solid ${selected[review.id] === i ? '#4f46e5' : '#e5e7eb'}`, background: selected[review.id] === i ? '#eef2ff' : '#fff', cursor: 'pointer', marginBottom: '8px', fontSize: '13px', lineHeight: '1.6' }}>
-                  <div style={{ fontWeight: '600', fontSize: '12px', marginBottom: '4px', color: '#4f46e5' }}>{a.label}</div>
-                  {a.text(review.name.split(' ')[0])}
+              {aiLoading === review.id ? (
+                <div style={{ textAlign: 'center', padding: '20px', color: '#6b7280', fontSize: '14px' }}>
+                  ✨ KI generiert Antworten basierend auf Ihrem Restaurantprofil...
                 </div>
-              ))}
-              {selected[review.id] !== undefined && (
-                <button onClick={() => { onStatusChange(review.id, 'Beantwortet'); setOpenAI(null) }}
-                  style={{ padding: '8px 18px', background: '#22c55e', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', fontWeight: '500' }}>
-                  ✅ Ausgewählte Antwort senden
-                </button>
+              ) : (
+                <>
+                  <div style={{ fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '10px' }}>
+                    {review.stars <= 2 ? '4 KI-Antwortvorschläge — bitte auswählen:' : '3 KI-Antwortvorschläge — bitte auswählen:'}
+                  </div>
+                  {(aiAnswers[review.id] || []).map((a, i) => (
+                    <div key={i} onClick={() => setSelected({...selected, [review.id]: i})}
+                      style={{ padding: '12px', borderRadius: '8px', border: `1.5px solid ${selected[review.id] === i ? '#4f46e5' : '#e5e7eb'}`, background: selected[review.id] === i ? '#eef2ff' : '#fff', cursor: 'pointer', marginBottom: '8px', fontSize: '13px', lineHeight: '1.6' }}>
+                      <div style={{ fontWeight: '600', fontSize: '12px', marginBottom: '4px', color: '#4f46e5' }}>{a.label}</div>
+                      {a.text}
+                    </div>
+                  ))}
+                  {selected[review.id] !== undefined && (
+                    <button onClick={() => { onStatusChange(review.id, 'Beantwortet'); setOpenAI(null) }}
+                      style={{ padding: '8px 18px', background: '#22c55e', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', fontWeight: '500' }}>
+                      ✅ Ausgewählte Antwort senden
+                    </button>
+                  )}
+                </>
               )}
             </div>
           )}
