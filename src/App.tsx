@@ -467,9 +467,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
   const [aiLoading, setAiLoading] = useState(false)
   const [aiDone, setAiDone] = useState(false)
 
-  const avg = reviews.length ? (reviews.reduce((s, r) => s + r.stars, 0) / reviews.length).toFixed(1) : '–'
   const answered = reviews.filter(r => r.status === 'Beantwortet').length
-  const pending = reviews.filter(r => r.status === 'Ausstehend').length
   const rate = reviews.length ? Math.round(answered / reviews.length * 100) : 0
 
   const distrib = [5,4,3,2,1].map(s => ({
@@ -477,6 +475,19 @@ function Analytics({ reviews }: { reviews: Review[] }) {
     pct: reviews.length ? Math.round(reviews.filter(r => r.stars === s).length / reviews.length * 100) : 0,
     color: '#F0B100',
   }))
+
+  const positiveThemen = [
+    { thema: 'Essen & Qualität', anzahl: 12 },
+    { thema: 'Atmosphäre & Ambiente', anzahl: 8 },
+    { thema: 'Freundlicher Service', anzahl: 6 },
+    { thema: 'Sauberkeit', anzahl: 4 },
+  ]
+
+  const negativThemen = [
+    { thema: 'Wartezeit', anzahl: 5 },
+    { thema: 'Lautstärke', anzahl: 2 },
+    { thema: 'Portionsgröße', anzahl: 1 },
+  ]
 
   const startAI = () => { setAiStarted(true); setAiLoading(true); setTimeout(() => { setAiLoading(false); setAiDone(true) }, 3000) }
 
@@ -487,46 +498,79 @@ function Analytics({ reviews }: { reviews: Review[] }) {
           <h1 style={{ fontSize: '30px', fontWeight: '600', marginBottom: '4px', color: '#111827' }}>Analyse</h1>
           <p style={{ color: '#6b7280', fontSize: '16px' }}>Statistiken & KI-Auswertung Ihrer Bewertungen.</p>
         </div>
-        <button onClick={startAI} style={{ padding: '9px 18px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', fontWeight: '500' }}>
+        <button onClick={startAI} style={{ padding: '9px 18px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', fontFamily: 'inherit', fontWeight: '500' }}>
           ✨ KI-Analyse starten
         </button>
       </div>
 
-      <div className="grid4" style={{ marginBottom: '20px' }}>
-        {[
-          { label: 'Ø Bewertung', value: avg, sub: 'von 5 Sternen', color: '#111827', icon: '⭐' },
-          { label: 'Bewertungen gesamt', value: reviews.length, sub: '', color: '#111827', icon: '💬' },
-          { label: 'Antwortrate', value: `${rate}%`, sub: `${answered} beantwortet`, color: '#111827', icon: '✅' },
-          { label: 'Ausstehend', value: pending, sub: 'Warten auf Antwort', color: '#F0B100', icon: '⏳' },
-        ].map(s => (
-          <div key={s.label} style={{ background: '#fff', borderRadius: '12px', padding: '18px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <div style={{ fontSize: '13px', color: '#6b7280' }}>{s.label}</div><span>{s.icon}</span>
-            </div>
-            <div style={{ fontSize: '26px', fontWeight: '600', color: s.color }}>{s.value}</div>
-            {s.sub && <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '3px' }}>{s.sub}</div>}
+      {/* 2 Stat Karten */}
+      <div className="grid2i" style={{ marginBottom: '16px' }}>
+        <div style={{ background: '#fff', borderRadius: '12px', padding: '18px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <div style={{ fontSize: '16px', color: '#6b7280' }}>Antwortrate</div><span>✅</span>
           </div>
-        ))}
+          <div style={{ fontSize: '28px', fontWeight: '600', color: '#111827' }}>{rate}%</div>
+          <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '3px' }}>{answered} von {reviews.length} beantwortet</div>
+        </div>
+        <div style={{ background: '#fff', borderRadius: '12px', padding: '18px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <div style={{ fontSize: '16px', color: '#6b7280' }}>Ø Antwortzeit</div><span>⏱️</span>
+          </div>
+          <div style={{ fontSize: '28px', fontWeight: '600', color: '#111827' }}>–</div>
+          <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '3px' }}>Verfügbar nach erster Antwort</div>
+        </div>
       </div>
 
-      <div className="grid2" style={{ marginBottom: '20px' }}>
+      {/* Positive & Negative Themen */}
+      <div className="grid2i" style={{ marginBottom: '16px' }}>
         <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
-          <div style={{ padding: '16px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '16px' }}>Sternverteilung</div>
-          <div style={{ padding: '16px 18px' }}>
-            {distrib.map(row => (
-              <div key={row.stars} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                <div style={{ width: '28px', fontSize: '12px', color: '#6b7280', flexShrink: 0 }}>{row.stars} ★</div>
-                <div style={{ flex: 1, height: '10px', background: '#f3f4f6', borderRadius: '5px', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${row.pct}%`, background: row.color, borderRadius: '5px' }} />
-                </div>
-                <div style={{ width: '20px', fontSize: '13px', color: '#374151', textAlign: 'right' }}>{row.count}</div>
+          <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '16px', color: '#111827' }}>
+            👍 Häufig positiv erwähnt
+          </div>
+          <div style={{ padding: '14px 18px' }}>
+            {positiveThemen.map(t => (
+              <div key={t.thema} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f3f4f6' }}>
+                <span style={{ fontSize: '14px', color: '#374151' }}>{t.thema}</span>
+                <span style={{ fontSize: '13px', fontWeight: '600', color: '#166534', background: '#f0fdf4', padding: '2px 8px', borderRadius: '12px' }}>{t.anzahl}×</span>
               </div>
             ))}
           </div>
         </div>
-
         <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
-          <div style={{ padding: '16px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '16px' }}>Bewertungstrend (6 Monate)</div>
+          <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '16px', color: '#111827' }}>
+            👎 Häufig negativ erwähnt
+          </div>
+          <div style={{ padding: '14px 18px' }}>
+            {negativThemen.map(t => (
+              <div key={t.thema} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f3f4f6' }}>
+                <span style={{ fontSize: '14px', color: '#374151' }}>{t.thema}</span>
+                <span style={{ fontSize: '13px', fontWeight: '600', color: '#991b1b', background: '#fef2f2', padding: '2px 8px', borderRadius: '12px' }}>{t.anzahl}×</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Sternverteilung & Trend */}
+      <div className="grid2i" style={{ marginBottom: '16px' }}>
+        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
+          <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '16px' }}>Sternverteilung</div>
+          <div style={{ padding: '16px 18px' }}>
+            {distrib.map(row => (
+              <div key={row.stars} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                <div style={{ width: '36px', fontSize: '13px', color: '#6b7280', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '3px' }}>
+                  <span>{row.stars}</span><span>☆</span>
+                </div>
+                <div style={{ flex: 1, height: '10px', background: '#f3f4f6', borderRadius: '5px', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${row.pct}%`, background: row.color, borderRadius: '5px' }} />
+                </div>
+                <div style={{ width: '24px', fontSize: '13px', color: '#374151', textAlign: 'right', flexShrink: 0 }}>{row.count}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
+          <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '16px' }}>Bewertungstrend (6 Monate)</div>
           <div style={{ padding: '16px 18px', display: 'flex', alignItems: 'flex-end', gap: '8px', height: '140px' }}>
             {[{ m: 'Dez', v: 3 },{ m: 'Jan', v: 5 },{ m: 'Feb', v: 4 },{ m: 'Mär', v: 7 },{ m: 'Apr', v: 6 },{ m: 'Mai', v: 9 }].map(d => (
               <div key={d.m} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
@@ -538,37 +582,37 @@ function Analytics({ reviews }: { reviews: Review[] }) {
         </div>
       </div>
 
+      {/* KI Analyse Box */}
       <div style={{ background: '#fff', borderRadius: '12px', border: aiDone ? '1px solid #86efac' : '1px dashed #d1d5db', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
         {!aiStarted && (
           <div style={{ padding: '48px', textAlign: 'center' }}>
             <div style={{ fontSize: '32px', marginBottom: '12px' }}>✨</div>
-            <div style={{ fontWeight: '600', fontSize: '15px', marginBottom: '6px', color: '#111827' }}>KI-Analyse noch nicht gestartet</div>
-            <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '16px' }}>Klicken Sie auf "KI-Analyse starten" — Claude wertet alle Bewertungen aus und liefert konkrete Handlungsempfehlungen.</div>
-            <button onClick={startAI} style={{ padding: '9px 20px', background: '#fff', border: '1px solid #d1d5db', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', fontWeight: '500' }}>✨ Jetzt analysieren</button>
+            <div style={{ fontWeight: '600', fontSize: '16px', marginBottom: '6px', color: '#111827' }}>KI-Analyse noch nicht gestartet</div>
+            <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>Klicken Sie auf "KI-Analyse starten" — Claude wertet alle Bewertungen aus und liefert konkrete Handlungsempfehlungen.</div>
+            <button onClick={startAI} style={{ padding: '9px 20px', background: '#fff', border: '1px solid #d1d5db', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', fontFamily: 'inherit', fontWeight: '500' }}>✨ Jetzt analysieren</button>
           </div>
         )}
-        {aiLoading && <div style={{ padding: '48px', textAlign: 'center' }}><div style={{ fontSize: '32px', marginBottom: '12px' }}>⏳</div><div style={{ fontWeight: '600', fontSize: '15px', color: '#111827' }}>KI analysiert Ihre Bewertungen...</div></div>}
+        {aiLoading && (
+          <div style={{ padding: '48px', textAlign: 'center' }}>
+            <div style={{ fontSize: '32px', marginBottom: '12px' }}>⏳</div>
+            <div style={{ fontWeight: '600', fontSize: '16px', color: '#111827' }}>KI analysiert Ihre Bewertungen...</div>
+          </div>
+        )}
         {aiDone && (
           <div>
             <div style={{ padding: '16px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '16px' }}>✨ KI-Analyse Ergebnis</div>
             <div style={{ padding: '18px' }}>
               <div style={{ background: '#eef2ff', border: '1px solid #c7d2fe', borderRadius: '10px', padding: '14px 16px', marginBottom: '16px' }}>
-                <div style={{ fontSize: '11px', fontWeight: '600', color: '#4f46e5', marginBottom: '6px' }}>WICHTIGSTE ERKENNTNIS</div>
-                <div style={{ fontSize: '16px', color: '#1e1b4b', lineHeight: '1.6' }}>Ihre Gäste loben besonders das Essen und die Atmosphäre. Häufigster Kritikpunkt ist die Wartezeit beim Service.</div>
-              </div>
-              <div className="grid2i" style={{ marginBottom: '16px' }}>
-                <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '10px', padding: '14px' }}>
-                  <div style={{ fontWeight: '600', color: '#166534', marginBottom: '8px', fontSize: '13px' }}>👍 Was Gäste loben</div>
-                  <div style={{ fontSize: '13px', color: '#166534', lineHeight: '1.8' }}>• Essen & Qualität<br />• Atmosphäre<br />• Freundlicher Service</div>
-                </div>
-                <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '10px', padding: '14px' }}>
-                  <div style={{ fontWeight: '600', color: '#991b1b', marginBottom: '8px', fontSize: '13px' }}>👎 Verbesserungspotenzial</div>
-                  <div style={{ fontSize: '13px', color: '#991b1b', lineHeight: '1.8' }}>• Wartezeit<br />• Service-Aufmerksamkeit</div>
-                </div>
+                <div style={{ fontSize: '12px', fontWeight: '600', color: '#4f46e5', marginBottom: '6px' }}>WICHTIGSTE ERKENNTNIS</div>
+                <div style={{ fontSize: '14px', color: '#1e1b4b', lineHeight: '1.6' }}>Ihre Gäste loben besonders das Essen und die Atmosphäre. Häufigster Kritikpunkt ist die Wartezeit beim Service.</div>
               </div>
               <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '10px', padding: '14px' }}>
-                <div style={{ fontWeight: '600', color: '#92400e', marginBottom: '8px', fontSize: '13px' }}>💡 Handlungsempfehlungen</div>
-                <div style={{ fontSize: '13px', color: '#78350f', lineHeight: '1.8' }}>1. Wartezeiten durch optimierte Abläufe reduzieren<br />2. Reservierungssystem einführen<br />3. Aktiv auf 3-Sterne-Bewertungen antworten</div>
+                <div style={{ fontWeight: '600', color: '#92400e', marginBottom: '8px', fontSize: '14px' }}>💡 Handlungsempfehlungen</div>
+                <div style={{ fontSize: '14px', color: '#78350f', lineHeight: '1.8' }}>
+                  1. Wartezeiten durch optimierte Abläufe reduzieren<br />
+                  2. Reservierungssystem einführen um Stoßzeiten zu verteilen<br />
+                  3. Aktiv auf 3-Sterne-Bewertungen antworten und um Feedback bitten
+                </div>
               </div>
             </div>
           </div>
@@ -577,6 +621,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
     </div>
   )
 }
+
 
 // ─── EINSTELLUNGEN ────────────────────────────────────────────────────────────
 
