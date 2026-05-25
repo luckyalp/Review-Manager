@@ -632,7 +632,7 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
 
       {/* KI Antworten */}
       <div style={{ background: '#fff', borderRadius: '12px', padding: '20px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-        {aiAnswers.length === 0 && !aiLoading && (
+        {aiAnswers.length === 0 && !aiLoading && !selectedReview?.answered && (
           <div style={{ textAlign: 'center', padding: '32px' }}>
             <div style={{ fontSize: '32px', marginBottom: '12px' }}>✨</div>
             <div style={{ fontWeight: '600', fontSize: '16px', marginBottom: '6px', color: '#111827' }}>Noch keine Antworten generiert</div>
