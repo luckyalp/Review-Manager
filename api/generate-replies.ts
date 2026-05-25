@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
+const GROK_API_KEY = process.env.GROK_API_KEY
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -9,8 +9,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const { review, settings } = req.body
 
-  if (!OPENROUTER_API_KEY) {
-    return res.status(500).json({ error: 'OPENROUTER_API_KEY nicht konfiguriert' })
+  if (!GROK_API_KEY) {
+    return res.status(500).json({ error: 'GROK_API_KEY nicht konfiguriert' })
   }
 
   const {
@@ -28,18 +28,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const duzen = salutation === 'Du'
   const anrede = duzen ? 'Du' : 'Sie'
-  const possessiv = duzen ? 'Dein' : 'Ihr'
-  const isLowRating = review.stars <= 2
-  const isMidRating = review.stars === 3
   const sig = responseSignature || `Das Team von ${businessName}`
+  const isMidRating = review.stars === 3
 
   let muster = ''
   if (review.stars >= 4) {
-    muster = 'MUSTER 1 — ECHTES LOB: Bewertung enthält aufrichtige Begeisterung. Ziel: Freude zurückspiegeln, Verbindung stärken, Wiederkommen einladen.'
+    muster = 'MUSTER 1 — LOB: Freude zurückspiegeln, Verbindung stärken, Wiederkommen einladen.'
   } else if (isMidRating) {
-    muster = 'MUSTER 2 — GEMISCHTE BEWERTUNG: Enthält Positives und Kritik. Positives aufgreifen, Kritik ernst nehmen ohne Rechtfertigung.'
+    muster = 'MUSTER 2 — GEMISCHT: Positives aufgreifen, Kritik ernst nehmen ohne Rechtfertigung.'
   } else {
-    muster = `MUSTER 3 — RECOVERY (1-2 Sterne): Deeskalation, Vertrauen wiederherstellen.
+    muster = `MUSTER 3 — RECOVERY (1-2 Sterne): Deeskalation, ruhig und professionell.
 VERBOTEN: Rechtfertigen, Diskutieren, defensive Sprache.
 PFLICHT: Erfahrung anerkennen, Entschuldigung, Kontakt anbieten: ${contactEmail || 'kontakt@restaurant.de'}`
   }
@@ -48,15 +46,15 @@ PFLICHT: Erfahrung anerkennen, Entschuldigung, Kontakt anbieten: ${contactEmail 
 
 KERN-PHILOSOPHIE: Verändere Gefühle — korrigiere keine Fakten.
 
-RESTAURANT-STIMMPROFIL:
+RESTAURANT:
 - Name: ${businessName}
 - Beschreibung: ${description || 'nicht angegeben'}
 - Küche: ${cuisineType || 'nicht angegeben'}
-- Was uns besonders macht: ${uniqueSellingPoints || 'nicht angegeben'}
-- Unsere Werte: ${brandValues || 'nicht angegeben'}
+- Besonderheiten: ${uniqueSellingPoints || 'nicht angegeben'}
+- Werte: ${brandValues || 'nicht angegeben'}
 - Bevorzugte Formulierungen: ${preferredPhrases || 'natürlich und authentisch'}
-- Nie verwenden: ${avoidPhrases || 'Floskeln, "eigentlich", übertriebene Entschuldigungen'}
-- Anredeform: "${anrede}" — WICHTIG: Konsequent ${duzen ? '"Du/Dein/Dich"' : '"Sie/Ihr/Ihnen"'} verwenden!
+- Nie verwenden: ${avoidPhrases || 'Floskeln, übertriebene Entschuldigungen'}
+- Anredeform: "${anrede}" — IMMER konsequent ${duzen ? '"Du/Dein/Dich"' : '"Sie/Ihr/Ihnen"'} verwenden!
 - Signatur: ${sig}
 
 SITUATION: ${muster}
@@ -72,9 +70,9 @@ REGELN:
 4. Kein "eigentlich"
 5. Nicht mit "Wir" anfangen
 6. Anrede IMMER: "${anrede}"
-7. Am Ende: "${sig}"
+7. Am Ende unterschreiben mit: "${sig}"
 
-Antworte NUR mit diesem JSON Array, keine Erklärungen:
+Antworte NUR mit diesem JSON Array:
 
 [
   {"label": "💬 Herzlich & persönlich", "text": "..."},
@@ -83,16 +81,14 @@ Antworte NUR mit diesem JSON Array, keine Erklärungen:
 ]`
 
   try {
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const response = await fetch('https://api.x.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'Authorization': `Bearer ${GROK_API_KEY}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://review-manager-mu.vercel.app',
-        'X-Title': 'ReviewMonitor',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.0-flash-exp:free',
+        model: 'grok-3-mini',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
         max_tokens: 1500,
@@ -102,12 +98,11 @@ Antworte NUR mit diesem JSON Array, keine Erklärungen:
     const data = await response.json()
 
     if (!response.ok) {
-      return res.status(500).json({ error: 'OpenRouter API Fehler', details: data })
+      return res.status(500).json({ error: 'Grok API Fehler', details: data })
     }
 
     const text = data.choices?.[0]?.message?.content || ''
     
-    // JSON extrahieren
     let jsonStr = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
     const jsonMatch = jsonStr.match(/\[[\s\S]*\]/)
 
