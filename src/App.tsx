@@ -292,7 +292,7 @@ function Dashboard({ stats, reviews, navigate }: { stats: any, reviews: Review[]
           <span style={{ fontSize: '12px', color: '#9ca3af' }}>(stündlich)</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '13px', color: '#6b7280' }}>🕐 Nächster Sync: in etwa 1 Stunde</span>
+          <span style={{ fontSize: '13px', color: '#6b7280' }}>🕐 Sync läuft stündlich automatisch</span>
         </div>
       </div>
 
@@ -527,8 +527,8 @@ function Reviews({ reviews, onStatusChange, onDelete }: { reviews: Review[], onS
               <button
                 onClick={() => onStatusChange(review.id, 'Abgelehnt')}
                 disabled={review.status === 'Abgelehnt'}
-                style={{ padding: '7px 14px', background: 'transparent', border: 'none', borderRadius: '7px', cursor: review.status === 'Abgelehnt' ? 'default' : 'pointer', fontSize: '13px', fontFamily: 'inherit', color: review.status === 'Abgelehnt' ? '#9ca3af' : '#6b7280', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                ⊗ Ablehnen
+                style={{ padding: '7px 14px', background: review.status === 'Abgelehnt' ? '#f3f4f6' : '#fff', border: `1px solid ${review.status === 'Abgelehnt' ? '#e5e7eb' : '#d1d5db'}`, borderRadius: '7px', cursor: review.status === 'Abgelehnt' ? 'default' : 'pointer', fontSize: '13px', fontFamily: 'inherit', color: review.status === 'Abgelehnt' ? '#9ca3af' : '#6b7280', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                {review.status === 'Abgelehnt' ? '✕ Abgelehnt' : '✕ Ablehnen'}
               </button>
             )}
 
