@@ -223,6 +223,7 @@ function Dashboard({ stats, reviews, navigate }: { stats: any, reviews: Review[]
       restaurantName: settings.businessName || 'Ihr Restaurant',
       isTest: true,
       salutation: salutation,
+      contactEmail: settings.contactEmail || '',
     }
 
     try {
@@ -379,12 +380,20 @@ const AI_RESPONSES = [
   { label: '⚡ Kurz & direkt', text: (_: string) => `Vielen Dank für die Bewertung! Ihr Feedback ist uns wichtig. Wir freuen uns auf Ihren nächsten Besuch.` },
 ]
 
+const RECOVERY_RESPONSE = (contactEmail: string) => ({
+  label: '🔴 Persönliche Kontaktaufnahme',
+  text: (_: string) => `Es tut uns aufrichtig leid von Ihrer Erfahrung zu hören. Das entspricht nicht unserem Anspruch. Wir würden uns sehr freuen, das persönlich mit Ihnen zu klären. Bitte melden Sie sich direkt bei uns: ${contactEmail || 'kontakt@meinrestaurant.de'}`,
+})
+
 function Reviews({ reviews, onStatusChange, onDelete }: { reviews: Review[], onStatusChange: (id: number, s: ReviewStatus) => void, onDelete: (id: number) => void }) {
   const [openAI, setOpenAI] = useState<number | null>(null)
   const [selected, setSelected] = useState<{[key: number]: number}>({})
   const [filterStatus, setFilterStatus] = useState('alle')
   const [filterStars, setFilterStars] = useState('alle')
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null)
+
+  const settings = JSON.parse(localStorage.getItem('reviewManagerSettings') || '{}')
+  const contactEmail = settings.contactEmail || ''
 
   const filtered = reviews.filter(r => {
     if (filterStatus === 'ausstehend' && r.status !== 'Ausstehend') return false
@@ -501,8 +510,10 @@ function Reviews({ reviews, onStatusChange, onDelete }: { reviews: Review[], onS
           {/* AI Responses */}
           {openAI === review.id && review.status !== 'Beantwortet' && (
             <div style={{ marginTop: '14px', padding: '14px', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-              <div style={{ fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '10px' }}>3 KI-Antwortvorschläge — bitte auswählen:</div>
-              {AI_RESPONSES.map((a, i) => (
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '10px' }}>
+                {review.stars <= 2 ? '4 KI-Antwortvorschläge — bitte auswählen:' : '3 KI-Antwortvorschläge — bitte auswählen:'}
+              </div>
+              {[...AI_RESPONSES, ...(review.stars <= 2 ? [RECOVERY_RESPONSE(contactEmail)] : [])].map((a, i) => (
                 <div key={i} onClick={() => setSelected({...selected, [review.id]: i})}
                   style={{ padding: '12px', borderRadius: '8px', border: `1.5px solid ${selected[review.id] === i ? '#4f46e5' : '#e5e7eb'}`, background: selected[review.id] === i ? '#eef2ff' : '#fff', cursor: 'pointer', marginBottom: '8px', fontSize: '13px', lineHeight: '1.6' }}>
                   <div style={{ fontWeight: '600', fontSize: '12px', marginBottom: '4px', color: '#4f46e5' }}>{a.label}</div>
@@ -699,7 +710,7 @@ function Settings() {
     uniqueSellingPoints: '', brandValues: '', preferredPhrases: '',
     avoidPhrases: '', responseSignature: '', responseLanguage: 'Deutsch',
     salutation: 'Sie', autoGenerate: false,
-    googleAccountId: '', googleLocationId: '', notificationEmail: '',
+    googleAccountId: '', googleLocationId: '', notificationEmail: '', contactEmail: '',
   })
   const [saved, setSaved] = useState(false)
   const [saveTimer, setSaveTimer] = useState<any>(null)
@@ -778,6 +789,7 @@ function Settings() {
           <div><label style={lbl}>PLZ & Stadt</label><input style={inp} placeholder="z. B. 80331 München" value={form.city} onChange={e => update('city', e.target.value)} /></div>
           <div><label style={lbl}>Telefon</label><input style={inp} placeholder="z. B. +49 89 12345678" value={form.phone} onChange={e => update('phone', e.target.value)} /></div>
           <div><label style={lbl}>Website</label><input style={inp} placeholder="z. B. https://www.meinrestaurant.de" value={form.website} onChange={e => update('website', e.target.value)} /></div>
+          <div><label style={lbl}>Kontakt-E-Mail für Gäste</label><input style={inp} type="email" placeholder="z. B. kontakt@meinrestaurant.de" value={form.contactEmail} onChange={e => update('contactEmail', e.target.value)} /><div style={hint}>Wird bei 1-2 Sterne Bewertungen in der Recovery-Antwort angezeigt.</div></div>
         </div>
       </div></div>
 

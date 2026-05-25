@@ -7,8 +7,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { to, reviewerName, stars, reviewText, answers, restaurantName, isTest, salutation } = req.body
-
+  const { to, reviewerName, stars, reviewText, answers, restaurantName, isTest, salutation, contactEmail } = req.body
   if (!RESEND_API_KEY) {
     return res.status(500).json({ error: 'RESEND_API_KEY nicht konfiguriert' })
   }
@@ -23,8 +22,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const initials = reviewerName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
 
-  const answerColors = ['#4f46e5', '#16a34a', '#7c3aed']
-  const answerLabels = ['PROFESSIONELL', 'FREUNDLICH', 'PRÄGNANT']
+  const answerColors = ['#4f46e5', '#16a34a', '#7c3aed', '#dc2626']
+  const answerLabels = ['PROFESSIONELL', 'FREUNDLICH', 'PRÄGNANT', 'PERSÖNLICHE KONTAKTAUFNAHME']
+
+  // Recovery Antwort bei 1-2 Sternen automatisch hinzufügen
+  const allAnswers = stars <= 2 ? [
+    ...answers,
+    { label: '🔴 Persönliche Kontaktaufnahme', text: `Es tut uns aufrichtig leid von Ihrer Erfahrung zu hören. Das entspricht nicht unserem Anspruch. Wir würden uns sehr freuen, das persönlich zu klären. Bitte melden ${salutation === 'Du' ? 'Dich' : 'Sie sich'} direkt bei uns: ${contactEmail || 'kontakt@meinrestaurant.de'}` }
+  ] : answers
 
   const html = `
 <!DOCTYPE html>
@@ -105,7 +110,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       <div class="section-title">✨ ${salutation === 'Du' ? 'Wähle eine Antwort' : 'Wählen Sie eine Antwort'} — 1 Klick genügt:</div>
 
-      ${answers.map((a: { label: string, text: string }, i: number) => `
+      ${allAnswers.map((a: { label: string, text: string }, i: number) => `
         <div class="answer-box">
           <span class="answer-label" style="background:${answerColors[i]}20; color:${answerColors[i]}">${answerLabels[i]}</span>
           <div class="answer-text">${a.text}</div>
