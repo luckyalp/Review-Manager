@@ -205,14 +205,19 @@ function Dashboard({ stats, reviews, navigate }: { stats: any, reviews: Review[]
       return
     }
 
+    const salutation = settings.salutation || 'Sie'
+    const greeting = salutation === 'Du' ? 'Liebe/r Maria' : 'Sehr geehrte Frau Testmann'
+    const thanks = salutation === 'Du' ? 'Danke für Deine tolle Bewertung' : 'Vielen Dank für Ihre Bewertung'
+    const nextVisit = salutation === 'Du' ? 'Wir freuen uns auf Deinen nächsten Besuch!' : 'Wir freuen uns auf Ihren nächsten Besuch.'
+
     const testReview = {
       reviewerName: 'Maria Testmann',
       stars: 4,
       reviewText: 'Das Essen war wirklich ausgezeichnet und die Atmosphäre sehr gemütlich. Der Service war aufmerksam und freundlich. Nur die Wartezeit beim Nachtisch war etwas lang. Wir kommen gerne wieder!',
       answers: [
-        { label: '💬 Herzlich & persönlich', text: 'Liebe Maria, vielen herzlichen Dank für Ihre wunderbare Bewertung! Es freut uns sehr zu hören, dass Ihnen das Essen und die Atmosphäre bei uns gefallen haben. Wir nehmen Ihren Hinweis zur Wartezeit ernst und arbeiten daran. Wir freuen uns auf Ihren nächsten Besuch!' },
-        { label: '👔 Professionell & freundlich', text: 'Vielen Dank für Ihr positives Feedback! Wir freuen uns, dass Sie Ihr Erlebnis bei uns genossen haben. Ihren Hinweis bezüglich der Wartezeit nehmen wir dankend an. Wir freuen uns auf Ihren nächsten Besuch.' },
-        { label: '⚡ Kurz & direkt', text: 'Vielen Dank für die tolle Bewertung! Den Hinweis zur Wartezeit nehmen wir mit. Bis bald!' },
+        { label: '💬 Herzlich & persönlich', text: `${greeting}, vielen herzlichen Dank für diese wunderbare Bewertung! Es freut uns sehr zu hören, dass ${salutation === 'Du' ? 'Dir' : 'Ihnen'} das Essen und die Atmosphäre bei uns gefallen haben. Den Hinweis zur Wartezeit nehmen wir ernst. ${nextVisit}` },
+        { label: '👔 Professionell & freundlich', text: `${thanks}! Wir freuen uns, dass ${salutation === 'Du' ? 'Du Dein' : 'Sie Ihr'} Erlebnis bei uns genossen haben. Den Hinweis bezüglich der Wartezeit nehmen wir dankend an. ${nextVisit}` },
+        { label: '⚡ Kurz & direkt', text: `${thanks}! Den Hinweis zur Wartezeit nehmen wir mit. ${nextVisit}` },
       ],
       to: email,
       restaurantName: settings.businessName || 'Ihr Restaurant',

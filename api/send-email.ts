@@ -36,17 +36,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: Arial, sans-serif; background: #f3f4f6; padding: 20px; }
     .wrapper { max-width: 580px; margin: 0 auto; }
-    .header { background: #0f172a; border-radius: 12px 12px 0 0; padding: 20px 24px; display: flex; align-items: center; gap: 12px; }
-    .header-icon { background: #4f46e5; border-radius: 8px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-    .header-text h1 { color: #fff; font-size: 18px; font-weight: 700; }
-    .header-text p { color: #94a3b8; font-size: 13px; margin-top: 2px; }
+    .header { background: #0f172a; border-radius: 12px 12px 0 0; padding: 20px 24px; }
+    .header-inner { display: table; width: 100%; }
+    .header-icon-cell { display: table-cell; vertical-align: middle; width: 44px; }
+    .header-icon { background: #4f46e5; border-radius: 8px; width: 36px; height: 36px; line-height: 36px; text-align: center; font-size: 16px; font-weight: 700; color: #fff; }
+    .header-text-cell { display: table-cell; vertical-align: middle; padding-left: 12px; }
+    .header-text h1 { color: #fff; font-size: 18px; font-weight: 700; margin: 0; }
+    .header-text p { color: #94a3b8; font-size: 13px; margin: 2px 0 0; }
     .body { background: #fff; padding: 24px; border-radius: 0 0 12px 12px; }
-    .test-banner { background: #fef9c3; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 14px; margin-bottom: 20px; font-size: 13px; color: #92400e; display: flex; align-items: center; gap: 8px; }
+    .test-banner { background: #fef9c3; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 14px; margin-bottom: 20px; font-size: 13px; color: #92400e; }
     .review-box { border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; margin-bottom: 24px; }
-    .reviewer-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-    .avatar { width: 40px; height: 40px; border-radius: 50%; background: #e5e7eb; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #374151; flex-shrink: 0; }
+    .reviewer-row { display: table; width: 100%; margin-bottom: 10px; }
+    .avatar-cell { display: table-cell; vertical-align: middle; width: 48px; }
+    .avatar { width: 40px; height: 40px; border-radius: 50%; background: #e5e7eb; line-height: 40px; text-align: center; font-weight: 700; font-size: 14px; color: #374151; }
+    .reviewer-info-cell { display: table-cell; vertical-align: middle; padding-left: 12px; }
     .reviewer-name { font-weight: 700; font-size: 15px; color: #111827; }
-    .reviewer-meta { display: flex; align-items: center; gap: 8px; margin-top: 3px; }
+    .reviewer-meta { margin-top: 3px; }
     .stars { color: #F0B100; font-size: 16px; }
     .google-badge { font-size: 11px; color: #6b7280; background: #f3f4f6; padding: 2px 8px; border-radius: 10px; }
     .review-text { font-size: 14px; color: #374151; line-height: 1.6; font-style: italic; }
@@ -63,10 +68,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 <body>
   <div class="wrapper">
     <div class="header">
-      <div class="header-icon">🏪</div>
-      <div class="header-text">
-        <h1>ReviewMonitor</h1>
-        <p>${restaurantName || 'Neue Bewertung eingegangen'}</p>
+      <div class="header-inner">
+        <div class="header-icon-cell">
+          <div class="header-icon">RM</div>
+        </div>
+        <div class="header-text-cell">
+          <div class="header-text">
+            <h1>ReviewMonitor</h1>
+            <p>${restaurantName || 'Neue Bewertung eingegangen'}</p>
+          </div>
+        </div>
       </div>
     </div>
     <div class="body">
@@ -78,8 +89,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       <div class="review-box">
         <div class="reviewer-row">
-          <div class="avatar">${initials}</div>
-          <div>
+          <div class="avatar-cell">
+            <div class="avatar">${initials}</div>
+          </div>
+          <div class="reviewer-info-cell">
             <div class="reviewer-name">${reviewerName}</div>
             <div class="reviewer-meta">
               <span class="stars">${starsFilled}<span style="color:#d1d5db">${starsEmpty}</span></span>
