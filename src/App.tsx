@@ -720,8 +720,8 @@ function Settings() {
   const getSupabase = async () => {
     const { createClient } = await import('@supabase/supabase-js')
     return createClient(
-      import.meta.env.Vite_PUBLIC_SUPABASE_URL,
-      import.meta.env.Vite_PUBLIC_SUPABASE_ANON_KEY
+      'https://xbgohbljmuoijgocrkka.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhiZ29oYmxqbXVvaWpnb2Nya2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2OTAwMjUsImV4cCI6MjA5NTI2NjAyNX0.CNpNc3uyxnfKfse9G_26XIaCBPhBpPPESuC4jm9WbGU'
     )
   }
 
