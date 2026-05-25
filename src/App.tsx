@@ -501,18 +501,13 @@ function Reviews({ reviews, onStatusChange, onDelete }: { reviews: Review[], onS
 
           {/* Actions */}
           <div className="review-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <button
-              onClick={() => setOpenAI(openAI === review.id ? null : review.id)}
-              style={{ padding: '7px 14px', background: '#fff', border: '1px solid #d1d5db', borderRadius: '7px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', color: '#374151', fontWeight: '500' }}>
-              Details anzeigen
-            </button>
 
             {/* Antworten generieren — nur wenn noch nicht beantwortet */}
             {review.status !== 'Beantwortet' && (
               <button
                 onClick={() => generateReplies(review)}
                 style={{ padding: '7px 14px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '7px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                {aiLoading === review.id ? '⏳ KI generiert...' : '✨ Antworten generieren'}
+                {aiLoading === review.id ? '⏳ KI generiert...' : openAI === review.id ? '✨ Ausblenden' : '✨ Antworten generieren'}
               </button>
             )}
 
