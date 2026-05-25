@@ -215,6 +215,8 @@ function Dashboard({ stats, reviews, navigate }: { stats: any, reviews: Review[]
         { label: '⚡ Kurz & direkt', text: 'Vielen Dank für die tolle Bewertung! Den Hinweis zur Wartezeit nehmen wir mit. Bis bald!' },
       ],
       to: email,
+      restaurantName: settings.businessName || 'Ihr Restaurant',
+      isTest: true,
     }
 
     try {
