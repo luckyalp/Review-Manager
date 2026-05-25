@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
-const GROK_API_KEY = process.env.GROK_API_KEY
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -9,8 +9,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const { review, settings } = req.body
 
-  if (!GROK_API_KEY) {
-    return res.status(500).json({ error: 'GROK_API_KEY nicht konfiguriert' })
+  if (!GEMINI_API_KEY) {
+    return res.status(500).json({ error: 'GEMINI_API_KEY nicht konfiguriert' })
   }
 
   const {
@@ -72,7 +72,7 @@ REGELN:
 6. Anrede IMMER: "${anrede}"
 7. Am Ende unterschreiben mit: "${sig}"
 
-Antworte NUR mit diesem JSON Array:
+Antworte NUR mit einem JSON Array, ohne Markdown, ohne Erklärungen:
 
 [
   {"label": "💬 Herzlich & persönlich", "text": "..."},
@@ -81,28 +81,27 @@ Antworte NUR mit diesem JSON Array:
 ]`
 
   try {
-    const response = await fetch('https://api.x.ai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${GROK_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'grok-3-mini',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7,
-        max_tokens: 1500,
-      })
-    })
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.7, maxOutputTokens: 1500 }
+        })
+      }
+    )
 
     const data = await response.json()
 
     if (!response.ok) {
-      return res.status(500).json({ error: 'Grok API Fehler', details: data })
+      return res.status(500).json({ error: 'Gemini API Fehler', details: data })
     }
 
-    const text = data.choices?.[0]?.message?.content || ''
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
     
+    // JSON extrahieren — mit oder ohne Code-Block
     let jsonStr = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
     const jsonMatch = jsonStr.match(/\[[\s\S]*\]/)
 
