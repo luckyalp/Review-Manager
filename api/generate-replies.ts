@@ -244,8 +244,21 @@ Referenzstil:
 - "Das haben wir selbst auch wahrgenommen." → ehrlich, ohne Drama
 - "Wir setzen auf Qualität und Frische, das hat auch seinen Preis." → klar, mit Haltung
 
-VERBOTEN:
-- "Vielen Dank für Ihr Feedback" / "Wir nehmen das ernst"
+DIESE EXAKTEN SÄTZE SIND ABSOLUT VERBOTEN — NIEMALS VERWENDEN:
+- "nehmen wir sehr ernst"
+- "nehmen wir ernst"
+- "ist uns wichtig"
+- "Wir nehmen Ihr/dein Feedback ernst"
+- "Vielen Dank für Ihr/dein Feedback"
+- "Vielen Dank für Ihre/deine Bewertung"
+- "Wir nehmen das zur Kenntnis"
+- "Das ist uns eine Herzensangelegenheit"
+- "Wir arbeiten ständig daran"
+- "Wir werden das intern prüfen"
+
+Wenn du einen dieser Sätze schreiben willst — stopp. Schreib stattdessen was konkret passiert oder was konkret gefühlt wird.
+
+Außerdem verboten:
 - Unterwürfigkeit, endlose Entschuldigungen
 - Defensivität, Rechtfertigung
 - Das Wort "eigentlich"
@@ -256,13 +269,15 @@ VERBOTEN:
 ## SCHRITT 6: DIE 3 VARIANTEN
 
 VARIANTE 1 — Nah & persönlich
-Klingt wie der Besitzer selbst. Echte Emotion, direkte Verbindung. Länge: 4–6 Sätze.
+Klingt wie der Besitzer selbst. Echte Emotion, direkte Verbindung.
+MAXIMAL 4 SÄTZE. Nicht mehr.
 
 VARIANTE 2 — Freundlich & professionell
-Warm aber nicht intim. Respektvoll, klar, menschlich. Länge: 3–5 Sätze.
+Warm aber nicht intim. Respektvoll, klar, menschlich.
+MAXIMAL 4 SÄTZE. Nicht mehr.
 
 VARIANTE 3 — Klar & knapp
-3–4 Sätze. Sagt was nötig ist, kein Wort zu viel.
+MAXIMAL 3 SÄTZE. Kein Wort zu viel.
 
 Alle drei enden mit: ${signature}
 
