@@ -292,8 +292,8 @@ function Dashboard({ stats, reviews, navigate }: { stats: any, reviews: Review[]
           <div style={{ padding: '18px' }}>
             {distrib.map(row => (
               <div key={row.stars} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                <div style={{ width: '28px', fontSize: '16px', color: '#6b7280', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '2px' }}>
-                  {row.stars} <span style={{ fontSize: '13px' }}>☆</span>
+                <div style={{ width: '36px', fontSize: '13px', color: '#6b7280', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '3px' }}>
+                  <span>{row.stars}</span><span>☆</span>
                 </div>
                 <div style={{ flex: 1, height: '10px', background: '#f3f4f6', borderRadius: '5px', overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: `${row.pct}%`, background: row.color, borderRadius: '5px', transition: 'width 0.3s' }} />
@@ -515,10 +515,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
           <div style={{ padding: '16px 18px' }}>
             {distrib.map(row => (
               <div key={row.stars} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                <div style={{ width: '28px', fontSize: '16px', color: '#6b7280', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '2px' }}>
-                  <span style={{ display: 'inline-block', width: '10px', textAlign: 'right' }}>{row.stars}</span>
-                  <span style={{ fontSize: '13px' }}>☆</span>
-                </div>
+                <div style={{ width: '28px', fontSize: '12px', color: '#6b7280', flexShrink: 0 }}>{row.stars} ★</div>
                 <div style={{ flex: 1, height: '10px', background: '#f3f4f6', borderRadius: '5px', overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: `${row.pct}%`, background: row.color, borderRadius: '5px' }} />
                 </div>
