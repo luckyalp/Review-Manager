@@ -631,7 +631,7 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
       </div>
 
       {/* KI Antworten */}
-      <div style={{ background: '#fff', borderRadius: '12px', padding: '20px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+      {review.status !== 'Beantwortet' && <div style={{ background: '#fff', borderRadius: '12px', padding: '20px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
         {aiAnswers.length === 0 && !aiLoading && (
           <div style={{ textAlign: 'center', padding: '32px' }}>
             <div style={{ fontSize: '32px', marginBottom: '12px' }}>✨</div>
@@ -670,7 +670,7 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
             )}
           </>
         )}
-      </div>
+      </div>}
     </div>
   )
 }
