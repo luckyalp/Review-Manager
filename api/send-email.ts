@@ -114,7 +114,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         <div class="answer-box">
           <span class="answer-label" style="background:${answerColors[i]}20; color:${answerColors[i]}">${answerLabels[i]}</span>
           <div class="answer-text">${a.text}</div>
-          <a href="#" class="answer-btn" style="background:${answerColors[i]}">✓ Diese Antwort auswählen & senden</a>
+          <a href="https://review-manager-mu.vercel.app/api/confirm-reply?reviewId=${encodeURIComponent(reviewerName + '_' + stars)}&answerIndex=${i}&answerText=${encodeURIComponent(a.text)}" class="answer-btn" style="background:${answerColors[i]}">✓ Diese Antwort auswählen & senden</a>
         </div>
       `).join('')}
 
