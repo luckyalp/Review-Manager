@@ -107,7 +107,7 @@ Erstelle GENAU 3 Antworten. Antworte NUR mit dem JSON Array, keine Erklärungen 
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -125,8 +125,14 @@ Erstelle GENAU 3 Antworten. Antworte NUR mit dem JSON Array, keine Erklärungen 
     }
 
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
-    const jsonMatch = text.match(/\[[\s\S]*\]/)
-
+    
+    // JSON aus der Antwort extrahieren - auch mit ```json Code-Blöcken
+    let jsonStr = text
+    // Entferne ```json und ``` Wrapper
+    jsonStr = jsonStr.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
+    // Suche nach dem Array
+    const jsonMatch = jsonStr.match(/\[[\s\S]*\]/)
+    
     if (!jsonMatch) {
       return res.status(500).json({ error: 'Kein JSON gefunden', raw: text })
     }
