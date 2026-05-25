@@ -33,6 +33,7 @@ function App() {
   const [page, setPage] = useState('dashboard')
   const [menuOpen, setMenuOpen] = useState(false)
   const [reviews, setReviews] = useState<Review[]>(INITIAL_REVIEWS)
+  const [selectedReview, setSelectedReview] = useState<Review | null>(null)
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: '📊' },
@@ -41,7 +42,8 @@ function App() {
     { id: 'settings', label: 'Einstellungen', icon: '⚙️' },
   ]
 
-  const navigate = (id: string) => { setPage(id); setMenuOpen(false) }
+  const navigate = (id: string) => { setPage(id); setMenuOpen(false); setSelectedReview(null) }
+  const openReview = (review: Review) => { setSelectedReview(review); setPage('reviews') }
 
   const updateReviewStatus = (id: number, status: ReviewStatus) => {
     setReviews(prev => prev.map(r => r.id === id ? { ...r, status } : r))
@@ -132,8 +134,9 @@ function App() {
       {/* Main */}
       <div style={{ flex: 1, overflowY: 'auto' }}>
         <div className="main-pad">
-          {page === 'dashboard' && <Dashboard stats={stats} reviews={reviews} navigate={navigate} />}
-          {page === 'reviews' && <Reviews reviews={reviews} onStatusChange={updateReviewStatus} onDelete={deleteReview} />}
+          {page === 'dashboard' && <Dashboard stats={stats} reviews={reviews} navigate={navigate} openReview={openReview} />}
+          {page === 'reviews' && !selectedReview && <Reviews reviews={reviews} onStatusChange={updateReviewStatus} onDelete={deleteReview} openReview={openReview} />}
+          {page === 'reviews' && selectedReview && <ReviewDetail review={selectedReview} onStatusChange={updateReviewStatus} onBack={() => setSelectedReview(null)} />}
           {page === 'analytics' && <Analytics reviews={reviews} />}
           {page === 'settings' && <Settings />}
         </div>
@@ -177,7 +180,7 @@ function StatusBadge({ status }: { status: ReviewStatus }) {
 
 // ─── DASHBOARD ───────────────────────────────────────────────────────────────
 
-function Dashboard({ stats, reviews, navigate }: { stats: any, reviews: Review[], navigate: (p: string) => void }) {
+function Dashboard({ stats, reviews, navigate, openReview }: { stats: any, reviews: Review[], navigate: (p: string) => void, openReview: (r: Review) => void }) {
   const [testRunning, setTestRunning] = useState(false)
   const [testDone, setTestDone] = useState(false)
   const [testError, setTestError] = useState('')
@@ -339,7 +342,7 @@ function Dashboard({ stats, reviews, navigate }: { stats: any, reviews: Review[]
                 </div>
                 <Stars n={r.stars} />
                 <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px', lineHeight: '1.5' }}>{r.text.length > 100 ? r.text.slice(0, 100) + '…' : r.text}</div>
-                <button onClick={() => navigate('reviews')} style={{ marginTop: '10px', padding: '6px 14px', background: '#fff', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontFamily: 'inherit', color: '#374151' }}>
+                <button onClick={() => openReview(r)} style={{ marginTop: '10px', padding: '6px 14px', background: '#fff', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontFamily: 'inherit', color: '#374151' }}>
                   Ansehen & Antworten
                 </button>
               </div>
@@ -380,7 +383,7 @@ const AI_RESPONSES = [
   { label: '⚡ Kurz & direkt', text: (_: string) => `Vielen Dank für die Bewertung! Ihr Feedback ist uns wichtig. Wir freuen uns auf Ihren nächsten Besuch.` },
 ]
 
-function Reviews({ reviews, onStatusChange, onDelete }: { reviews: Review[], onStatusChange: (id: number, s: ReviewStatus) => void, onDelete: (id: number) => void }) {
+function Reviews({ reviews, onStatusChange, onDelete, openReview }: { reviews: Review[], onStatusChange: (id: number, s: ReviewStatus) => void, onDelete: (id: number) => void, openReview: (r: Review) => void }) {
   const [openAI, setOpenAI] = useState<number | null>(null)
   const [selected, setSelected] = useState<{[key: number]: number}>({})
   const [filterStatus, setFilterStatus] = useState('alle')
@@ -469,7 +472,7 @@ function Reviews({ reviews, onStatusChange, onDelete }: { reviews: Review[], onS
         <div key={review.id} style={{ background: '#fff', borderRadius: '12px', padding: '18px', border: '1px solid #e5e7eb', marginBottom: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', opacity: review.status === 'Abgelehnt' ? 0.65 : 1 }}>
 
           {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '10px', cursor: 'pointer' }} onClick={() => openReview(review)}>
             <Avatar name={review.name} initials={review.initials} photoUrl={review.photoUrl} size={40} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', flexWrap: 'wrap' }}>
@@ -566,6 +569,108 @@ function Reviews({ reviews, onStatusChange, onDelete }: { reviews: Review[], onS
           )}
         </div>
       ))}
+    </div>
+  )
+}
+
+// ─── REVIEW DETAIL ───────────────────────────────────────────────────────────
+
+function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onStatusChange: (id: number, s: ReviewStatus) => void, onBack: () => void }) {
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiAnswers, setAiAnswers] = useState<{label: string, text: string}[]>([])
+  const [selected, setSelected] = useState<number | null>(null)
+
+  const settings = JSON.parse(localStorage.getItem('reviewManagerSettings') || '{}')
+  const contactEmail = settings.contactEmail || ''
+
+  const generateReplies = async () => {
+    setAiLoading(true)
+    try {
+      const response = await fetch('/api/generate-replies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          review: { reviewerName: review.name, stars: review.stars, reviewText: review.text },
+          settings,
+        })
+      })
+      const data = await response.json()
+      if (data.success && data.answers) {
+        const answers = review.stars <= 2
+          ? [...data.answers, { label: '🔴 Persönliche Kontaktaufnahme', text: `Es tut uns aufrichtig leid von Ihrer Erfahrung zu hören. Wir würden uns sehr freuen, das persönlich zu klären. Bitte melden ${settings.salutation === 'Du' ? 'Dich' : 'Sie sich'} direkt bei uns: ${contactEmail || 'kontakt@restaurant.de'}` }]
+          : data.answers
+        setAiAnswers(answers)
+      }
+    } catch (e) {
+      console.error(e)
+    }
+    setAiLoading(false)
+  }
+
+  return (
+    <div>
+      {/* Zurück Button */}
+      <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#6b7280', marginBottom: '20px', padding: '0', fontFamily: 'inherit' }}>
+        ← Zurück
+      </button>
+
+      {/* Bewertung */}
+      <div style={{ background: '#fff', borderRadius: '12px', padding: '20px', border: '1px solid #e5e7eb', marginBottom: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <Avatar name={review.name} initials={review.initials} photoUrl={review.photoUrl} size={44} />
+            <div>
+              <div style={{ fontWeight: '700', fontSize: '16px', color: '#111827' }}>{review.name}</div>
+              <Stars n={review.stars} />
+              <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>{review.date}</div>
+            </div>
+          </div>
+          <StatusBadge status={review.status} />
+        </div>
+        <div style={{ fontSize: '15px', color: '#374151', lineHeight: '1.7', marginTop: '12px' }}>{review.text}</div>
+      </div>
+
+      {/* KI Antworten */}
+      <div style={{ background: '#fff', borderRadius: '12px', padding: '20px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        {aiAnswers.length === 0 && !aiLoading && (
+          <div style={{ textAlign: 'center', padding: '32px' }}>
+            <div style={{ fontSize: '32px', marginBottom: '12px' }}>✨</div>
+            <div style={{ fontWeight: '600', fontSize: '16px', marginBottom: '6px', color: '#111827' }}>Noch keine Antworten generiert</div>
+            <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '20px' }}>Klicken Sie auf „KI-Antworten generieren", um 3 Antwortmöglichkeiten zu erstellen.</div>
+            <button onClick={generateReplies} style={{ padding: '10px 24px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontFamily: 'inherit', fontWeight: '600' }}>
+              ✨ KI-Antworten generieren
+            </button>
+          </div>
+        )}
+
+        {aiLoading && (
+          <div style={{ textAlign: 'center', padding: '32px', color: '#6b7280' }}>
+            <div style={{ fontSize: '32px', marginBottom: '12px' }}>⏳</div>
+            <div>KI generiert Antworten...</div>
+          </div>
+        )}
+
+        {aiAnswers.length > 0 && (
+          <>
+            <div style={{ fontWeight: '600', fontSize: '15px', marginBottom: '14px', color: '#111827' }}>
+              {review.stars <= 2 ? '4' : '3'} KI-Antwortvorschläge — bitte auswählen:
+            </div>
+            {aiAnswers.map((a, i) => (
+              <div key={i} onClick={() => setSelected(i)}
+                style={{ padding: '14px', borderRadius: '10px', border: `1.5px solid ${selected === i ? '#4f46e5' : '#e5e7eb'}`, background: selected === i ? '#eef2ff' : '#fff', cursor: 'pointer', marginBottom: '10px', fontSize: '14px', lineHeight: '1.7' }}>
+                <div style={{ fontWeight: '600', fontSize: '12px', marginBottom: '6px', color: '#4f46e5' }}>{a.label}</div>
+                {a.text}
+              </div>
+            ))}
+            {selected !== null && (
+              <button onClick={() => { onStatusChange(review.id, 'Beantwortet'); onBack() }}
+                style={{ padding: '10px 24px', background: '#22c55e', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontFamily: 'inherit', fontWeight: '600', marginTop: '8px' }}>
+                ✅ Ausgewählte Antwort senden
+              </button>
+            )}
+          </>
+        )}
+      </div>
     </div>
   )
 }
