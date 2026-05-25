@@ -29,56 +29,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const duzen = salutation === 'Du'
   const anrede = duzen ? 'Du' : 'Sie'
   const sig = responseSignature || `Das Team von ${businessName}`
-  const isMidRating = review.stars === 3
 
   let muster = ''
   if (review.stars >= 4) {
-    muster = 'MUSTER 1 — LOB: Freude zurückspiegeln, Verbindung stärken, Wiederkommen einladen.'
-  } else if (isMidRating) {
-    muster = 'MUSTER 2 — GEMISCHT: Positives aufgreifen, Kritik ernst nehmen ohne Rechtfertigung.'
+    muster = 'Positive Bewertung: Freude zurückspiegeln, Verbindung stärken, Wiederkommen einladen.'
+  } else if (review.stars === 3) {
+    muster = 'Gemischte Bewertung: Positives aufgreifen, Kritik ernst nehmen ohne Rechtfertigung.'
   } else {
-    muster = `MUSTER 3 — RECOVERY (1-2 Sterne): Deeskalation, ruhig und professionell.
-VERBOTEN: Rechtfertigen, Diskutieren, defensive Sprache.
-PFLICHT: Erfahrung anerkennen, Entschuldigung, Kontakt anbieten: ${contactEmail || 'kontakt@restaurant.de'}`
+    muster = `Negative Bewertung (1-2 Sterne): Deeskalation, ruhig und professionell.
+Erfahrung anerkennen, kurze Entschuldigung, Kontakt anbieten: ${contactEmail || 'kontakt@restaurant.de'}
+VERBOTEN: Rechtfertigen, Diskutieren, defensive Sprache.`
   }
 
-  const prompt = `Du bist ein Experte für authentische Restaurant-Kommunikation.
+  const prompt = `Du bist ein Experte für Restaurant-Kommunikation.
 
-KERN-PHILOSOPHIE: Verändere Gefühle — korrigiere keine Fakten.
+Restaurant: ${businessName}
+Beschreibung: ${description || 'nicht angegeben'}
+Küche: ${cuisineType || 'nicht angegeben'}
+Besonderheiten: ${uniqueSellingPoints || 'nicht angegeben'}
+Werte: ${brandValues || 'nicht angegeben'}
+Anredeform: ${anrede} (konsequent verwenden!)
+Signatur: ${sig}
+Bevorzugte Formulierungen: ${preferredPhrases || 'natürlich und authentisch'}
+Verbotene Formulierungen: ${avoidPhrases || 'Floskeln, übertriebene Entschuldigungen'}
 
-RESTAURANT:
-- Name: ${businessName}
-- Beschreibung: ${description || 'nicht angegeben'}
-- Küche: ${cuisineType || 'nicht angegeben'}
-- Besonderheiten: ${uniqueSellingPoints || 'nicht angegeben'}
-- Werte: ${brandValues || 'nicht angegeben'}
-- Bevorzugte Formulierungen: ${preferredPhrases || 'natürlich und authentisch'}
-- Nie verwenden: ${avoidPhrases || 'Floskeln, übertriebene Entschuldigungen'}
-- Anredeform: "${anrede}" — IMMER konsequent ${duzen ? '"Du/Dein/Dich"' : '"Sie/Ihr/Ihnen"'} verwenden!
-- Signatur: ${sig}
+Situation: ${muster}
 
-SITUATION: ${muster}
-
-BEWERTUNG:
-Von: ${review.reviewerName} | Sterne: ${review.stars}/5
+Bewertung von ${review.reviewerName} (${review.stars}/5 Sterne):
 "${review.reviewText}"
 
-REGELN:
-1. Deutsch
-2. 3-5 Sätze
-3. Keine Marketingsprache
-4. Kein "eigentlich"
-5. Nicht mit "Wir" anfangen
-6. Anrede IMMER: "${anrede}"
-7. Am Ende unterschreiben mit: "${sig}"
+Schreibe genau 3 verschiedene Antworten auf Deutsch.
+Jede Antwort: 3-5 Sätze, natürlich, keine Marketingsprache, nicht mit "Wir" anfangen, endet mit "${sig}".
+Anredeform immer: ${anrede}
 
-Antworte NUR mit einem JSON Array, ohne Markdown, ohne Erklärungen:
-
-[
-  {"label": "💬 Herzlich & persönlich", "text": "..."},
-  {"label": "👔 Professionell & freundlich", "text": "..."},
-  {"label": "⚡ Kurz & direkt", "text": "..."}
-]`
+Antworte NUR mit einem JSON Array aus 3 Strings, genau so:
+["antwort1", "antwort2", "antwort3"]`
 
   try {
     const response = await fetch(
@@ -88,7 +73,7 @@ Antworte NUR mit einem JSON Array, ohne Markdown, ohne Erklärungen:
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 1500 }
+          generationConfig: { temperature: 0.7, maxOutputTokens: 3000 }
         })
       }
     )
@@ -101,15 +86,25 @@ Antworte NUR mit einem JSON Array, ohne Markdown, ohne Erklärungen:
 
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
     
-    // JSON extrahieren — mit oder ohne Code-Block
+    // JSON extrahieren
     let jsonStr = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
-    const jsonMatch = jsonStr.match(/\[[\s\S]*\]/)
-
-    if (!jsonMatch) {
+    const startIdx = jsonStr.indexOf('[')
+    const endIdx = jsonStr.lastIndexOf(']')
+    
+    if (startIdx === -1 || endIdx === -1) {
       return res.status(500).json({ error: 'Kein JSON gefunden', raw: text })
     }
+    
+    jsonStr = jsonStr.substring(startIdx, endIdx + 1)
+    const parsed = JSON.parse(jsonStr)
+    
+    // Beide Formate unterstützen: Strings ODER Objekte mit text-Feld
+    const answers = parsed.map((item: any, i: number) => {
+      const labels = ['💬 Herzlich & persönlich', '👔 Professionell & freundlich', '⚡ Kurz & direkt']
+      const text = typeof item === 'string' ? item : (item.text || item.content || item.response || JSON.stringify(item))
+      return { label: labels[i] || `Antwort ${i+1}`, text }
+    })
 
-    const answers = JSON.parse(jsonMatch[0])
     return res.status(200).json({ success: true, answers })
 
   } catch (error) {
