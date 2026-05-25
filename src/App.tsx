@@ -696,14 +696,27 @@ function Settings() {
     googleAccountId: '', googleLocationId: '', notificationEmail: '',
   })
   const [saved, setSaved] = useState(false)
+  const [saveTimer, setSaveTimer] = useState<any>(null)
 
   useEffect(() => {
     const d = localStorage.getItem('reviewManagerSettings')
     if (d) setForm(JSON.parse(d))
   }, [])
 
-  const update = (k: string, v: any) => { setForm(p => ({ ...p, [k]: v })); setSaved(false) }
-  const save = () => { localStorage.setItem('reviewManagerSettings', JSON.stringify(form)); setSaved(true) }
+  // Auto-Save nach 1.5 Sekunden
+  useEffect(() => {
+    if (saveTimer) clearTimeout(saveTimer)
+    const timer = setTimeout(() => {
+      localStorage.setItem('reviewManagerSettings', JSON.stringify(form))
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    }, 1500)
+    setSaveTimer(timer)
+    return () => clearTimeout(timer)
+  }, [form])
+
+  const update = (k: string, v: any) => { setForm(p => ({ ...p, [k]: v })) }
+  const save = () => { localStorage.setItem('reviewManagerSettings', JSON.stringify(form)); setSaved(true); setTimeout(() => setSaved(false), 2000) }
 
   const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '13px', marginTop: '4px', boxSizing: 'border-box', background: '#f9fafb', fontFamily: 'inherit' }
   const lbl: React.CSSProperties = { fontSize: '13px', fontWeight: '500', display: 'block', color: '#374151' }
@@ -844,7 +857,7 @@ function Settings() {
       </div></div>
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px', paddingBottom: '40px' }}>
-        {saved && <span style={{ color: '#22c55e', fontSize: '16px', fontWeight: '500' }}>✅ Gespeichert!</span>}
+        {saved && <span style={{ color: '#22c55e', fontSize: '14px', fontWeight: '500', transition: 'opacity 0.3s' }}>✅ Automatisch gespeichert</span>}
         <button onClick={save} style={{ padding: '10px 28px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', fontFamily: 'inherit', fontWeight: '500' }}>Profil speichern</button>
       </div>
     </div>
