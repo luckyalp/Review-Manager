@@ -23,63 +23,87 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     responseSignature = '',
     salutation = 'Sie',
     contactEmail = '',
+    description = '',
   } = settings || {}
 
-  const anrede = salutation === 'Du' ? 'du' : 'Sie'
-  const anredeGross = salutation === 'Du' ? 'Du' : 'Sie'
-  const possessiv = salutation === 'Du' ? 'Dein' : 'Ihr'
+  const duzen = salutation === 'Du'
+  const anrede = duzen ? 'Du' : 'Sie'
+  const possessiv = duzen ? 'Dein' : 'Ihr'
+  const dativ = duzen ? 'Dir' : 'Ihnen'
+  const reflexiv = duzen ? 'Dich' : 'Sie sich'
   const isLowRating = review.stars <= 2
+  const isMidRating = review.stars === 3
+  const sig = responseSignature || `Das Team von ${businessName}`
 
-  const systemPrompt = `Du bist ein Experte für Restaurant-Kommunikation. Du schreibst Antworten auf Google-Bewertungen für das Restaurant "${businessName}".
+  // Muster bestimmen basierend auf Sternanzahl und Inhalt
+  let muster = ''
+  if (review.stars >= 4) {
+    muster = 'MUSTER 1 — ECHTES LOB: Bewertung enthält aufrichtige Begeisterung. Ziel: Freude zurückspiegeln, Verbindung stärken, Wiederkommen einladen. Keine Übertreibung, keine leeren Phrasen.'
+  } else if (isMidRating) {
+    muster = 'MUSTER 2 — GEMISCHTE BEWERTUNG: Bewertung enthält sowohl Positives als auch Kritik. Ziel: Positives aufgreifen, Kritik ernst nehmen ohne Rechtfertigung, offen für Verbesserung zeigen.'
+  } else {
+    muster = `MUSTER 3 — NIEDRIGE BEWERTUNG (Recovery): Gast hat schlechte Erfahrung gemacht. 
+Ziel: Deeskalation, Vertrauen wiederherstellen, in private Kommunikation überführen.
+VERBOTEN: Rechtfertigen, Diskutieren, Schuldzuweisung, defensive Sprache.
+PFLICHT: Erfahrung anerkennen, kurze Entschuldigung, Kontaktangebot: ${contactEmail || 'kontakt@restaurant.de'}
+Struktur: 1. Anerkennung 2. Entschuldigung 3. Kontakteinladung`
+  }
 
-RESTAURANT PROFIL:
+  const prompt = `Du bist ein Experte für authentische Restaurant-Kommunikation.
+
+KERN-PHILOSOPHIE (wichtigster Grundsatz):
+Verändere Gefühle — korrigiere keine Fakten.
+Auch wenn der Gast übertrieben hat: Es geht nicht darum wer Recht hat. Es geht darum, dass der Gast sich gehört fühlt und du als Mensch antwortest — nicht als Unternehmen.
+
+RESTAURANT-STIMMPROFIL:
 - Name: ${businessName}
-- Küche: ${cuisineType || 'nicht angegeben'}
-- Besonderheiten: ${uniqueSellingPoints || 'nicht angegeben'}
-- Markenwerte: ${brandValues || 'nicht angegeben'}
-- Signatur: ${responseSignature || `Das Team von ${businessName}`}
+- Beschreibung: ${description || 'nicht angegeben'}
+- Küche: ${cuisineType || 'nicht angegeben'}  
+- Was uns besonders macht: ${uniqueSellingPoints || 'nicht angegeben'}
+- Unsere Werte: ${brandValues || 'nicht angegeben'}
+- Bevorzugte Formulierungen: ${preferredPhrases || 'natürlich und authentisch'}
+- Nie verwenden: ${avoidPhrases || 'Floskeln, "eigentlich", übertriebene Entschuldigungen'}
+- Anredeform für Gäste: "${anrede}" — WICHTIG: Konsequent ${duzen ? '"Du/Dein/Dich"' : '"Sie/Ihr/Ihnen"'} verwenden!
+- Signatur: ${sig}
 
-KOMMUNIKATIONSREGELN:
-- Anredeform: "${anredeGross}" (${salutation === 'Du' ? 'persönlich/du' : 'förmlich/Sie'})
-- Bevorzugte Formulierungen: ${preferredPhrases || 'natürlich, authentisch'}
-- Zu vermeiden: ${avoidPhrases || 'Floskeln, übertriebene Entschuldigungen'}
-- Sprache: Deutsch
-- Länge: maximal 4-6 Sätze
-- Keine Marketing-Floskeln
-- Natürliche, menschliche Sprache
-- Gefühle ansprechen, nicht Fakten korrigieren
+AKTUELLE SITUATION:
+${muster}
 
-${isLowRating ? `WICHTIG - NIEDRIGE BEWERTUNG (${review.stars} Sterne):
-- Kein Rechtfertigen oder Diskutieren
-- Erfahrung anerkennen
-- Kurze Entschuldigung
-- Zur direkten Kontaktaufnahme einladen: ${contactEmail || 'kontakt@restaurant.de'}
-- Ruhig, sachlich, menschlich` : ''}
-
-Erstelle GENAU 3 verschiedene Antworten im JSON Format. Keine Erklärungen, nur das JSON.`
-
-  const userPrompt = `Bewertung von ${review.reviewerName} (${review.stars} von 5 Sternen):
+BEWERTUNG:
+Von: ${review.reviewerName} | Sterne: ${review.stars}/5
 "${review.reviewText}"
 
-Erstelle 3 Antworten als JSON Array:
+REGELN FÜR ALLE ANTWORTEN:
+1. Sprache: Deutsch
+2. Länge: 3-5 Sätze — nicht mehr, nicht weniger
+3. Keine Marketingsprache ("erstklassig", "einzigartig", "von Herzen")
+4. Kein Wort "eigentlich"
+5. Nicht mit "Wir" anfangen — persönlicher einsteigen
+6. Anrede IMMER: "${anrede}" — niemals wechseln
+7. Jede Antwort anders im Ton, gleich in der Aussage
+8. Am Ende immer unterschreiben mit: "${sig}"
+
+QUALITÄTSCHECK (vor jeder Antwort prüfen):
+- Fühlt sich der Gast gehört — egal ob er Recht hatte?
+- Klingt das wie ein Mensch oder wie ein Unternehmen?
+- Würde ich das selbst sagen wollen?
+
+Erstelle GENAU 3 Antworten. Antworte NUR mit dem JSON Array, keine Erklärungen davor oder danach:
+
 [
   {
     "label": "💬 Herzlich & persönlich",
-    "text": "..."
+    "text": "... (warm, nah, emotional, persönlich)"
   },
   {
-    "label": "👔 Professionell & freundlich", 
-    "text": "..."
+    "label": "👔 Professionell & freundlich",
+    "text": "... (ruhig, klar, respektvoll, sachlich)"
   },
   {
     "label": "⚡ Kurz & direkt",
-    "text": "..."
+    "text": "... (kompakt, auf den Punkt, keine Füllwörter)"
   }
-]
-
-Jede Antwort soll einen anderen Ton haben aber dieselbe Kernaussage.
-Nutze die Anredeform "${anredeGross}/${possessiv}".
-Unterschreibe mit: "${responseSignature || `Das Team von ${businessName}`}"`
+]`
 
   try {
     const response = await fetch(
@@ -88,16 +112,8 @@ Unterschreibe mit: "${responseSignature || `Das Team von ${businessName}`}"`
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: systemPrompt + '\n\n' + userPrompt }]
-            }
-          ],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 1500,
-          }
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.75, maxOutputTokens: 2000 }
         })
       }
     )
@@ -109,15 +125,13 @@ Unterschreibe mit: "${responseSignature || `Das Team von ${businessName}`}"`
     }
 
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
-
-    // JSON aus der Antwort extrahieren
     const jsonMatch = text.match(/\[[\s\S]*\]/)
+
     if (!jsonMatch) {
-      return res.status(500).json({ error: 'Kein JSON in Antwort gefunden', raw: text })
+      return res.status(500).json({ error: 'Kein JSON gefunden', raw: text })
     }
 
     const answers = JSON.parse(jsonMatch[0])
-
     return res.status(200).json({ success: true, answers })
 
   } catch (error) {
