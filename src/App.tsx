@@ -180,6 +180,7 @@ function StatusBadge({ status }: { status: ReviewStatus }) {
 function Dashboard({ stats, reviews, navigate }: { stats: any, reviews: Review[], navigate: (p: string) => void }) {
   const [testRunning, setTestRunning] = useState(false)
   const [testDone, setTestDone] = useState(false)
+  const [testError, setTestError] = useState('')
 
   const recent = reviews.slice(0, 3)
 
@@ -189,6 +190,59 @@ function Dashboard({ stats, reviews, navigate }: { stats: any, reviews: Review[]
     pct: reviews.length ? Math.round(reviews.filter(r => r.stars === s).length / reviews.length * 100) : 0,
     color: '#F0B100',
   }))
+
+  const runTest = async () => {
+    setTestRunning(true)
+    setTestError('')
+    setTestDone(false)
+
+    const settings = JSON.parse(localStorage.getItem('reviewManagerSettings') || '{}')
+    const email = settings.notificationEmail
+
+    if (!email) {
+      setTestError('Bitte zuerst eine Benachrichtigungs-E-Mail in den Einstellungen hinterlegen und speichern!')
+      setTestRunning(false)
+      return
+    }
+
+    const testReview = {
+      reviewerName: 'Maria Testmann',
+      stars: 4,
+      reviewText: 'Das Essen war wirklich ausgezeichnet und die Atmosphäre sehr gemütlich. Der Service war aufmerksam und freundlich. Nur die Wartezeit beim Nachtisch war etwas lang. Wir kommen gerne wieder!',
+      answers: [
+        { label: '💬 Herzlich & persönlich', text: 'Liebe Maria, vielen herzlichen Dank für Ihre wunderbare Bewertung! Es freut uns sehr zu hören, dass Ihnen das Essen und die Atmosphäre bei uns gefallen haben. Wir nehmen Ihren Hinweis zur Wartezeit ernst und arbeiten daran. Wir freuen uns auf Ihren nächsten Besuch!' },
+        { label: '👔 Professionell & freundlich', text: 'Vielen Dank für Ihr positives Feedback! Wir freuen uns, dass Sie Ihr Erlebnis bei uns genossen haben. Ihren Hinweis bezüglich der Wartezeit nehmen wir dankend an. Wir freuen uns auf Ihren nächsten Besuch.' },
+        { label: '⚡ Kurz & direkt', text: 'Vielen Dank für die tolle Bewertung! Den Hinweis zur Wartezeit nehmen wir mit. Bis bald!' },
+      ],
+      to: email,
+    }
+
+    try {
+      console.log('Sending test email to:', email)
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(testReview),
+      })
+
+      console.log('Response status:', response.status)
+      const data = await response.json()
+      console.log('Response data:', data)
+
+      if (!response.ok) {
+        setTestError('Fehler: ' + (data.error || 'Unbekannter Fehler'))
+        setTestRunning(false)
+        return
+      }
+
+      setTestDone(true)
+    } catch (err) {
+      console.error('Fetch error:', err)
+      setTestError('Verbindungsfehler: ' + String(err))
+    }
+
+    setTestRunning(false)
+  }
 
   return (
     <div>
@@ -240,10 +294,11 @@ function Dashboard({ stats, reviews, navigate }: { stats: any, reviews: Review[]
           <div>
             <div style={{ fontWeight: '600', fontSize: '16px', marginBottom: '3px', color: '#111827' }}>System-Test</div>
             <div style={{ fontSize: '13px', color: '#6b7280' }}>Erstellt eine realistische Test-Bewertung, generiert 3 KI-Antworten und sendet (falls konfiguriert) eine Test-E-Mail.</div>
+            {testError && <div style={{ fontSize: '12px', color: '#ef4444', marginTop: '6px' }}>⚠️ {testError}</div>}
+            {testDone && <div style={{ fontSize: '12px', color: '#16a34a', marginTop: '6px' }}>✅ Test-E-Mail wurde erfolgreich gesendet!</div>}
           </div>
         </div>
-        <button onClick={() => { setTestRunning(true); setTimeout(() => { setTestRunning(false); setTestDone(true) }, 2500) }}
-          disabled={testRunning}
+        <button onClick={runTest} disabled={testRunning}
           style={{ padding: '8px 18px', background: testDone ? '#dcfce7' : '#fff', border: `1px solid ${testDone ? '#86efac' : '#d1d5db'}`, borderRadius: '8px', cursor: testRunning ? 'default' : 'pointer', fontSize: '13px', fontFamily: 'inherit', color: testDone ? '#166534' : '#374151', fontWeight: '500', whiteSpace: 'nowrap' }}>
           {testRunning ? '⏳ Läuft...' : testDone ? '✅ Erfolgreich' : '🧪 Test starten'}
         </button>
