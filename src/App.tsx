@@ -713,18 +713,59 @@ function Settings() {
     googleAccountId: '', googleLocationId: '', notificationEmail: '', contactEmail: '',
   })
   const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [saveTimer, setSaveTimer] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
 
+  const getSupabase = async () => {
+    const { createClient } = await import('@supabase/supabase-js')
+    return createClient(
+      import.meta.env.VITE_PUBLIC_SUPABASE_URL,
+      import.meta.env.VITE_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    )
+  }
+
+  // Einstellungen laden — erst Supabase, dann localStorage als Fallback
   useEffect(() => {
-    const d = localStorage.getItem('reviewManagerSettings')
-    if (d) setForm(JSON.parse(d))
+    const loadData = async () => {
+      try {
+        const supabase = await getSupabase()
+        const { data } = await supabase
+          .from('settings')
+          .select('value')
+          .eq('key', 'restaurant_profile')
+          .single()
+        if (data?.value) {
+          setForm(data.value)
+          localStorage.setItem('reviewManagerSettings', JSON.stringify(data.value))
+        } else {
+          const local = localStorage.getItem('reviewManagerSettings')
+          if (local) setForm(JSON.parse(local))
+        }
+      } catch {
+        const local = localStorage.getItem('reviewManagerSettings')
+        if (local) setForm(JSON.parse(local))
+      }
+      setLoading(false)
+    }
+    loadData()
   }, [])
 
   // Auto-Save nach 1.5 Sekunden
   useEffect(() => {
+    if (loading) return
     if (saveTimer) clearTimeout(saveTimer)
-    const timer = setTimeout(() => {
+    const timer = setTimeout(async () => {
+      setSaving(true)
       localStorage.setItem('reviewManagerSettings', JSON.stringify(form))
+      try {
+        const supabase = await getSupabase()
+        await supabase.from('settings').upsert(
+          { key: 'restaurant_profile', value: form, updated_at: new Date().toISOString() },
+          { onConflict: 'key' }
+        )
+      } catch (e) { console.warn('Supabase save failed', e) }
+      setSaving(false)
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
     }, 1500)
@@ -733,7 +774,20 @@ function Settings() {
   }, [form])
 
   const update = (k: string, v: any) => { setForm(p => ({ ...p, [k]: v })) }
-  const save = () => { localStorage.setItem('reviewManagerSettings', JSON.stringify(form)); setSaved(true); setTimeout(() => setSaved(false), 2000) }
+  const save = async () => {
+    setSaving(true)
+    localStorage.setItem('reviewManagerSettings', JSON.stringify(form))
+    try {
+      const supabase = await getSupabase()
+      await supabase.from('settings').upsert(
+        { key: 'restaurant_profile', value: form, updated_at: new Date().toISOString() },
+        { onConflict: 'key' }
+      )
+    } catch (e) { console.warn('Supabase save failed', e) }
+    setSaving(false)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
 
   const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '13px', marginTop: '4px', boxSizing: 'border-box', background: '#f9fafb', fontFamily: 'inherit' }
   const lbl: React.CSSProperties = { fontSize: '13px', fontWeight: '500', display: 'block', color: '#374151' }
@@ -885,6 +939,7 @@ function Settings() {
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px', paddingBottom: '40px' }}>
         {saved && <span style={{ color: '#22c55e', fontSize: '14px', fontWeight: '500', transition: 'opacity 0.3s' }}>✅ Automatisch gespeichert</span>}
+        {saving && !saved && <span style={{ color: '#9ca3af', fontSize: '14px' }}>💾 Speichert...</span>}
         <button onClick={save} style={{ padding: '10px 28px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', fontFamily: 'inherit', fontWeight: '500' }}>Profil speichern</button>
       </div>
     </div>
