@@ -134,7 +134,7 @@ function App() {
       {/* Main */}
       <div style={{ flex: 1, overflowY: 'auto' }}>
         <div className="main-pad">
-          {page === 'dashboard' && <Dashboard stats={stats} reviews={reviews} navigate={navigate} openReview={openReview} />}
+          {page === 'dashboard' && <Dashboard stats={stats} reviews={reviews} openReview={openReview} />}
           {page === 'reviews' && !selectedReview && <Reviews reviews={reviews} onStatusChange={updateReviewStatus} onDelete={deleteReview} openReview={openReview} />}
           {page === 'reviews' && selectedReview && <ReviewDetail review={selectedReview} onStatusChange={updateReviewStatus} onBack={() => setSelectedReview(null)} />}
           {page === 'analytics' && <Analytics reviews={reviews} />}
