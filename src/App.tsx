@@ -27,6 +27,14 @@ const INITIAL_REVIEWS: Review[] = [
   { id: 7, name: 'Lisa T.', initials: 'LI', stars: 5, date: '22. Mai 2026', status: 'Ausstehend', text: 'Absolut fantastisch! Jedes Gericht war ein Kunstwerk. Der Chef ist offensichtlich sehr talentiert. Wir werden definitiv wiederkommen und Freunde mitbringen!' },
 ]
 
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+
+const formatDate = (raw: string) => {
+  const d = new Date(raw)
+  if (isNaN(d.getTime())) return raw
+  return d.toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
 // ─── SUPABASE ────────────────────────────────────────────────────────────────
 
 const getSupabase = async () => {
@@ -402,7 +410,7 @@ function Dashboard({ stats, reviews, openReview }: { stats: any, reviews: Review
                     </div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', flexShrink: 0 }}>
-                    <div style={{ fontSize: '11px', color: '#9ca3af' }}>{r.date}</div>
+                    <div style={{ fontSize: '11px', color: '#9ca3af' }}>{formatDate(r.date)}</div>
                     <StatusBadge status={r.status} />
                   </div>
                 </div>
@@ -544,7 +552,7 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview }: { reviews: R
                   <div style={{ marginTop: '3px' }}><Stars n={review.stars} /></div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', flexShrink: 0 }}>
-                  <div style={{ fontSize: '12px', color: '#9ca3af' }}>{review.date}</div>
+                  <div style={{ fontSize: '12px', color: '#9ca3af' }}>{formatDate(review.date)}</div>
                   <StatusBadge status={review.status} />
                 </div>
               </div>
@@ -688,7 +696,7 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
             <div>
               <div style={{ fontWeight: '700', fontSize: '16px', color: '#111827' }}>{review.name}</div>
               <Stars n={review.stars} />
-              <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>{review.date}</div>
+              <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>{formatDate(review.date)}</div>
             </div>
           </div>
           <StatusBadge status={review.status} />
