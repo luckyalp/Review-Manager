@@ -397,10 +397,6 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview }: { reviews: R
 
   const generateReplies = async (review: Review) => {
     console.log('generateReplies aufgerufen für:', review.id)
-    if (aiAnswers[review.id]) {
-      setOpenAI(openAI === review.id ? null : review.id)
-      return
-    }
     setAiLoading(review.id)
     setOpenAI(review.id)
     try {
