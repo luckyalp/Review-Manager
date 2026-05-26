@@ -466,6 +466,16 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview }: { reviews: R
   const [aiLoading, setAiLoading] = useState<number | null>(null)
   const [aiAnswers, setAiAnswers] = useState<{[key: number]: {label: string, text: string}[]}>({})
 
+  const sendAnswer = async (review: Review) => {
+    const text = aiAnswers[review.id]?.[selected[review.id]]?.text
+    try {
+      const supabase = await getSupabase()
+      await supabase.from('reviews').update({ selected_answer: text ?? null }).eq('id', review.id)
+    } catch (e) { console.warn('Supabase save failed', e) }
+    onStatusChange(review.id, 'Beantwortet')
+    setOpenAI(null)
+  }
+
   const settings = JSON.parse(localStorage.getItem('reviewManagerSettings') || '{}')
 
   const generateReplies = async (review: Review) => {
@@ -629,7 +639,7 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview }: { reviews: R
                     </div>
                   ))}
                   {selected[review.id] !== undefined && (
-                    <button onClick={() => { onStatusChange(review.id, 'Beantwortet'); setOpenAI(null) }}
+                    <button onClick={() => sendAnswer(review)}
                       style={{ padding: '8px 18px', background: '#22c55e', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', fontWeight: '500' }}>
                       ✅ Ausgewählte Antwort senden
                     </button>
@@ -652,6 +662,16 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
   const [selected, setSelected] = useState<number | null>(null)
 
   const settings = JSON.parse(localStorage.getItem('reviewManagerSettings') || '{}')
+
+  const sendAnswer = async () => {
+    const text = selected !== null ? aiAnswers[selected]?.text : null
+    try {
+      const supabase = await getSupabase()
+      await supabase.from('reviews').update({ selected_answer: text ?? null }).eq('id', review.id)
+    } catch (e) { console.warn('Supabase save failed', e) }
+    onStatusChange(review.id, 'Beantwortet')
+    onBack()
+  }
 
   const generateReplies = async () => {
     setAiLoading(true)
@@ -739,7 +759,7 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
               </div>
             ))}
             {selected !== null && (
-              <button onClick={() => { onStatusChange(review.id, 'Beantwortet'); onBack() }}
+              <button onClick={sendAnswer}
                 style={{ padding: '10px 24px', background: '#22c55e', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontFamily: 'inherit', fontWeight: '600', marginTop: '8px' }}>
                 ✅ Ausgewählte Antwort senden
               </button>
