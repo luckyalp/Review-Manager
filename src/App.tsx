@@ -410,10 +410,7 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview }: { reviews: R
       })
       const data = await response.json()
       if (data.success && data.answers) {
-        const answers = review.stars <= 2
-          ? [...data.answers, { label: '🔴 Persönliche Kontaktaufnahme', text: `Es tut uns aufrichtig leid von Ihrer Erfahrung zu hören. Das entspricht nicht unserem Anspruch. Wir würden uns sehr freuen, das persönlich zu klären. Bitte melden ${settings.salutation === 'Du' ? 'Dich' : 'Sie sich'} direkt bei uns: ${contactEmail || 'kontakt@restaurant.de'}` }]
-          : data.answers
-        setAiAnswers(prev => ({ ...prev, [review.id]: answers }))
+        setAiAnswers(prev => ({ ...prev, [review.id]: data.answers }))
       } else {
         // Fallback auf statische Antworten
         const fallback = [...AI_RESPONSES.map(a => ({ label: a.label, text: a.text(review.name.split(' ')[0]) })),
@@ -592,10 +589,7 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
       })
       const data = await response.json()
       if (data.success && data.answers) {
-        const answers = review.stars <= 2
-          ? [...data.answers, { label: '🔴 Persönliche Kontaktaufnahme', text: `Es tut uns aufrichtig leid von Ihrer Erfahrung zu hören. Wir würden uns sehr freuen, das persönlich zu klären. Bitte melden ${settings.salutation === 'Du' ? 'Dich' : 'Sie sich'} direkt bei uns: ${contactEmail || 'kontakt@restaurant.de'}` }]
-          : data.answers
-        setAiAnswers(answers)
+        setAiAnswers(data.answers)
       }
     } catch (e) {
       console.error(e)
