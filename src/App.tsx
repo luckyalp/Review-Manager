@@ -1000,7 +1000,7 @@ function Settings() {
   useEffect(() => {
     const merge = (source: any, base: typeof form) =>
       (Object.keys(base) as Array<keyof typeof base>).reduce((acc, key) => {
-        acc[key] = source[key] !== undefined ? source[key] : base[key]
+        (acc as any)[key] = source[key] !== undefined ? source[key] : base[key]
         return acc
       }, { ...base })
 
