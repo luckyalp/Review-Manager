@@ -88,6 +88,8 @@ ${nameRule}
 BEWERTUNG: ${rating} Sterne — kein Text.
 
 AUFGABE: 3 Antworten. Anerkennen + einladen sich zu melden. Ohne Druck.${contactEmail ? `\nKontakt: ${contactEmail}` : ''}
+Max. 3 Sätze. Keine leeren Entschuldigungen.
+NIEMALS mit 'Vielen Dank für deine/Ihre Bewertung' anfangen. NIEMALS Floskeln. Direkt und menschlich beginnen — z.B. 'Schade, dass...' oder 'Das tut uns leid...' aber niemals mit Dankesfloskeln.
 Alle drei enden mit: ${signature}
 
 AUSGABE — NUR dieses JSON:
