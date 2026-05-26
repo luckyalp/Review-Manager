@@ -252,48 +252,51 @@ function Dashboard({ stats, reviews, openReview }: { stats: any, reviews: Review
       return
     }
 
-    const salutation = settings.salutation || 'Sie'
-    const greeting = salutation === 'Du' ? 'Liebe/r Maria' : 'Sehr geehrte Frau Testmann'
-    const thanks = salutation === 'Du' ? 'Danke für Deine tolle Bewertung' : 'Vielen Dank für Ihre Bewertung'
-    const nextVisit = salutation === 'Du' ? 'Wir freuen uns auf Deinen nächsten Besuch!' : 'Wir freuen uns auf Ihren nächsten Besuch.'
-
     const testReview = {
       reviewerName: 'Maria Testmann',
       stars: 4,
       reviewText: 'Das Essen war wirklich ausgezeichnet und die Atmosphäre sehr gemütlich. Der Service war aufmerksam und freundlich. Nur die Wartezeit beim Nachtisch war etwas lang. Wir kommen gerne wieder!',
-      answers: [
-        { label: '💬 Herzlich & persönlich', text: `${greeting}, vielen herzlichen Dank für diese wunderbare Bewertung! Es freut uns sehr zu hören, dass ${salutation === 'Du' ? 'Dir' : 'Ihnen'} das Essen und die Atmosphäre bei uns gefallen haben. Den Hinweis zur Wartezeit nehmen wir ernst. ${nextVisit}` },
-        { label: '👔 Professionell & freundlich', text: `${thanks}! Wir freuen uns, dass ${salutation === 'Du' ? 'Du Dein' : 'Sie Ihr'} Erlebnis bei uns genossen haben. Den Hinweis bezüglich der Wartezeit nehmen wir dankend an. ${nextVisit}` },
-        { label: '⚡ Kurz & direkt', text: `${thanks}! Den Hinweis zur Wartezeit nehmen wir mit. ${nextVisit}` },
-      ],
-      to: email,
-      restaurantName: settings.businessName || 'Ihr Restaurant',
-      isTest: true,
-      salutation: salutation,
-      contactEmail: settings.contactEmail || '',
     }
 
     try {
-      console.log('Sending test email to:', email)
-      const response = await fetch('/api/send-email', {
+      // Schritt 1: Echte KI-Antworten generieren
+      const repliesRes = await fetch('/api/generate-replies', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(testReview),
+        body: JSON.stringify({ review: testReview, settings }),
       })
+      const repliesData = await repliesRes.json()
 
-      console.log('Response status:', response.status)
-      const data = await response.json()
-      console.log('Response data:', data)
+      if (!repliesData.success || !repliesData.answers) {
+        setTestError('KI-Generierung fehlgeschlagen: ' + (repliesData.error || 'Unbekannter Fehler'))
+        setTestRunning(false)
+        return
+      }
 
-      if (!response.ok) {
-        setTestError('Fehler: ' + (data.error || 'Unbekannter Fehler'))
+      // Schritt 2: Test-E-Mail mit echten Antworten senden
+      const emailRes = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...testReview,
+          answers: repliesData.answers,
+          to: email,
+          restaurantName: settings.businessName || 'Ihr Restaurant',
+          isTest: true,
+          salutation: settings.salutation || 'Sie',
+          contactEmail: settings.contactEmail || '',
+        }),
+      })
+      const emailData = await emailRes.json()
+
+      if (!emailRes.ok) {
+        setTestError('E-Mail-Versand fehlgeschlagen: ' + (emailData.error || 'Unbekannter Fehler'))
         setTestRunning(false)
         return
       }
 
       setTestDone(true)
     } catch (err) {
-      console.error('Fetch error:', err)
       setTestError('Verbindungsfehler: ' + String(err))
     }
 
