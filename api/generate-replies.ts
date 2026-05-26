@@ -3,29 +3,30 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY
 
 // ============================================================
-// MODUS-ERKENNUNG
+// KLASSIFIKATION
+// Entscheidet welcher Modus aktiviert wird
 // ============================================================
 
-function detectMode(rating: number, reviewText: string): 'POSITIVE_NO_TEXT' | 'RECOVERY_NO_TEXT' | 'STANDARD' {
+function classify(rating: number, reviewText: string): {
+  mode: 'EMPTY_POSITIVE' | 'EMPTY_NEGATIVE' | 'CONTENT_POSITIVE' | 'CONTENT_MIXED' | 'CONTENT_NEGATIVE'
+  hasText: boolean
+  wordCount: number
+} {
   const wordCount = reviewText.trim().split(/\s+/).filter(Boolean).length
-  const hasText = wordCount >= 10
+  const hasText = wordCount >= 8
 
-  if (!hasText && rating >= 4) return 'POSITIVE_NO_TEXT'
-  if (!hasText && rating <= 2) return 'RECOVERY_NO_TEXT'
-  if (!hasText && rating <= 2 && wordCount < 10) return 'RECOVERY_NO_TEXT'
-
-  return 'STANDARD'
+  if (!hasText && rating >= 4) return { mode: 'EMPTY_POSITIVE', hasText, wordCount }
+  if (!hasText && rating <= 2) return { mode: 'EMPTY_NEGATIVE', hasText, wordCount }
+  if (rating >= 4) return { mode: 'CONTENT_POSITIVE', hasText, wordCount }
+  if (rating === 3) return { mode: 'CONTENT_MIXED', hasText, wordCount }
+  return { mode: 'CONTENT_NEGATIVE', hasText, wordCount }
 }
 
 // ============================================================
-// PROMPT BUILDER — Voice of Ton
+// PROMPT BUILDER
 // ============================================================
 
-function buildPrompt(
-  reviewText: string,
-  rating: number,
-  settings: any
-): string {
+function buildPrompt(reviewText: string, rating: number, settings: any): string {
   const {
     businessName = 'das Restaurant',
     cuisineType = '',
@@ -47,267 +48,209 @@ function buildPrompt(
 
   const duSie = salutation === 'Du' ? 'Du/Dein (Duzen)' : 'Sie/Ihr (Siezen)'
   const signature = responseSignature || `Das Team von ${businessName}`
-  const mode = detectMode(rating, reviewText)
+  const { mode } = classify(rating, reviewText)
 
-  // Restaurantprofil Block
   const profileBlock = [
-    `Name: ${businessName}`,
-    description        && `Beschreibung: ${description}`,
-    restaurantType     && `Typ: ${restaurantType}`,
-    cuisineType        && `Küche: ${cuisineType}`,
-    priceRange         && `Preisklasse: ${priceRange}`,
-    targetAudience     && `Zielgruppe: ${targetAudience}`,
-    foundedYear        && `Gegründet: ${foundedYear}`,
-    signatureDishes    && `Signature-Gerichte: ${signatureDishes}`,
-    dietaryOptions     && `Ernährungsoptionen: ${dietaryOptions}`,
-    uniqueSellingPoints && `Was uns besonders macht: ${uniqueSellingPoints}`,
-    brandValues        && `Unsere Werte: ${brandValues}`,
-    preferredPhrases   && `Bevorzugte Formulierungen: ${preferredPhrases}`,
-    avoidPhrases       && `Zu vermeidende Formulierungen: ${avoidPhrases}`,
-    contactEmail       && `Kontakt-E-Mail: ${contactEmail}`,
+    `Restaurant: ${businessName}`,
+    description         && `Beschreibung: ${description}`,
+    restaurantType      && `Typ: ${restaurantType}`,
+    cuisineType         && `Küche: ${cuisineType}`,
+    priceRange          && `Preisklasse: ${priceRange}`,
+    targetAudience      && `Zielgruppe: ${targetAudience}`,
+    foundedYear         && `Gegründet: ${foundedYear}`,
+    signatureDishes     && `Spezialitäten: ${signatureDishes}`,
+    dietaryOptions      && `Ernährungsoptionen: ${dietaryOptions}`,
+    uniqueSellingPoints && `Besonderheiten: ${uniqueSellingPoints}`,
+    brandValues         && `Werte: ${brandValues}`,
+    preferredPhrases    && `Bevorzugte Formulierungen: ${preferredPhrases}`,
+    avoidPhrases        && `Verbotene Formulierungen: ${avoidPhrases}`,
+    contactEmail        && `Kontakt: ${contactEmail}`,
   ].filter(Boolean).join('\n')
 
   // -------------------------------------------------------
-  // MODUS A: Positiv, kein Text
+  // TON-REGEL (gilt für alle Modi)
+  // Atlas-Prinzip: ruhig, direkt, verlässlich
   // -------------------------------------------------------
-  if (mode === 'POSITIVE_NO_TEXT') {
+  const tonRegel = `
+## TON-REGEL (immer gültig)
+
+Schreibe wie jemand der weiß was passiert ist, es ernst nimmt, und bereits weiß was als nächstes passiert.
+Ruhig. Direkt. Verlässlich. Nicht kalt, nicht überschwänglich. Einfach da.
+
+NIEMALS diese Sätze:
+- "Wir nehmen Ihr/dein Feedback ernst"
+- "Vielen Dank für Ihre/deine Bewertung"  
+- "Wir bitten um Verständnis"
+- "Wir bedauern sehr"
+- "Das ist uns eine Herzensangelegenheit"
+- "Wir arbeiten ständig daran"
+
+Kein Marketington. Keine künstliche Emotion. Keine Entschuldigungs-Kaskaden.
+Anredeform: ${duSie}
+Signatur: ${signature}
+`
+
+  // -------------------------------------------------------
+  // MODUS: EMPTY POSITIVE (4-5 Sterne, kein Text)
+  // -------------------------------------------------------
+  if (mode === 'EMPTY_POSITIVE') {
     return `
-Du schreibst eine kurze Antwort auf eine positive Google-Bewertung ohne Text für das Restaurant "${businessName}".
-Antworte auf Deutsch. Verwende: ${duSie}
+Du schreibst eine kurze Antwort auf eine positive Bewertung ohne Text.
+Antworte auf Deutsch.
+${tonRegel}
 
 ## RESTAURANT-PROFIL
 ${profileBlock}
 
 ## AUFGABE
-Der Gast hat ${rating} Sterne gegeben aber nichts geschrieben.
-Schreibe 3 kurze, herzliche Antworten. Maximal 2-3 Sätze je Antwort.
-Kein "Vielen Dank für Ihr wertvolles Feedback". Kein Korporativ-Sprech.
-Menschlich, direkt, warm. Wie jemand der sich wirklich freut.
-Jede Antwort endet mit: ${signature}
+${rating} Sterne, kein Text.
+Schreibe 3 kurze Antworten. Maximal 2 Sätze je Antwort.
+Kurz, echt, direkt. Kein "Vielen Dank für Ihre Bewertung".
 
-## AUSGABE-FORMAT
-Antworte NUR mit diesem JSON — kein Text davor oder danach:
-
+## AUSGABE — NUR dieses JSON, kein Text davor oder danach:
 {
   "variant1": { "label": "Kurz & herzlich", "text": "..." },
   "variant2": { "label": "Kurz & herzlich", "text": "..." },
   "variant3": { "label": "Kurz & herzlich", "text": "..." }
 }
 
-## DIE BEWERTUNG
-Sterne: ${rating} von 5
-Bewertungstext: (kein Text)
+Bewertung: ${rating} Sterne, kein Text.
 `
   }
 
   // -------------------------------------------------------
-  // MODUS B: Negativ, kein oder kaum Text
+  // MODUS: EMPTY NEGATIVE (1-2 Sterne, kein Text)
   // -------------------------------------------------------
-  if (mode === 'RECOVERY_NO_TEXT') {
+  if (mode === 'EMPTY_NEGATIVE') {
     return `
-Du schreibst eine Recovery-Antwort auf eine negative Google-Bewertung ohne ausreichenden Text für das Restaurant "${businessName}".
-Antworte auf Deutsch. Verwende: ${duSie}
+Du schreibst eine Antwort auf eine negative Bewertung ohne Text.
+Antworte auf Deutsch.
+${tonRegel}
 
 ## RESTAURANT-PROFIL
 ${profileBlock}
 
 ## AUFGABE
-Der Gast hat ${rating} Sterne gegeben aber kaum oder nichts geschrieben.
+${rating} Sterne, kein Text.
 Schreibe 3 Antworten die:
 - Anerkennen dass etwas nicht gestimmt hat
-- Ehrlich sagen dass wir gerne mehr wüssten
-- Den Gast einladen sich direkt zu melden — ohne Druck
-- Ruhig, menschlich, ohne Drama bleiben
+- Einladen sich zu melden — ohne Druck
+- Ruhig und direkt bleiben
 ${contactEmail ? `- Kontakt erwähnen: ${contactEmail}` : ''}
+Maximal 3 Sätze. Kein Kriechen.
 
-Maximal 3-4 Sätze. Kein Kriechen. Keine leeren Entschuldigungen.
-Jede Antwort endet mit: ${signature}
-
-VERBOTEN: Diskussion, Rechtfertigung, "Wir nehmen Feedback ernst", Bitte um Löschung.
-
-## AUSGABE-FORMAT
-Antworte NUR mit diesem JSON — kein Text davor oder danach:
-
+## AUSGABE — NUR dieses JSON, kein Text davor oder danach:
 {
   "variant1": { "label": "Einladend & ruhig", "text": "..." },
   "variant2": { "label": "Einladend & ruhig", "text": "..." },
   "variant3": { "label": "Einladend & ruhig", "text": "..." }
 }
 
-## DIE BEWERTUNG
-Sterne: ${rating} von 5
-Bewertungstext: "${reviewText || '(kein Text)'}"
+Bewertung: ${rating} Sterne, kein Text.
 `
   }
 
   // -------------------------------------------------------
-  // MODUS C: Standard — volles Voice of Ton System
+  // MODI MIT TEXT: POSITIVE / MIXED / NEGATIVE
   // -------------------------------------------------------
-  return `
-Du bist ein Kommunikationsexperte für das Restaurant "${businessName}".
-Deine Aufgabe: Schreibe 3 unterschiedliche Antworten auf eine Google-Bewertung.
-Antworte ausschließlich auf Deutsch.
-Verwende durchgehend die Anredeform: ${duSie}
 
----
+  let aufgabe = ''
+
+  if (mode === 'CONTENT_POSITIVE') {
+    aufgabe = `
+## AUFGABE
+Positive Bewertung. Fokus auf Bestätigung + Einladung.
+
+STRUKTUR:
+1. Name ansprechen (wenn bekannt)
+2. Konkretes Lob aufnehmen — exakt was der Gast positiv erwähnt hat
+3. Kurzer Dank + Einladung wiederzukommen
+
+KEIN Wiederholen von Problemen. KEIN übertriebener Dank.
+`
+  }
+
+  if (mode === 'CONTENT_MIXED') {
+    aufgabe = `
+## AUFGABE
+Gemischte Bewertung (3 Sterne). Balance zwischen Problem und Positivem.
+
+STRUKTUR — IMMER in dieser Reihenfolge:
+1. Name ansprechen (wenn bekannt)
+2. Problem spiegeln — neutral formuliert, nie als Beschwerde wiederholen
+   Beispiel: nicht "Sie mussten warten" sondern "Wenn es zu einer Wartezeit kommt"
+3. Positives aufnehmen
+4. Kurze ruhige Einordnung (nur wenn ein konkreter Kontext existiert)
+
+WICHTIG: Erst Erlebnis, dann Einordnung — nie umgekehrt.
+`
+  }
+
+  if (mode === 'CONTENT_NEGATIVE') {
+    aufgabe = `
+## AUFGABE
+Negative Bewertung (1-2 Sterne). Deeskalation + Einladung zur direkten Kontaktaufnahme.
+
+STRUKTUR:
+1. Name ansprechen (wenn bekannt)  
+2. Das Erlebte kurz anerkennen — OHNE die Fehler aufzulisten
+   Nicht: "Eine Stunde warten, falsches Essen, unhöfliches Personal"
+   Sondern: einen Satz der zeigt dass verstanden wurde was passiert ist
+3. Klare Haltung: das entspricht nicht unserem Anspruch
+4. Einladung sich zu melden
+${contactEmail ? `   Kontakt: ${contactEmail}` : ''}
+
+VERBOTEN:
+- Fehler aufzählen (der Gast weiß was passiert ist)
+- Endlose Entschuldigungen
+- Defensive Erklärungen
+- "Das war kein guter Abend" (zu weich)
+- "Komplettes Versagen" (zu dramatisch)
+`
+  }
+
+  return `
+Du schreibst 3 verschiedene Antworten auf eine Google-Bewertung für "${businessName}".
+Antworte auf Deutsch.
+${tonRegel}
 
 ## RESTAURANT-PROFIL
 ${profileBlock}
 
----
+${aufgabe}
 
-## KERN-PHILOSOPHIE
+## DIE 3 VARIANTEN
 
-Der Gast der sich die Mühe macht eine Bewertung zu schreiben sucht eines: gehört werden.
+Alle drei basieren auf derselben Analyse.
+Sie unterscheiden sich NUR in Haltung und Länge:
 
-Das einzige Ziel einer Antwort ist es, Gefühle zu verändern — nicht Fakten zu korrigieren.
+VARIANTE 1 — Nah & direkt
+Klingt wie der Besitzer persönlich. Maximal 3 Sätze.
 
-Jede Antwort folgt diesem Weg:
-Empathie → Verbindung → Vertrauen
+VARIANTE 2 — Ruhig & professionell  
+Klar, respektvoll, verlässlich. Maximal 3 Sätze.
 
-Wichtig: Antworten wirken nicht nur auf den ursprünglichen Reviewer.
-Sie wirken auf Mitleser, zukünftige Gäste, die soziale Wahrnehmung des Restaurants.
-Schreibe immer für beide.
-
----
-
-## SCHRITT 1: BEWERTUNG ANALYSIEREN
-
-Erkenne die Emotion hinter der Bewertung:
-- Frustration (Ablauf, Service, Wartezeit)
-- Ärger (echter Fehler, Grenzüberschreitung)
-- Enttäuschung (Erwartung nicht erfüllt)
-- Unsicherheit (Missverständnis, unvollständige Info)
-- Stille Enttäuschung (höflich, kein Drama — aber Rückzug, hohes Abwanderungsrisiko)
-- Neutral-kritisch (sachlich, keine Emotion)
-- Positiv (Lob, Begeisterung)
-
-Risiko-Level:
-- Low Risk → kleine Irritation, keine Eskalation
-- Medium Risk → klarer Fehler + Emotion
-- High Risk → aggressive Sprache, persönliche Angriffe
-
----
-
-## SCHRITT 2: DAS RICHTIGE MUSTER WÄHLEN
-
-### Muster 1 — Mirror → Validate → Contain
-Für: Frustration, operative Probleme, Wartezeit, Service
-
-### Muster 2 — Mirror → Context Expansion → Stabilize
-Für: Missverständnisse, unvollständige Wahrnehmung
-Wichtig: Nie "Du hast es falsch verstanden" — neue Perspektive hinzufügen
-
-### Muster 3 — Mirror → Responsibility Absorption → Repair Orientation
-Für: Echte Fehler, Qualitätsprobleme, berechtigte Kritik
-
-### Muster 4 — Mirror → Reframing of Meaning → Identity Signal
-Für: Dinge die Qualitätsmerkmale sind, keine Fehler
-⚠️ NUR wenn das Reframing objektiv wahr ist
-
-Referenzbeispiel:
-Bewertung: "Das Brisket war super — aber ich fand ein BLATT in meinen Baked Beans."
-Antwort: "Das war ein Lorbeerblatt — ein Zeichen dafür, dass jemand Zeit und Mühe investiert hat, das Essen frisch zu kochen. Wir verwenden nie Dosenware. Es tut mir leid, dass es dich überrascht hat."
-
-### Muster 5 — Mirror → De-escalation → Closure
-Für: Aggressive Bewertungen, emotionale Überreaktionen
-
----
-
-## SCHRITT 3: MIRROR-TIEFE
-
-Level 1 — schwach, vermeiden: "Wir verstehen Ihre Frustration."
-Level 2 — mittel: "Sie mussten lange warten."
-Level 3 — stark, anstreben: "Sie kamen für einen entspannten Abend und haben stattdessen etwas erlebt, das sich nicht wie Willkommen angefühlt hat."
-
-→ Je stärker die Emotion, desto tiefer der Mirror.
-
----
-
-## SCHRITT 4: REFRAMING-CHECK
-
-Erlaubt: objektiver Kontext fehlt / Missverständnis / erklärbare Logik existiert
-Verboten: reine subjektive Erfahrung / keine Zusatzinfo / Gefahr valide Wahrnehmung umzudeuten
-
----
-
-## SCHRITT 5: TON & STIL
-
-Natürlichkeit ist das oberste Gebot.
-Kein "Sehr geehrter Herr/Frau", kein "Vielen Dank für Ihr wertvolles Feedback".
-Wie ein Mensch schreibt der wirklich da ist.
-
-Humor erlaubt als Haltung — nie bei echter Enttäuschung oder echtem Fehler.
-
-Referenzstil:
-- "Ich glaube du hast das Restaurant verwechselt. Wir sind in der 1. Etage 🙈" → leicht, menschlich
-- "Das haben wir selbst auch wahrgenommen." → ehrlich, ohne Drama
-- "Wir setzen auf Qualität und Frische, das hat auch seinen Preis." → klar, mit Haltung
-
-DIESE EXAKTEN SÄTZE SIND ABSOLUT VERBOTEN — NIEMALS VERWENDEN:
-- "nehmen wir sehr ernst"
-- "nehmen wir ernst"
-- "ist uns wichtig"
-- "Wir nehmen Ihr/dein Feedback ernst"
-- "Vielen Dank für Ihr/dein Feedback"
-- "Vielen Dank für Ihre/deine Bewertung"
-- "Wir nehmen das zur Kenntnis"
-- "Das ist uns eine Herzensangelegenheit"
-- "Wir arbeiten ständig daran"
-- "Wir werden das intern prüfen"
-
-Wenn du einen dieser Sätze schreiben willst — stopp. Schreib stattdessen was konkret passiert oder was konkret gefühlt wird.
-
-Außerdem verboten:
-- Unterwürfigkeit, endlose Entschuldigungen
-- Defensivität, Rechtfertigung
-- Das Wort "eigentlich"
-- Annahmen über den Gast die nicht in der Bewertung stehen
-
----
-
-## SCHRITT 6: DIE 3 VARIANTEN
-
-VARIANTE 1 — Nah & persönlich
-Klingt wie der Besitzer selbst. Echte Emotion, direkte Verbindung.
-MAXIMAL 4 SÄTZE. Nicht mehr.
-
-VARIANTE 2 — Freundlich & professionell
-Warm aber nicht intim. Respektvoll, klar, menschlich.
-MAXIMAL 4 SÄTZE. Nicht mehr.
-
-VARIANTE 3 — Klar & knapp
-MAXIMAL 3 SÄTZE. Kein Wort zu viel.
+VARIANTE 3 — Kurz & klar
+2 Sätze. Nicht mehr.
 
 Alle drei enden mit: ${signature}
 
----
-
 ## QUALITÄTSCHECK
-
-- Würde der Gast denken: "Die haben mich wirklich gehört"?
-- Würde ein Mitleser denken: "Da gehe ich hin"?
+Vor jeder Variante fragen:
+- Würde der Gast denken "die haben verstanden was passiert ist"?
 - Klingt es wie ein Mensch oder wie eine Vorlage?
-- Gibt es ein Wort das ich streichen könnte ohne Verlust? → Streichen.
+- Gibt es ein Wort das gestrichen werden kann? → Streichen.
 
----
-
-## AUSGABE-FORMAT
-
-Antworte NUR mit diesem JSON — kein Text davor oder danach:
-
+## AUSGABE — NUR dieses JSON, kein Text davor oder danach:
 {
-  "variant1": { "label": "Nah & persönlich", "text": "..." },
-  "variant2": { "label": "Freundlich & professionell", "text": "..." },
-  "variant3": { "label": "Klar & knapp", "text": "..." }
+  "variant1": { "label": "Nah & direkt", "text": "..." },
+  "variant2": { "label": "Ruhig & professionell", "text": "..." },
+  "variant3": { "label": "Kurz & klar", "text": "..." }
 }
 
----
-
 ## DIE BEWERTUNG
-
 Sterne: ${rating} von 5
-Bewertungstext: "${reviewText}"
+Text: "${reviewText}"
 `
 }
 
@@ -340,7 +283,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 3000 }
+          generationConfig: { temperature: 0.7, maxOutputTokens: 2000 }
         })
       }
     )
@@ -353,7 +296,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
 
-    // JSON extrahieren
     let jsonStr = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
     const startIdx = jsonStr.indexOf('{')
     const endIdx = jsonStr.lastIndexOf('}')
@@ -365,12 +307,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     jsonStr = jsonStr.substring(startIdx, endIdx + 1)
     const parsed = JSON.parse(jsonStr)
 
-    // In Array-Format umwandeln das die App erwartet
     const answers = [
-      { label: parsed.variant1?.label || '💬 Nah & persönlich',        text: parsed.variant1?.text || '' },
-      { label: parsed.variant2?.label || '👔 Freundlich & professionell', text: parsed.variant2?.text || '' },
-      { label: parsed.variant3?.label || '⚡ Klar & knapp',             text: parsed.variant3?.text || '' },
+      { label: parsed.variant1?.label || 'Nah & direkt',          text: parsed.variant1?.text || '' },
+      { label: parsed.variant2?.label || 'Ruhig & professionell', text: parsed.variant2?.text || '' },
+      { label: parsed.variant3?.label || 'Kurz & klar',           text: parsed.variant3?.text || '' },
     ]
+
+    // 4. Variante bei 1-2 Sternen
+    if (review.stars <= 2) {
+      const contactEmail = settings?.contactEmail || 'kontakt@restaurant.de'
+      const duSie = settings?.salutation === 'Du' ? 'Dich' : 'Sie sich'
+      answers.push({
+        label: '🔴 Persönliche Kontaktaufnahme',
+        text: `Es tut uns leid von dieser Erfahrung zu hören. Bitte melde${settings?.salutation === 'Du' ? ' Dich' : 'n Sie sich'} direkt bei uns: ${contactEmail}`
+      })
+    }
 
     return res.status(200).json({ success: true, answers })
 
