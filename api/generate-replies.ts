@@ -2,10 +2,6 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
 
-// ============================================================
-// KLASSIFIKATION
-// ============================================================
-
 function classify(rating: number, reviewText: string) {
   const wordCount = reviewText.trim().split(/\s+/).filter(Boolean).length
   const hasText = wordCount >= 8
@@ -16,11 +12,7 @@ function classify(rating: number, reviewText: string) {
   return 'CONTENT_NEGATIVE'
 }
 
-// ============================================================
-// V2 ENGINE PROMPT
-// ============================================================
-
-function buildPrompt(reviewText: string, rating: number, settings: any): string {
+function buildPrompt(reviewText: string, rating: number, reviewerName: string, settings: any): string {
   const {
     businessName = 'das Restaurant',
     cuisineType = '',
@@ -40,6 +32,17 @@ function buildPrompt(reviewText: string, rating: number, settings: any): string 
   const duSie = salutation === 'Du' ? 'Du/Dein (Duzen)' : 'Sie/Ihr (Siezen)'
   const signature = responseSignature || `Das Team von ${businessName}`
   const mode = classify(rating, reviewText)
+  const firstName = reviewerName ? reviewerName.split(' ')[0] : ''
+
+  const nameRule = firstName
+    ? `PERSONALISIERUNG:
+- Vorname des Gastes: ${firstName}
+- Variante A: KEIN Name — bleibt neutral
+- Variante B: beginnt mit "Hallo ${firstName}," — direkt, menschlich
+- Variante C: beginnt mit "${firstName}," — subtil, würdevoll
+- Name NIE mehrfach wiederholen — nur am Anfang
+- Kein CRM-Gefühl`
+    : `PERSONALISIERUNG: Kein Name bekannt — ohne persönliche Anrede`
 
   const context = [
     `Restaurant: ${businessName}`,
@@ -62,11 +65,11 @@ Antworte auf Deutsch. Anredeform: ${duSie}
 RESTAURANT-KONTEXT:
 ${context}
 
+${nameRule}
+
 BEWERTUNG: ${rating} Sterne — kein Text.
 
-AUFGABE:
-Erstelle 3 kurze Antworten (max. 2 Sätze) auf eine positive Bewertung ohne Text.
-Natürlich, menschlich, keine Floskeln wie "Vielen Dank für Ihre Bewertung".
+AUFGABE: 3 kurze herzliche Antworten (max. 2 Sätze). Keine Floskeln.
 Alle drei enden mit: ${signature}
 
 AUSGABE — NUR dieses JSON:
@@ -80,12 +83,11 @@ Antworte auf Deutsch. Anredeform: ${duSie}
 RESTAURANT-KONTEXT:
 ${context}
 
+${nameRule}
+
 BEWERTUNG: ${rating} Sterne — kein Text.
 
-AUFGABE:
-Erstelle 3 kurze Antworten. Anerkenne dass etwas nicht gestimmt hat.
-Lade den Gast ein sich zu melden — ohne Druck.${contactEmail ? `\nKontakt: ${contactEmail}` : ''}
-Max. 3 Sätze. Keine leeren Entschuldigungen.
+AUFGABE: 3 Antworten. Anerkennen + einladen sich zu melden. Ohne Druck.${contactEmail ? `\nKontakt: ${contactEmail}` : ''}
 Alle drei enden mit: ${signature}
 
 AUSGABE — NUR dieses JSON:
@@ -93,7 +95,6 @@ AUSGABE — NUR dieses JSON:
   }
 
   return `Du bist ein Response-Engine-System für Hospitality-Bewertungen.
-Deine Aufgabe ist nicht, Texte zu schreiben, sondern aus einem Input-System drei fertige Antwortvarianten zu generieren.
 Antworte auf Deutsch. Anredeform: ${duSie}
 
 ---
@@ -103,42 +104,39 @@ ${context}
 
 ---
 
+${nameRule}
+
+---
+
 BEWERTUNG:
 Sterne: ${rating} von 5
 Text: "${reviewText}"
 
 ---
 
-DEINE AUFGABE — führe diese 3 Schritte aus:
+DEINE AUFGABE:
 
 SCHRITT 1: ANALYSE
-- Emotion des Gastes erkennen (Frustration / Ärger / Enttäuschung / stille Enttäuschung / neutral-kritisch / positiv)
-- Art des Problems bestimmen (operativ / Erwartung / Missverständnis / echter Fehler / kein Problem)
+- Emotion: Frustration / Ärger / Enttäuschung / stille Enttäuschung / neutral-kritisch / positiv
+- Problemtyp: operativ / Erwartung / Missverständnis / echter Fehler / kein Problem
 - Spannungsniveau: Low / Medium / High
 
 SCHRITT 2: ENTSCHEIDUNG
-- Erklärlevel festlegen:
-  0 = keine Erklärung nötig
-  1 = 1 Satz Kontext
-  2 = klare neutrale Systembeschreibung
-- Ist Reframing erlaubt? (NUR wenn objektiver Kontext fehlt oder Missverständnis vorliegt)
-- Verantwortung übernehmen? (NUR bei echtem Fehler)
+- Erklärlevel: 0 = keine Erklärung / 1 = 1 Satz Kontext / 2 = neutrale Systembeschreibung
+- Reframing erlaubt? NUR wenn objektiver Kontext fehlt oder Missverständnis
+- Verantwortung? NUR bei echtem Fehler
 
-SCHRITT 3: 3 VARIANTEN ERZEUGEN
-Alle drei Varianten:
-- enthalten DENSELBEN Inhalt (gleiche Bedeutung, gleiche Strategie)
-- unterscheiden sich NUR in Ton, Rhythmus und Sprachstil
-- fügen KEINE neuen Informationen hinzu
+SCHRITT 3: 3 VARIANTEN
+Alle drei: gleiche Bedeutung, gleiche Strategie — nur Ton und Rhythmus unterschiedlich.
 
 VARIANTE A — Calm Professional
-Ruhig, sachlich, präzise, souverän. Minimale Emotionalität.
+Ruhig, sachlich, präzise. Kein Name. Minimale Emotionalität.
 
 VARIANTE B — Warm Hospitality
-Menschlich, einladend, leicht wärmer, weichere Sprache.
+Menschlich, einladend, wärmer. Beginnt mit "Hallo ${firstName || '[Name]'}," wenn Name bekannt.
 
 VARIANTE C — Reflective Elegant
-Ruhig-intelligent, höhere Bedeutungsdichte, atmosphärisch, würdevoll.
-Mehr Wahrnehmung und implizite Bedeutung pro Satz — nicht mehr Emotion.
+Bedeutungsdicht, atmosphärisch, würdevoll. Beginnt mit "${firstName || '[Name]'}," wenn Name bekannt.
 
 ---
 
@@ -146,36 +144,28 @@ ABSOLUTE VERBOTE:
 - NIEMALS: "Wir nehmen Ihr/dein Feedback ernst"
 - NIEMALS: "Vielen Dank für Ihre/deine Bewertung"
 - NIEMALS: "Wir bitten um Verständnis"
-- NIEMALS: "Das ist uns eine Herzensangelegenheit"
-- Keine Rechtfertigungen
-- Keine Überentschuldigungen
-- Keine defensiven Formulierungen
+- Keine Rechtfertigungen, keine Überentschuldigungen
 - Nicht mit dem Problem anfangen — erst den Menschen abholen
 
-REFERENZTON (echte Antworten von Henry's Sandbar):
-- "Ich glaube du hast das Restaurant verwechselt. Wir sind in der 1. Etage 🙈" → leicht, menschlich
+REFERENZTON:
 - "Das haben wir selbst auch wahrgenommen." → ehrlich, ohne Drama
 - "Wir setzen auf Qualität und Frische, das hat auch seinen Preis." → klar, mit Haltung
+- "Als kleine Wiedergutmachung laden wir Sie herzlich ein." → warm, konkret
 
-LORBEERBLATT-PRINZIP:
-Wenn etwas wie ein Problem aussieht aber eigentlich ein Qualitätsmerkmal ist →
-zeige die Bedeutung dahinter ohne zu rechtfertigen.
+LORBEERBLATT-PRINZIP: Wenn etwas wie ein Problem aussieht aber ein Qualitätsmerkmal ist →
+zeige die Bedeutung ohne zu rechtfertigen.
 
-Alle drei Varianten enden mit: ${signature}
+Alle drei enden mit: ${signature}
 
 ---
 
-AUSGABE — NUR dieses JSON, kein Text davor oder danach:
+AUSGABE — NUR dieses JSON:
 {
   "variant1": {"label": "Ruhig & klar", "text": "..."},
   "variant2": {"label": "Warm & einladend", "text": "..."},
   "variant3": {"label": "Atmosphärisch", "text": "..."}
 }`
 }
-
-// ============================================================
-// HAUPTFUNKTION
-// ============================================================
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -191,6 +181,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const prompt = buildPrompt(
     review.reviewText || '',
     review.stars || 3,
+    review.reviewerName || '',
     settings
   )
 
