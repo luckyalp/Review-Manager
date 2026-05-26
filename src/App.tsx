@@ -396,6 +396,10 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview }: { reviews: R
 
   const generateReplies = async (review: Review) => {
     console.log('generateReplies aufgerufen für:', review.id)
+    if (aiAnswers[review.id]) {
+      setOpenAI(openAI === review.id ? null : review.id)
+      return
+    }
     setAiLoading(review.id)
     setOpenAI(review.id)
     try {
@@ -417,7 +421,8 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview }: { reviews: R
         setAiAnswers(prev => ({ ...prev, [review.id]: fallback }))
       }
     } catch {
-      const fallback = AI_RESPONSES.map(a => ({ label: a.label, text: a.text(review.name.split(' ')[0]) }))
+      const fallback = [...AI_RESPONSES.map(a => ({ label: a.label, text: a.text(review.name.split(' ')[0]) })),
+        ...(review.stars <= 2 ? [{ label: '🔴 Persönliche Kontaktaufnahme', text: `Es tut uns leid. Bitte melden Sie sich direkt bei uns: ${settings.contactEmail || 'kontakt@restaurant.de'}` }] : [])]
       setAiAnswers(prev => ({ ...prev, [review.id]: fallback }))
     }
     setAiLoading(null)
@@ -540,7 +545,7 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview }: { reviews: R
               ) : (
                 <>
                   <div style={{ fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '10px' }}>
-                    {review.stars <= 2 ? '4 KI-Antwortvorschläge — bitte auswählen:' : '3 KI-Antwortvorschläge — bitte auswählen:'}
+                    {(aiAnswers[review.id]?.length ?? 0)} KI-Antwortvorschläge — bitte auswählen:
                   </div>
                   {(aiAnswers[review.id] || []).map((a, i) => (
                     <div key={i} onClick={() => setSelected({...selected, [review.id]: i})}
@@ -588,9 +593,16 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
       const data = await response.json()
       if (data.success && data.answers) {
         setAiAnswers(data.answers)
+      } else {
+        const fallback = [...AI_RESPONSES.map(a => ({ label: a.label, text: a.text(review.name.split(' ')[0]) })),
+          ...(review.stars <= 2 ? [{ label: '🔴 Persönliche Kontaktaufnahme', text: `Es tut uns leid. Bitte melden Sie sich direkt bei uns: ${settings.contactEmail || 'kontakt@restaurant.de'}` }] : [])]
+        setAiAnswers(fallback)
       }
     } catch (e) {
       console.error(e)
+      const fallback = [...AI_RESPONSES.map(a => ({ label: a.label, text: a.text(review.name.split(' ')[0]) })),
+        ...(review.stars <= 2 ? [{ label: '🔴 Persönliche Kontaktaufnahme', text: `Es tut uns leid. Bitte melden Sie sich direkt bei uns: ${settings.contactEmail || 'kontakt@restaurant.de'}` }] : [])]
+      setAiAnswers(fallback)
     }
     setAiLoading(false)
   }
@@ -641,7 +653,7 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
         {aiAnswers.length > 0 && (
           <>
             <div style={{ fontWeight: '600', fontSize: '15px', marginBottom: '14px', color: '#111827' }}>
-              {review.stars <= 2 ? '4' : '3'} KI-Antwortvorschläge — bitte auswählen:
+              {aiAnswers.length} KI-Antwortvorschläge — bitte auswählen:
             </div>
             {aiAnswers.map((a, i) => (
               <div key={i} onClick={() => setSelected(i)}
