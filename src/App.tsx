@@ -393,7 +393,6 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview }: { reviews: R
   const [aiAnswers, setAiAnswers] = useState<{[key: number]: {label: string, text: string}[]}>({})
 
   const settings = JSON.parse(localStorage.getItem('reviewManagerSettings') || '{}')
-  const contactEmail = settings.contactEmail || ''
 
   const generateReplies = async (review: Review) => {
     console.log('generateReplies aufgerufen für:', review.id)
@@ -574,7 +573,6 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
   const [selected, setSelected] = useState<number | null>(null)
 
   const settings = JSON.parse(localStorage.getItem('reviewManagerSettings') || '{}')
-  const contactEmail = settings.contactEmail || ''
 
   const generateReplies = async () => {
     setAiLoading(true)
