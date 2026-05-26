@@ -17,16 +17,12 @@ function buildPrompt(reviewText: string, rating: number, reviewerName: string, s
     businessName = 'das Restaurant',
     cuisineType = '',
     uniqueSellingPoints = '',
-    brandValues = '',
-    preferredPhrases = '',
-    avoidPhrases = '',
     responseSignature = '',
     salutation = 'Sie',
     contactEmail = '',
     description = '',
     restaurantType = '',
     priceRange = '',
-    signatureDishes = '',
   } = settings || {}
 
   const duSie = salutation === 'Du' ? 'Du/Dein (Duzen)' : 'Sie/Ihr (Siezen)'
@@ -50,11 +46,7 @@ function buildPrompt(reviewText: string, rating: number, reviewerName: string, s
     restaurantType      && `Typ: ${restaurantType}`,
     cuisineType         && `Küche: ${cuisineType}`,
     priceRange          && `Preisklasse: ${priceRange}`,
-    signatureDishes     && `Spezialitäten: ${signatureDishes}`,
     uniqueSellingPoints && `Besonderheiten: ${uniqueSellingPoints}`,
-    brandValues         && `Werte: ${brandValues}`,
-    preferredPhrases    && `Bevorzugte Formulierungen: ${preferredPhrases}`,
-    avoidPhrases        && `Verbotene Formulierungen: ${avoidPhrases}`,
     contactEmail        && `Kontakt-E-Mail: ${contactEmail}`,
   ].filter(Boolean).join('\n')
 

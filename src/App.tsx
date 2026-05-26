@@ -53,6 +53,11 @@ function App() {
   const [reviews, setReviews] = useState<Review[]>([])
   const [reviewsLoading, setReviewsLoading] = useState(true)
   const [selectedReview, setSelectedReview] = useState<Review | null>(null)
+  const [onboardingStep, setOnboardingStep] = useState<number | null>(null)
+  const [onboardingData, setOnboardingData] = useState({
+    businessName: '', restaurantType: '', priceRange: '',
+    salutation: 'Sie', uniqueSellingPoints: '', contactEmail: '',
+  })
 
   // Bewertungen aus Supabase laden
   useEffect(() => {
@@ -88,6 +93,26 @@ function App() {
     loadReviews()
   }, [])
 
+  useEffect(() => {
+    const checkOnboarding = async () => {
+      try {
+        const supabase = await getSupabase()
+        const { data } = await supabase
+          .from('settings').select('value').eq('key', 'restaurant_profile').single()
+        if (data?.value?.businessName) { setOnboardingStep(0); return }
+      } catch { /* ignore */ }
+      try {
+        const local = localStorage.getItem('reviewManagerSettings')
+        if (local) {
+          const parsed = JSON.parse(local)
+          if (parsed?.businessName) { setOnboardingStep(0); return }
+        }
+      } catch { /* ignore */ }
+      setOnboardingStep(1)
+    }
+    checkOnboarding()
+  }, [])
+
   const navigate = (id: string) => { setPage(id); setSelectedReview(null) }
   const openReview = (review: Review) => { setSelectedReview(review); setPage('reviews') }
 
@@ -116,6 +141,53 @@ function App() {
     avg: reviews.length ? (reviews.reduce((s, r) => s + r.stars, 0) / reviews.length).toFixed(1) : '–',
     pending: reviews.filter(r => r.status === 'Ausstehend').length,
     answered: reviews.filter(r => r.status === 'Beantwortet').length,
+  }
+
+  if (onboardingStep === null) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '"Plus Jakarta Sans", -apple-system, sans-serif' }}>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap'); @keyframes ob-spin { to { transform: rotate(360deg) } }`}</style>
+        <div style={{ width: 32, height: 32, border: '3px solid rgba(79,70,229,0.3)', borderTopColor: '#4f46e5', borderRadius: '50%', animation: 'ob-spin 0.8s linear infinite' }} />
+      </div>
+    )
+  }
+
+  if (onboardingStep > 0) {
+    const handleFinish = async () => {
+      const fullSettings = {
+        businessName: onboardingData.businessName,
+        restaurantType: onboardingData.restaurantType,
+        priceRange: onboardingData.priceRange,
+        salutation: onboardingData.salutation,
+        uniqueSellingPoints: onboardingData.uniqueSellingPoints,
+        contactEmail: onboardingData.contactEmail,
+        notificationEmail: onboardingData.contactEmail,
+        description: '', cuisineType: '', dietaryOptions: '', openingHours: '',
+        hasReservation: false, hasDelivery: false, hasTakeaway: false,
+        hasParking: false, isWheelchairAccessible: false,
+        responseSignature: '', responseLanguage: 'Deutsch',
+        googleAccountId: '', googleLocationId: '',
+      }
+      localStorage.setItem('reviewManagerSettings', JSON.stringify(fullSettings))
+      try {
+        const supabase = await getSupabase()
+        await supabase.from('settings').upsert(
+          { key: 'restaurant_profile', value: fullSettings, updated_at: new Date().toISOString() },
+          { onConflict: 'key' }
+        )
+      } catch (e) { console.warn('Supabase save failed', e) }
+      setOnboardingStep(0)
+    }
+    return (
+      <Onboarding
+        step={onboardingStep}
+        data={onboardingData}
+        onDataChange={(key, val) => setOnboardingData(prev => ({ ...prev, [key]: val }))}
+        onNext={() => setOnboardingStep(s => (s ?? 1) + 1)}
+        onBack={() => setOnboardingStep(s => Math.max(1, (s ?? 1) - 1))}
+        onFinish={handleFinish}
+      />
+    )
   }
 
   return (
@@ -912,14 +984,11 @@ function Analytics({ reviews }: { reviews: Review[] }) {
 function Settings() {
   const [form, setForm] = useState({
     businessName: '', description: '', restaurantType: '', cuisineType: '',
-    priceRange: '', seatingCapacity: '', foundedYear: '', targetAudience: '',
-    phone: '', website: '', address: '', city: '',
-    signatureDishes: '', dietaryOptions: '', openingHours: '',
+    priceRange: '', dietaryOptions: '', openingHours: '',
     hasReservation: false, hasDelivery: false, hasTakeaway: false,
     hasParking: false, isWheelchairAccessible: false,
-    uniqueSellingPoints: '', brandValues: '', preferredPhrases: '',
-    avoidPhrases: '', responseSignature: '', responseLanguage: 'Deutsch',
-    salutation: 'Sie', autoGenerate: false,
+    uniqueSellingPoints: '', responseSignature: '', responseLanguage: 'Deutsch',
+    salutation: 'Sie',
     googleAccountId: '', googleLocationId: '', notificationEmail: '', contactEmail: '',
   })
   const [saved, setSaved] = useState(false)
@@ -927,8 +996,14 @@ function Settings() {
   const [saveTimer, setSaveTimer] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
-  // Einstellungen laden — erst Supabase, dann localStorage als Fallback
+  // Einstellungen laden — nur bekannte Felder übernehmen (ignoriert entfernte Felder aus Supabase/localStorage)
   useEffect(() => {
+    const merge = (source: any, base: typeof form) =>
+      (Object.keys(base) as Array<keyof typeof base>).reduce((acc, key) => {
+        acc[key] = source[key] !== undefined ? source[key] : base[key]
+        return acc
+      }, { ...base })
+
     const loadData = async () => {
       try {
         const supabase = await getSupabase()
@@ -938,20 +1013,21 @@ function Settings() {
           .eq('key', 'restaurant_profile')
           .single()
         if (data?.value) {
-          setForm(data.value)
-          localStorage.setItem('reviewManagerSettings', JSON.stringify(data.value))
+          const merged = merge(data.value, form)
+          setForm(merged)
+          localStorage.setItem('reviewManagerSettings', JSON.stringify(merged))
         } else {
           const local = localStorage.getItem('reviewManagerSettings')
-          if (local) setForm(JSON.parse(local))
+          if (local) setForm(prev => merge(JSON.parse(local), prev))
         }
       } catch {
         const local = localStorage.getItem('reviewManagerSettings')
-        if (local) setForm(JSON.parse(local))
+        if (local) setForm(prev => merge(JSON.parse(local), prev))
       }
       setLoading(false)
     }
     loadData()
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-Save nach 1.5 Sekunden
   useEffect(() => {
@@ -1033,33 +1109,21 @@ function Settings() {
               <option value="€€€">€€€ — Gehoben</option><option value="€€€€">€€€€ — Fine Dining</option>
             </select>
           </div>
-          <div><label style={lbl}>Sitzplätze</label><input style={inp} placeholder="z. B. 60 innen, 30 außen" value={form.seatingCapacity} onChange={e => update('seatingCapacity', e.target.value)} /></div>
-          <div><label style={lbl}>Gründungsjahr</label><input style={inp} placeholder="z. B. 1998" value={form.foundedYear} onChange={e => update('foundedYear', e.target.value)} /></div>
-          <div><label style={lbl}>Zielgruppe</label><input style={inp} placeholder="z. B. Familien, Paare..." value={form.targetAudience} onChange={e => update('targetAudience', e.target.value)} /></div>
         </div>
       </div></div>
 
-      <div style={card}><div style={cardH}>📍 Kontakt & Standort</div><div style={cardB}>
-        <div className="grid2i">
-          <div><label style={lbl}>Straße & Hausnummer</label><input style={inp} placeholder="z. B. Hauptstraße 12" value={form.address} onChange={e => update('address', e.target.value)} /></div>
-          <div><label style={lbl}>PLZ & Stadt</label><input style={inp} placeholder="z. B. 80331 München" value={form.city} onChange={e => update('city', e.target.value)} /></div>
-          <div><label style={lbl}>Telefon</label><input style={inp} placeholder="z. B. +49 89 12345678" value={form.phone} onChange={e => update('phone', e.target.value)} /></div>
-          <div><label style={lbl}>Website</label><input style={inp} placeholder="z. B. https://www.meinrestaurant.de" value={form.website} onChange={e => update('website', e.target.value)} /></div>
-          <div>
-            <label style={lbl}>Kontakt-E-Mail für Gäste</label>
-            <input style={inp} type="email" placeholder="z. B. kontakt@meinrestaurant.de" value={form.contactEmail} onChange={e => update('contactEmail', e.target.value)} />
-            <div style={hint}>Wird bei 1-2 Sterne Bewertungen in der Recovery-Antwort angezeigt.</div>
-            {!form.contactEmail && (
-              <div style={{ background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: '8px', padding: '8px 12px', fontSize: '12px', color: '#92400e', marginTop: '6px' }}>
-                ⚠️ Ohne diese E-Mail kann die <strong>Recovery-Antwort</strong> bei 1-2 Sterne Bewertungen nicht verwendet werden.
-              </div>
-            )}
+      <div style={card}><div style={cardH}>📧 Kontakt für Gäste</div><div style={cardB}>
+        <label style={lbl}>Kontakt-E-Mail für Gäste</label>
+        <input style={{ ...inp, marginTop: '6px' }} type="email" placeholder="z. B. kontakt@meinrestaurant.de" value={form.contactEmail} onChange={e => update('contactEmail', e.target.value)} />
+        <div style={hint}>Wird bei 1-2 Sterne Bewertungen in der Recovery-Antwort angezeigt.</div>
+        {!form.contactEmail && (
+          <div style={{ background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: '8px', padding: '8px 12px', fontSize: '12px', color: '#92400e', marginTop: '8px' }}>
+            ⚠️ Ohne diese E-Mail kann die <strong>Recovery-Antwort</strong> bei 1-2 Sterne Bewertungen nicht verwendet werden.
           </div>
-        </div>
+        )}
       </div></div>
 
       <div style={card}><div style={cardH}>⭐ Speisekarte & Angebot</div><div style={cardB}>
-        <div style={{ marginBottom: '12px' }}><label style={lbl}>Signature-Gerichte / Spezialitäten</label><textarea style={{ ...inp, height: '60px', resize: 'none' }} placeholder="z. B. Hausgemachte Tagliatelle, Neapolitanische Pizza..." value={form.signatureDishes} onChange={e => update('signatureDishes', e.target.value)} /></div>
         <div style={{ marginBottom: '12px' }}><label style={lbl}>Ernährungsoptionen</label><input style={inp} placeholder="z. B. Vegetarisch, Vegan, Glutenfrei..." value={form.dietaryOptions} onChange={e => update('dietaryOptions', e.target.value)} /><div style={hint}>Kommagetrennt angeben.</div></div>
         <div style={{ marginBottom: '14px' }}><label style={lbl}>Öffnungszeiten</label><textarea style={{ ...inp, height: '70px', resize: 'none' }} placeholder={'Mo–Fr: 11:30–15:00 & 18:00–23:00\nSa–So: 12:00–23:00'} value={form.openingHours} onChange={e => update('openingHours', e.target.value)} /></div>
         <div style={{ fontSize: '13px', fontWeight: '500', marginBottom: '10px', color: '#374151' }}>Service-Optionen</div>
@@ -1074,11 +1138,6 @@ function Settings() {
 
       <div style={card}><div style={cardH}>🎨 Marke & Tonalität</div><div style={cardB}>
         <div style={{ marginBottom: '12px' }}><label style={lbl}>Was macht Ihr Restaurant besonders?</label><textarea style={{ ...inp, height: '60px', resize: 'none' }} value={form.uniqueSellingPoints} onChange={e => update('uniqueSellingPoints', e.target.value)} /></div>
-        <div style={{ marginBottom: '12px' }}><label style={lbl}>Markenwerte</label><textarea style={{ ...inp, height: '60px', resize: 'none' }} value={form.brandValues} onChange={e => update('brandValues', e.target.value)} /></div>
-        <div className="grid2i" style={{ marginBottom: '12px' }}>
-          <div><label style={lbl}>Bevorzugte Formulierungen</label><textarea style={{ ...inp, height: '70px', resize: 'none' }} value={form.preferredPhrases} onChange={e => update('preferredPhrases', e.target.value)} /></div>
-          <div><label style={lbl}>Zu vermeidende Formulierungen</label><textarea style={{ ...inp, height: '70px', resize: 'none' }} value={form.avoidPhrases} onChange={e => update('avoidPhrases', e.target.value)} /></div>
-        </div>
         <div className="grid3i">
           <div><label style={lbl}>Antwort-Signatur</label><input style={inp} placeholder="z. B. Das Team der Trattoria" value={form.responseSignature} onChange={e => update('responseSignature', e.target.value)} /></div>
           <div><label style={lbl}>Antwortsprache</label>
@@ -1092,13 +1151,6 @@ function Settings() {
               <option value="Sie">Sie (förmlich)</option><option value="Du">Du (persönlich)</option>
             </select>
           </div>
-        </div>
-      </div></div>
-
-      <div style={card}><div style={cardH}>🤖 KI-Antworteinstellungen</div><div style={cardB}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
-          <div><div style={{ fontSize: '13px', fontWeight: '500', color: '#374151' }}>Antworten automatisch generieren</div><div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>KI-Antworten automatisch erstellen, wenn neue Bewertungen synchronisiert werden.</div></div>
-          <Toggle k="autoGenerate" />
         </div>
       </div></div>
 
@@ -1143,6 +1195,294 @@ function Settings() {
         {saved && <span style={{ color: '#22c55e', fontSize: '14px', fontWeight: '500', transition: 'opacity 0.3s' }}>✅ Automatisch gespeichert</span>}
         {saving && !saved && <span style={{ color: '#9ca3af', fontSize: '14px' }}>💾 Speichert...</span>}
         <button onClick={save} style={{ padding: '10px 28px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', fontFamily: 'inherit', fontWeight: '500' }}>Profil speichern</button>
+      </div>
+    </div>
+  )
+}
+
+// ─── ONBOARDING ──────────────────────────────────────────────────────────────
+
+interface OnboardingData {
+  businessName: string
+  restaurantType: string
+  priceRange: string
+  salutation: string
+  uniqueSellingPoints: string
+  contactEmail: string
+}
+
+function ObStepHeader({ n, label, title, subtitle }: { n: number; label: string; title: string; subtitle: string }) {
+  return (
+    <div>
+      <div style={{ fontSize: '11px', fontWeight: '600', color: '#4f46e5', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
+        Schritt {n} · {label}
+      </div>
+      <div style={{ fontSize: '21px', fontWeight: '700', color: '#111827', marginBottom: '6px', lineHeight: '1.3' }}>
+        {title}
+      </div>
+      <div style={{ fontSize: '13px', color: '#6b7280', lineHeight: '1.5' }}>{subtitle}</div>
+    </div>
+  )
+}
+
+function ObActions({ onNext, canContinue, optional = false }: { onNext: () => void; canContinue: boolean; optional?: boolean }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: optional ? 'space-between' : 'flex-end' }}>
+      {optional && (
+        <button
+          onClick={onNext}
+          style={{ fontSize: '13px', color: '#9ca3af', border: 'none', background: 'transparent', cursor: 'pointer', padding: 0, fontFamily: 'inherit', fontWeight: '500' }}
+          onMouseOver={e => { (e.currentTarget as HTMLElement).style.color = '#374151' }}
+          onMouseOut={e => { (e.currentTarget as HTMLElement).style.color = '#9ca3af' }}
+        >
+          Überspringen
+        </button>
+      )}
+      <button
+        onClick={onNext}
+        disabled={!canContinue}
+        style={{
+          padding: '11px 24px', borderRadius: '10px', border: 'none', fontFamily: 'inherit',
+          background: canContinue ? '#4f46e5' : '#e5e7eb',
+          color: canContinue ? '#fff' : '#9ca3af',
+          fontSize: '14px', fontWeight: '600', cursor: canContinue ? 'pointer' : 'not-allowed',
+          transition: 'all 0.15s',
+        }}
+      >
+        Weiter →
+      </button>
+    </div>
+  )
+}
+
+function Onboarding({ step, data, onDataChange, onNext, onBack, onFinish }: {
+  step: number
+  data: OnboardingData
+  onDataChange: (key: string, val: string) => void
+  onNext: () => void
+  onBack: () => void
+  onFinish: () => Promise<void>
+}) {
+  const [saving, setSaving] = useState(false)
+
+  const handleFinish = async () => {
+    setSaving(true)
+    await onFinish()
+    setSaving(false)
+  }
+
+  const chip = (selected: boolean): React.CSSProperties => ({
+    padding: '10px 18px', borderRadius: '10px', cursor: 'pointer', fontFamily: 'inherit',
+    border: selected ? '2px solid #4f46e5' : '1.5px solid #e5e7eb',
+    background: selected ? '#eef2ff' : '#fff',
+    color: selected ? '#4338ca' : '#374151',
+    fontWeight: selected ? '600' : '500',
+    fontSize: '14px', transition: 'all 0.15s',
+  })
+
+  const inp: React.CSSProperties = {
+    width: '100%', padding: '12px 14px', borderRadius: '10px',
+    border: '1.5px solid #d1d5db', fontSize: '15px', fontFamily: 'inherit',
+    background: '#f9fafb', marginTop: '20px', marginBottom: '28px', outline: 'none',
+  }
+
+  const canContinue = (): boolean => {
+    if (step === 2) return data.businessName.trim().length > 0
+    if (step === 3) return data.restaurantType !== ''
+    if (step === 4) return data.priceRange !== ''
+    if (step === 5) return data.salutation !== ''
+    if (step === 7) return data.contactEmail.includes('@') && data.contactEmail.includes('.')
+    return true
+  }
+
+  const progress = step === 8 ? 1 : step <= 1 ? 0 : (step - 1) / 6
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, background: '#0f172a', zIndex: 1000, padding: '16px',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontFamily: '"Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+        @keyframes ob-spin { to { transform: rotate(360deg) } }
+        .ob-chip:hover { border-color: #a5b4fc !important; background: #f5f3ff !important; }
+      `}</style>
+
+      <div style={{ background: '#fff', borderRadius: '24px', width: '100%', maxWidth: '460px', overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.6)' }}>
+        {/* Fortschrittsbalken */}
+        <div style={{ height: '4px', background: '#e5e7eb' }}>
+          <div style={{
+            height: '100%', background: 'linear-gradient(90deg, #4f46e5, #7c3aed)',
+            width: `${progress * 100}%`, transition: 'width 0.4s ease',
+            borderRadius: progress < 1 ? '0 4px 4px 0' : '0',
+          }} />
+        </div>
+
+        {/* Zurück-Button & Schritt-Zähler */}
+        {step > 1 && step < 8 && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 24px 0' }}>
+            <button
+              onClick={onBack}
+              style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#9ca3af', fontSize: '13px', fontWeight: '500', fontFamily: 'inherit', padding: 0 }}
+              onMouseOver={e => { (e.currentTarget as HTMLElement).style.color = '#374151' }}
+              onMouseOut={e => { (e.currentTarget as HTMLElement).style.color = '#9ca3af' }}
+            >
+              ← Zurück
+            </button>
+            <span style={{ fontSize: '12px', color: '#d1d5db', fontWeight: '500' }}>{step - 1} / 6</span>
+          </div>
+        )}
+
+        <div style={{ padding: step > 1 && step < 9 ? '22px 32px 32px' : '40px 32px 36px' }}>
+
+          {/* Screen 1: Willkommen */}
+          {step === 1 && (
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <img src="/favicon.svg" alt="Logo" style={{ width: 56, height: 56 }} />
+              </div>
+              <div style={{ fontSize: '26px', fontWeight: '700', color: '#111827', marginBottom: '10px', lineHeight: '1.3' }}>
+                Willkommen bei<br />ReviewManager
+              </div>
+              <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '36px', lineHeight: '1.7' }}>
+                Smarte KI-Antworten auf Google-Bewertungen —<br />schnell, persönlich, in deinem Stil.
+              </div>
+              <button
+                onClick={onNext}
+                style={{ width: '100%', padding: '14px', borderRadius: '12px', background: '#4f46e5', color: '#fff', border: 'none', fontSize: '15px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                Loslegen →
+              </button>
+            </div>
+          )}
+
+          {/* Screen 2: Restaurantname */}
+          {step === 2 && (
+            <div>
+              <ObStepHeader n={1} label="Name" title="Wie heißt euer Restaurant?" subtitle="So spricht die KI euer Restaurant in allen Antworten an." />
+              <input
+                autoFocus type="text" placeholder="z.B. Trattoria da Marco"
+                value={data.businessName} onChange={e => onDataChange('businessName', e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && canContinue() && onNext()}
+                style={inp}
+                onFocus={e => { e.currentTarget.style.borderColor = '#4f46e5' }}
+                onBlur={e => { e.currentTarget.style.borderColor = '#d1d5db' }}
+              />
+              <ObActions onNext={onNext} canContinue={canContinue()} />
+            </div>
+          )}
+
+          {/* Screen 3: Restaurant-Typ */}
+          {step === 3 && (
+            <div>
+              <ObStepHeader n={2} label="Typ" title="Was seid ihr?" subtitle="Hilft der KI, die passende Tonalität zu wählen." />
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '20px', marginBottom: '28px' }}>
+                {['Restaurant', 'Café', 'Bar', 'Bistro', 'Imbiss', 'Sonstiges'].map(t => (
+                  <button key={t} className="ob-chip" onClick={() => onDataChange('restaurantType', t)} style={chip(data.restaurantType === t)}>{t}</button>
+                ))}
+              </div>
+              <ObActions onNext={onNext} canContinue={canContinue()} />
+            </div>
+          )}
+
+          {/* Screen 4: Preisklasse */}
+          {step === 4 && (
+            <div>
+              <ObStepHeader n={3} label="Preisklasse" title="In welcher Preisklasse seid ihr?" subtitle="Beeinflusst, wie die KI Antworten formuliert." />
+              <div style={{ display: 'flex', gap: '10px', marginTop: '20px', marginBottom: '28px' }}>
+                {['€', '€€', '€€€', '€€€€'].map(p => (
+                  <button key={p} className="ob-chip" onClick={() => onDataChange('priceRange', p)}
+                    style={{ ...chip(data.priceRange === p), flex: 1, padding: '14px 8px', textAlign: 'center', fontSize: '18px', fontWeight: '600' }}>
+                    {p}
+                  </button>
+                ))}
+              </div>
+              <ObActions onNext={onNext} canContinue={canContinue()} />
+            </div>
+          )}
+
+          {/* Screen 5: Anredeform */}
+          {step === 5 && (
+            <div>
+              <ObStepHeader n={4} label="Anrede" title="Wie redet ihr eure Gäste an?" subtitle="Gilt für alle KI-generierten Antworten." />
+              <div style={{ display: 'flex', gap: '12px', marginTop: '20px', marginBottom: '28px' }}>
+                {[
+                  { val: 'Du', emoji: '👋', sub: 'locker & modern' },
+                  { val: 'Sie', emoji: '🤝', sub: 'formell & professionell' },
+                ].map(s => (
+                  <button key={s.val} className="ob-chip" onClick={() => onDataChange('salutation', s.val)}
+                    style={{ ...chip(data.salutation === s.val), flex: 1, padding: '18px 12px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '26px' }}>{s.emoji}</span>
+                    <span style={{ fontSize: '16px', fontWeight: '700' }}>{s.val}</span>
+                    <span style={{ fontSize: '12px', fontWeight: '400', color: data.salutation === s.val ? '#6366f1' : '#9ca3af' }}>{s.sub}</span>
+                  </button>
+                ))}
+              </div>
+              <ObActions onNext={onNext} canContinue={canContinue()} />
+            </div>
+          )}
+
+          {/* Screen 6: Besonderheit (optional) */}
+          {step === 6 && (
+            <div>
+              <ObStepHeader n={5} label="Besonderheit" title="Was macht euch besonders?" subtitle="Optional — macht KI-Antworten persönlicher und einzigartiger." />
+              <textarea
+                autoFocus rows={3}
+                placeholder="z.B. Hausgemachte Pasta, 50 Jahre Familientradition, Live-Musik freitags…"
+                value={data.uniqueSellingPoints} onChange={e => onDataChange('uniqueSellingPoints', e.target.value)}
+                style={{ ...inp, resize: 'vertical', minHeight: '90px', marginBottom: '28px', lineHeight: '1.5', fontSize: '14px' } as React.CSSProperties}
+                onFocus={e => { e.currentTarget.style.borderColor = '#4f46e5' }}
+                onBlur={e => { e.currentTarget.style.borderColor = '#d1d5db' }}
+              />
+              <ObActions onNext={onNext} canContinue optional />
+            </div>
+          )}
+
+          {/* Screen 7: Kontakt-E-Mail */}
+          {step === 7 && (
+            <div>
+              <ObStepHeader n={6} label="E-Mail" title="Kontakt-E-Mail für Gäste" subtitle="Wird in Recovery-Antworten bei negativen Bewertungen eingebettet." />
+              <input
+                autoFocus type="email" placeholder="kontakt@euer-restaurant.de"
+                value={data.contactEmail} onChange={e => onDataChange('contactEmail', e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && canContinue() && onNext()}
+                style={inp}
+                onFocus={e => { e.currentTarget.style.borderColor = '#4f46e5' }}
+                onBlur={e => { e.currentTarget.style.borderColor = '#d1d5db' }}
+              />
+              <ObActions onNext={onNext} canContinue={canContinue()} />
+            </div>
+          )}
+
+          {/* Screen 8: Fertig */}
+          {step === 8 && (
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '52px', marginBottom: '16px', lineHeight: '1' }}>🎉</div>
+              <div style={{ fontSize: '24px', fontWeight: '700', color: '#111827', marginBottom: '10px' }}>
+                Alles bereit!
+              </div>
+              <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '32px', lineHeight: '1.7' }}>
+                <strong style={{ color: '#111827' }}>{data.businessName || 'Euer Profil'}</strong> ist eingerichtet.<br />
+                Die KI kennt jetzt euren Stil.
+              </div>
+              <button
+                onClick={handleFinish} disabled={saving}
+                style={{
+                  width: '100%', padding: '14px', borderRadius: '12px',
+                  background: saving ? '#e5e7eb' : '#4f46e5',
+                  color: saving ? '#9ca3af' : '#fff', border: 'none',
+                  fontSize: '15px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer',
+                  fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                }}
+              >
+                {saving && <div style={{ width: 16, height: 16, border: '2.5px solid rgba(0,0,0,0.15)', borderTopColor: '#9ca3af', borderRadius: '50%', animation: 'ob-spin 0.8s linear infinite' }} />}
+                Dashboard öffnen
+              </button>
+            </div>
+          )}
+
+        </div>
       </div>
     </div>
   )
