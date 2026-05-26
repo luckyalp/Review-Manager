@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Home, MessageSquare, BarChart2, Settings as SettingsIcon } from 'lucide-react'
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 
@@ -49,7 +50,6 @@ const getSupabase = async () => {
 
 function App() {
   const [page, setPage] = useState('dashboard')
-  const [menuOpen, setMenuOpen] = useState(false)
   const [reviews, setReviews] = useState<Review[]>([])
   const [reviewsLoading, setReviewsLoading] = useState(true)
   const [selectedReview, setSelectedReview] = useState<Review | null>(null)
@@ -88,14 +88,7 @@ function App() {
     loadReviews()
   }, [])
 
-  const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-    { id: 'reviews', label: 'Bewertungen', icon: '💬' },
-    { id: 'analytics', label: 'Analyse', icon: '📈' },
-    { id: 'settings', label: 'Einstellungen', icon: '⚙️' },
-  ]
-
-  const navigate = (id: string) => { setPage(id); setMenuOpen(false); setSelectedReview(null) }
+  const navigate = (id: string) => { setPage(id); setSelectedReview(null) }
   const openReview = (review: Review) => { setSelectedReview(review); setPage('reviews') }
 
   const updateReviewStatus = async (id: number, status: ReviewStatus) => {
@@ -126,78 +119,35 @@ function App() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', fontFamily: '"Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', background: '#f3f4f6' }}>
+    <div style={{ minHeight: '100vh', fontFamily: '"Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', background: '#f3f4f6' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
         * { box-sizing: border-box; font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-        .sidebar { width: 255px; background: #0f172a; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
-        .mobile-header { display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 200; background: #0f172a; height: 56px; align-items: center; padding: 0 16px; gap: 12px; }
-        .mobile-dropdown { display: none; }
-        .main-pad { padding: 28px 130px; }
-        .grid4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
-        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .grid-dashboard { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
-        .grid2i { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .grid3i { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-        .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; cursor: pointer; margin-bottom: 2px; font-size: 16px; transition: all 0.15s; }
-        .nav-item:hover { background: rgba(255,255,255,0.06); }
-        @media (max-width: 768px) {
-          .sidebar { display: none !important; }
-          .mobile-header { display: flex !important; }
-          .mobile-dropdown.open { display: block !important; position: fixed; top: 56px; left: 0; right: 0; z-index: 199; background: #0f172a; padding: 8px; }
-          .main-pad { padding: 72px 16px 16px; }
-          .grid4 { grid-template-columns: 1fr 1fr !important; }
-          .grid2 { grid-template-columns: 1fr !important; }
-          .grid-dashboard { grid-template-columns: 1fr !important; }
-          .grid2i { grid-template-columns: 1fr !important; }
-          .grid3i { grid-template-columns: 1fr 1fr !important; }
-          .review-actions { flex-wrap: wrap; }
+        .main-pad { padding: 20px 16px 88px; }
+        .grid4 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .grid2 { display: grid; grid-template-columns: 1fr; gap: 16px; }
+        .grid-dashboard { display: grid; grid-template-columns: 1fr; gap: 16px; }
+        .grid2i { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        .grid3i { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .review-actions { flex-wrap: wrap; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 200; background: #fff; border-top: 1px solid #e5e7eb; display: flex; padding-bottom: env(safe-area-inset-bottom); }
+        .bottom-nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 10px 0; cursor: pointer; border: none; background: transparent; color: #9ca3af; font-size: 11px; font-weight: 500; font-family: inherit; transition: color 0.15s; -webkit-tap-highlight-color: transparent; }
+        .bottom-nav-item.active { color: #4f46e5; }
+        @media (min-width: 640px) {
+          .main-pad { padding: 28px 40px 100px; }
+          .grid4 { grid-template-columns: repeat(4,1fr); gap: 14px; }
+          .grid2 { grid-template-columns: 1fr 1fr; }
+          .grid-dashboard { grid-template-columns: 2fr 1fr; }
+          .grid2i { grid-template-columns: 1fr 1fr; }
+          .grid3i { grid-template-columns: 1fr 1fr 1fr; }
+        }
+        @media (min-width: 1024px) {
+          .main-pad { padding: 32px 80px 100px; }
         }
       `}</style>
 
-      {/* Sidebar Desktop */}
-      <div className="sidebar">
-        <div style={{ padding: '20px 16px', display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid #1e293b' }}>
-          <div style={{ background: '#4f46e5', borderRadius: '8px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', flexShrink: 0 }}>🏪</div>
-          <span style={{ fontWeight: '600', fontSize: '15px' }}>ReviewMonitor</span>
-        </div>
-        <nav style={{ padding: '12px 8px', flex: 1 }}>
-          {navItems.map(item => (
-            <div key={item.id} className="nav-item" onClick={() => navigate(item.id)}
-              style={{ background: page === item.id ? '#4f46e5' : 'transparent', color: page === item.id ? '#fff' : '#94a3b8', fontWeight: page === item.id ? '500' : '400' }}>
-              <span>{item.icon}</span><span>{item.label}</span>
-            </div>
-          ))}
-        </nav>
-        <div style={{ padding: '12px 8px', borderTop: '1px solid #1e293b' }}>
-          <button style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 12px', borderRadius: '8px', border: '1px solid #1e293b', background: 'transparent', color: '#94a3b8', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit' }}>
-            🔄 Bewertungen synchronisieren
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile Header */}
-      <div className="mobile-header">
-        <div style={{ background: '#4f46e5', borderRadius: '8px', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>🏪</div>
-        <span style={{ color: '#fff', fontWeight: '600', fontSize: '15px', flex: 1 }}>ReviewMonitor</span>
-        <div onClick={() => setMenuOpen(!menuOpen)} style={{ color: '#fff', fontSize: '22px', cursor: 'pointer', padding: '4px' }}>{menuOpen ? '✕' : '☰'}</div>
-      </div>
-
-      {/* Mobile Dropdown */}
-      <div className={`mobile-dropdown${menuOpen ? ' open' : ''}`}>
-        {navItems.map(item => (
-          <div key={item.id} className="nav-item" onClick={() => navigate(item.id)}
-            style={{ background: page === item.id ? '#4f46e5' : 'transparent', color: page === item.id ? '#fff' : '#94a3b8' }}>
-            <span>{item.icon}</span><span>{item.label}</span>
-          </div>
-        ))}
-        <div style={{ borderTop: '1px solid #1e293b', marginTop: '8px', paddingTop: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', color: '#94a3b8', fontSize: '16px' }}>🔄 Bewertungen synchronisieren</div>
-        </div>
-      </div>
-
       {/* Main */}
-      <div style={{ flex: 1, overflowY: 'auto' }}>
+      <div>
         <div className="main-pad">
           {reviewsLoading ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', flexDirection: 'column', gap: '14px', color: '#6b7280' }}>
@@ -215,6 +165,26 @@ function App() {
           )}
         </div>
       </div>
+
+      {/* Bottom Navigation */}
+      <nav className="bottom-nav">
+        <button className={`bottom-nav-item${page === 'dashboard' ? ' active' : ''}`} onClick={() => navigate('dashboard')}>
+          <Home size={22} strokeWidth={1.8} />
+          Home
+        </button>
+        <button className={`bottom-nav-item${page === 'reviews' ? ' active' : ''}`} onClick={() => navigate('reviews')}>
+          <MessageSquare size={22} strokeWidth={1.8} />
+          Bewertungen
+        </button>
+        <button className={`bottom-nav-item${page === 'analytics' ? ' active' : ''}`} onClick={() => navigate('analytics')}>
+          <BarChart2 size={22} strokeWidth={1.8} />
+          Insights
+        </button>
+        <button className={`bottom-nav-item${page === 'settings' ? ' active' : ''}`} onClick={() => navigate('settings')}>
+          <SettingsIcon size={22} strokeWidth={1.8} />
+          Profil
+        </button>
+      </nav>
     </div>
   )
 }
