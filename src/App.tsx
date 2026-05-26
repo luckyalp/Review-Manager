@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Home, MessageSquare, BarChart2, Settings as SettingsIcon } from 'lucide-react'
+import { Home, MessageSquare, BarChart2, User } from 'lucide-react'
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 
@@ -181,7 +181,7 @@ function App() {
           Insights
         </button>
         <button className={`bottom-nav-item${page === 'settings' ? ' active' : ''}`} onClick={() => navigate('settings')}>
-          <SettingsIcon size={22} strokeWidth={1.8} />
+          <User size={22} strokeWidth={1.8} />
           Profil
         </button>
       </nav>
