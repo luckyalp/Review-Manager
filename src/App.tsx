@@ -48,15 +48,27 @@ function App() {
 
   // Bewertungen aus Supabase laden
   useEffect(() => {
+    const mapRow = (row: any): Review => ({
+      id: row.id,
+      name: row.reviewer_name,
+      initials: row.reviewer_name
+        ? row.reviewer_name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
+        : '??',
+      stars: row.stars,
+      text: row.review_text,
+      date: row.review_date,
+      status: row.status as ReviewStatus,
+    })
+
     const loadReviews = async () => {
       try {
         const supabase = await getSupabase()
         const { data, error } = await supabase
           .from('reviews')
           .select('*')
-          .order('id', { ascending: false })
+          .order('created_at', { ascending: false })
         if (data && !error) {
-          setReviews(data)
+          setReviews(data.map(mapRow))
         } else {
           setReviews(INITIAL_REVIEWS)
         }
