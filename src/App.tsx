@@ -27,13 +27,46 @@ const INITIAL_REVIEWS: Review[] = [
   { id: 7, name: 'Lisa T.', initials: 'LI', stars: 5, date: '22. Mai 2026', status: 'Ausstehend', text: 'Absolut fantastisch! Jedes Gericht war ein Kunstwerk. Der Chef ist offensichtlich sehr talentiert. Wir werden definitiv wiederkommen und Freunde mitbringen!' },
 ]
 
+// ─── SUPABASE ────────────────────────────────────────────────────────────────
+
+const getSupabase = async () => {
+  const { createClient } = await import('@supabase/supabase-js')
+  return createClient(
+    'https://xbgohbljmuoijgocrkka.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhiZ29oYmxqbXVvaWpnb2Nya2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2OTAwMjUsImV4cCI6MjA5NTI2NjAyNX0.CNpNc3uyxnfKfse9G_26XIaCBPhBpPPESuC4jm9WbGU'
+  )
+}
+
 // ─── APP ─────────────────────────────────────────────────────────────────────
 
 function App() {
   const [page, setPage] = useState('dashboard')
   const [menuOpen, setMenuOpen] = useState(false)
-  const [reviews, setReviews] = useState<Review[]>(INITIAL_REVIEWS)
+  const [reviews, setReviews] = useState<Review[]>([])
+  const [reviewsLoading, setReviewsLoading] = useState(true)
   const [selectedReview, setSelectedReview] = useState<Review | null>(null)
+
+  // Bewertungen aus Supabase laden
+  useEffect(() => {
+    const loadReviews = async () => {
+      try {
+        const supabase = await getSupabase()
+        const { data, error } = await supabase
+          .from('reviews')
+          .select('*')
+          .order('id', { ascending: false })
+        if (data && !error) {
+          setReviews(data)
+        } else {
+          setReviews(INITIAL_REVIEWS)
+        }
+      } catch {
+        setReviews(INITIAL_REVIEWS)
+      }
+      setReviewsLoading(false)
+    }
+    loadReviews()
+  }, [])
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: '📊' },
@@ -45,12 +78,24 @@ function App() {
   const navigate = (id: string) => { setPage(id); setMenuOpen(false); setSelectedReview(null) }
   const openReview = (review: Review) => { setSelectedReview(review); setPage('reviews') }
 
-  const updateReviewStatus = (id: number, status: ReviewStatus) => {
+  const updateReviewStatus = async (id: number, status: ReviewStatus) => {
     setReviews(prev => prev.map(r => r.id === id ? { ...r, status } : r))
+    try {
+      const supabase = await getSupabase()
+      await supabase.from('reviews').update({ status }).eq('id', id)
+    } catch (e) {
+      console.warn('Supabase update failed', e)
+    }
   }
 
-  const deleteReview = (id: number) => {
+  const deleteReview = async (id: number) => {
     setReviews(prev => prev.filter(r => r.id !== id))
+    try {
+      const supabase = await getSupabase()
+      await supabase.from('reviews').delete().eq('id', id)
+    } catch (e) {
+      console.warn('Supabase delete failed', e)
+    }
   }
 
   const stats = {
@@ -134,11 +179,20 @@ function App() {
       {/* Main */}
       <div style={{ flex: 1, overflowY: 'auto' }}>
         <div className="main-pad">
-          {page === 'dashboard' && <Dashboard stats={stats} reviews={reviews} openReview={openReview} />}
-          {page === 'reviews' && !selectedReview && <Reviews reviews={reviews} onStatusChange={updateReviewStatus} onDelete={deleteReview} openReview={openReview} />}
-          {page === 'reviews' && selectedReview && <ReviewDetail review={selectedReview} onStatusChange={updateReviewStatus} onBack={() => setSelectedReview(null)} />}
-          {page === 'analytics' && <Analytics reviews={reviews} />}
-          {page === 'settings' && <Settings />}
+          {reviewsLoading ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', flexDirection: 'column', gap: '14px', color: '#6b7280' }}>
+              <div style={{ fontSize: '28px' }}>⏳</div>
+              <div style={{ fontSize: '14px', fontWeight: '500' }}>Bewertungen werden geladen…</div>
+            </div>
+          ) : (
+            <>
+              {page === 'dashboard' && <Dashboard stats={stats} reviews={reviews} openReview={openReview} />}
+              {page === 'reviews' && !selectedReview && <Reviews reviews={reviews} onStatusChange={updateReviewStatus} onDelete={deleteReview} openReview={openReview} />}
+              {page === 'reviews' && selectedReview && <ReviewDetail review={selectedReview} onStatusChange={updateReviewStatus} onBack={() => setSelectedReview(null)} />}
+              {page === 'analytics' && <Analytics reviews={reviews} />}
+              {page === 'settings' && <Settings />}
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -857,14 +911,6 @@ function Settings() {
   const [saving, setSaving] = useState(false)
   const [saveTimer, setSaveTimer] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-
-  const getSupabase = async () => {
-    const { createClient } = await import('@supabase/supabase-js')
-    return createClient(
-      'https://xbgohbljmuoijgocrkka.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhiZ29oYmxqbXVvaWpnb2Nya2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2OTAwMjUsImV4cCI6MjA5NTI2NjAyNX0.CNpNc3uyxnfKfse9G_26XIaCBPhBpPPESuC4jm9WbGU'
-    )
-  }
 
   // Einstellungen laden — erst Supabase, dann localStorage als Fallback
   useEffect(() => {
