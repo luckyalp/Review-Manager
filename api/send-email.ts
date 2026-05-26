@@ -23,13 +23,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const initials = reviewerName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
 
   const answerColors = ['#4f46e5', '#16a34a', '#7c3aed', '#dc2626']
-  const answerLabels = ['PROFESSIONELL', 'FREUNDLICH', 'PRÄGNANT', 'PERSÖNLICHE KONTAKTAUFNAHME']
 
-  // Recovery Antwort nur bei 1-2 Sternen
-  const allAnswers = stars <= 2 ? [
-    ...answers,
-    { label: '🔴 Persönliche Kontaktaufnahme', text: `Es tut uns aufrichtig leid von Ihrer Erfahrung zu hören. Das entspricht nicht unserem Anspruch. Wir würden uns sehr freuen, das persönlich zu klären. Bitte melden ${salutation === 'Du' ? 'Dich' : 'Sie sich'} direkt bei uns: ${contactEmail || 'kontakt@meinrestaurant.de'}` }
-  ] : answers
+  // Antworten kommen vollständig vom Server (inkl. Recovery-Karte bei ≤2 Sternen)
+  const allAnswers = answers
 
   const html = `
 <!DOCTYPE html>
@@ -112,7 +108,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       ${allAnswers.map((a: { label: string, text: string }, i: number) => `
         <div class="answer-box">
-          <span class="answer-label" style="background:${answerColors[i]}20; color:${answerColors[i]}">${answerLabels[i]}</span>
+          <span class="answer-label" style="background:${answerColors[i]}20; color:${answerColors[i]}">${a.label}</span>
           <div class="answer-text">${a.text}</div>
           <a href="https://review-manager-mu.vercel.app/api/confirm-reply?reviewId=${encodeURIComponent(reviewerName + '_' + stars)}&answerIndex=${i}&answerText=${encodeURIComponent(a.text)}" class="answer-btn" style="background:${answerColors[i]}">✓ Diese Antwort auswählen & senden</a>
         </div>
