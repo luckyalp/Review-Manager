@@ -259,7 +259,7 @@ function Dashboard({ stats, reviews, openReview }: { stats: any, reviews: Review
   const [testDone, setTestDone] = useState(false)
   const [testError, setTestError] = useState('')
 
-  const recent = reviews.slice(0, 3)
+  const recent = reviews.filter(r => r.status === 'Ausstehend')
 
   const distrib = [5,4,3,2,1].map(s => ({
     stars: s,
