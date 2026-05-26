@@ -696,10 +696,12 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
             <div>
               <div style={{ fontWeight: '700', fontSize: '16px', color: '#111827' }}>{review.name}</div>
               <Stars n={review.stars} />
-              <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>{formatDate(review.date)}</div>
             </div>
           </div>
-          <StatusBadge status={review.status} />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', flexShrink: 0 }}>
+            <div style={{ fontSize: '12px', color: '#9ca3af' }}>{formatDate(review.date)}</div>
+            <StatusBadge status={review.status} />
+          </div>
         </div>
         <div style={{ fontSize: '15px', color: '#374151', lineHeight: '1.7', marginTop: '12px' }}>{review.text}</div>
       </div>
