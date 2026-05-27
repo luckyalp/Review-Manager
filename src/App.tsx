@@ -63,6 +63,7 @@ function App() {
   // ── Auth State ──
   const [user, setUser] = useState<SupabaseUser | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
+  const [showAuth, setShowAuth] = useState<false | 'login' | 'register'>(false)
 
   // Auth-Listener: einmal beim Mount, reagiert auf Login/Logout/OAuth-Callback
   useEffect(() => {
@@ -157,6 +158,7 @@ function App() {
     setOnboardingStep(null)
     setReviews([])
     setPage('dashboard')
+    setShowAuth(false)
     localStorage.removeItem('reviewManagerSettings')
   }
 
@@ -179,9 +181,17 @@ function App() {
     )
   }
 
-  // 2. Nicht eingeloggt → Auth-Screen
+  // 2. Nicht eingeloggt → Willkommens-Screen oder Auth-Screen
   if (!user) {
-    return <AuthScreen />
+    if (!showAuth) {
+      return (
+        <WelcomeScreen
+          onLogin={() => setShowAuth('login')}
+          onRegister={() => setShowAuth('register')}
+        />
+      )
+    }
+    return <AuthScreen initialMode={showAuth} />
   }
 
   // 3. Eingeloggt, Onboarding-Check läuft noch
@@ -1236,10 +1246,99 @@ function AccountEmail() {
   return <span>{email || '–'}</span>
 }
 
+// ─── WELCOME SCREEN ──────────────────────────────────────────────────────────
+
+function WelcomeScreen({ onLogin, onRegister }: { onLogin: () => void; onRegister: () => void }) {
+  return (
+    <div style={{
+      minHeight: '100vh', background: '#0f172a',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '16px', fontFamily: '"Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+        .wlc-btn-primary:hover { background: #4338ca !important; }
+        .wlc-btn-secondary:hover { background: rgba(255,255,255,0.08) !important; }
+      `}</style>
+
+      <div style={{ width: '100%', maxWidth: '420px', textAlign: 'center' }}>
+
+        {/* Logo */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+          <div style={{
+            width: 64, height: 64, borderRadius: '18px',
+            background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 8px 32px rgba(79,70,229,0.4)',
+          }}>
+            <span style={{ fontSize: '30px' }}>⭐</span>
+          </div>
+        </div>
+
+        {/* Titel */}
+        <div style={{ fontSize: '32px', fontWeight: '700', color: '#fff', marginBottom: '10px', lineHeight: '1.2' }}>
+          Willkommen bei<br />ReviewManager
+        </div>
+        <div style={{ fontSize: '16px', color: '#94a3b8', marginBottom: '48px', lineHeight: '1.7' }}>
+          KI-Antworten auf Google-Bewertungen —<br />schnell, persönlich, in Ihrem Stil.
+        </div>
+
+        {/* Features */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '48px' }}>
+          {[
+            { icon: '✨', text: 'KI generiert 3 Antwortvorschläge pro Bewertung' },
+            { icon: '📊', text: 'Übersicht & Analyse aller Google-Bewertungen' },
+            { icon: '📧', text: 'Automatische E-Mail bei neuen Bewertungen' },
+          ].map(f => (
+            <div key={f.text} style={{
+              display: 'flex', alignItems: 'center', gap: '12px',
+              background: 'rgba(255,255,255,0.05)', borderRadius: '12px',
+              padding: '12px 16px', textAlign: 'left',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}>
+              <span style={{ fontSize: '20px', flexShrink: 0 }}>{f.icon}</span>
+              <span style={{ fontSize: '14px', color: '#cbd5e1', fontWeight: '500' }}>{f.text}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Buttons */}
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button
+            onClick={onRegister}
+            className="wlc-btn-primary"
+            style={{
+              flex: 1, padding: '14px', borderRadius: '12px', border: 'none',
+              background: '#4f46e5', color: '#fff', fontSize: '15px',
+              fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit',
+              transition: 'background 0.15s',
+            }}
+          >
+            Registrieren
+          </button>
+          <button
+            onClick={onLogin}
+            className="wlc-btn-secondary"
+            style={{
+              flex: 1, padding: '14px', borderRadius: '12px',
+              border: '1.5px solid rgba(255,255,255,0.2)',
+              background: 'rgba(255,255,255,0.04)', color: '#e2e8f0',
+              fontSize: '15px', fontWeight: '600', cursor: 'pointer',
+              fontFamily: 'inherit', transition: 'background 0.15s',
+            }}
+          >
+            Anmelden
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── AUTH SCREEN ─────────────────────────────────────────────────────────────
 
-function AuthScreen() {
-  const [mode, setMode] = useState<'login' | 'register'>('login')
+function AuthScreen({ initialMode = 'login' }: { initialMode?: 'login' | 'register' }) {
+  const [mode, setMode] = useState<'login' | 'register'>(initialMode)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -1575,7 +1674,7 @@ function Onboarding({ step, data, onDataChange, onNext, onBack, onFinish }: {
                   <button key={t} className="ob-chip" onClick={() => onDataChange('restaurantType', t)} style={chip(data.restaurantType === t)}>{t}</button>
                 ))}
               </div>
-              <ObActions onNext={onNext} canContinue={canContinue()} />
+              <ObActions onNext={onNext} canContinue={canContinue()} optional />
             </div>
           )}
 
@@ -1591,7 +1690,7 @@ function Onboarding({ step, data, onDataChange, onNext, onBack, onFinish }: {
                   </button>
                 ))}
               </div>
-              <ObActions onNext={onNext} canContinue={canContinue()} />
+              <ObActions onNext={onNext} canContinue={canContinue()} optional />
             </div>
           )}
 
@@ -1612,7 +1711,7 @@ function Onboarding({ step, data, onDataChange, onNext, onBack, onFinish }: {
                   </button>
                 ))}
               </div>
-              <ObActions onNext={onNext} canContinue={canContinue()} />
+              <ObActions onNext={onNext} canContinue={canContinue()} optional />
             </div>
           )}
 
@@ -1644,7 +1743,7 @@ function Onboarding({ step, data, onDataChange, onNext, onBack, onFinish }: {
                 onFocus={e => { e.currentTarget.style.borderColor = '#4f46e5' }}
                 onBlur={e => { e.currentTarget.style.borderColor = '#d1d5db' }}
               />
-              <ObActions onNext={onNext} canContinue={canContinue()} />
+              <ObActions onNext={onNext} canContinue={canContinue()} optional />
             </div>
           )}
 
