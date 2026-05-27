@@ -1046,6 +1046,11 @@ function Settings({ onLogout }: { onLogout: () => void }) {
   const [saving, setSaving] = useState(false)
   const [saveTimer, setSaveTimer] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [cuisineSonstiges, setCuisineSonstiges] = useState(false)
+  const [dietarySonstigesChecked, setDietarySonstigesChecked] = useState(false)
+
+  const CUISINE_OPTIONS_LIST = ['Deutsch', 'Österreichisch', 'Italienisch', 'Türkisch & Orientalisch', 'Asiatisch & Japanisch & Chinesisch', 'Griechisch & Mediterran', 'Indisch', 'Mexikanisch & Lateinamerikanisch', 'Amerikanisch & Burger', 'Französisch', 'International & Fusion', 'Vegetarisch & Vegan fokussiert']
+  const DIETARY_LIST = ['Vegetarisch', 'Vegan', 'Glutenfrei', 'Halal', 'Kosher', 'Laktosefrei']
 
   // Einstellungen laden — nur bekannte Felder übernehmen (ignoriert entfernte Felder aus Supabase/localStorage)
   useEffect(() => {
@@ -1100,6 +1105,15 @@ function Settings({ onLogout }: { onLogout: () => void }) {
     return () => clearTimeout(timer)
   }, [form])
 
+  // Sonstiges-States nach Laden initialisieren
+  useEffect(() => {
+    if (!loading) {
+      setCuisineSonstiges(form.cuisineType !== '' && !CUISINE_OPTIONS_LIST.includes(form.cuisineType))
+      const arr = form.dietaryOptions ? form.dietaryOptions.split(',').map(s => s.trim()).filter(Boolean) : []
+      setDietarySonstigesChecked(arr.some(d => !DIETARY_LIST.includes(d)))
+    }
+  }, [loading]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const update = (k: string, v: any) => { setForm(p => ({ ...p, [k]: v })) }
   const save = async () => {
     setSaving(true)
@@ -1149,7 +1163,23 @@ function Settings({ onLogout }: { onLogout: () => void }) {
               <option value="hotel-restaurant">Hotelrestaurant</option><option value="catering">Catering</option><option value="sonstiges">Sonstiges</option>
             </select>
           </div>
-          <div><label style={lbl}>Küche / Küchenrichtung</label><input style={inp} placeholder="z. B. Italienisch, Asiatisch..." value={form.cuisineType} onChange={e => update('cuisineType', e.target.value)} /></div>
+          <div>
+            <label style={lbl}>Küche / Küchenrichtung</label>
+            <select style={inp}
+              value={cuisineSonstiges ? 'Sonstiges' : form.cuisineType}
+              onChange={e => {
+                if (e.target.value === 'Sonstiges') { setCuisineSonstiges(true); update('cuisineType', '') }
+                else { setCuisineSonstiges(false); update('cuisineType', e.target.value) }
+              }}>
+              <option value="">Küchenrichtung auswählen</option>
+              {CUISINE_OPTIONS_LIST.map(c => <option key={c} value={c}>{c}</option>)}
+              <option value="Sonstiges">Sonstiges</option>
+            </select>
+            {cuisineSonstiges && (
+              <input style={{ ...inp, marginTop: '6px' }} placeholder="Eigene Küchenrichtung eingeben…"
+                value={form.cuisineType} onChange={e => update('cuisineType', e.target.value)} />
+            )}
+          </div>
           <div><label style={lbl}>Preisklasse</label>
             <select style={inp} value={form.priceRange} onChange={e => update('priceRange', e.target.value)}>
               <option value="">Preisklasse auswählen</option>
@@ -1172,7 +1202,48 @@ function Settings({ onLogout }: { onLogout: () => void }) {
       </div></div>
 
       <div style={card}><div style={cardH}>⭐ Speisekarte & Angebot</div><div style={cardB}>
-        <div style={{ marginBottom: '12px' }}><label style={lbl}>Ernährungsoptionen</label><input style={inp} placeholder="z. B. Vegetarisch, Vegan, Glutenfrei..." value={form.dietaryOptions} onChange={e => update('dietaryOptions', e.target.value)} /><div style={hint}>Kommagetrennt angeben.</div></div>
+        <div style={{ marginBottom: '16px' }}>
+          <label style={lbl}>Ernährungsoptionen</label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '9px', marginTop: '10px' }}>
+            {DIETARY_LIST.map(opt => {
+              const items = form.dietaryOptions ? form.dietaryOptions.split(',').map(s => s.trim()).filter(Boolean) : []
+              return (
+                <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13px', color: '#374151', userSelect: 'none' }}>
+                  <input type="checkbox" checked={items.includes(opt)}
+                    onChange={e => {
+                      const cur = form.dietaryOptions ? form.dietaryOptions.split(',').map(s => s.trim()).filter(Boolean) : []
+                      update('dietaryOptions', (e.target.checked ? [...cur, opt] : cur.filter(i => i !== opt)).join(', '))
+                    }}
+                    style={{ width: 16, height: 16, accentColor: '#4f46e5', cursor: 'pointer', flexShrink: 0 }} />
+                  {opt}
+                </label>
+              )
+            })}
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13px', color: '#374151', userSelect: 'none' }}>
+              <input type="checkbox" checked={dietarySonstigesChecked}
+                onChange={e => {
+                  setDietarySonstigesChecked(e.target.checked)
+                  if (!e.target.checked) {
+                    const cur = form.dietaryOptions ? form.dietaryOptions.split(',').map(s => s.trim()).filter(Boolean) : []
+                    update('dietaryOptions', cur.filter(d => DIETARY_LIST.includes(d)).join(', '))
+                  }
+                }}
+                style={{ width: 16, height: 16, accentColor: '#4f46e5', cursor: 'pointer', flexShrink: 0 }} />
+              Sonstiges
+            </label>
+            {dietarySonstigesChecked && (
+              <input style={{ ...inp, marginTop: '2px' }} placeholder="z. B. Rohkost, Jain-Vegetarisch…"
+                value={(() => {
+                  const arr = form.dietaryOptions ? form.dietaryOptions.split(',').map(s => s.trim()).filter(Boolean) : []
+                  return arr.filter(d => !DIETARY_LIST.includes(d)).join(', ')
+                })()}
+                onChange={e => {
+                  const predefined = form.dietaryOptions ? form.dietaryOptions.split(',').map(s => s.trim()).filter(Boolean).filter(d => DIETARY_LIST.includes(d)) : []
+                  update('dietaryOptions', [...predefined, ...(e.target.value.trim() ? [e.target.value] : [])].join(', '))
+                }} />
+            )}
+          </div>
+        </div>
         <div style={{ marginBottom: '14px' }}><label style={lbl}>Öffnungszeiten</label><textarea style={{ ...inp, height: '70px', resize: 'none' }} placeholder={'Mo–Fr: 11:30–15:00 & 18:00–23:00\nSa–So: 12:00–23:00'} value={form.openingHours} onChange={e => update('openingHours', e.target.value)} /></div>
         <div style={{ fontSize: '13px', fontWeight: '500', marginBottom: '10px', color: '#374151' }}>Service-Optionen</div>
         <div className="grid2i">
@@ -1185,27 +1256,19 @@ function Settings({ onLogout }: { onLogout: () => void }) {
       </div></div>
 
       <div style={card}><div style={cardH}>✨ Atmosphäre & Stil</div><div style={cardB}>
-        <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '14px' }}>Wie würden Sie die Atmosphäre Ihres Restaurants beschreiben? Beeinflusst den Ton der KI-Antworten.</div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-          {['Modern & urban', 'Gemütlich & familiär', 'Rustikal & bodenständig', 'Elegant & hochwertig', 'Lebhaft & gesellig', 'Traditionell & heimelig'].map(a => (
-            <button
-              key={a}
-              onClick={() => update('restaurantAtmosphere', form.restaurantAtmosphere === a ? '' : a)}
-              style={{
-                padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontFamily: 'inherit',
-                border: form.restaurantAtmosphere === a ? '2px solid #4f46e5' : '1.5px solid #e5e7eb',
-                background: form.restaurantAtmosphere === a ? '#eef2ff' : '#fff',
-                color: form.restaurantAtmosphere === a ? '#4338ca' : '#374151',
-                fontWeight: form.restaurantAtmosphere === a ? '600' : '500',
-                fontSize: '13px', transition: 'all 0.15s',
-              }}
-            >{a}</button>
-          ))}
-        </div>
+        <label style={lbl}>Atmosphäre</label>
+        <select style={inp} value={form.restaurantAtmosphere} onChange={e => update('restaurantAtmosphere', e.target.value)}>
+          <option value="">Atmosphäre auswählen</option>
+          <option value="Modern & urban">Modern & urban</option>
+          <option value="Gemütlich & familiär">Gemütlich & familiär</option>
+          <option value="Rustikal & bodenständig">Rustikal & bodenständig</option>
+          <option value="Elegant & hochwertig">Elegant & hochwertig</option>
+          <option value="Lebhaft & gesellig">Lebhaft & gesellig</option>
+          <option value="Traditionell & heimelig">Traditionell & heimelig</option>
+        </select>
       </div></div>
 
       <div style={card}><div style={cardH}>🎨 Marke & Tonalität</div><div style={cardB}>
-        <div style={{ marginBottom: '12px' }}><label style={lbl}>Was macht Ihr Restaurant besonders?</label><textarea style={{ ...inp, height: '60px', resize: 'none' }} value={form.uniqueSellingPoints} onChange={e => update('uniqueSellingPoints', e.target.value)} /></div>
         <div className="grid3i">
           <div><label style={lbl}>Antwort-Signatur</label><input style={inp} placeholder="z. B. Das Team der Trattoria" value={form.responseSignature} onChange={e => update('responseSignature', e.target.value)} /></div>
           <div><label style={lbl}>Antwortsprache</label>
