@@ -166,7 +166,6 @@ function App() {
         hasReservation: false, hasDelivery: false, hasTakeaway: false,
         hasParking: false, isWheelchairAccessible: false,
         responseSignature: '', responseLanguage: 'Deutsch',
-        googleAccountId: '', googleLocationId: '',
       }
       localStorage.setItem('reviewManagerSettings', JSON.stringify(fullSettings))
       try {
@@ -989,7 +988,7 @@ function Settings() {
     hasParking: false, isWheelchairAccessible: false,
     uniqueSellingPoints: '', responseSignature: '', responseLanguage: 'Deutsch',
     salutation: 'Sie',
-    googleAccountId: '', googleLocationId: '', notificationEmail: '', contactEmail: '',
+    notificationEmail: '', contactEmail: '',
   })
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -1150,32 +1149,6 @@ function Settings() {
             <select style={inp} value={form.salutation} onChange={e => update('salutation', e.target.value)}>
               <option value="Sie">Sie (förmlich)</option><option value="Du">Du (persönlich)</option>
             </select>
-          </div>
-        </div>
-      </div></div>
-
-      <div style={card}><div style={cardH}>🔗 Google Business Profile</div><div style={cardB}>
-        <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '14px' }}>Verbinden Sie Ihr Google-Konto, um Bewertungen automatisch zu synchronisieren.</div>
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
-          <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '500', flexShrink: 0, marginTop: '1px' }}>1</div>
-          <div style={{ flex: 1 }}><div style={{ fontSize: '13px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Google Dienstkonto-Schlüssel hinterlegen</div>
-            <div style={{ background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: '8px', padding: '10px 12px', fontSize: '12px', color: '#92400e' }}>⚠️ Fügen Sie das Secret <code style={{ background: '#fde68a', padding: '1px 4px', borderRadius: '3px' }}>GOOGLE_SERVICE_ACCOUNT_KEY</code> in den Replit Secrets ein.</div>
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
-          <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '500', flexShrink: 0, marginTop: '1px' }}>2</div>
-          <div style={{ flex: 1 }}><div style={{ fontSize: '13px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Konto-ID und Standort-ID eingeben</div>
-            <div className="grid2i">
-              <div><label style={lbl}>Google Account-ID</label><input style={inp} placeholder="z. B. 123456789012345" value={form.googleAccountId} onChange={e => update('googleAccountId', e.target.value)} /></div>
-              <div><label style={lbl}>Standort-ID</label><input style={inp} placeholder="z. B. 9876543210987654" value={form.googleLocationId} onChange={e => update('googleLocationId', e.target.value)} /></div>
-            </div>
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '500', flexShrink: 0, marginTop: '1px' }}>3</div>
-          <div><div style={{ fontSize: '13px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Verbindung testen</div>
-            <button style={{ padding: '8px 16px', background: '#fff', border: '1px solid #d1d5db', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', color: '#374151' }}>📡 Verbindung testen</button>
-            <div style={{ ...hint, marginTop: '6px' }}>Speichern Sie zuerst die Einstellungen.</div>
           </div>
         </div>
       </div></div>
