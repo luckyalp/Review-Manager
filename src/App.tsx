@@ -1037,6 +1037,7 @@ function Settings({ onLogout }: { onLogout: () => void }) {
     priceRange: '', dietaryOptions: '', openingHours: '',
     hasReservation: false, hasDelivery: false, hasTakeaway: false,
     hasParking: false, isWheelchairAccessible: false,
+    restaurantAtmosphere: '',
     uniqueSellingPoints: '', responseSignature: '', responseLanguage: 'Deutsch',
     salutation: 'Sie',
     notificationEmail: '', contactEmail: '',
@@ -1179,6 +1180,26 @@ function Settings({ onLogout }: { onLogout: () => void }) {
             <div key={item.k} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
               <span style={{ fontSize: '13px', color: '#374151' }}>{item.l}</span><Toggle k={item.k} />
             </div>
+          ))}
+        </div>
+      </div></div>
+
+      <div style={card}><div style={cardH}>✨ Atmosphäre & Stil</div><div style={cardB}>
+        <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '14px' }}>Wie würden Sie die Atmosphäre Ihres Restaurants beschreiben? Beeinflusst den Ton der KI-Antworten.</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          {['Modern & urban', 'Gemütlich & familiär', 'Rustikal & bodenständig', 'Elegant & hochwertig', 'Lebhaft & gesellig', 'Traditionell & heimelig'].map(a => (
+            <button
+              key={a}
+              onClick={() => update('restaurantAtmosphere', form.restaurantAtmosphere === a ? '' : a)}
+              style={{
+                padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontFamily: 'inherit',
+                border: form.restaurantAtmosphere === a ? '2px solid #4f46e5' : '1.5px solid #e5e7eb',
+                background: form.restaurantAtmosphere === a ? '#eef2ff' : '#fff',
+                color: form.restaurantAtmosphere === a ? '#4338ca' : '#374151',
+                fontWeight: form.restaurantAtmosphere === a ? '600' : '500',
+                fontSize: '13px', transition: 'all 0.15s',
+              }}
+            >{a}</button>
           ))}
         </div>
       </div></div>
