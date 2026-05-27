@@ -56,8 +56,8 @@ function App() {
   const [selectedReview, setSelectedReview] = useState<Review | null>(null)
   const [onboardingStep, setOnboardingStep] = useState<number | null>(null)
   const [onboardingData, setOnboardingData] = useState({
-    businessName: '', restaurantType: '', priceRange: '',
-    salutation: 'Sie', uniqueSellingPoints: '', contactEmail: '',
+    businessName: '', restaurantType: '',
+    salutation: 'Sie', restaurantAtmosphere: '', contactEmail: '',
   })
 
   // ── Auth State ──
@@ -210,9 +210,10 @@ function App() {
       const fullSettings = {
         businessName: onboardingData.businessName,
         restaurantType: onboardingData.restaurantType,
-        priceRange: onboardingData.priceRange,
+        priceRange: '',
         salutation: onboardingData.salutation,
-        uniqueSellingPoints: onboardingData.uniqueSellingPoints,
+        uniqueSellingPoints: '',
+        restaurantAtmosphere: onboardingData.restaurantAtmosphere,
         contactEmail: onboardingData.contactEmail,
         notificationEmail: onboardingData.contactEmail,
         description: '', cuisineType: '', dietaryOptions: '', openingHours: '',
@@ -1497,9 +1498,8 @@ function AuthScreen({ initialMode = 'login' }: { initialMode?: 'login' | 'regist
 interface OnboardingData {
   businessName: string
   restaurantType: string
-  priceRange: string
   salutation: string
-  uniqueSellingPoints: string
+  restaurantAtmosphere: string
   contactEmail: string
 }
 
@@ -1581,13 +1581,12 @@ function Onboarding({ step, data, onDataChange, onNext, onBack, onFinish }: {
   const canContinue = (): boolean => {
     if (step === 2) return data.businessName.trim().length > 0
     if (step === 3) return data.restaurantType !== ''
-    if (step === 4) return data.priceRange !== ''
-    if (step === 5) return data.salutation !== ''
-    if (step === 7) return data.contactEmail.includes('@') && data.contactEmail.includes('.')
+    if (step === 4) return data.salutation !== ''
+    if (step === 6) return data.contactEmail.includes('@') && data.contactEmail.includes('.')
     return true
   }
 
-  const progress = step === 8 ? 1 : step <= 1 ? 0 : (step - 1) / 6
+  const progress = step === 7 ? 1 : step <= 1 ? 0 : (step - 1) / 5
 
   return (
     <div style={{
@@ -1612,7 +1611,7 @@ function Onboarding({ step, data, onDataChange, onNext, onBack, onFinish }: {
         </div>
 
         {/* Zurück-Button & Schritt-Zähler */}
-        {step > 1 && step < 8 && (
+        {step > 1 && step < 7 && (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 24px 0' }}>
             <button
               onClick={onBack}
@@ -1622,11 +1621,11 @@ function Onboarding({ step, data, onDataChange, onNext, onBack, onFinish }: {
             >
               ← Zurück
             </button>
-            <span style={{ fontSize: '12px', color: '#d1d5db', fontWeight: '500' }}>{step - 1} / 6</span>
+            <span style={{ fontSize: '12px', color: '#d1d5db', fontWeight: '500' }}>{step - 1} / 5</span>
           </div>
         )}
 
-        <div style={{ padding: step > 1 && step < 9 ? '22px 32px 32px' : '40px 32px 36px' }}>
+        <div style={{ padding: step > 1 && step < 7 ? '22px 32px 32px' : '40px 32px 36px' }}>
 
           {/* Screen 1: Willkommen */}
           {step === 1 && (
@@ -1678,26 +1677,10 @@ function Onboarding({ step, data, onDataChange, onNext, onBack, onFinish }: {
             </div>
           )}
 
-          {/* Screen 4: Preisklasse */}
+          {/* Screen 4: Anredeform */}
           {step === 4 && (
             <div>
-              <ObStepHeader n={3} label="Preisklasse" title="In welcher Preisklasse seid ihr?" subtitle="Beeinflusst, wie die KI Antworten formuliert." />
-              <div style={{ display: 'flex', gap: '10px', marginTop: '20px', marginBottom: '28px' }}>
-                {['€', '€€', '€€€', '€€€€'].map(p => (
-                  <button key={p} className="ob-chip" onClick={() => onDataChange('priceRange', p)}
-                    style={{ ...chip(data.priceRange === p), flex: 1, padding: '14px 8px', textAlign: 'center', fontSize: '18px', fontWeight: '600' }}>
-                    {p}
-                  </button>
-                ))}
-              </div>
-              <ObActions onNext={onNext} canContinue={canContinue()} optional />
-            </div>
-          )}
-
-          {/* Screen 5: Anredeform */}
-          {step === 5 && (
-            <div>
-              <ObStepHeader n={4} label="Anrede" title="Wie redet ihr eure Gäste an?" subtitle="Gilt für alle KI-generierten Antworten." />
+              <ObStepHeader n={3} label="Anrede" title="Wie redet ihr eure Gäste an?" subtitle="Gilt für alle KI-generierten Antworten." />
               <div style={{ display: 'flex', gap: '12px', marginTop: '20px', marginBottom: '28px' }}>
                 {[
                   { val: 'Du', emoji: '👋', sub: 'locker & modern' },
@@ -1715,26 +1698,30 @@ function Onboarding({ step, data, onDataChange, onNext, onBack, onFinish }: {
             </div>
           )}
 
-          {/* Screen 6: Besonderheit (optional) */}
-          {step === 6 && (
+          {/* Screen 5: Atmosphäre & Stil */}
+          {step === 5 && (
             <div>
-              <ObStepHeader n={5} label="Besonderheit" title="Was macht euch besonders?" subtitle="Optional — macht KI-Antworten persönlicher und einzigartiger." />
-              <textarea
-                autoFocus rows={3}
-                placeholder="z.B. Hausgemachte Pasta, 50 Jahre Familientradition, Live-Musik freitags…"
-                value={data.uniqueSellingPoints} onChange={e => onDataChange('uniqueSellingPoints', e.target.value)}
-                style={{ ...inp, resize: 'vertical', minHeight: '90px', marginBottom: '28px', lineHeight: '1.5', fontSize: '14px' } as React.CSSProperties}
-                onFocus={e => { e.currentTarget.style.borderColor = '#4f46e5' }}
-                onBlur={e => { e.currentTarget.style.borderColor = '#d1d5db' }}
-              />
-              <ObActions onNext={onNext} canContinue optional />
+              <ObStepHeader n={4} label="Atmosphäre" title="Wie würdet ihr eure Atmosphäre beschreiben?" subtitle="Hilft der KI, den richtigen Ton und Stil in den Antworten zu treffen." />
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '20px', marginBottom: '28px' }}>
+                {[
+                  'Modern & urban',
+                  'Gemütlich & familiär',
+                  'Rustikal & bodenständig',
+                  'Elegant & hochwertig',
+                  'Lebhaft & gesellig',
+                  'Traditionell & heimelig',
+                ].map(a => (
+                  <button key={a} className="ob-chip" onClick={() => onDataChange('restaurantAtmosphere', a)} style={chip(data.restaurantAtmosphere === a)}>{a}</button>
+                ))}
+              </div>
+              <ObActions onNext={onNext} canContinue={data.restaurantAtmosphere !== ''} optional />
             </div>
           )}
 
-          {/* Screen 7: Kontakt-E-Mail */}
-          {step === 7 && (
+          {/* Screen 6: Kontakt-E-Mail */}
+          {step === 6 && (
             <div>
-              <ObStepHeader n={6} label="E-Mail" title="Kontakt-E-Mail für Gäste" subtitle="Wird in Recovery-Antworten bei negativen Bewertungen eingebettet." />
+              <ObStepHeader n={5} label="E-Mail" title="Kontakt-E-Mail für Gäste" subtitle="Wird in Recovery-Antworten bei negativen Bewertungen eingebettet." />
               <input
                 autoFocus type="email" placeholder="kontakt@euer-restaurant.de"
                 value={data.contactEmail} onChange={e => onDataChange('contactEmail', e.target.value)}
@@ -1747,8 +1734,8 @@ function Onboarding({ step, data, onDataChange, onNext, onBack, onFinish }: {
             </div>
           )}
 
-          {/* Screen 8: Fertig */}
-          {step === 8 && (
+          {/* Screen 7: Fertig */}
+          {step === 7 && (
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '52px', marginBottom: '16px', lineHeight: '1' }}>🎉</div>
               <div style={{ fontSize: '24px', fontWeight: '700', color: '#111827', marginBottom: '10px' }}>
