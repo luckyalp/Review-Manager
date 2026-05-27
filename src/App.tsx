@@ -1670,7 +1670,7 @@ function Onboarding({ step, data, onDataChange, onNext, onBack, onFinish }: {
             <div>
               <ObStepHeader n={2} label="Typ" title="Was seid ihr?" subtitle="Hilft der KI, die passende Tonalität zu wählen." />
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '20px', marginBottom: '28px' }}>
-                {['Restaurant', 'Café', 'Bar', 'Bistro', 'Imbiss', 'Sonstiges'].map(t => (
+                {['Restaurant', 'Café', 'Bar / Weinbar', 'Bistro', 'Imbiss / Foodtruck', 'Bäckerei / Konditorei', 'Hotel / Hotelrestaurant', 'Gasthof / Pension', 'Catering', 'Kantine', 'Sonstiges'].map(t => (
                   <button key={t} className="ob-chip" onClick={() => onDataChange('restaurantType', t)} style={chip(data.restaurantType === t)}>{t}</button>
                 ))}
               </div>
