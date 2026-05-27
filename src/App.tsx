@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Home, MessageSquare, BarChart2, User } from 'lucide-react'
+import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 
@@ -38,13 +39,13 @@ const formatDate = (raw: string) => {
 
 // ─── SUPABASE ────────────────────────────────────────────────────────────────
 
-const getSupabase = async () => {
-  const { createClient } = await import('@supabase/supabase-js')
-  return createClient(
-    'https://xbgohbljmuoijgocrkka.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhiZ29oYmxqbXVvaWpnb2Nya2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2OTAwMjUsImV4cCI6MjA5NTI2NjAyNX0.CNpNc3uyxnfKfse9G_26XIaCBPhBpPPESuC4jm9WbGU'
-  )
-}
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  'https://xbgohbljmuoijgocrkka.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhiZ29oYmxqbXVvaWpnb2Nya2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2OTAwMjUsImV4cCI6MjA5NTI2NjAyNX0.CNpNc3uyxnfKfse9G_26XIaCBPhBpPPESuC4jm9WbGU'
+)
+
 
 // ─── APP ─────────────────────────────────────────────────────────────────────
 
@@ -59,8 +60,46 @@ function App() {
     salutation: 'Sie', uniqueSellingPoints: '', contactEmail: '',
   })
 
-  // Bewertungen aus Supabase laden
+  // ── Auth State ──
+  const [user, setUser] = useState<SupabaseUser | null>(null)
+  const [authLoading, setAuthLoading] = useState(true)
+
+  // Auth-Listener: einmal beim Mount, reagiert auf Login/Logout/OAuth-Callback
   useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      setAuthLoading(false)
+    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
+  // Onboarding-Check: nur wenn eingeloggt
+  useEffect(() => {
+    if (!user) return
+    const checkOnboarding = async () => {
+      try {
+        const { data } = await supabase
+          .from('settings').select('value').eq('key', 'restaurant_profile').single()
+        if (data?.value?.businessName) { setOnboardingStep(0); return }
+      } catch { /* ignore */ }
+      try {
+        const local = localStorage.getItem('reviewManagerSettings')
+        if (local) {
+          const parsed = JSON.parse(local)
+          if (parsed?.businessName) { setOnboardingStep(0); return }
+        }
+      } catch { /* ignore */ }
+      setOnboardingStep(1)
+    }
+    checkOnboarding()
+  }, [user])
+
+  // Bewertungen laden: nur wenn eingeloggt
+  useEffect(() => {
+    if (!user) return
     const mapRow = (row: any): Review => ({
       id: row.id,
       name: row.reviewer_name,
@@ -72,10 +111,8 @@ function App() {
       date: row.review_date,
       status: row.status as ReviewStatus,
     })
-
     const loadReviews = async () => {
       try {
-        const supabase = await getSupabase()
         const { data, error } = await supabase
           .from('reviews')
           .select('*')
@@ -91,27 +128,7 @@ function App() {
       setReviewsLoading(false)
     }
     loadReviews()
-  }, [])
-
-  useEffect(() => {
-    const checkOnboarding = async () => {
-      try {
-        const supabase = await getSupabase()
-        const { data } = await supabase
-          .from('settings').select('value').eq('key', 'restaurant_profile').single()
-        if (data?.value?.businessName) { setOnboardingStep(0); return }
-      } catch { /* ignore */ }
-      try {
-        const local = localStorage.getItem('reviewManagerSettings')
-        if (local) {
-          const parsed = JSON.parse(local)
-          if (parsed?.businessName) { setOnboardingStep(0); return }
-        }
-      } catch { /* ignore */ }
-      setOnboardingStep(1)
-    }
-    checkOnboarding()
-  }, [])
+  }, [user])
 
   const navigate = (id: string) => { setPage(id); setSelectedReview(null) }
   const openReview = (review: Review) => { setSelectedReview(review); setPage('reviews') }
@@ -119,7 +136,6 @@ function App() {
   const updateReviewStatus = async (id: number, status: ReviewStatus) => {
     setReviews(prev => prev.map(r => r.id === id ? { ...r, status } : r))
     try {
-      const supabase = await getSupabase()
       await supabase.from('reviews').update({ status }).eq('id', id)
     } catch (e) {
       console.warn('Supabase update failed', e)
@@ -129,11 +145,19 @@ function App() {
   const deleteReview = async (id: number) => {
     setReviews(prev => prev.filter(r => r.id !== id))
     try {
-      const supabase = await getSupabase()
       await supabase.from('reviews').delete().eq('id', id)
     } catch (e) {
       console.warn('Supabase delete failed', e)
     }
+  }
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    setUser(null)
+    setOnboardingStep(null)
+    setReviews([])
+    setPage('dashboard')
+    localStorage.removeItem('reviewManagerSettings')
   }
 
   const stats = {
@@ -143,6 +167,24 @@ function App() {
     answered: reviews.filter(r => r.status === 'Beantwortet').length,
   }
 
+  // ── Render-Logik ──
+
+  // 1. Auth lädt noch
+  if (authLoading) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '"Plus Jakarta Sans", -apple-system, sans-serif' }}>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap'); @keyframes ob-spin { to { transform: rotate(360deg) } }`}</style>
+        <div style={{ width: 32, height: 32, border: '3px solid rgba(79,70,229,0.3)', borderTopColor: '#4f46e5', borderRadius: '50%', animation: 'ob-spin 0.8s linear infinite' }} />
+      </div>
+    )
+  }
+
+  // 2. Nicht eingeloggt → Auth-Screen
+  if (!user) {
+    return <AuthScreen />
+  }
+
+  // 3. Eingeloggt, Onboarding-Check läuft noch
   if (onboardingStep === null) {
     return (
       <div style={{ minHeight: '100vh', background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '"Plus Jakarta Sans", -apple-system, sans-serif' }}>
@@ -152,6 +194,7 @@ function App() {
     )
   }
 
+  // 4. Eingeloggt, Onboarding noch nicht abgeschlossen
   if (onboardingStep > 0) {
     const handleFinish = async () => {
       const fullSettings = {
@@ -169,7 +212,6 @@ function App() {
       }
       localStorage.setItem('reviewManagerSettings', JSON.stringify(fullSettings))
       try {
-        const supabase = await getSupabase()
         await supabase.from('settings').upsert(
           { key: 'restaurant_profile', value: fullSettings, updated_at: new Date().toISOString() },
           { onConflict: 'key' }
@@ -231,7 +273,7 @@ function App() {
               {page === 'reviews' && !selectedReview && <Reviews reviews={reviews} onStatusChange={updateReviewStatus} onDelete={deleteReview} openReview={openReview} />}
               {page === 'reviews' && selectedReview && <ReviewDetail review={selectedReview} onStatusChange={updateReviewStatus} onBack={() => setSelectedReview(null)} />}
               {page === 'analytics' && <Analytics reviews={reviews} />}
-              {page === 'settings' && <Settings />}
+              {page === 'settings' && <Settings onLogout={handleLogout} />}
             </>
           )}
         </div>
@@ -513,7 +555,6 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview }: { reviews: R
   const sendAnswer = async (review: Review) => {
     const text = aiAnswers[review.id]?.[selected[review.id]]?.text
     try {
-      const supabase = await getSupabase()
       await supabase.from('reviews').update({ selected_answer: text ?? null }).eq('id', review.id)
     } catch (e) { console.warn('Supabase save failed', e) }
     onStatusChange(review.id, 'Beantwortet')
@@ -710,7 +751,6 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
   const sendAnswer = async () => {
     const text = selected !== null ? aiAnswers[selected]?.text : null
     try {
-      const supabase = await getSupabase()
       await supabase.from('reviews').update({ selected_answer: text ?? null }).eq('id', review.id)
     } catch (e) { console.warn('Supabase save failed', e) }
     onStatusChange(review.id, 'Beantwortet')
@@ -980,7 +1020,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
 
 // ─── EINSTELLUNGEN ────────────────────────────────────────────────────────────
 
-function Settings() {
+function Settings({ onLogout }: { onLogout: () => void }) {
   const [form, setForm] = useState({
     businessName: '', description: '', restaurantType: '', cuisineType: '',
     priceRange: '', dietaryOptions: '', openingHours: '',
@@ -1005,7 +1045,6 @@ function Settings() {
 
     const loadData = async () => {
       try {
-        const supabase = await getSupabase()
         const { data } = await supabase
           .from('settings')
           .select('value')
@@ -1036,7 +1075,6 @@ function Settings() {
       setSaving(true)
       localStorage.setItem('reviewManagerSettings', JSON.stringify(form))
       try {
-        const supabase = await getSupabase()
         await supabase.from('settings').upsert(
           { key: 'restaurant_profile', value: form, updated_at: new Date().toISOString() },
           { onConflict: 'key' }
@@ -1055,7 +1093,6 @@ function Settings() {
     setSaving(true)
     localStorage.setItem('reviewManagerSettings', JSON.stringify(form))
     try {
-      const supabase = await getSupabase()
       await supabase.from('settings').upsert(
         { key: 'restaurant_profile', value: form, updated_at: new Date().toISOString() },
         { onConflict: 'key' }
@@ -1164,10 +1201,193 @@ function Settings() {
         </div>
       </div></div>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px', paddingBottom: '40px' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px', paddingBottom: '16px' }}>
         {saved && <span style={{ color: '#22c55e', fontSize: '14px', fontWeight: '500', transition: 'opacity 0.3s' }}>✅ Automatisch gespeichert</span>}
         {saving && !saved && <span style={{ color: '#9ca3af', fontSize: '14px' }}>💾 Speichert...</span>}
         <button onClick={save} style={{ padding: '10px 28px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', fontFamily: 'inherit', fontWeight: '500' }}>Profil speichern</button>
+      </div>
+
+      {/* Account / Abmelden */}
+      <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', marginBottom: '40px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '16px', color: '#111827' }}>👤 Konto</div>
+        <div style={{ padding: '18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <div>
+            <div style={{ fontSize: '13px', color: '#6b7280' }}>Eingeloggt als</div>
+            <div style={{ fontSize: '14px', fontWeight: '500', color: '#111827', marginTop: '2px' }}>
+              <AccountEmail />
+            </div>
+          </div>
+          <button
+            onClick={onLogout}
+            style={{ padding: '8px 18px', background: '#fff', border: '1px solid #fca5a5', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', color: '#ef4444', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            🚪 Abmelden
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function AccountEmail() {
+  const [email, setEmail] = useState('')
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ''))
+  }, [])
+  return <span>{email || '–'}</span>
+}
+
+// ─── AUTH SCREEN ─────────────────────────────────────────────────────────────
+
+function AuthScreen() {
+  const [mode, setMode] = useState<'login' | 'register'>('login')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+    setLoading(true)
+
+    if (mode === 'login') {
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) setError(error.message === 'Invalid login credentials'
+        ? 'E-Mail oder Passwort ist falsch.'
+        : error.message)
+    } else {
+      const { error } = await supabase.auth.signUp({ email, password })
+      if (error) {
+        setError(error.message === 'User already registered'
+          ? 'Diese E-Mail ist bereits registriert. Bitte einloggen.'
+          : error.message)
+      } else {
+        setSuccess('Registrierung erfolgreich! Bitte bestätigen Sie Ihre E-Mail-Adresse.')
+      }
+    }
+    setLoading(false)
+  }
+
+  const handleGoogle = async () => {
+    setGoogleLoading(true)
+    setError('')
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin },
+    })
+    if (error) { setError(error.message); setGoogleLoading(false) }
+  }
+
+  const inp: React.CSSProperties = {
+    width: '100%', padding: '11px 14px', borderRadius: '10px',
+    border: '1.5px solid #d1d5db', fontSize: '15px', fontFamily: 'inherit',
+    background: '#f9fafb', outline: 'none', boxSizing: 'border-box',
+  }
+
+  return (
+    <div style={{
+      minHeight: '100vh', background: '#0f172a',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '16px', fontFamily: '"Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+        @keyframes ob-spin { to { transform: rotate(360deg) } }
+        .auth-inp:focus { border-color: #4f46e5 !important; background: #fff !important; }
+        .auth-google:hover { background: #f9fafb !important; }
+        .auth-tab-active { border-bottom: 2.5px solid #4f46e5; color: #4f46e5; font-weight: 600; }
+        .auth-tab { color: #9ca3af; border-bottom: 2.5px solid transparent; font-weight: 500; }
+      `}</style>
+
+      <div style={{ background: '#fff', borderRadius: '24px', width: '100%', maxWidth: '420px', overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.6)' }}>
+
+        {/* Logo + Titel */}
+        <div style={{ padding: '36px 32px 0', textAlign: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+            <img src="/favicon.svg" alt="Logo" style={{ width: 48, height: 48 }} onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
+          </div>
+          <div style={{ fontSize: '22px', fontWeight: '700', color: '#111827', marginBottom: '4px' }}>ReviewManager</div>
+          <div style={{ fontSize: '14px', color: '#6b7280' }}>KI-Antworten für Google-Bewertungen</div>
+        </div>
+
+        {/* Tabs */}
+        <div style={{ display: 'flex', borderBottom: '1px solid #e5e7eb', margin: '24px 32px 0', gap: '0' }}>
+          {(['login', 'register'] as const).map(m => (
+            <button key={m} onClick={() => { setMode(m); setError(''); setSuccess('') }}
+              className={mode === m ? 'auth-tab-active' : 'auth-tab'}
+              style={{ flex: 1, padding: '10px 0', fontSize: '14px', border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}>
+              {m === 'login' ? 'Anmelden' : 'Registrieren'}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ padding: '28px 32px 36px' }}>
+
+          {/* Google Button */}
+          <button onClick={handleGoogle} disabled={googleLoading} className="auth-google"
+            style={{ width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1.5px solid #e5e7eb', background: '#fff', fontSize: '14px', fontFamily: 'inherit', fontWeight: '600', color: '#374151', cursor: googleLoading ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '20px', transition: 'background 0.15s' }}>
+            {googleLoading ? (
+              <div style={{ width: 18, height: 18, border: '2px solid #e5e7eb', borderTopColor: '#4f46e5', borderRadius: '50%', animation: 'ob-spin 0.7s linear infinite' }} />
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 48 48">
+                <path fill="#FFC107" d="M43.6 20H24v8h11.3C33.6 33.1 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.6-8 19.6-20 0-1.3-.1-2.7-.4-4z" />
+                <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 15.1 18.9 12 24 12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
+                <path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5l-6.2-5.2C29.4 35.6 26.8 36 24 36c-5.2 0-9.6-2.9-11.3-7H6.3C9.7 39.7 16.3 44 24 44z" />
+                <path fill="#1976D2" d="M43.6 20H24v8h11.3c-.8 2.3-2.3 4.2-4.2 5.6l6.2 5.2C41.1 35.3 44 30 44 24c0-1.3-.1-2.7-.4-4z" />
+              </svg>
+            )}
+            Mit Google {mode === 'login' ? 'anmelden' : 'registrieren'}
+          </button>
+
+          {/* Divider */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+            <div style={{ flex: 1, height: 1, background: '#e5e7eb' }} />
+            <span style={{ fontSize: '12px', color: '#9ca3af', fontWeight: '500' }}>oder</span>
+            <div style={{ flex: 1, height: 1, background: '#e5e7eb' }} />
+          </div>
+
+          {/* E-Mail / Passwort Form */}
+          <form onSubmit={handleSubmit}>
+            <div style={{ marginBottom: '14px' }}>
+              <label style={{ fontSize: '13px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '5px' }}>E-Mail</label>
+              <input className="auth-inp" style={inp} type="email" required autoComplete="email"
+                placeholder="name@restaurant.de" value={email} onChange={e => setEmail(e.target.value)} />
+            </div>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ fontSize: '13px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '5px' }}>Passwort</label>
+              <input className="auth-inp" style={inp} type="password" required autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+                placeholder={mode === 'register' ? 'Mindestens 6 Zeichen' : '••••••••'} value={password} onChange={e => setPassword(e.target.value)} />
+            </div>
+
+            {error && (
+              <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '8px', padding: '10px 12px', fontSize: '13px', color: '#dc2626', marginBottom: '16px' }}>
+                ⚠️ {error}
+              </div>
+            )}
+            {success && (
+              <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '8px', padding: '10px 12px', fontSize: '13px', color: '#16a34a', marginBottom: '16px' }}>
+                ✅ {success}
+              </div>
+            )}
+
+            <button type="submit" disabled={loading}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: 'none', background: loading ? '#e5e7eb' : '#4f46e5', color: loading ? '#9ca3af' : '#fff', fontSize: '15px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'background 0.15s' }}>
+              {loading && <div style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'ob-spin 0.7s linear infinite' }} />}
+              {mode === 'login' ? 'Anmelden' : 'Konto erstellen'}
+            </button>
+          </form>
+
+          <div style={{ textAlign: 'center', marginTop: '18px', fontSize: '13px', color: '#9ca3af' }}>
+            {mode === 'login' ? 'Noch kein Konto?' : 'Bereits registriert?'}{' '}
+            <button onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); setSuccess('') }}
+              style={{ background: 'none', border: 'none', color: '#4f46e5', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit', fontSize: '13px', padding: 0 }}>
+              {mode === 'login' ? 'Registrieren' : 'Anmelden'}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   )
