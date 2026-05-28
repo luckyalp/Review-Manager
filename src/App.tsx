@@ -196,7 +196,7 @@ function App() {
     return (
       <div style={{ minHeight: '100vh', background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '"Plus Jakarta Sans", -apple-system, sans-serif' }}>
         <style>{`@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap'); @keyframes ob-spin { to { transform: rotate(360deg) } }`}</style>
-        <div style={{ width: 32, height: 32, border: '3px solid rgba(79,70,229,0.3)', borderTopColor: '#4f46e5', borderRadius: '50%', animation: 'ob-spin 0.8s linear infinite' }} />
+        <div style={{ width: 32, height: 32, border: '3px solid rgba(15,76,92,0.3)', borderTopColor: '#0f4c5c', borderRadius: '50%', animation: 'ob-spin 0.8s linear infinite' }} />
       </div>
     )
   }
@@ -219,7 +219,7 @@ function App() {
     return (
       <div style={{ minHeight: '100vh', background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '"Plus Jakarta Sans", -apple-system, sans-serif' }}>
         <style>{`@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap'); @keyframes ob-spin { to { transform: rotate(360deg) } }`}</style>
-        <div style={{ width: 32, height: 32, border: '3px solid rgba(79,70,229,0.3)', borderTopColor: '#4f46e5', borderRadius: '50%', animation: 'ob-spin 0.8s linear infinite' }} />
+        <div style={{ width: 32, height: 32, border: '3px solid rgba(15,76,92,0.3)', borderTopColor: '#0f4c5c', borderRadius: '50%', animation: 'ob-spin 0.8s linear infinite' }} />
       </div>
     )
   }
@@ -276,7 +276,7 @@ function App() {
         .review-actions { flex-wrap: wrap; }
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 200; background: #fff; border-top: 1px solid #e5e7eb; display: flex; padding-bottom: env(safe-area-inset-bottom); }
         .bottom-nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 10px 0; cursor: pointer; border: none; background: transparent; color: #9ca3af; font-size: 11px; font-weight: 500; font-family: inherit; transition: color 0.15s; -webkit-tap-highlight-color: transparent; }
-        .bottom-nav-item.active { color: #4f46e5; }
+        .bottom-nav-item.active { color: #0f4c5c; }
         @media (min-width: 640px) {
           .main-pad { padding: 28px 40px 100px; }
           .grid4 { grid-template-columns: repeat(4,1fr); gap: 14px; }
@@ -702,7 +702,7 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview }: { reviews: R
             {review.status !== 'Beantwortet' && (
               <button
                 onClick={() => generateReplies(review)}
-                style={{ padding: '7px 14px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '7px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                style={{ padding: '7px 14px', background: '#0f4c5c', color: '#fff', border: 'none', borderRadius: '7px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 {aiLoading === review.id ? '⏳ KI generiert...' : openAI === review.id ? '✨ Ausblenden' : '✨ Antworten generieren'}
               </button>
             )}
@@ -749,8 +749,8 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview }: { reviews: R
                   </div>
                   {(aiAnswers[review.id] || []).map((a, i) => (
                     <div key={i} onClick={() => setSelected({...selected, [review.id]: i})}
-                      style={{ padding: '12px', borderRadius: '8px', border: `1.5px solid ${selected[review.id] === i ? '#4f46e5' : '#e5e7eb'}`, background: selected[review.id] === i ? '#eef2ff' : '#fff', cursor: 'pointer', marginBottom: '8px', fontSize: '13px', lineHeight: '1.6' }}>
-                      <div style={{ fontWeight: '600', fontSize: '12px', marginBottom: '4px', color: '#4f46e5' }}>{a.label}</div>
+                      style={{ padding: '12px', borderRadius: '8px', border: `1.5px solid ${selected[review.id] === i ? '#0f4c5c' : '#e5e7eb'}`, background: selected[review.id] === i ? '#f0f7f8' : '#fff', cursor: 'pointer', marginBottom: '8px', fontSize: '13px', lineHeight: '1.6' }}>
+                      <div style={{ fontWeight: '600', fontSize: '12px', marginBottom: '4px', color: '#0f4c5c' }}>{a.label}</div>
                       {a.text}
                     </div>
                   ))}
@@ -848,7 +848,7 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
             <div style={{ fontSize: '32px', marginBottom: '12px' }}>✨</div>
             <div style={{ fontWeight: '600', fontSize: '16px', marginBottom: '6px', color: '#111827' }}>Noch keine Antworten generiert</div>
             <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '20px' }}>Klicken Sie auf „KI-Antworten generieren", um 3 Antwortmöglichkeiten zu erstellen.</div>
-            <button onClick={generateReplies} style={{ padding: '10px 24px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontFamily: 'inherit', fontWeight: '600' }}>
+            <button onClick={generateReplies} style={{ padding: '10px 24px', background: '#0f4c5c', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontFamily: 'inherit', fontWeight: '600' }}>
               ✨ KI-Antworten generieren
             </button>
           </div>
@@ -868,8 +868,8 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
             </div>
             {aiAnswers.map((a, i) => (
               <div key={i} onClick={() => setSelected(i)}
-                style={{ padding: '14px', borderRadius: '10px', border: `1.5px solid ${selected === i ? '#4f46e5' : '#e5e7eb'}`, background: selected === i ? '#eef2ff' : '#fff', cursor: 'pointer', marginBottom: '10px', fontSize: '14px', lineHeight: '1.7' }}>
-                <div style={{ fontWeight: '600', fontSize: '12px', marginBottom: '6px', color: '#4f46e5' }}>{a.label}</div>
+                style={{ padding: '14px', borderRadius: '10px', border: `1.5px solid ${selected === i ? '#0f4c5c' : '#e5e7eb'}`, background: selected === i ? '#f0f7f8' : '#fff', cursor: 'pointer', marginBottom: '10px', fontSize: '14px', lineHeight: '1.7' }}>
+                <div style={{ fontWeight: '600', fontSize: '12px', marginBottom: '6px', color: '#0f4c5c' }}>{a.label}</div>
                 {a.text}
               </div>
             ))}
@@ -924,7 +924,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
           <h1 style={{ fontSize: '30px', fontWeight: '600', marginBottom: '4px', color: '#111827' }}>Analyse</h1>
           <p style={{ color: '#6b7280', fontSize: '16px' }}>Statistiken & KI-Auswertung Ihrer Bewertungen.</p>
         </div>
-        <button onClick={startAI} style={{ padding: '9px 18px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', fontFamily: 'inherit', fontWeight: '500' }}>
+        <button onClick={startAI} style={{ padding: '9px 18px', background: '#0f4c5c', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', fontFamily: 'inherit', fontWeight: '500' }}>
           ✨ KI-Analyse starten
         </button>
       </div>
@@ -1000,7 +1000,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
           <div style={{ padding: '16px 18px', display: 'flex', alignItems: 'flex-end', gap: '8px', height: '140px' }}>
             {[{ m: 'Dez', v: 3 },{ m: 'Jan', v: 5 },{ m: 'Feb', v: 4 },{ m: 'Mär', v: 7 },{ m: 'Apr', v: 6 },{ m: 'Mai', v: 9 }].map(d => (
               <div key={d.m} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                <div style={{ width: '100%', background: '#4f46e5', borderRadius: '4px 4px 0 0', height: `${d.v * 10}px`, opacity: 0.85 }} />
+                <div style={{ width: '100%', background: '#0f4c5c', borderRadius: '4px 4px 0 0', height: `${d.v * 10}px`, opacity: 0.85 }} />
                 <div style={{ fontSize: '11px', color: '#9ca3af' }}>{d.m}</div>
               </div>
             ))}
@@ -1028,9 +1028,9 @@ function Analytics({ reviews }: { reviews: Review[] }) {
           <div>
             <div style={{ padding: '16px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '16px' }}>✨ KI-Analyse Ergebnis</div>
             <div style={{ padding: '18px' }}>
-              <div style={{ background: '#eef2ff', border: '1px solid #c7d2fe', borderRadius: '10px', padding: '14px 16px', marginBottom: '16px' }}>
-                <div style={{ fontSize: '12px', fontWeight: '600', color: '#4f46e5', marginBottom: '6px' }}>WICHTIGSTE ERKENNTNIS</div>
-                <div style={{ fontSize: '14px', color: '#1e1b4b', lineHeight: '1.6' }}>Ihre Gäste loben besonders das Essen und die Atmosphäre. Häufigster Kritikpunkt ist die Wartezeit beim Service.</div>
+              <div style={{ background: '#f0f7f8', border: '1px solid #a5c8d0', borderRadius: '10px', padding: '14px 16px', marginBottom: '16px' }}>
+                <div style={{ fontSize: '12px', fontWeight: '600', color: '#0f4c5c', marginBottom: '6px' }}>WICHTIGSTE ERKENNTNIS</div>
+                <div style={{ fontSize: '14px', color: '#0f3340', lineHeight: '1.6' }}>Ihre Gäste loben besonders das Essen und die Atmosphäre. Häufigster Kritikpunkt ist die Wartezeit beim Service.</div>
               </div>
               <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '10px', padding: '14px' }}>
                 <div style={{ fontWeight: '600', color: '#92400e', marginBottom: '8px', fontSize: '14px' }}>💡 Handlungsempfehlungen</div>
@@ -1157,7 +1157,7 @@ function Settings({ onLogout }: { onLogout: () => void }) {
   const hint: React.CSSProperties = { fontSize: '11px', color: '#9ca3af', marginTop: '4px' }
 
   const Toggle = ({ k }: { k: string }) => (
-    <div onClick={() => update(k, !(form as any)[k])} style={{ width: '38px', height: '22px', borderRadius: '11px', background: (form as any)[k] ? '#4f46e5' : '#d1d5db', position: 'relative', cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0 }}>
+    <div onClick={() => update(k, !(form as any)[k])} style={{ width: '38px', height: '22px', borderRadius: '11px', background: (form as any)[k] ? '#0f4c5c' : '#d1d5db', position: 'relative', cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0 }}>
       <div style={{ position: 'absolute', top: '4px', left: (form as any)[k] ? '20px' : '4px', width: '14px', height: '14px', borderRadius: '50%', background: '#fff', transition: 'left 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }} />
     </div>
   )
@@ -1234,7 +1234,7 @@ function Settings({ onLogout }: { onLogout: () => void }) {
                       const cur = form.dietaryOptions ? form.dietaryOptions.split(',').map(s => s.trim()).filter(Boolean) : []
                       update('dietaryOptions', (e.target.checked ? [...cur, opt] : cur.filter(i => i !== opt)).join(', '))
                     }}
-                    style={{ width: 16, height: 16, accentColor: '#4f46e5', cursor: 'pointer', flexShrink: 0 }} />
+                    style={{ width: 16, height: 16, accentColor: '#0f4c5c', cursor: 'pointer', flexShrink: 0 }} />
                   {opt}
                 </label>
               )
@@ -1248,7 +1248,7 @@ function Settings({ onLogout }: { onLogout: () => void }) {
                     update('dietaryOptions', cur.filter(d => DIETARY_LIST.includes(d)).join(', '))
                   }
                 }}
-                style={{ width: 16, height: 16, accentColor: '#4f46e5', cursor: 'pointer', flexShrink: 0 }} />
+                style={{ width: 16, height: 16, accentColor: '#0f4c5c', cursor: 'pointer', flexShrink: 0 }} />
               Sonstiges
             </label>
             {dietarySonstigesChecked && (
@@ -1319,7 +1319,7 @@ function Settings({ onLogout }: { onLogout: () => void }) {
       <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px', paddingBottom: '16px' }}>
         {saved && <span style={{ color: '#22c55e', fontSize: '14px', fontWeight: '500', transition: 'opacity 0.3s' }}>✅ Automatisch gespeichert</span>}
         {saving && !saved && <span style={{ color: '#9ca3af', fontSize: '14px' }}>💾 Speichert...</span>}
-        <button onClick={save} style={{ padding: '10px 28px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', fontFamily: 'inherit', fontWeight: '500' }}>Profil speichern</button>
+        <button onClick={save} style={{ padding: '10px 28px', background: '#0f4c5c', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', fontFamily: 'inherit', fontWeight: '500' }}>Profil speichern</button>
       </div>
 
       {/* Account / Abmelden */}
@@ -1362,7 +1362,7 @@ function WelcomeScreen({ onLogin, onRegister }: { onLogin: () => void; onRegiste
     }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
-        .wlc-btn-primary:hover { background: #4338ca !important; }
+        .wlc-btn-primary:hover { background: #0d3d4a !important; }
         .wlc-btn-secondary:hover { background: rgba(255,255,255,0.08) !important; }
       `}</style>
 
@@ -1372,9 +1372,9 @@ function WelcomeScreen({ onLogin, onRegister }: { onLogin: () => void; onRegiste
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
           <div style={{
             width: 64, height: 64, borderRadius: '18px',
-            background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+            background: 'linear-gradient(135deg, #0f4c5c, #155e75)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 8px 32px rgba(79,70,229,0.4)',
+            boxShadow: '0 8px 32px rgba(15,76,92,0.4)',
           }}>
             <span style={{ fontSize: '30px' }}>⭐</span>
           </div>
@@ -1414,7 +1414,7 @@ function WelcomeScreen({ onLogin, onRegister }: { onLogin: () => void; onRegiste
             className="wlc-btn-primary"
             style={{
               flex: 1, padding: '14px', borderRadius: '12px', border: 'none',
-              background: '#4f46e5', color: '#fff', fontSize: '15px',
+              background: '#0f4c5c', color: '#fff', fontSize: '15px',
               fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit',
               transition: 'background 0.15s',
             }}
@@ -1500,9 +1500,9 @@ function AuthScreen({ initialMode = 'login' }: { initialMode?: 'login' | 'regist
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
         @keyframes ob-spin { to { transform: rotate(360deg) } }
-        .auth-inp:focus { border-color: #4f46e5 !important; background: #fff !important; }
+        .auth-inp:focus { border-color: #0f4c5c !important; background: #fff !important; }
         .auth-google:hover { background: #f9fafb !important; }
-        .auth-tab-active { border-bottom: 2.5px solid #4f46e5; color: #4f46e5; font-weight: 600; }
+        .auth-tab-active { border-bottom: 2.5px solid #0f4c5c; color: #0f4c5c; font-weight: 600; }
         .auth-tab { color: #9ca3af; border-bottom: 2.5px solid transparent; font-weight: 500; }
       `}</style>
 
@@ -1534,7 +1534,7 @@ function AuthScreen({ initialMode = 'login' }: { initialMode?: 'login' | 'regist
           <button onClick={handleGoogle} disabled={googleLoading} className="auth-google"
             style={{ width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1.5px solid #e5e7eb', background: '#fff', fontSize: '14px', fontFamily: 'inherit', fontWeight: '600', color: '#374151', cursor: googleLoading ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '20px', transition: 'background 0.15s' }}>
             {googleLoading ? (
-              <div style={{ width: 18, height: 18, border: '2px solid #e5e7eb', borderTopColor: '#4f46e5', borderRadius: '50%', animation: 'ob-spin 0.7s linear infinite' }} />
+              <div style={{ width: 18, height: 18, border: '2px solid #e5e7eb', borderTopColor: '#0f4c5c', borderRadius: '50%', animation: 'ob-spin 0.7s linear infinite' }} />
             ) : (
               <svg width="18" height="18" viewBox="0 0 48 48">
                 <path fill="#FFC107" d="M43.6 20H24v8h11.3C33.6 33.1 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.6-8 19.6-20 0-1.3-.1-2.7-.4-4z" />
@@ -1578,7 +1578,7 @@ function AuthScreen({ initialMode = 'login' }: { initialMode?: 'login' | 'regist
             )}
 
             <button type="submit" disabled={loading}
-              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: 'none', background: loading ? '#e5e7eb' : '#4f46e5', color: loading ? '#9ca3af' : '#fff', fontSize: '15px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'background 0.15s' }}>
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: 'none', background: loading ? '#e5e7eb' : '#0f4c5c', color: loading ? '#9ca3af' : '#fff', fontSize: '15px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'background 0.15s' }}>
               {loading && <div style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'ob-spin 0.7s linear infinite' }} />}
               {mode === 'login' ? 'Anmelden' : 'Konto erstellen'}
             </button>
@@ -1587,7 +1587,7 @@ function AuthScreen({ initialMode = 'login' }: { initialMode?: 'login' | 'regist
           <div style={{ textAlign: 'center', marginTop: '18px', fontSize: '13px', color: '#9ca3af' }}>
             {mode === 'login' ? 'Noch kein Konto?' : 'Bereits registriert?'}{' '}
             <button onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); setSuccess('') }}
-              style={{ background: 'none', border: 'none', color: '#4f46e5', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit', fontSize: '13px', padding: 0 }}>
+              style={{ background: 'none', border: 'none', color: '#0f4c5c', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit', fontSize: '13px', padding: 0 }}>
               {mode === 'login' ? 'Registrieren' : 'Anmelden'}
             </button>
           </div>
@@ -1610,7 +1610,7 @@ interface OnboardingData {
 function ObStepHeader({ n, label, title, subtitle }: { n: number; label: string; title: string; subtitle: string }) {
   return (
     <div>
-      <div style={{ fontSize: '11px', fontWeight: '600', color: '#4f46e5', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
+      <div style={{ fontSize: '11px', fontWeight: '600', color: '#0f4c5c', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
         Schritt {n} · {label}
       </div>
       <div style={{ fontSize: '21px', fontWeight: '700', color: '#111827', marginBottom: '6px', lineHeight: '1.3' }}>
@@ -1639,7 +1639,7 @@ function ObActions({ onNext, canContinue, optional = false }: { onNext: () => vo
         disabled={!canContinue}
         style={{
           padding: '11px 24px', borderRadius: '10px', border: 'none', fontFamily: 'inherit',
-          background: canContinue ? '#4f46e5' : '#e5e7eb',
+          background: canContinue ? '#0f4c5c' : '#e5e7eb',
           color: canContinue ? '#fff' : '#9ca3af',
           fontSize: '14px', fontWeight: '600', cursor: canContinue ? 'pointer' : 'not-allowed',
           transition: 'all 0.15s',
@@ -1669,9 +1669,9 @@ function Onboarding({ step, data, onDataChange, onNext, onBack, onFinish }: {
 
   const chip = (selected: boolean): React.CSSProperties => ({
     padding: '10px 18px', borderRadius: '10px', cursor: 'pointer', fontFamily: 'inherit',
-    border: selected ? '2px solid #4f46e5' : '1.5px solid #e5e7eb',
-    background: selected ? '#eef2ff' : '#fff',
-    color: selected ? '#4338ca' : '#374151',
+    border: selected ? '2px solid #0f4c5c' : '1.5px solid #e5e7eb',
+    background: selected ? '#f0f7f8' : '#fff',
+    color: selected ? '#0d3d4a' : '#374151',
     fontWeight: selected ? '600' : '500',
     fontSize: '14px', transition: 'all 0.15s',
   })
@@ -1701,14 +1701,14 @@ function Onboarding({ step, data, onDataChange, onNext, onBack, onFinish }: {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
         @keyframes ob-spin { to { transform: rotate(360deg) } }
-        .ob-chip:hover { border-color: #a5b4fc !important; background: #f5f3ff !important; }
+        .ob-chip:hover { border-color: #7ab8c4 !important; background: #f5f3ff !important; }
       `}</style>
 
       <div style={{ background: '#fff', borderRadius: '24px', width: '100%', maxWidth: '460px', overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.6)' }}>
         {/* Fortschrittsbalken */}
         <div style={{ height: '4px', background: '#e5e7eb' }}>
           <div style={{
-            height: '100%', background: 'linear-gradient(90deg, #4f46e5, #7c3aed)',
+            height: '100%', background: 'linear-gradient(90deg, #0f4c5c, #155e75)',
             width: `${progress * 100}%`, transition: 'width 0.4s ease',
             borderRadius: progress < 1 ? '0 4px 4px 0' : '0',
           }} />
@@ -1745,7 +1745,7 @@ function Onboarding({ step, data, onDataChange, onNext, onBack, onFinish }: {
               </div>
               <button
                 onClick={onNext}
-                style={{ width: '100%', padding: '14px', borderRadius: '12px', background: '#4f46e5', color: '#fff', border: 'none', fontSize: '15px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ width: '100%', padding: '14px', borderRadius: '12px', background: '#0f4c5c', color: '#fff', border: 'none', fontSize: '15px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}
               >
                 Loslegen →
               </button>
@@ -1761,7 +1761,7 @@ function Onboarding({ step, data, onDataChange, onNext, onBack, onFinish }: {
                 value={data.businessName} onChange={e => onDataChange('businessName', e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && canContinue() && onNext()}
                 style={inp}
-                onFocus={e => { e.currentTarget.style.borderColor = '#4f46e5' }}
+                onFocus={e => { e.currentTarget.style.borderColor = '#0f4c5c' }}
                 onBlur={e => { e.currentTarget.style.borderColor = '#d1d5db' }}
               />
               <ObActions onNext={onNext} canContinue={canContinue()} />
@@ -1794,7 +1794,7 @@ function Onboarding({ step, data, onDataChange, onNext, onBack, onFinish }: {
                     style={{ ...chip(data.salutation === s.val), flex: 1, padding: '18px 12px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
                     <span style={{ fontSize: '26px' }}>{s.emoji}</span>
                     <span style={{ fontSize: '16px', fontWeight: '700' }}>{s.val}</span>
-                    <span style={{ fontSize: '12px', fontWeight: '400', color: data.salutation === s.val ? '#6366f1' : '#9ca3af' }}>{s.sub}</span>
+                    <span style={{ fontSize: '12px', fontWeight: '400', color: data.salutation === s.val ? '#1e7a8c' : '#9ca3af' }}>{s.sub}</span>
                   </button>
                 ))}
               </div>
@@ -1831,7 +1831,7 @@ function Onboarding({ step, data, onDataChange, onNext, onBack, onFinish }: {
                 value={data.contactEmail} onChange={e => onDataChange('contactEmail', e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && canContinue() && onNext()}
                 style={inp}
-                onFocus={e => { e.currentTarget.style.borderColor = '#4f46e5' }}
+                onFocus={e => { e.currentTarget.style.borderColor = '#0f4c5c' }}
                 onBlur={e => { e.currentTarget.style.borderColor = '#d1d5db' }}
               />
               <ObActions onNext={onNext} canContinue={canContinue()} optional />
@@ -1853,7 +1853,7 @@ function Onboarding({ step, data, onDataChange, onNext, onBack, onFinish }: {
                 onClick={handleFinish} disabled={saving}
                 style={{
                   width: '100%', padding: '14px', borderRadius: '12px',
-                  background: saving ? '#e5e7eb' : '#4f46e5',
+                  background: saving ? '#e5e7eb' : '#0f4c5c',
                   color: saving ? '#9ca3af' : '#fff', border: 'none',
                   fontSize: '15px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer',
                   fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
