@@ -1048,12 +1048,16 @@ function Analytics({ reviews }: { reviews: Review[] }) {
   const [aiDone, setAiDone] = useState(false)
 
   const answered = reviews.filter(r => r.status === 'Beantwortet').length
-  const rate = reviews.length ? Math.round(answered / reviews.length * 100) : 0
+  const pending = reviews.filter(r => r.status === 'Ausstehend').length
+  const rejected = reviews.filter(r => r.status === 'Abgelehnt').length
+  const total = reviews.length
+  const rate = total ? Math.round(answered / total * 100) : 0
+  const avg = total ? (reviews.reduce((s, r) => s + r.stars, 0) / total).toFixed(1) : '–'
 
   const distrib = [5,4,3,2,1].map(s => ({
-    stars: s, count: reviews.filter(r => r.stars === s).length,
-    pct: reviews.length ? Math.round(reviews.filter(r => r.stars === s).length / reviews.length * 100) : 0,
-    color: '#F0B100',
+    stars: s,
+    count: reviews.filter(r => r.stars === s).length,
+    pct: total ? Math.round(reviews.filter(r => r.stars === s).length / total * 100) : 0,
   }))
 
   const positiveThemen = [
@@ -1062,7 +1066,6 @@ function Analytics({ reviews }: { reviews: Review[] }) {
     { thema: 'Freundlicher Service', anzahl: 6 },
     { thema: 'Sauberkeit', anzahl: 4 },
   ]
-
   const negativThemen = [
     { thema: 'Wartezeit', anzahl: 5 },
     { thema: 'Lautstärke', anzahl: 2 },
@@ -1071,42 +1074,152 @@ function Analytics({ reviews }: { reviews: Review[] }) {
 
   const startAI = () => { setAiStarted(true); setAiLoading(true); setTimeout(() => { setAiLoading(false); setAiDone(true) }, 3000) }
 
+  // Donut SVG helper
+  const DonutChart = ({ segments, size = 120 }: { segments: { value: number, color: string, label: string }[], size?: number }) => {
+    const total = segments.reduce((s, seg) => s + seg.value, 0)
+    if (total === 0) return (
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <circle cx={size/2} cy={size/2} r={size/2 - 8} fill="none" stroke="#f3f4f6" strokeWidth="16" />
+      </svg>
+    )
+    const r = size / 2 - 8
+    const cx = size / 2, cy = size / 2
+    const circumference = 2 * Math.PI * r
+    let offset = 0
+    const paths = segments.map((seg, i) => {
+      const pct = seg.value / total
+      const dash = pct * circumference
+      const gap = circumference - dash
+      const rotation = offset * 360 - 90
+      offset += pct
+      return (
+        <circle key={i} cx={cx} cy={cy} r={r} fill="none"
+          stroke={seg.color} strokeWidth="16"
+          strokeDasharray={`${dash} ${gap}`}
+          strokeDashoffset={0}
+          transform={`rotate(${rotation} ${cx} ${cy})`}
+          style={{ transition: 'stroke-dasharray 0.5s ease' }}
+        />
+      )
+    })
+    return (
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="#f3f4f6" strokeWidth="16" />
+        {paths}
+      </svg>
+    )
+  }
+
+  // Sparkline for trend (last 7 days simulated from reviews)
+  const trendData = [3, 5, 4, 7, 6, 9, total > 0 ? total : 8]
+  const maxVal = Math.max(...trendData)
+  const sparkPoints = trendData.map((v, i) => `${(i / (trendData.length - 1)) * 160},${40 - (v / maxVal) * 36}`).join(' ')
+
+  const starSegments = [
+    { value: distrib[0].count, color: '#16a34a', label: '5★' },
+    { value: distrib[1].count, color: '#4ade80', label: '4★' },
+    { value: distrib[2].count, color: '#fbbf24', label: '3★' },
+    { value: distrib[3].count, color: '#f97316', label: '2★' },
+    { value: distrib[4].count, color: '#ef4444', label: '1★' },
+  ]
+
+  const statusSegments = [
+    { value: answered, color: '#0f4c5c', label: 'Beantwortet' },
+    { value: pending, color: '#fbbf24', label: 'Ausstehend' },
+    { value: rejected, color: '#e5e7eb', label: 'Abgelehnt' },
+  ]
+
   return (
     <div>
+      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <h1 style={{ fontSize: '30px', fontWeight: '600', marginBottom: '4px', color: '#111827' }}>Analyse</h1>
           <p style={{ color: '#6b7280', fontSize: '16px' }}>Statistiken & KI-Auswertung Ihrer Bewertungen.</p>
         </div>
-        <button onClick={startAI} style={{ padding: '9px 18px', background: '#0f4c5c', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', fontFamily: 'inherit', fontWeight: '500' }}>
+        <button onClick={startAI} style={{ padding: '9px 18px', background: '#0f4c5c', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontFamily: 'inherit', fontWeight: '500' }}>
           ✨ KI-Analyse starten
         </button>
       </div>
 
-      {/* 2 Stat Karten */}
-      <div className="grid2i" style={{ marginBottom: '16px' }}>
-        <div style={{ background: '#fff', borderRadius: '12px', padding: '18px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <div style={{ fontSize: '16px', color: '#6b7280' }}>Antwortrate</div><span>✅</span>
+      {/* 5 Stat Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', marginBottom: '20px' }}>
+        {[
+          { label: 'Ø Bewertung', value: avg, sub: `${total} Bewertungen`, icon: '⭐' },
+          { label: 'Beantwortet', value: answered, sub: `von ${total} gesamt`, icon: '✅' },
+          { label: 'Antwortquote', value: `${rate}%`, sub: rate >= 80 ? '🟢 Gut' : rate >= 50 ? '🟡 Mittel' : '🔴 Niedrig', icon: '📊' },
+          { label: 'Ausstehend', value: pending, sub: 'noch offen', icon: '⏳' },
+          { label: 'Abgelehnt', value: rejected, sub: 'nicht beantwortet', icon: '✕' },
+        ].map(s => (
+          <div key={s.label} style={{ background: '#fff', borderRadius: '12px', padding: '16px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <div style={{ fontSize: '12px', color: '#6b7280' }}>{s.label}</div>
+              <span style={{ fontSize: '16px' }}>{s.icon}</span>
+            </div>
+            <div style={{ fontSize: '26px', fontWeight: '600', color: '#111827', marginBottom: '3px' }}>{s.value}</div>
+            <div style={{ fontSize: '11px', color: '#9ca3af' }}>{s.sub}</div>
           </div>
-          <div style={{ fontSize: '28px', fontWeight: '600', color: '#111827' }}>{rate}%</div>
-          <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '3px' }}>{answered} von {reviews.length} beantwortet</div>
+        ))}
+      </div>
+
+      {/* Trend + Donuts */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px', marginBottom: '20px' }}>
+
+        {/* Sparkline Trend */}
+        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '18px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+          <div style={{ fontWeight: '600', fontSize: '14px', color: '#111827', marginBottom: '4px' }}>Bewertungsverlauf</div>
+          <div style={{ fontSize: '11px', color: '#9ca3af', marginBottom: '14px' }}>letzte 7 Tage</div>
+          <svg width="100%" viewBox="0 0 160 44" style={{ overflow: 'visible' }}>
+            <defs>
+              <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#0f4c5c" stopOpacity="0.15" />
+                <stop offset="100%" stopColor="#0f4c5c" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <polygon points={`0,44 ${sparkPoints} 160,44`} fill="url(#sparkGrad)" />
+            <polyline points={sparkPoints} fill="none" stroke="#0f4c5c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </div>
-        <div style={{ background: '#fff', borderRadius: '12px', padding: '18px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <div style={{ fontSize: '16px', color: '#6b7280' }}>Ø Antwortzeit</div><span>⏱️</span>
+
+        {/* Donut 1: Sternverteilung */}
+        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '18px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+          <div style={{ fontWeight: '600', fontSize: '14px', color: '#111827', marginBottom: '12px' }}>Sternverteilung</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <DonutChart segments={starSegments} size={100} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
+              {starSegments.map((s, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: s.color, flexShrink: 0 }} />
+                  <span style={{ fontSize: '11px', color: '#374151', flex: 1 }}>{s.label}</span>
+                  <span style={{ fontSize: '11px', color: '#9ca3af' }}>{distrib[i].count}</span>
+                </div>
+              ))}
+            </div>
           </div>
-          <div style={{ fontSize: '28px', fontWeight: '600', color: '#111827' }}>–</div>
-          <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '3px' }}>Verfügbar nach erster Antwort</div>
+        </div>
+
+        {/* Donut 2: Status */}
+        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '18px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+          <div style={{ fontWeight: '600', fontSize: '14px', color: '#111827', marginBottom: '12px' }}>Antwortstatus</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <DonutChart segments={statusSegments} size={100} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
+              {statusSegments.map((s, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: s.color, flexShrink: 0 }} />
+                  <span style={{ fontSize: '11px', color: '#374151', flex: 1 }}>{s.label}</span>
+                  <span style={{ fontSize: '11px', color: '#9ca3af' }}>{[answered, pending, rejected][i]}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Positive & Negative Themen */}
       <div className="grid2i" style={{ marginBottom: '16px' }}>
         <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
-          <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '16px', color: '#111827' }}>
-            👍 Häufig positiv erwähnt
-          </div>
+          <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '15px', color: '#111827' }}>👍 Häufig positiv erwähnt</div>
           <div style={{ padding: '14px 18px' }}>
             {positiveThemen.map(t => (
               <div key={t.thema} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f3f4f6' }}>
@@ -1117,9 +1230,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
           </div>
         </div>
         <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
-          <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '16px', color: '#111827' }}>
-            👎 Häufig negativ erwähnt
-          </div>
+          <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '15px', color: '#111827' }}>👎 Häufig negativ erwähnt</div>
           <div style={{ padding: '14px 18px' }}>
             {negativThemen.map(t => (
               <div key={t.thema} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f3f4f6' }}>
@@ -1131,10 +1242,10 @@ function Analytics({ reviews }: { reviews: Review[] }) {
         </div>
       </div>
 
-      {/* Sternverteilung & Trend */}
+      {/* Sternverteilung Balken */}
       <div className="grid2i" style={{ marginBottom: '16px' }}>
         <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
-          <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '16px' }}>Sternverteilung</div>
+          <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '15px' }}>Sternverteilung</div>
           <div style={{ padding: '16px 18px' }}>
             {distrib.map(row => (
               <div key={row.stars} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
@@ -1142,7 +1253,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
                   <span>{row.stars}</span><span>☆</span>
                 </div>
                 <div style={{ flex: 1, height: '10px', background: '#f3f4f6', borderRadius: '5px', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${row.pct}%`, background: row.color, borderRadius: '5px' }} />
+                  <div style={{ height: '100%', width: `${row.pct}%`, background: '#0f4c5c', borderRadius: '5px' }} />
                 </div>
                 <div style={{ width: '24px', fontSize: '13px', color: '#374151', textAlign: 'right', flexShrink: 0 }}>{row.count}</div>
               </div>
@@ -1150,7 +1261,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
           </div>
         </div>
         <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
-          <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '16px' }}>Bewertungstrend (6 Monate)</div>
+          <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '15px' }}>Bewertungstrend (6 Monate)</div>
           <div style={{ padding: '16px 18px', display: 'flex', alignItems: 'flex-end', gap: '8px', height: '140px' }}>
             {[{ m: 'Dez', v: 3 },{ m: 'Jan', v: 5 },{ m: 'Feb', v: 4 },{ m: 'Mär', v: 7 },{ m: 'Apr', v: 6 },{ m: 'Mai', v: 9 }].map(d => (
               <div key={d.m} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
@@ -1169,7 +1280,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
             <div style={{ fontSize: '32px', marginBottom: '12px' }}>✨</div>
             <div style={{ fontWeight: '600', fontSize: '16px', marginBottom: '6px', color: '#111827' }}>KI-Analyse noch nicht gestartet</div>
             <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>Klicken Sie auf "KI-Analyse starten" — Claude wertet alle Bewertungen aus und liefert konkrete Handlungsempfehlungen.</div>
-            <button onClick={startAI} style={{ padding: '9px 20px', background: '#0f4c5c', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', fontFamily: 'inherit', fontWeight: '500', color: '#fff' }}>✨ Jetzt analysieren</button>
+            <button onClick={startAI} style={{ padding: '9px 20px', background: '#0f4c5c', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontFamily: 'inherit', fontWeight: '500', color: '#fff' }}>✨ Jetzt analysieren</button>
           </div>
         )}
         {aiLoading && (
