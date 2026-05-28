@@ -13,19 +13,52 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (!to) {
-    return res.status(400).json({ error: 'Keine E-Mail-Adresse angegeben' }
-    )
+    return res.status(400).json({ error: 'Keine E-Mail-Adresse angegeben' })
   }
 
   const starsFilled = '★'.repeat(stars)
   const starsEmpty = '☆'.repeat(5 - stars)
-
   const initials = reviewerName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
 
-  const answerColors = ['#4f46e5', '#16a34a', '#7c3aed', '#dc2626']
+  const normalColors = ['#0f4c5c', '#155e75', '#1e7a8c']
+  const teal = '#0e7490'
 
-  // Antworten kommen vollständig vom Server (inkl. Recovery-Karte bei ≤2 Sternen)
-  const allAnswers = answers
+  const allAnswers: { label: string, text: string, isRecovery?: boolean }[] = answers
+
+  const normalAnswers = allAnswers.filter(a => !a.isRecovery)
+  const recoveryAnswer = allAnswers.find(a => a.isRecovery)
+
+  const renderNormalCard = (a: { label: string, text: string }, i: number) => `
+    <div style="border: 1.5px solid #e2ddd8; border-radius: 12px; padding: 16px; margin-bottom: 10px;">
+      <div style="display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 10px; border-radius: 20px; margin-bottom: 8px; letter-spacing: 0.5px; background: ${normalColors[i] || '#0f4c5c'}18; color: ${normalColors[i] || '#0f4c5c'}; text-transform: uppercase;">${a.label}</div>
+      <div style="font-size: 13px; color: #374151; line-height: 1.65; margin-bottom: 14px;">${a.text}</div>
+      <a href="https://review-manager-mu.vercel.app/api/confirm-reply?reviewId=${encodeURIComponent(reviewerName + '_' + stars)}&answerIndex=${i}&answerText=${encodeURIComponent(a.text)}"
+        style="display: block; text-align: center; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #fff; text-decoration: none; background: ${normalColors[i] || '#0f4c5c'};">
+        ✓ Diese Antwort auswählen & senden
+      </a>
+    </div>
+  `
+
+  const renderRecoveryCard = (a: { label: string, text: string }, idx: number) => `
+    <div style="margin: 20px 0 10px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 12px;">
+        <tr>
+          <td style="border-top: 1px solid #e2ddd8;"></td>
+          <td style="padding: 0 10px; white-space: nowrap; font-size: 10px; font-weight: 700; color: ${teal}; text-transform: uppercase; letter-spacing: 0.08em;">Empfohlen bei 1–2 Sternen</td>
+          <td style="border-top: 1px solid #e2ddd8;"></td>
+        </tr>
+      </table>
+      <div style="border: 1.5px solid ${teal}; border-left: 3px solid ${teal}; border-radius: 12px; padding: 16px;">
+        <div style="font-size: 11px; color: ${teal}; margin-bottom: 6px; opacity: 0.85;">Fokus auf Vertrauen und Deeskalation.</div>
+        <div style="display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 10px; border-radius: 20px; margin-bottom: 8px; letter-spacing: 0.5px; background: ${teal}18; color: ${teal}; text-transform: uppercase;">${a.label}</div>
+        <div style="font-size: 13px; color: #374151; line-height: 1.65; margin-bottom: 14px;">${a.text}</div>
+        <a href="https://review-manager-mu.vercel.app/api/confirm-reply?reviewId=${encodeURIComponent(reviewerName + '_' + stars)}&answerIndex=${idx}&answerText=${encodeURIComponent(a.text)}"
+          style="display: block; text-align: center; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #fff; text-decoration: none; background: ${teal};">
+          ✓ Diese Antwort auswählen & senden
+        </a>
+      </div>
+    </div>
+  `
 
   const html = `
 <!DOCTYPE html>
@@ -33,91 +66,67 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Arial, sans-serif; background: #f3f4f6; padding: 20px; }
-    .wrapper { max-width: 580px; margin: 0 auto; }
-    .header { background: #0f172a; border-radius: 12px 12px 0 0; padding: 20px 24px; }
-    .header-inner { display: table; width: 100%; }
-    .header-icon-cell { display: table-cell; vertical-align: middle; width: 44px; }
-    .header-icon { background: #4f46e5; border-radius: 8px; width: 36px; height: 36px; line-height: 36px; text-align: center; font-size: 16px; font-weight: 700; color: #fff; }
-    .header-text-cell { display: table-cell; vertical-align: middle; padding-left: 12px; }
-    .header-text h1 { color: #fff; font-size: 18px; font-weight: 700; margin: 0; }
-    .header-text p { color: #94a3b8; font-size: 13px; margin: 2px 0 0; }
-    .body { background: #fff; padding: 24px; border-radius: 0 0 12px 12px; }
-    .test-banner { background: #fef9c3; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 14px; margin-bottom: 20px; font-size: 13px; color: #92400e; }
-    .review-box { border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; margin-bottom: 24px; }
-    .reviewer-row { display: table; width: 100%; margin-bottom: 10px; }
-    .avatar-cell { display: table-cell; vertical-align: middle; width: 48px; }
-    .avatar { width: 40px; height: 40px; border-radius: 50%; background: #e5e7eb; line-height: 40px; text-align: center; font-weight: 700; font-size: 14px; color: #374151; display: inline-block; vertical-align: middle; }
-    .reviewer-info-cell { display: table-cell; vertical-align: middle; padding-left: 12px; }
-    .reviewer-name { font-weight: 700; font-size: 15px; color: #111827; }
-    .reviewer-meta { margin-top: 3px; }
-    .stars { color: #F0B100; font-size: 16px; }
-    .google-badge { font-size: 11px; color: #6b7280; background: #f3f4f6; padding: 2px 8px; border-radius: 10px; }
-    .review-text { font-size: 14px; color: #374151; line-height: 1.6; font-style: italic; }
-    .section-title { font-weight: 700; font-size: 15px; color: #111827; margin-bottom: 14px; }
-    .answer-box { border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px; margin-bottom: 12px; }
-    .answer-label { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-bottom: 8px; letter-spacing: 0.5px; }
-    .answer-text { font-size: 13px; color: #374151; line-height: 1.6; margin-bottom: 12px; }
-    .answer-btn { display: block; text-align: center; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #fff !important; text-decoration: none; }
-    .footer { text-align: center; margin-top: 20px; }
-    .footer a { color: #4f46e5; font-size: 13px; text-decoration: none; }
-    .footer-note { font-size: 11px; color: #9ca3af; margin-top: 8px; }
-  </style>
 </head>
-<body>
-  <div class="wrapper">
-    <div class="header">
-      <div class="header-inner">
-        <div class="header-icon-cell">
-          <div class="header-icon">RM</div>
-        </div>
-        <div class="header-text-cell">
-          <div class="header-text">
-            <h1>ReviewMonitor</h1>
-            <p>${restaurantName || 'Neue Bewertung eingegangen'}</p>
-          </div>
-        </div>
-      </div>
+<body style="margin:0; padding:0; background:#f3f4f6; font-family: Arial, sans-serif;">
+  <div style="max-width: 580px; margin: 20px auto;">
+
+    <!-- Header -->
+    <div style="background: #0f172a; border-radius: 12px 12px 0 0; padding: 20px 24px;">
+      <table cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="vertical-align: middle; width: 44px;">
+            <div style="background: #4f46e5; border-radius: 8px; width: 36px; height: 36px; line-height: 36px; text-align: center; font-size: 14px; font-weight: 700; color: #fff;">RM</div>
+          </td>
+          <td style="vertical-align: middle; padding-left: 12px;">
+            <div style="color: #fff; font-size: 17px; font-weight: 700; margin: 0;">ReviewMonitor</div>
+            <div style="color: #94a3b8; font-size: 13px; margin-top: 2px;">${restaurantName || 'Neue Bewertung eingegangen'}</div>
+          </td>
+        </tr>
+      </table>
     </div>
-    <div class="body">
+
+    <!-- Body -->
+    <div style="background: #fff; padding: 24px; border-radius: 0 0 12px 12px;">
+
       ${isTest ? `
-      <div class="test-banner">
+      <div style="background: #fef9c3; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 14px; margin-bottom: 20px; font-size: 13px; color: #92400e;">
         🧪 <strong>Test-E-Mail</strong> — So sieht Ihre echte Benachrichtigung aus
       </div>
       ` : ''}
 
-      <div class="review-box">
-        <div class="reviewer-row">
-          <div class="avatar-cell">
-            <div class="avatar">${initials}</div>
-          </div>
-          <div class="reviewer-info-cell">
-            <div class="reviewer-name">${reviewerName}</div>
-            <div class="reviewer-meta">
-              <span class="stars">${starsFilled}<span style="color:#d1d5db">${starsEmpty}</span></span>
-              <span class="google-badge">Google Bewertung · ${stars}/5 Sterne</span>
-            </div>
-          </div>
-        </div>
-        <div class="review-text">"${reviewText}"</div>
+      <!-- Bewertung -->
+      <div style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; margin-bottom: 24px;">
+        <table cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 10px;">
+          <tr>
+            <td style="vertical-align: middle; width: 48px;">
+              <div style="width: 40px; height: 40px; border-radius: 50%; background: #e5e7eb; line-height: 40px; text-align: center; font-weight: 700; font-size: 14px; color: #374151;">${initials}</div>
+            </td>
+            <td style="vertical-align: middle; padding-left: 12px;">
+              <div style="font-weight: 700; font-size: 15px; color: #111827;">${reviewerName}</div>
+              <div style="margin-top: 3px;">
+                <span style="color: #F0B100; font-size: 16px;">${starsFilled}</span><span style="color: #d1d5db; font-size: 16px;">${starsEmpty}</span>
+                <span style="font-size: 11px; color: #6b7280; background: #f3f4f6; padding: 2px 8px; border-radius: 10px; margin-left: 6px;">Google · ${stars}/5 Sterne</span>
+              </div>
+            </td>
+          </tr>
+        </table>
+        <div style="font-size: 14px; color: #374151; line-height: 1.6; font-style: italic;">"${reviewText}"</div>
       </div>
 
-      <div class="section-title">✨ ${salutation === 'Du' ? 'Wähle eine Antwort' : 'Wählen Sie eine Antwort'} — 1 Klick genügt:</div>
-
-      ${allAnswers.map((a: { label: string, text: string }, i: number) => `
-        <div class="answer-box">
-          <span class="answer-label" style="background:${answerColors[i]}20; color:${answerColors[i]}">${a.label}</span>
-          <div class="answer-text">${a.text}</div>
-          <a href="https://review-manager-mu.vercel.app/api/confirm-reply?reviewId=${encodeURIComponent(reviewerName + '_' + stars)}&answerIndex=${i}&answerText=${encodeURIComponent(a.text)}" class="answer-btn" style="background:${answerColors[i]}">✓ Diese Antwort auswählen & senden</a>
-        </div>
-      `).join('')}
-
-      <div class="footer">
-        <a href="https://review-manager-mu.vercel.app">Dashboard öffnen →</a>
-        <div class="footer-note">Diese E-Mail wurde automatisch von ReviewMonitor generiert.</div>
+      <!-- Antworten -->
+      <div style="font-weight: 700; font-size: 15px; color: #111827; margin-bottom: 14px;">
+        ✨ ${salutation === 'Du' ? 'Wähle eine Antwort' : 'Wählen Sie eine Antwort'} — 1 Klick genügt:
       </div>
+
+      ${normalAnswers.map((a, i) => renderNormalCard(a, i)).join('')}
+      ${recoveryAnswer ? renderRecoveryCard(recoveryAnswer, allAnswers.indexOf(recoveryAnswer)) : ''}
+
+      <!-- Footer -->
+      <div style="text-align: center; margin-top: 24px;">
+        <a href="https://review-manager-mu.vercel.app" style="color: #4f46e5; font-size: 13px; text-decoration: none;">Dashboard öffnen →</a>
+        <div style="font-size: 11px; color: #9ca3af; margin-top: 8px;">Diese E-Mail wurde automatisch von ReviewMonitor generiert.</div>
+      </div>
+
     </div>
   </div>
 </body>
