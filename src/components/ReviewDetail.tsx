@@ -558,12 +558,13 @@ export default function ReviewDetail({ review, onStatusChange, onBack }: ReviewD
 
   useEffect(() => {
     const id = "review-detail-styles";
-    if (!document.getElementById(id)) {
-      const tag = document.createElement("style");
+    let tag = document.getElementById(id) as HTMLStyleElement | null;
+    if (!tag) {
+      tag = document.createElement("style");
       tag.id = id;
-      tag.textContent = styles;
       document.head.appendChild(tag);
     }
+    tag.textContent = styles;
   }, []);
 
   const autoResize = (el: HTMLTextAreaElement) => {
