@@ -533,7 +533,7 @@ function Dashboard({ stats, reviews, openReview }: { stats: any, reviews: Review
                 </div>
                 <Stars n={r.stars} />
                 <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px', lineHeight: '1.5' }}>{r.text.length > 100 ? r.text.slice(0, 100) + '…' : r.text}</div>
-                <button onClick={() => openReview(r)} style={{ marginTop: '10px', padding: '6px 14px', background: '#fff', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontFamily: 'inherit', color: '#374151' }}>
+                <button onClick={() => openReview(r)} style={{ marginTop: '10px', padding: '6px 14px', background: '#0f4c5c', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontFamily: 'inherit', color: '#fff' }}>
                   Ansehen & Antworten
                 </button>
               </div>
@@ -1015,7 +1015,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
             <div style={{ fontSize: '32px', marginBottom: '12px' }}>✨</div>
             <div style={{ fontWeight: '600', fontSize: '16px', marginBottom: '6px', color: '#111827' }}>KI-Analyse noch nicht gestartet</div>
             <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>Klicken Sie auf "KI-Analyse starten" — Claude wertet alle Bewertungen aus und liefert konkrete Handlungsempfehlungen.</div>
-            <button onClick={startAI} style={{ padding: '9px 20px', background: '#fff', border: '1px solid #d1d5db', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', fontFamily: 'inherit', fontWeight: '500' }}>✨ Jetzt analysieren</button>
+            <button onClick={startAI} style={{ padding: '9px 20px', background: '#0f4c5c', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', fontFamily: 'inherit', fontWeight: '500', color: '#fff' }}>✨ Jetzt analysieren</button>
           </div>
         )}
         {aiLoading && (
