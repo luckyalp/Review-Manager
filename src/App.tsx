@@ -636,13 +636,11 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview }: { reviews: R
         setAiAnswers(prev => ({ ...prev, [review.id]: data.answers }))
       } else {
         // Fallback auf statische Antworten
-        const fallback = [...AI_RESPONSES.map(a => ({ label: a.label, text: a.text(review.name.split(' ')[0]) })),
-          ...(review.stars <= 2 ? [{ label: '🔴 Persönliche Kontaktaufnahme', text: `Es tut uns leid. Bitte melden Sie sich direkt bei uns: ${settings.contactEmail || 'kontakt@restaurant.de'}` }] : [])]
+        const fallback = [...AI_RESPONSES.map(a => ({ label: a.label, text: a.text(review.name.split(' ')[0]) }))]
         setAiAnswers(prev => ({ ...prev, [review.id]: fallback }))
       }
     } catch {
-      const fallback = [...AI_RESPONSES.map(a => ({ label: a.label, text: a.text(review.name.split(' ')[0]) })),
-        ...(review.stars <= 2 ? [{ label: '🔴 Persönliche Kontaktaufnahme', text: `Es tut uns leid. Bitte melden Sie sich direkt bei uns: ${settings.contactEmail || 'kontakt@restaurant.de'}` }] : [])]
+      const fallback = [...AI_RESPONSES.map(a => ({ label: a.label, text: a.text(review.name.split(' ')[0]) }))]
       setAiAnswers(prev => ({ ...prev, [review.id]: fallback }))
     }
     setAiLoading(null)

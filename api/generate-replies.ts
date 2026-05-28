@@ -213,20 +213,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     jsonStr = jsonStr.substring(startIdx, endIdx + 1)
     const parsed = JSON.parse(jsonStr)
 
-    const answers = [
-      { label: parsed.variant1?.label || 'Ruhig & klar',     text: parsed.variant1?.text || '' },
-      { label: parsed.variant2?.label || 'Warm & einladend', text: parsed.variant2?.text || '' },
-      { label: parsed.variant3?.label || 'Atmosphärisch',    text: parsed.variant3?.text || '' },
-    ]
+    const cleanText = (t: string) => t.replace(/\n\n/g, ' ').replace(/\n/g, ' ').trim()
 
-    if (review.stars <= 2) {
-      const contact = settings?.contactEmail || 'kontakt@restaurant.de'
-      const meld = settings?.salutation === 'Du' ? 'Melde Dich' : 'Melden Sie sich'
-      answers.push({
-        label: '🔴 Persönliche Kontaktaufnahme',
-        text: `Es tut uns leid von dieser Erfahrung zu hören. ${meld} direkt bei uns: ${contact}`
-      })
-    }
+    const answers = [
+      { label: parsed.variant1?.label || 'Ruhig & klar',     text: cleanText(parsed.variant1?.text || '') },
+      { label: parsed.variant2?.label || 'Warm & einladend', text: cleanText(parsed.variant2?.text || '') },
+      { label: parsed.variant3?.label || 'Atmosphärisch',    text: cleanText(parsed.variant3?.text || '') },
+    ]
 
     return res.status(200).json({ success: true, answers })
 
