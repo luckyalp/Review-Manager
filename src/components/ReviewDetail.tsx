@@ -41,6 +41,12 @@ const styles = `
     margin-bottom: 20px;
     display: flex;
     align-items: center;
+    justify-content: space-between;
+  }
+
+  .rd-header-left {
+    display: flex;
+    align-items: center;
     gap: 10px;
   }
 
@@ -58,6 +64,22 @@ const styles = `
     color: var(--petrol);
     letter-spacing: 0.09em;
     text-transform: uppercase;
+  }
+
+  .rd-back-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--text-muted);
+  }
+
+  .rd-back-btn:hover {
+    border-color: var(--text-muted);
+    color: var(--text);
   }
 
   .rd-review-card {
@@ -376,35 +398,56 @@ interface AnswerOption {
   isRecovery?: boolean;
 }
 
-const initialAnswers: AnswerOption[] = [
-  {
-    id: 1,
-    style: "Warm & persönlich",
-    text: "Hallo Anna, das tut uns von Herzen leid. Eine Stunde warten, dann das falsche Gericht — und beim Reklamieren keine Hilfe. Das entspricht nicht unserem Anspruch. Wir haben das intern besprochen. Melde dich gerne bei uns: kontakt@henrys-sandbar.de — Das Team von Henry's Sandbar",
-  },
-  {
-    id: 2,
-    style: "Ruhig & sachlich",
-    text: "Das entspricht nicht unserem Anspruch. Wartezeit, falsches Gericht, unfreundliche Reaktion — das ist dreifach schiefgelaufen. Wir haben die Abläufe intern überprüft. Kontakt: kontakt@henrys-sandbar.de — Das Team von Henry's Sandbar",
-  },
-  {
-    id: 3,
-    style: "Atmosphärisch",
-    text: "Anna, dieser Abend war nicht das, wofür Henry's Sandbar steht. Lange warten, dann das Falsche — und als du dich gemeldet hast, kam keine Hilfe. Das wiegt schwer. Wenn du möchtest, sind wir da: kontakt@henrys-sandbar.de — Das Team von Henry's Sandbar",
-  },
-  {
-    id: 4,
-    style: "Deeskalierend",
-    text: "Anna, diese Erfahrung tut uns leid — und wir verstehen, dass ein solcher Abend nachwirkt. Wir möchten das nicht einfach übergehen. Wenn du möchtest, melde dich direkt bei uns: kontakt@henrys-sandbar.de. Wir nehmen uns die Zeit. — Das Team von Henry's Sandbar",
-    isRecovery: true,
-  },
-];
+interface ReviewDetailProps {
+  review: {
+    id: number;
+    name: string;
+    stars: number;
+    text: string;
+    date: string;
+    status: string;
+  };
+  onStatusChange: (id: number, status: 'Ausstehend' | 'Beantwortet' | 'Abgelehnt') => void;
+  onBack: () => void;
+}
 
-export default function ReviewDetail() {
+export default function ReviewDetail({ review, onStatusChange, onBack }: ReviewDetailProps) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [answers, setAnswers] = useState<AnswerOption[]>(initialAnswers);
   const [showToast, setShowToast] = useState(false);
   const textareaRefs = useRef<Record<number, HTMLTextAreaElement | null>>({});
+
+  const firstName = review.name.split(' ')[0];
+
+  const initialAnswers: AnswerOption[] = [
+    {
+      id: 1,
+      style: "Warm & persönlich",
+      text: `Hallo ${firstName}, das tut uns von Herzen leid. Eine Stunde warten, dann das falsche Gericht — und beim Reklamieren keine Hilfe. Das entspricht nicht unserem Anspruch. Wir haben das intern besprochen. Melde dich gerne bei uns: kontakt@henrys-sandbar.de — Das Team von Henry's Sandbar`,
+    },
+    {
+      id: 2,
+      style: "Ruhig & sachlich",
+      text: `Das entspricht nicht unserem Anspruch. Wartezeit, falsches Gericht, unfreundliche Reaktion — das ist dreifach schiefgelaufen. Wir haben die Abläufe intern überprüft. Kontakt: kontakt@henrys-sandbar.de — Das Team von Henry's Sandbar`,
+    },
+    {
+      id: 3,
+      style: "Atmosphärisch",
+      text: `${firstName}, dieser Abend war nicht das, wofür Henry's Sandbar steht. Lange warten, dann das Falsche — und als du dich gemeldet hast, kam keine Hilfe. Das wiegt schwer. Wenn du möchtest, sind wir da: kontakt@henrys-sandbar.de — Das Team von Henry's Sandbar`,
+    },
+    {
+      id: 4,
+      style: "Deeskalierend",
+      text: `${firstName}, diese Erfahrung tut uns leid — und wir verstehen, dass ein solcher Abend nachwirkt. Wir möchten das nicht einfach übergehen. Wenn du möchtest, melde dich direkt bei uns: kontakt@henrys-sandbar.de. Wir nehmen uns die Zeit. — Das Team von Henry's Sandbar`,
+      isRecovery: true,
+    },
+  ];
+
+  const [answers, setAnswers] = useState<AnswerOption[]>(initialAnswers);
+
+  useEffect(() => {
+    setAnswers(initialAnswers);
+    setSelectedId(null);
+  }, [review]);
 
   useEffect(() => {
     const id = "review-detail-styles";
@@ -449,8 +492,12 @@ export default function ReviewDetail() {
 
   const handleSend = () => {
     setShowToast(true);
+    onStatusChange(review.id, 'Beantwortet');
     setSelectedId(null);
-    setTimeout(() => setShowToast(false), 2500);
+    setTimeout(() => {
+      setShowToast(false);
+      onBack();
+    }, 2000);
   };
 
   const normalAnswers = answers.filter((a) => !a.isRecovery);
@@ -495,21 +542,20 @@ export default function ReviewDetail() {
   return (
     <div className="rd-root">
       <div className="rd-header">
-        <div className="rd-header-dot" />
-        <span className="rd-header-label">Neue Bewertung — Google</span>
+        <div className="rd-header-left">
+          <div className="rd-header-dot" />
+          <span className="rd-header-label">Bewertung Details</span>
+        </div>
+        <button className="rd-back-btn" onClick={onBack}>← Zurück</button>
       </div>
 
       <div className="rd-review-card">
         <div className="rd-reviewer-row">
-          <span className="rd-reviewer-name">Anna W.</span>
-          <span className="rd-stars">★☆☆☆☆</span>
+          <span className="rd-reviewer-name">{review.name}</span>
+          <span className="rd-stars">{'★'.repeat(review.stars)}{'☆'.repeat(5 - review.stars)}</span>
         </div>
-        <div className="rd-review-text">
-          Schreckliche Erfahrung. Wir warteten über eine Stunde auf unser Essen,
-          das dann noch falsch war. Als wir reklamierten, wurde das Personal
-          unhöflich.
-        </div>
-        <div className="rd-review-meta">Google · vor 2 Stunden · 1 Stern</div>
+        <div className="rd-review-text">{review.text}</div>
+        <div className="rd-review-meta">Google · {review.date} · {review.stars} {review.stars === 1 ? 'Stern' : 'Sterne'}</div>
       </div>
 
       <div className="rd-section-label">Antwort wählen — oder nach Auswahl anpassen</div>
@@ -518,7 +564,7 @@ export default function ReviewDetail() {
         {normalAnswers.map(renderCard)}
       </div>
 
-      {recoveryAnswer && (
+      {review.stars <= 2 && recoveryAnswer && (
         <>
           <div className="rd-recovery-separator">
             <div className="rd-recovery-separator-line" />

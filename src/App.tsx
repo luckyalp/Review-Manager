@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Home, MessageSquare, BarChart2, User } from 'lucide-react'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
+import ReviewDetail from './components/ReviewDetail'
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 
