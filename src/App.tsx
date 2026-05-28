@@ -746,7 +746,11 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview }: { reviews: R
           )}
         </div>
       ))}
-    </div>// ─── REVIEW DETAIL STYLES ────────────────────────────────────────────────────
+    </div>
+  )
+}
+
+// ─── REVIEW DETAIL STYLES ────────────────────────────────────────────────────
 
 const rdStyles = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400&display=swap');
@@ -873,18 +877,32 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
       })
       const data = await response.json()
       if (data.success && data.answers) {
+        const firstName = review.name.split(' ')[0]
+        const contactEmail = settings.contactEmail || 'kontakt@restaurant.de'
         const withRecovery = review.stars <= 2
-          ? [...data.answers, { label: 'Deeskalierend', text: `${review.name.split(' ')[0]}, diese Erfahrung tut uns leid — und wir verstehen, dass ein solcher Besuch nachwirkt. Wenn Sie möchten, melden Sie sich direkt bei uns: ${settings.contactEmail || 'kontakt@restaurant.de'}. Wir nehmen uns die Zeit. — Ihr Team`, isRecovery: true }]
+          ? [...data.answers, {
+              label: 'Deeskalierend',
+              text: `${firstName}, diese Erfahrung tut uns leid — und wir verstehen, dass ein solcher Besuch nachwirkt. Wenn Sie möchten, melden Sie sich direkt bei uns: ${contactEmail}. Wir nehmen uns die Zeit. — Ihr Team`,
+              isRecovery: true
+            }]
           : data.answers
         setAnswers(withRecovery)
       } else {
-        const fallback = [...AI_RESPONSES.map(a => ({ label: a.label, text: a.text(review.name.split(' ')[0]) })),
-          ...(review.stars <= 2 ? [{ label: 'Deeskalierend', text: `${review.name.split(' ')[0]}, diese Erfahrung tut uns leid. Melden Sie sich gerne direkt bei uns: ${settings.contactEmail || 'kontakt@restaurant.de'} — Ihr Team`, isRecovery: true }] : [])]
+        const firstName = review.name.split(' ')[0]
+        const contactEmail = settings.contactEmail || 'kontakt@restaurant.de'
+        const fallback = [
+          ...AI_RESPONSES.map(a => ({ label: a.label, text: a.text(firstName) })),
+          ...(review.stars <= 2 ? [{ label: 'Deeskalierend', text: `${firstName}, diese Erfahrung tut uns leid. Melden Sie sich gerne direkt bei uns: ${contactEmail} — Ihr Team`, isRecovery: true }] : [])
+        ]
         setAnswers(fallback)
       }
     } catch {
-      const fallback = [...AI_RESPONSES.map(a => ({ label: a.label, text: a.text(review.name.split(' ')[0]) })),
-        ...(review.stars <= 2 ? [{ label: 'Deeskalierend', text: `${review.name.split(' ')[0]}, diese Erfahrung tut uns leid. Melden Sie sich gerne direkt bei uns: ${settings.contactEmail || 'kontakt@restaurant.de'} — Ihr Team`, isRecovery: true }] : [])]
+      const firstName = review.name.split(' ')[0]
+      const contactEmail = settings.contactEmail || 'kontakt@restaurant.de'
+      const fallback = [
+        ...AI_RESPONSES.map(a => ({ label: a.label, text: a.text(firstName) })),
+        ...(review.stars <= 2 ? [{ label: 'Deeskalierend', text: `${firstName}, diese Erfahrung tut uns leid. Melden Sie sich gerne direkt bei uns: ${contactEmail} — Ihr Team`, isRecovery: true }] : [])
+      ]
       setAnswers(fallback)
     }
     setAiLoading(false)
@@ -906,10 +924,12 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
             <div className="rd2-answer-style">{answer.label}</div>
             <textarea
               ref={el => { textareaRefs.current[idx] = el }}
-              className="rd2-answer-textarea" rows={3}
-              readOnly={!isSelected} value={answer.text}
+              className="rd2-answer-textarea"
+              rows={3}
+              readOnly={!isSelected}
+              value={answer.text}
               onChange={e => handleTextChange(idx, e.target.value)}
-              onClick={e => isSelected && e.stopPropagation()}
+              onClick={e => { if (isSelected) e.stopPropagation() }}
             />
           </div>
         </div>
@@ -923,8 +943,17 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
       <button onClick={onBack} className="rd2-back-btn">← Zurück</button>
       <div className="rd2-review-card">
         <div className="rd2-reviewer-row">
-          <div className="rd2-reviewer-left"><Avatar name={review.name} initials={review.initials} photoUrl={review.photoUrl} size={44} /><div><div className="rd2-reviewer-name">{review.name}</div><Stars n={review.stars} /></div></div>
-          <div className="rd2-reviewer-right"><span className="rd2-review-date">{formatDate(review.date)}</span><StatusBadge status={review.status} /></div>
+          <div className="rd2-reviewer-left">
+            <Avatar name={review.name} initials={review.initials} photoUrl={review.photoUrl} size={44} />
+            <div>
+              <div className="rd2-reviewer-name">{review.name}</div>
+              <Stars n={review.stars} />
+            </div>
+          </div>
+          <div className="rd2-reviewer-right">
+            <span className="rd2-review-date">{formatDate(review.date)}</span>
+            <StatusBadge status={review.status} />
+          </div>
         </div>
         <div className="rd2-review-text">{review.text}</div>
       </div>
@@ -939,11 +968,21 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
               <button onClick={generateReplies} className="rd2-gen-btn">✨ KI-Antworten generieren</button>
             </div>
           )}
-          {aiLoading && <div className="rd2-state-box"><div className="rd2-state-icon">⏳</div><div className="rd2-state-title">KI generiert Antworten…</div></div>}
+
+          {aiLoading && (
+            <div className="rd2-state-box">
+              <div className="rd2-state-icon">⏳</div>
+              <div className="rd2-state-title">KI generiert Antworten…</div>
+            </div>
+          )}
+
           {answers.length > 0 && (
             <>
               <div className="rd2-section-label">Antwort wählen — oder nach Auswahl anpassen</div>
-              <div className="rd2-answers">{normalAnswers.map((a) => renderCard(a, answers.indexOf(a)))}</div>
+              <div className="rd2-answers">
+                {normalAnswers.map((a) => renderCard(a, answers.indexOf(a)))}
+              </div>
+
               {recoveryAnswer && recoveryIdx !== -1 && (
                 <>
                   <div className="rd2-recovery-separator">
@@ -951,23 +990,35 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
                     <span className="rd2-recovery-separator-label">Empfohlen bei 1–2 Sternen</span>
                     <div className="rd2-recovery-separator-line" />
                   </div>
-                  <div className="rd2-answers">{renderCard(recoveryAnswer, recoveryIdx)}</div>
+                  <div className="rd2-answers">
+                    {renderCard(recoveryAnswer, recoveryIdx)}
+                  </div>
                 </>
               )}
+
               <div className="rd2-send-bar">
-                <span className="rd2-send-info">{selectedId !== null ? 'Bereit zum Senden' : 'Erst eine Antwort auswählen'}</span>
-                <button className={`rd2-send-btn${selectedId !== null ? ' rd2-active' : ''}`} onClick={selectedId !== null ? sendAnswer : undefined}>Antwort senden</button>
+                <span className="rd2-send-info">
+                  {selectedId !== null ? 'Bereit zum Senden' : 'Erst eine Antwort auswählen'}
+                </span>
+                <button
+                  className={`rd2-send-btn${selectedId !== null ? ' rd2-active' : ''}`}
+                  onClick={selectedId !== null ? sendAnswer : undefined}
+                >
+                  Antwort senden
+                </button>
               </div>
             </>
           )}
         </>
       )}
-      <div className={`rd2-toast${showToast ? ' rd2-toast-show' : ''}`}>✓ Antwort wurde gesendet</div>
+
+      <div className={`rd2-toast${showToast ? ' rd2-toast-show' : ''}`}>
+        ✓ Antwort wurde gesendet
+      </div>
     </div>
   )
-}>
-  )
 }
+
 
 // ─── ANALYSE ─────────────────────────────────────────────────────────────────
 
