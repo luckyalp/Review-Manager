@@ -98,11 +98,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     <!-- Body -->
     <div style="background-color: #ffffff; padding: 24px; border-radius: 0 0 14px 14px; border: 1px solid ${border}; border-top: none;">
 
-      ${isTest ? `
-      <div style="background-color: #fef9c3; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 14px; margin-bottom: 20px; font-size: 13px; color: #92400e;">
-        🧪 <strong>Test-E-Mail</strong> — So sieht Ihre echte Benachrichtigung aus
-      </div>
-      ` : ''}
+
 
       <!-- Bewertung -->
       <div style="border: 1px solid ${border}; border-radius: 12px; padding: 16px; margin-bottom: 24px; background-color: #fdfcfa;">
