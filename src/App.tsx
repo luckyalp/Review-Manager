@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Home, MessageSquare, BarChart2, User } from 'lucide-react'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
@@ -746,26 +746,121 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview }: { reviews: R
           )}
         </div>
       ))}
-    </div>
-  )
-}
+    </div>// ─── REVIEW DETAIL STYLES ────────────────────────────────────────────────────
+
+const rdStyles = `
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400&display=swap');
+
+  .rd2-root {
+    --rd2-petrol: #0f4c5c;
+    --rd2-petrol-mid: #155e75;
+    --rd2-petrol-subtle: rgba(15,76,92,0.06);
+    --rd2-teal: #0e7490;
+    --rd2-teal-subtle: rgba(14,116,144,0.07);
+    --rd2-border: #e5e0db;
+    --rd2-border-hover: #c9c2ba;
+    --rd2-text: #111827;
+    --rd2-text-sec: #374151;
+    --rd2-text-muted: #6b7280;
+    --rd2-text-faint: #9ca3af;
+    --rd2-surface: #ffffff;
+    --rd2-bg: #f5f3f0;
+    --rd2-success: #15803d;
+    --rd2-sand: #c8a97e;
+    --rd2-shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+    --rd2-shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    -webkit-font-smoothing: antialiased;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .rd2-back-btn { display: inline-flex; align-items: center; gap: 6px; background: var(--rd2-surface); border: 1px solid var(--rd2-border); padding: 7px 15px; border-radius: 10px; font-size: 12.5px; font-weight: 500; cursor: pointer; color: var(--rd2-text-muted); font-family: 'DM Sans', sans-serif; box-shadow: var(--rd2-shadow-xs); transition: border-color 0.15s, color 0.15s, transform 0.1s; margin-bottom: 20px; }
+  .rd2-back-btn:hover { border-color: var(--rd2-border-hover); color: var(--rd2-text-sec); }
+  .rd2-back-btn:active { transform: scale(0.97); }
+  .rd2-review-card { background: var(--rd2-surface); border-radius: 18px; border: 1px solid var(--rd2-border); padding: 20px 22px; margin-bottom: 20px; box-shadow: var(--rd2-shadow-sm); }
+  .rd2-reviewer-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+  .rd2-reviewer-left { display: flex; align-items: center; gap: 13px; }
+  .rd2-reviewer-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+  .rd2-reviewer-name { font-weight: 600; font-size: 15px; color: var(--rd2-text); margin-bottom: 3px; }
+  .rd2-review-date { font-size: 11px; color: var(--rd2-text-faint); font-family: 'DM Mono', monospace; }
+  .rd2-review-text { font-size: 14.5px; color: var(--rd2-text-sec); line-height: 1.7; }
+  .rd2-section-label { font-size: 11px; font-weight: 600; color: var(--rd2-text-faint); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+  .rd2-answers { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+  .rd2-answer-card { background: var(--rd2-surface); border: 1.5px solid var(--rd2-border); border-radius: 14px; cursor: pointer; transition: border-color 0.18s, box-shadow 0.18s; box-shadow: var(--rd2-shadow-xs); }
+  .rd2-answer-card:hover { border-color: var(--rd2-border-hover); }
+  .rd2-answer-card.rd2-selected { border-color: var(--rd2-petrol); box-shadow: 0 0 0 3px var(--rd2-petrol-subtle); cursor: default; }
+  .rd2-answer-card.rd2-recovery { border-left: 2.5px solid var(--rd2-teal); }
+  .rd2-answer-card.rd2-recovery:hover { border-color: var(--rd2-teal); border-left-color: var(--rd2-teal); }
+  .rd2-answer-card.rd2-recovery.rd2-selected { border-color: var(--rd2-teal); border-left-color: var(--rd2-teal); box-shadow: 0 0 0 3px var(--rd2-teal-subtle); }
+  .rd2-answer-top { display: flex; align-items: flex-start; gap: 12px; padding: 14px 15px 11px; }
+  .rd2-answer-indicator { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--rd2-border); flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; background: white; }
+  .rd2-answer-card.rd2-selected .rd2-answer-indicator { background: var(--rd2-petrol); border-color: var(--rd2-petrol); }
+  .rd2-answer-card.rd2-recovery.rd2-selected .rd2-answer-indicator { background: var(--rd2-teal); border-color: var(--rd2-teal); }
+  .rd2-check-icon { display: none; color: white; font-size: 11px; font-weight: 700; }
+  .rd2-answer-card.rd2-selected .rd2-check-icon { display: block; }
+  .rd2-answer-style { font-size: 10px; font-weight: 600; color: var(--rd2-text-faint); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 5px; }
+  .rd2-answer-card.rd2-selected .rd2-answer-style { color: var(--rd2-petrol); }
+  .rd2-answer-card.rd2-recovery.rd2-selected .rd2-answer-style { color: var(--rd2-teal); }
+  .rd2-answer-textarea { font-size: 14px; color: var(--rd2-text-sec); line-height: 1.6; width: 100%; border: none; outline: none; background: transparent; font-family: 'DM Sans', sans-serif; resize: none; cursor: pointer; overflow: hidden; padding: 0; margin: 0; }
+  .rd2-answer-textarea:focus { cursor: text; color: var(--rd2-text); }
+  .rd2-answer-card.rd2-selected .rd2-answer-textarea { cursor: text; }
+  .rd2-edit-hint { display: none; padding: 0 15px 11px 47px; font-size: 11px; color: var(--rd2-sand); font-style: italic; line-height: 1.4; }
+  .rd2-answer-card.rd2-selected .rd2-edit-hint { display: block; }
+  .rd2-recovery-note { font-size: 11px; color: var(--rd2-teal); margin-bottom: 4px; line-height: 1.4; opacity: 0.85; }
+  .rd2-recovery-separator { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .rd2-recovery-separator-line { flex: 1; height: 1px; background: var(--rd2-border); }
+  .rd2-recovery-separator-label { font-size: 10px; font-weight: 600; color: var(--rd2-teal); text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; }
+  .rd2-send-bar { display: flex; justify-content: space-between; align-items: center; padding: 13px 17px; background: var(--rd2-surface); border: 1.5px solid var(--rd2-border); border-radius: 14px; }
+  .rd2-send-info { font-size: 13px; color: var(--rd2-text-faint); }
+  .rd2-send-btn { background: var(--rd2-petrol); color: white; border: none; border-radius: 40px; padding: 9px 22px; font-size: 13px; font-weight: 600; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: background 0.2s, opacity 0.2s, transform 0.1s; opacity: 0.35; pointer-events: none; flex-shrink: 0; }
+  .rd2-send-btn.rd2-active { opacity: 1; pointer-events: all; }
+  .rd2-send-btn.rd2-active:hover { background: var(--rd2-petrol-mid); transform: scale(0.98); }
+  .rd2-state-box { padding: 48px 32px; text-align: center; }
+  .rd2-state-icon { font-size: 32px; margin-bottom: 14px; }
+  .rd2-state-title { font-weight: 600; font-size: 16px; color: var(--rd2-text); margin-bottom: 7px; }
+  .rd2-state-desc { font-size: 13.5px; color: var(--rd2-text-muted); margin-bottom: 24px; line-height: 1.6; max-width: 340px; margin-left: auto; margin-right: auto; }
+  .rd2-gen-btn { display: inline-flex; align-items: center; gap: 7px; padding: 10px 26px; background: var(--rd2-petrol); color: #fff; border: none; border-radius: 40px; cursor: pointer; font-size: 13.5px; font-family: 'DM Sans', sans-serif; font-weight: 600; box-shadow: 0 2px 8px rgba(15,76,92,0.22); transition: background 0.18s, transform 0.1s; }
+  .rd2-gen-btn:hover { background: var(--rd2-petrol-mid); transform: translateY(-1px); }
+  .rd2-toast { position: fixed; bottom: 72px; left: 50%; transform: translateX(-50%) translateY(16px); background: var(--rd2-success); color: white; padding: 10px 24px; border-radius: 40px; font-size: 13px; font-weight: 500; font-family: 'DM Sans', sans-serif; opacity: 0; transition: opacity 0.25s, transform 0.25s; pointer-events: none; white-space: nowrap; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+  .rd2-toast.rd2-toast-show { opacity: 1; transform: translateX(-50%) translateY(0); }
+`
 
 // ─── REVIEW DETAIL ───────────────────────────────────────────────────────────
 
 function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onStatusChange: (id: number, s: ReviewStatus) => void, onBack: () => void }) {
   const [aiLoading, setAiLoading] = useState(false)
-  const [aiAnswers, setAiAnswers] = useState<{label: string, text: string}[]>([])
-  const [selected, setSelected] = useState<number | null>(null)
-
+  const [answers, setAnswers] = useState<{label: string, text: string, isRecovery?: boolean}[]>([])
+  const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [showToast, setShowToast] = useState(false)
+  const textareaRefs = useRef<Record<number, HTMLTextAreaElement | null>>({})
   const settings = JSON.parse(localStorage.getItem('reviewManagerSettings') || '{}')
 
+  useEffect(() => {
+    const id = 'rd2-styles'
+    let tag = document.getElementById(id) as HTMLStyleElement | null
+    if (!tag) { tag = document.createElement('style'); tag.id = id; document.head.appendChild(tag) }
+    tag.textContent = rdStyles
+  }, [])
+
+  const autoResize = (el: HTMLTextAreaElement) => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px' }
+
+  useEffect(() => { Object.values(textareaRefs.current).forEach(el => { if (el) autoResize(el) }) }, [answers])
+
+  const handleSelect = (idx: number) => {
+    if (selectedId === idx) { setSelectedId(null); return }
+    setSelectedId(idx)
+    setTimeout(() => { const el = textareaRefs.current[idx]; if (el) autoResize(el) }, 0)
+  }
+
+  const handleTextChange = (idx: number, value: string) => {
+    setAnswers(prev => prev.map((a, i) => i === idx ? { ...a, text: value } : a))
+    const el = textareaRefs.current[idx]; if (el) autoResize(el)
+  }
+
   const sendAnswer = async () => {
-    const text = selected !== null ? aiAnswers[selected]?.text : null
-    try {
-      await supabase.from('reviews').update({ selected_answer: text ?? null }).eq('id', review.id)
-    } catch (e) { console.warn('Supabase save failed', e) }
+    const text = selectedId !== null ? answers[selectedId]?.text : null
+    try { await supabase.from('reviews').update({ selected_answer: text ?? null }).eq('id', review.id) } catch (e) { console.warn('Supabase save failed', e) }
     onStatusChange(review.id, 'Beantwortet')
-    onBack()
+    setShowToast(true)
+    setTimeout(() => { setShowToast(false); onBack() }, 1500)
   }
 
   const generateReplies = async () => {
@@ -774,95 +869,103 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
       const response = await fetch('/api/generate-replies', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          review: { reviewerName: review.name, stars: review.stars, reviewText: review.text },
-          settings,
-        })
+        body: JSON.stringify({ review: { reviewerName: review.name, stars: review.stars, reviewText: review.text }, settings })
       })
       const data = await response.json()
       if (data.success && data.answers) {
-        setAiAnswers(data.answers)
+        const withRecovery = review.stars <= 2
+          ? [...data.answers, { label: 'Deeskalierend', text: `${review.name.split(' ')[0]}, diese Erfahrung tut uns leid — und wir verstehen, dass ein solcher Besuch nachwirkt. Wenn Sie möchten, melden Sie sich direkt bei uns: ${settings.contactEmail || 'kontakt@restaurant.de'}. Wir nehmen uns die Zeit. — Ihr Team`, isRecovery: true }]
+          : data.answers
+        setAnswers(withRecovery)
       } else {
         const fallback = [...AI_RESPONSES.map(a => ({ label: a.label, text: a.text(review.name.split(' ')[0]) })),
-          ...(review.stars <= 2 ? [{ label: '🔴 Persönliche Kontaktaufnahme', text: `Es tut uns leid. Bitte melden Sie sich direkt bei uns: ${settings.contactEmail || 'kontakt@restaurant.de'}` }] : [])]
-        setAiAnswers(fallback)
+          ...(review.stars <= 2 ? [{ label: 'Deeskalierend', text: `${review.name.split(' ')[0]}, diese Erfahrung tut uns leid. Melden Sie sich gerne direkt bei uns: ${settings.contactEmail || 'kontakt@restaurant.de'} — Ihr Team`, isRecovery: true }] : [])]
+        setAnswers(fallback)
       }
-    } catch (e) {
-      console.error(e)
+    } catch {
       const fallback = [...AI_RESPONSES.map(a => ({ label: a.label, text: a.text(review.name.split(' ')[0]) })),
-        ...(review.stars <= 2 ? [{ label: '🔴 Persönliche Kontaktaufnahme', text: `Es tut uns leid. Bitte melden Sie sich direkt bei uns: ${settings.contactEmail || 'kontakt@restaurant.de'}` }] : [])]
-      setAiAnswers(fallback)
+        ...(review.stars <= 2 ? [{ label: 'Deeskalierend', text: `${review.name.split(' ')[0]}, diese Erfahrung tut uns leid. Melden Sie sich gerne direkt bei uns: ${settings.contactEmail || 'kontakt@restaurant.de'} — Ihr Team`, isRecovery: true }] : [])]
+      setAnswers(fallback)
     }
     setAiLoading(false)
   }
 
-  return (
-    <div>
-      {/* Zurück Button */}
-      <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#6b7280', marginBottom: '20px', padding: '0', fontFamily: 'inherit' }}>
-        ← Zurück
-      </button>
+  const normalAnswers = answers.filter(a => !a.isRecovery)
+  const recoveryAnswer = answers.find(a => a.isRecovery)
+  const recoveryIdx = answers.findIndex(a => a.isRecovery)
 
-      {/* Bewertung */}
-      <div style={{ background: '#fff', borderRadius: '12px', padding: '20px', border: '1px solid #e5e7eb', marginBottom: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Avatar name={review.name} initials={review.initials} photoUrl={review.photoUrl} size={44} />
-            <div>
-              <div style={{ fontWeight: '700', fontSize: '16px', color: '#111827' }}>{review.name}</div>
-              <Stars n={review.stars} />
-            </div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', flexShrink: 0 }}>
-            <div style={{ fontSize: '12px', color: '#9ca3af' }}>{formatDate(review.date)}</div>
-            <StatusBadge status={review.status} />
+  const renderCard = (answer: {label: string, text: string, isRecovery?: boolean}, idx: number) => {
+    const isSelected = selectedId === idx
+    const isRecovery = !!answer.isRecovery
+    return (
+      <div key={idx} className={`rd2-answer-card${isRecovery ? ' rd2-recovery' : ''}${isSelected ? ' rd2-selected' : ''}`} onClick={() => handleSelect(idx)}>
+        <div className="rd2-answer-top">
+          <div className="rd2-answer-indicator"><span className="rd2-check-icon">✓</span></div>
+          <div style={{ flex: 1 }}>
+            {isRecovery && <div className="rd2-recovery-note">Fokus auf Vertrauen und Deeskalation.</div>}
+            <div className="rd2-answer-style">{answer.label}</div>
+            <textarea
+              ref={el => { textareaRefs.current[idx] = el }}
+              className="rd2-answer-textarea" rows={3}
+              readOnly={!isSelected} value={answer.text}
+              onChange={e => handleTextChange(idx, e.target.value)}
+              onClick={e => isSelected && e.stopPropagation()}
+            />
           </div>
         </div>
-        <div style={{ fontSize: '15px', color: '#374151', lineHeight: '1.7', marginTop: '12px' }}>{review.text}</div>
+        <div className="rd2-edit-hint">Direkt im Text anpassen, falls gewünscht.</div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="rd2-root">
+      <button onClick={onBack} className="rd2-back-btn">← Zurück</button>
+      <div className="rd2-review-card">
+        <div className="rd2-reviewer-row">
+          <div className="rd2-reviewer-left"><Avatar name={review.name} initials={review.initials} photoUrl={review.photoUrl} size={44} /><div><div className="rd2-reviewer-name">{review.name}</div><Stars n={review.stars} /></div></div>
+          <div className="rd2-reviewer-right"><span className="rd2-review-date">{formatDate(review.date)}</span><StatusBadge status={review.status} /></div>
+        </div>
+        <div className="rd2-review-text">{review.text}</div>
       </div>
 
-      {/* KI Antworten */}
-      {review.status !== 'Beantwortet' && <div style={{ background: '#fff', borderRadius: '12px', padding: '20px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-        {aiAnswers.length === 0 && !aiLoading && (
-          <div style={{ textAlign: 'center', padding: '32px' }}>
-            <div style={{ fontSize: '32px', marginBottom: '12px' }}>✨</div>
-            <div style={{ fontWeight: '600', fontSize: '16px', marginBottom: '6px', color: '#111827' }}>Noch keine Antworten generiert</div>
-            <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '20px' }}>Klicken Sie auf „KI-Antworten generieren", um 3 Antwortmöglichkeiten zu erstellen.</div>
-            <button onClick={generateReplies} style={{ padding: '10px 24px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontFamily: 'inherit', fontWeight: '600' }}>
-              ✨ KI-Antworten generieren
-            </button>
-          </div>
-        )}
-
-        {aiLoading && (
-          <div style={{ textAlign: 'center', padding: '32px', color: '#6b7280' }}>
-            <div style={{ fontSize: '32px', marginBottom: '12px' }}>⏳</div>
-            <div>KI generiert Antworten...</div>
-          </div>
-        )}
-
-        {aiAnswers.length > 0 && (
-          <>
-            <div style={{ fontWeight: '600', fontSize: '15px', marginBottom: '14px', color: '#111827' }}>
-              {aiAnswers.length} KI-Antwortvorschläge — bitte auswählen:
+      {review.status !== 'Beantwortet' && (
+        <>
+          {answers.length === 0 && !aiLoading && (
+            <div className="rd2-state-box">
+              <div className="rd2-state-icon">✨</div>
+              <div className="rd2-state-title">Noch keine Antworten generiert</div>
+              <div className="rd2-state-desc">Klicken Sie auf „KI-Antworten generieren", um passende Antwortmöglichkeiten zu erstellen.</div>
+              <button onClick={generateReplies} className="rd2-gen-btn">✨ KI-Antworten generieren</button>
             </div>
-            {aiAnswers.map((a, i) => (
-              <div key={i} onClick={() => setSelected(i)}
-                style={{ padding: '14px', borderRadius: '10px', border: `1.5px solid ${selected === i ? '#4f46e5' : '#e5e7eb'}`, background: selected === i ? '#eef2ff' : '#fff', cursor: 'pointer', marginBottom: '10px', fontSize: '14px', lineHeight: '1.7' }}>
-                <div style={{ fontWeight: '600', fontSize: '12px', marginBottom: '6px', color: '#4f46e5' }}>{a.label}</div>
-                {a.text}
+          )}
+          {aiLoading && <div className="rd2-state-box"><div className="rd2-state-icon">⏳</div><div className="rd2-state-title">KI generiert Antworten…</div></div>}
+          {answers.length > 0 && (
+            <>
+              <div className="rd2-section-label">Antwort wählen — oder nach Auswahl anpassen</div>
+              <div className="rd2-answers">{normalAnswers.map((a) => renderCard(a, answers.indexOf(a)))}</div>
+              {recoveryAnswer && recoveryIdx !== -1 && (
+                <>
+                  <div className="rd2-recovery-separator">
+                    <div className="rd2-recovery-separator-line" />
+                    <span className="rd2-recovery-separator-label">Empfohlen bei 1–2 Sternen</span>
+                    <div className="rd2-recovery-separator-line" />
+                  </div>
+                  <div className="rd2-answers">{renderCard(recoveryAnswer, recoveryIdx)}</div>
+                </>
+              )}
+              <div className="rd2-send-bar">
+                <span className="rd2-send-info">{selectedId !== null ? 'Bereit zum Senden' : 'Erst eine Antwort auswählen'}</span>
+                <button className={`rd2-send-btn${selectedId !== null ? ' rd2-active' : ''}`} onClick={selectedId !== null ? sendAnswer : undefined}>Antwort senden</button>
               </div>
-            ))}
-            {selected !== null && (
-              <button onClick={sendAnswer}
-                style={{ padding: '10px 24px', background: '#22c55e', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontFamily: 'inherit', fontWeight: '600', marginTop: '8px' }}>
-                ✅ Ausgewählte Antwort senden
-              </button>
-            )}
-          </>
-        )}
-      </div>}
+            </>
+          )}
+        </>
+      )}
+      <div className={`rd2-toast${showToast ? ' rd2-toast-show' : ''}`}>✓ Antwort wurde gesendet</div>
     </div>
+  )
+}>
   )
 }
 
