@@ -750,6 +750,228 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview }: { reviews: R
   )
 }
 
+// ─── REVIEW DETAIL STYLES ────────────────────────────────────────────────────
+
+const rdStyles = `
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400&display=swap');
+
+  .rd2-root {
+    --rd2-petrol: #0f4c5c;
+    --rd2-petrol-mid: #155e75;
+    --rd2-petrol-subtle: rgba(15,76,92,0.06);
+    --rd2-border: #e5e0db;
+    --rd2-border-hover: #c9c2ba;
+    --rd2-text: #111827;
+    --rd2-text-sec: #374151;
+    --rd2-text-muted: #6b7280;
+    --rd2-text-faint: #9ca3af;
+    --rd2-surface: #ffffff;
+    --rd2-bg: #f5f3f0;
+    --rd2-success: #15803d;
+    --rd2-shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+    --rd2-shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .rd2-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--rd2-surface);
+    border: 1px solid var(--rd2-border);
+    padding: 7px 15px;
+    border-radius: 10px;
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--rd2-text-muted);
+    font-family: 'DM Sans', sans-serif;
+    box-shadow: var(--rd2-shadow-xs);
+    transition: border-color 0.15s, color 0.15s, box-shadow 0.15s, transform 0.1s;
+    margin-bottom: 20px;
+    letter-spacing: 0.01em;
+  }
+  .rd2-back-btn:hover {
+    border-color: var(--rd2-border-hover);
+    color: var(--rd2-text-sec);
+    box-shadow: var(--rd2-shadow-sm);
+  }
+  .rd2-back-btn:active { transform: scale(0.97); }
+
+  .rd2-review-card {
+    background: var(--rd2-surface);
+    border-radius: 18px;
+    border: 1px solid var(--rd2-border);
+    padding: 20px 22px;
+    margin-bottom: 14px;
+    box-shadow: var(--rd2-shadow-sm);
+  }
+  .rd2-reviewer-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .rd2-reviewer-left { display: flex; align-items: center; gap: 13px; }
+  .rd2-reviewer-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+    flex-shrink: 0;
+  }
+  .rd2-reviewer-name {
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--rd2-text);
+    letter-spacing: -0.01em;
+    margin-bottom: 3px;
+  }
+  .rd2-review-date {
+    font-size: 11px;
+    color: var(--rd2-text-faint);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.02em;
+  }
+  .rd2-review-text {
+    font-size: 14.5px;
+    color: var(--rd2-text-sec);
+    line-height: 1.7;
+  }
+
+  .rd2-ai-card {
+    background: var(--rd2-surface);
+    border-radius: 18px;
+    border: 1px solid var(--rd2-border);
+    box-shadow: var(--rd2-shadow-sm);
+    overflow: hidden;
+  }
+  .rd2-empty-state { padding: 48px 32px; text-align: center; }
+  .rd2-empty-icon { font-size: 34px; margin-bottom: 14px; }
+  .rd2-empty-title { font-weight: 600; font-size: 16px; color: var(--rd2-text); margin-bottom: 7px; }
+  .rd2-empty-desc {
+    font-size: 13.5px;
+    color: var(--rd2-text-muted);
+    margin-bottom: 24px;
+    line-height: 1.6;
+    max-width: 340px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .rd2-gen-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 26px;
+    background: var(--rd2-petrol);
+    color: #fff;
+    border: none;
+    border-radius: 40px;
+    cursor: pointer;
+    font-size: 13.5px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(15,76,92,0.22);
+    transition: background 0.18s, transform 0.1s, box-shadow 0.18s;
+    letter-spacing: 0.01em;
+  }
+  .rd2-gen-btn:hover {
+    background: var(--rd2-petrol-mid);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(15,76,92,0.28);
+  }
+  .rd2-gen-btn:active { transform: scale(0.97); }
+
+  .rd2-loading { padding: 48px 32px; text-align: center; color: var(--rd2-text-muted); font-size: 14px; }
+  .rd2-loading-icon { font-size: 30px; margin-bottom: 12px; }
+
+  .rd2-answers-header {
+    padding: 18px 20px 4px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--rd2-text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .rd2-answers-list { padding: 10px 14px 14px; display: flex; flex-direction: column; gap: 8px; }
+
+  .rd2-answer-card {
+    background: var(--rd2-surface);
+    border: 1.5px solid var(--rd2-border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: border-color 0.18s, box-shadow 0.18s, transform 0.12s, background 0.18s;
+    box-shadow: var(--rd2-shadow-xs);
+  }
+  .rd2-answer-card:hover {
+    border-color: var(--rd2-border-hover);
+    box-shadow: var(--rd2-shadow-sm);
+    transform: translateY(-1px);
+  }
+  .rd2-answer-card.rd2-selected {
+    border-color: var(--rd2-petrol);
+    background: #fdfcfb;
+    box-shadow: 0 0 0 3px var(--rd2-petrol-subtle), var(--rd2-shadow-sm);
+    transform: none;
+    cursor: default;
+  }
+
+  .rd2-answer-label {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--rd2-text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    margin-bottom: 8px;
+    background: var(--rd2-bg);
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--rd2-border);
+    transition: background 0.18s, color 0.18s, border-color 0.18s;
+  }
+  .rd2-answer-card.rd2-selected .rd2-answer-label {
+    color: var(--rd2-petrol);
+    background: var(--rd2-petrol-subtle);
+    border-color: rgba(15,76,92,0.18);
+  }
+  .rd2-answer-text { font-size: 13.5px; color: var(--rd2-text-sec); line-height: 1.65; }
+
+  .rd2-send-bar {
+    padding: 14px 20px;
+    border-top: 1px solid var(--rd2-border);
+    background: #fafaf9;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .rd2-send-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 26px;
+    background: var(--rd2-success);
+    color: #fff;
+    border: none;
+    border-radius: 40px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(21,128,61,0.2);
+    transition: background 0.18s, transform 0.1s, box-shadow 0.18s;
+    letter-spacing: 0.01em;
+  }
+  .rd2-send-btn:hover {
+    background: #166534;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(21,128,61,0.28);
+  }
+  .rd2-send-btn:active { transform: scale(0.97); }
+`
+
 // ─── REVIEW DETAIL ───────────────────────────────────────────────────────────
 
 function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onStatusChange: (id: number, s: ReviewStatus) => void, onBack: () => void }) {
@@ -758,6 +980,17 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
   const [selected, setSelected] = useState<number | null>(null)
 
   const settings = JSON.parse(localStorage.getItem('reviewManagerSettings') || '{}')
+
+  useEffect(() => {
+    const id = 'rd2-styles'
+    let tag = document.getElementById(id) as HTMLStyleElement | null
+    if (!tag) {
+      tag = document.createElement('style')
+      tag.id = id
+      document.head.appendChild(tag)
+    }
+    tag.textContent = rdStyles
+  }, [])
 
   const sendAnswer = async () => {
     const text = selected !== null ? aiAnswers[selected]?.text : null
@@ -797,71 +1030,79 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
   }
 
   return (
-    <div>
-      {/* Zurück Button */}
-      <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#6b7280', marginBottom: '20px', padding: '0', fontFamily: 'inherit' }}>
-        ← Zurück
-      </button>
+    <div className="rd2-root">
 
-      {/* Bewertung */}
-      <div style={{ background: '#fff', borderRadius: '12px', padding: '20px', border: '1px solid #e5e7eb', marginBottom: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      {/* Zurück */}
+      <button onClick={onBack} className="rd2-back-btn">← Zurück</button>
+
+      {/* Bewertungs-Karte */}
+      <div className="rd2-review-card">
+        <div className="rd2-reviewer-row">
+          <div className="rd2-reviewer-left">
             <Avatar name={review.name} initials={review.initials} photoUrl={review.photoUrl} size={44} />
             <div>
-              <div style={{ fontWeight: '700', fontSize: '16px', color: '#111827' }}>{review.name}</div>
+              <div className="rd2-reviewer-name">{review.name}</div>
               <Stars n={review.stars} />
             </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', flexShrink: 0 }}>
-            <div style={{ fontSize: '12px', color: '#9ca3af' }}>{formatDate(review.date)}</div>
+          <div className="rd2-reviewer-right">
+            <span className="rd2-review-date">{formatDate(review.date)}</span>
             <StatusBadge status={review.status} />
           </div>
         </div>
-        <div style={{ fontSize: '15px', color: '#374151', lineHeight: '1.7', marginTop: '12px' }}>{review.text}</div>
+        <div className="rd2-review-text">{review.text}</div>
       </div>
 
-      {/* KI Antworten */}
-      {review.status !== 'Beantwortet' && <div style={{ background: '#fff', borderRadius: '12px', padding: '20px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-        {aiAnswers.length === 0 && !aiLoading && (
-          <div style={{ textAlign: 'center', padding: '32px' }}>
-            <div style={{ fontSize: '32px', marginBottom: '12px' }}>✨</div>
-            <div style={{ fontWeight: '600', fontSize: '16px', marginBottom: '6px', color: '#111827' }}>Noch keine Antworten generiert</div>
-            <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '20px' }}>Klicken Sie auf „KI-Antworten generieren", um 3 Antwortmöglichkeiten zu erstellen.</div>
-            <button onClick={generateReplies} style={{ padding: '10px 24px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontFamily: 'inherit', fontWeight: '600' }}>
-              ✨ KI-Antworten generieren
-            </button>
-          </div>
-        )}
+      {/* KI-Antworten */}
+      {review.status !== 'Beantwortet' && (
+        <div className="rd2-ai-card">
 
-        {aiLoading && (
-          <div style={{ textAlign: 'center', padding: '32px', color: '#6b7280' }}>
-            <div style={{ fontSize: '32px', marginBottom: '12px' }}>⏳</div>
-            <div>KI generiert Antworten...</div>
-          </div>
-        )}
-
-        {aiAnswers.length > 0 && (
-          <>
-            <div style={{ fontWeight: '600', fontSize: '15px', marginBottom: '14px', color: '#111827' }}>
-              {aiAnswers.length} KI-Antwortvorschläge — bitte auswählen:
+          {/* Leerzustand */}
+          {aiAnswers.length === 0 && !aiLoading && (
+            <div className="rd2-empty-state">
+              <div className="rd2-empty-icon">✨</div>
+              <div className="rd2-empty-title">Noch keine Antworten generiert</div>
+              <div className="rd2-empty-desc">Klicken Sie auf „KI-Antworten generieren", um Antwortmöglichkeiten zu erstellen.</div>
+              <button onClick={generateReplies} className="rd2-gen-btn">✨ KI-Antworten generieren</button>
             </div>
-            {aiAnswers.map((a, i) => (
-              <div key={i} onClick={() => setSelected(i)}
-                style={{ padding: '14px', borderRadius: '10px', border: `1.5px solid ${selected === i ? '#4f46e5' : '#e5e7eb'}`, background: selected === i ? '#eef2ff' : '#fff', cursor: 'pointer', marginBottom: '10px', fontSize: '14px', lineHeight: '1.7' }}>
-                <div style={{ fontWeight: '600', fontSize: '12px', marginBottom: '6px', color: '#4f46e5' }}>{a.label}</div>
-                {a.text}
+          )}
+
+          {/* Ladezustand */}
+          {aiLoading && (
+            <div className="rd2-loading">
+              <div className="rd2-loading-icon">⏳</div>
+              <div>KI generiert Antworten…</div>
+            </div>
+          )}
+
+          {/* Antwort-Karten */}
+          {aiAnswers.length > 0 && (
+            <>
+              <div className="rd2-answers-header">
+                {aiAnswers.length} KI-Antwortvorschläge — auswählen &amp; ggf. anpassen
               </div>
-            ))}
-            {selected !== null && (
-              <button onClick={sendAnswer}
-                style={{ padding: '10px 24px', background: '#22c55e', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontFamily: 'inherit', fontWeight: '600', marginTop: '8px' }}>
-                ✅ Ausgewählte Antwort senden
-              </button>
-            )}
-          </>
-        )}
-      </div>}
+              <div className="rd2-answers-list">
+                {aiAnswers.map((a, i) => (
+                  <div
+                    key={i}
+                    onClick={() => setSelected(i)}
+                    className={`rd2-answer-card${selected === i ? ' rd2-selected' : ''}`}
+                  >
+                    <div className="rd2-answer-label">{a.label}</div>
+                    <div className="rd2-answer-text">{a.text}</div>
+                  </div>
+                ))}
+              </div>
+              {selected !== null && (
+                <div className="rd2-send-bar">
+                  <button onClick={sendAnswer} className="rd2-send-btn">✅ Antwort senden</button>
+                </div>
+              )}
+            </>
+          )}
+
+        </div>
+      )}
     </div>
   )
 }
