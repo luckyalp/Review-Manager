@@ -36,10 +36,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     <div style="border: 1.5px solid ${border}; border-radius: 12px; padding: 16px; margin-bottom: 10px; background: #ffffff;">
       <div style="display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 10px; border-radius: 20px; margin-bottom: 8px; letter-spacing: 0.5px; background: ${normalColors[i] || petrol}18; color: ${normalColors[i] || petrol}; text-transform: uppercase;">${a.label}</div>
       <div style="font-size: 13px; color: #374151; line-height: 1.65; margin-bottom: 14px;">${a.text}</div>
-      <a href="https://review-manager-mu.vercel.app/api/confirm-reply?reviewId=${encodeURIComponent(reviewerName + '_' + stars)}&answerIndex=${i}&answerText=${encodeURIComponent(a.text)}"
-        style="display: block; text-align: center; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #ffffff; text-decoration: none; background: ${normalColors[i] || petrol};">
-        ✓ Diese Antwort auswählen &amp; senden
-      </a>
+      <table cellpadding="0" cellspacing="0" width="100%" role="presentation">
+        <tr>
+          <td style="padding-right: 6px;">
+            <a href="https://review-manager-mu.vercel.app/api/confirm-reply?reviewId=${encodeURIComponent(reviewerName + '_' + stars)}&answerIndex=${i}&answerText=${encodeURIComponent(a.text)}"
+              style="display: block; text-align: center; padding: 10px; border-radius: 40px; font-size: 13px; font-weight: 600; color: #ffffff; text-decoration: none; background: ${normalColors[i] || petrol};">
+              ✓ Sofort senden
+            </a>
+          </td>
+          <td style="padding-left: 6px;">
+            <a href="https://review-manager-mu.vercel.app?reviewId=${encodeURIComponent(reviewerName + '_' + stars)}&edit=true"
+              style="display: block; text-align: center; padding: 10px; border-radius: 40px; font-size: 13px; font-weight: 600; color: ${teal}; text-decoration: none; background: #ffffff; border: 1.5px solid ${teal};">
+              ✏️ Bearbeiten
+            </a>
+          </td>
+        </tr>
+      </table>
     </div>
   `
 
@@ -56,10 +68,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         <div style="font-size: 11px; color: ${teal}; margin-bottom: 6px; opacity: 0.85;">Fokus auf Vertrauen und Deeskalation.</div>
         <div style="display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 10px; border-radius: 20px; margin-bottom: 8px; letter-spacing: 0.5px; background: ${teal}18; color: ${teal}; text-transform: uppercase;">${a.label}</div>
         <div style="font-size: 13px; color: #374151; line-height: 1.65; margin-bottom: 14px;">${a.text}</div>
-        <a href="https://review-manager-mu.vercel.app/api/confirm-reply?reviewId=${encodeURIComponent(reviewerName + '_' + stars)}&answerIndex=${idx}&answerText=${encodeURIComponent(a.text)}"
-          style="display: block; text-align: center; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #ffffff; text-decoration: none; background: ${teal};">
-          ✓ Diese Antwort auswählen &amp; senden
-        </a>
+        <table cellpadding="0" cellspacing="0" width="100%" role="presentation">
+          <tr>
+            <td style="padding-right: 6px;">
+              <a href="https://review-manager-mu.vercel.app/api/confirm-reply?reviewId=${encodeURIComponent(reviewerName + '_' + stars)}&answerIndex=${idx}&answerText=${encodeURIComponent(a.text)}"
+                style="display: block; text-align: center; padding: 10px; border-radius: 40px; font-size: 13px; font-weight: 600; color: #ffffff; text-decoration: none; background: ${teal};">
+                ✓ Sofort senden
+              </a>
+            </td>
+            <td style="padding-left: 6px;">
+              <a href="https://review-manager-mu.vercel.app?reviewId=${encodeURIComponent(reviewerName + '_' + stars)}&edit=true"
+                style="display: block; text-align: center; padding: 10px; border-radius: 40px; font-size: 13px; font-weight: 600; color: ${teal}; text-decoration: none; background: #ffffff; border: 1.5px solid ${teal};">
+                ✏️ Bearbeiten
+              </a>
+            </td>
+          </tr>
+        </table>
       </div>
     </div>
   `
