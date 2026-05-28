@@ -418,26 +418,32 @@ export default function ReviewDetail({ review, onStatusChange, onBack }: ReviewD
 
   const firstName = review.name.split(' ')[0];
 
+  // 1. Einstellungen dynamisch aus dem LocalStorage laden
+  const settings = JSON.parse(localStorage.getItem('reviewManagerSettings') || '{}');
+  const contactEmail = settings.contactEmail || 'kontakt@henrys-sandbar.de';
+  const chosenStyle = settings.aiStyle || 'Standard';
+
+  // 2. Antwortoptionen generieren, die die geladenen Einstellungen einbeziehen
   const initialAnswers: AnswerOption[] = [
     {
       id: 1,
-      style: "Warm & persönlich",
-      text: `Hallo ${firstName}, das tut uns von Herzen leid. Eine Stunde warten, dann das falsche Gericht — und beim Reklamieren keine Hilfe. Das entspricht nicht unserem Anspruch. Wir haben das intern besprochen. Melde dich gerne bei uns: kontakt@henrys-sandbar.de — Das Team von Henry's Sandbar`,
+      style: `Warm & persönlich ${chosenStyle !== 'Standard' ? `(${chosenStyle})` : ''}`,
+      text: `Hallo ${firstName}, das tut uns von Herzen leid. Eine Stunde warten, dann das falsche Gericht — und beim Reklamieren keine Hilfe. Das entspricht nicht unserem Anspruch. Wir haben das intern besprochen. Melde dich gerne bei uns unter: ${contactEmail} — Das Team von Henry's Sandbar`,
     },
     {
       id: 2,
       style: "Ruhig & sachlich",
-      text: `Das entspricht nicht unserem Anspruch. Wartezeit, falsches Gericht, unfreundliche Reaktion — das ist dreifach schiefgelaufen. Wir haben die Abläufe intern überprüft. Kontakt: kontakt@henrys-sandbar.de — Das Team von Henry's Sandbar`,
+      text: `Das entspricht nicht unserem Anspruch. Wartezeit, falsches Gericht, unfreundliche Reaktion — das ist dreifach schiefgelaufen. Wir haben die Abläufe intern überprüft. Bitte kontaktieren Sie uns für eine Klärung unter: ${contactEmail} — Das Team von Henry's Sandbar`,
     },
     {
       id: 3,
-      style: "Atmosphärisch",
-      text: `${firstName}, dieser Abend war nicht das, wofür Henry's Sandbar steht. Lange warten, dann das Falsche — und als du dich gemeldet hast, kam keine Hilfe. Das wiegt schwer. Wenn du möchtest, sind wir da: kontakt@henrys-sandbar.de — Das Team von Henry's Sandbar`,
+      style: "Atmosphärisch & Stilvoll",
+      text: `${firstName}, dieser Abend war nicht das, wofür Henry's Sandbar steht. Lange warten, dann das Falsche — und als du dich gemeldet hast, kam keine Hilfe. Das wiegt schwer. Unser Fokus liegt auf einer stimmigen Atmosphäre, die hier leider gefehlt hat. Wenn du möchtest, sind wir erreichbar: ${contactEmail} — Das Team von Henry's Sandbar`,
     },
     {
       id: 4,
       style: "Deeskalierend",
-      text: `${firstName}, diese Erfahrung tut uns leid — und wir verstehen, dass ein solcher Abend nachwirkt. Wir möchten das nicht einfach übergehen. Wenn du möchtest, melde dich direkt bei uns: kontakt@henrys-sandbar.de. Wir nehmen uns die Zeit. — Das Team von Henry's Sandbar`,
+      text: `${firstName}, diese Erfahrung tut uns leid — und wir verstehen, dass ein solcher Abend nachwirkt. Wir möchten das nicht einfach übergehen. Wenn du möchtest, melde dich direkt bei uns: ${contactEmail}. Wir nehmen uns die Zeit. — Das Team von Henry's Sandbar`,
       isRecovery: true,
     },
   ];
