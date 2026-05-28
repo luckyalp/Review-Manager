@@ -23,12 +23,22 @@ function buildPrompt(reviewText: string, rating: number, reviewerName: string, s
     description = '',
     restaurantType = '',
     priceRange = '',
+    responseLanguage = 'Deutsch',
   } = settings || {}
 
   const duSie = salutation === 'Du' ? 'Du/Dein (Duzen)' : 'Sie/Ihr (Siezen)'
   const signature = responseSignature || `Das Team von ${businessName}`
   const mode = classify(rating, reviewText)
   const firstName = reviewerName ? reviewerName.split(' ')[0] : ''
+
+  // Language instruction based on profile setting
+  const langInstruction = responseLanguage === 'Sprache des Bewerters'
+    ? `Antworte in der Sprache der Bewertung (erkenne sie automatisch). Wenn die Bewertung auf Englisch ist, antworte auf Englisch. Wenn auf Deutsch, antworte auf Deutsch. Usw.`
+    : responseLanguage === 'Deutsch und Englisch'
+    ? `Antworte auf Deutsch und füge eine englische Übersetzung in Klammern hinzu.`
+    : responseLanguage === 'Englisch'
+    ? `Respond in English only.`
+    : `Antworte auf Deutsch.`
 
   const nameRule = firstName
     ? `PERSONALISIERUNG:
@@ -52,7 +62,7 @@ function buildPrompt(reviewText: string, rating: number, reviewerName: string, s
 
   if (mode === 'EMPTY_POSITIVE') {
     return `Du bist ein Response-Engine-System für das Restaurant "${businessName}".
-Antworte auf Deutsch. Anredeform: ${duSie}
+${langInstruction} Anredeform: ${duSie}
 
 RESTAURANT-KONTEXT:
 ${context}
@@ -70,7 +80,7 @@ AUSGABE — NUR dieses JSON:
 
   if (mode === 'EMPTY_NEGATIVE') {
     return `Du bist ein Response-Engine-System für das Restaurant "${businessName}".
-Antworte auf Deutsch. Anredeform: ${duSie}
+${langInstruction} Anredeform: ${duSie}
 
 RESTAURANT-KONTEXT:
 ${context}
@@ -81,7 +91,7 @@ BEWERTUNG: ${rating} Sterne — kein Text.
 
 AUFGABE: 3 Antworten. Anerkennen + einladen sich zu melden. Ohne Druck.${contactEmail ? `\nKontakt: ${contactEmail}` : ''}
 Max. 3 Sätze. Keine leeren Entschuldigungen.
-NIEMALS mit 'Vielen Dank für deine/Ihre Bewertung' anfangen. NIEMALS Floskeln. Direkt und menschlich beginnen — z.B. 'Schade, dass...' oder 'Das tut uns leid...' aber niemals mit Dankesfloskeln.
+NIEMALS mit 'Vielen Dank für deine/Ihre Bewertung' anfangen. NIEMALS Floskeln. Direkt und menschlich beginnen.
 Alle drei enden mit: ${signature}
 
 AUSGABE — NUR dieses JSON:
@@ -89,7 +99,7 @@ AUSGABE — NUR dieses JSON:
   }
 
   return `Du bist ein Response-Engine-System für Hospitality-Bewertungen.
-Antworte auf Deutsch. Anredeform: ${duSie}
+${langInstruction} Anredeform: ${duSie}
 
 ---
 
@@ -115,22 +125,34 @@ SCHRITT 1: ANALYSE
 - Problemtyp: operativ / Erwartung / Missverständnis / echter Fehler / kein Problem
 - Spannungsniveau: Low / Medium / High
 
-SCHRITT 2: ENTSCHEIDUNG
+SCHRITT 2: PRIORISIERUNG DER KRITIKPUNKTE
+- Identifiziere alle genannten Kritikpunkte
+- Wähle MAX. 2 Hauptprobleme (die schwerwiegendsten / häufigsten)
+- Alle weiteren Punkte werden NICHT einzeln aufgezählt — nur kurz als Gesamtbild eingeordnet
+- NIEMALS alle Kritikpunkte hintereinander auflisten — das wirkt defensiv
+- Stattdessen: bündeln, priorisieren, einordnen
+
+SCHRITT 3: ENTSCHEIDUNG
 - Erklärlevel: 0 = keine Erklärung / 1 = 1 Satz Kontext / 2 = neutrale Systembeschreibung
 - Reframing erlaubt? NUR wenn objektiver Kontext fehlt oder Missverständnis
-- Verantwortung? NUR bei echtem Fehler
+- Verantwortung? NUR bei echtem Fehler — dann konkret benennen was intern passiert
+- NIEMALS "Wir arbeiten daran" ohne konkreten Inhalt — stattdessen z.B.:
+  "Wir haben die Abläufe überprüft" / "Das Thema ist intern besprochen" / "Wir haben reagiert"
 
-SCHRITT 3: 3 VARIANTEN
+SCHRITT 4: 3 VARIANTEN
 Alle drei: gleiche Bedeutung, gleiche Strategie — nur Ton und Rhythmus unterschiedlich.
 
 VARIANTE A — Calm Professional
-Ruhig, sachlich, präzise. Kein Name. Minimale Emotionalität.
+Ruhig, sachlich, präzise. Kein Name. Minimale Emotionalität. Kurze Sätze, klare Struktur.
+Maximal 4 Sätze. Keine Wiederholungen.
 
 VARIANTE B — Warm Hospitality
 Menschlich, einladend, wärmer. Beginnt mit "Hallo ${firstName || '[Name]'}," wenn Name bekannt.
+Maximal 5 Sätze. Empathisch aber nicht übertrieben.
 
 VARIANTE C — Reflective Elegant
 Bedeutungsdicht, atmosphärisch, würdevoll. Beginnt mit "${firstName || '[Name]'}," wenn Name bekannt.
+Maximal 4 Sätze. Keine Adjektivhäufungen.
 
 ---
 
@@ -138,13 +160,15 @@ ABSOLUTE VERBOTE:
 - NIEMALS: "Wir nehmen Ihr/dein Feedback ernst"
 - NIEMALS: "Vielen Dank für Ihre/deine Bewertung"
 - NIEMALS: "Wir bitten um Verständnis"
+- NIEMALS: "Wir arbeiten daran" ohne konkreten Inhalt
+- NIEMALS alle Kritikpunkte einzeln aufzählen
 - Keine Rechtfertigungen, keine Überentschuldigungen
 - Nicht mit dem Problem anfangen — erst den Menschen abholen
 
 REFERENZTON:
 - "Das haben wir selbst auch wahrgenommen." → ehrlich, ohne Drama
 - "Wir setzen auf Qualität und Frische, das hat auch seinen Preis." → klar, mit Haltung
-- "Als kleine Wiedergutmachung laden wir Sie herzlich ein." → warm, konkret
+- "Die Abläufe an diesem Abend haben nicht funktioniert — das wissen wir." → konkret, kontrolliert
 
 LORBEERBLATT-PRINZIP: Wenn etwas wie ein Problem aussieht aber ein Qualitätsmerkmal ist →
 zeige die Bedeutung ohne zu rechtfertigen.
