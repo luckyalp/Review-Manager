@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Home, MessageSquare, BarChart2, User } from 'lucide-react'
+import { Home, MessageSquare, BarChart2, User, Star, Clock, CheckCircle } from 'lucide-react'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
@@ -463,17 +463,17 @@ function Dashboard({ stats, reviews, openReview }: { stats: any, reviews: Review
       {/* Stats */}
       <div className="grid4" style={{ marginBottom: '16px' }}>
         {[
-          { label: 'Bewertungen gesamt', value: stats.total, icon: '💬', color: '#111827' },
-          { label: 'Ø Bewertung', value: stats.avg, icon: '⭐', color: '#111827' },
-          { label: 'Ausstehend', value: stats.pending, icon: '📋', color: '#111827' },
-          { label: 'Beantwortet', value: stats.answered, icon: '📊', color: '#111827' },
+          { label: 'Bewertungen gesamt', value: stats.total, Icon: MessageSquare },
+          { label: 'Ø Bewertung', value: stats.avg, Icon: Star },
+          { label: 'Ausstehend', value: stats.pending, Icon: Clock },
+          { label: 'Beantwortet', value: stats.answered, Icon: CheckCircle },
         ].map(s => (
           <div key={s.label} style={{ background: '#fff', borderRadius: '12px', padding: '18px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
               <div style={{ fontSize: '13px', color: '#6b7280' }}>{s.label}</div>
-              <span style={{ fontSize: '18px' }}>{s.icon}</span>
+              <s.Icon size={18} strokeWidth={1.8} color="#0f4c5c" />
             </div>
-            <div style={{ fontSize: '28px', fontWeight: '600', color: s.color }}>{s.value}</div>
+            <div style={{ fontSize: '28px', fontWeight: '600', color: '#111827' }}>{s.value}</div>
           </div>
         ))}
       </div>
