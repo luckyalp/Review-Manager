@@ -134,6 +134,26 @@ function App() {
   const navigate = (id: string) => { setPage(id); setSelectedReview(null) }
   const openReview = (review: Review) => { setSelectedReview(review); setPage('reviews') }
 
+  // URL-Parameter: direkt zur Bewertung springen wenn ?edit=true
+  useEffect(() => {
+    if (!user || reviewsLoading || reviews.length === 0) return
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('edit') === 'true') {
+      const reviewId = params.get('reviewId')
+      if (reviewId) {
+        const match = reviews.find(r =>
+          encodeURIComponent(r.name + '_' + r.stars) === reviewId ||
+          (r.name + '_' + r.stars) === reviewId
+        )
+        if (match) {
+          setSelectedReview(match)
+          setPage('reviews')
+          window.history.replaceState({}, '', window.location.pathname)
+        }
+      }
+    }
+  }, [user, reviewsLoading, reviews])
+
   const updateReviewStatus = async (id: number, status: ReviewStatus) => {
     setReviews(prev => prev.map(r => r.id === id ? { ...r, status } : r))
     try {
@@ -596,11 +616,13 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview }: { reviews: R
         setAiAnswers(prev => ({ ...prev, [review.id]: data.answers }))
       } else {
         // Fallback auf statische Antworten
-        const fallback = [...AI_RESPONSES.map(a => ({ label: a.label, text: a.text(review.name.split(' ')[0]) }))]
+        const fallback = [...AI_RESPONSES.map(a => ({ label: a.label, text: a.text(review.name.split(' ')[0]) })),
+          ...(review.stars <= 2 ? [{ label: '🔴 Persönliche Kontaktaufnahme', text: `Es tut uns leid. Bitte melden Sie sich direkt bei uns: ${settings.contactEmail || 'kontakt@restaurant.de'}` }] : [])]
         setAiAnswers(prev => ({ ...prev, [review.id]: fallback }))
       }
     } catch {
-      const fallback = [...AI_RESPONSES.map(a => ({ label: a.label, text: a.text(review.name.split(' ')[0]) }))]
+      const fallback = [...AI_RESPONSES.map(a => ({ label: a.label, text: a.text(review.name.split(' ')[0]) })),
+        ...(review.stars <= 2 ? [{ label: '🔴 Persönliche Kontaktaufnahme', text: `Es tut uns leid. Bitte melden Sie sich direkt bei uns: ${settings.contactEmail || 'kontakt@restaurant.de'}` }] : [])]
       setAiAnswers(prev => ({ ...prev, [review.id]: fallback }))
     }
     setAiLoading(null)
@@ -781,12 +803,14 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
       if (data.success && data.answers) {
         setAiAnswers(data.answers)
       } else {
-        const fallback = [...AI_RESPONSES.map(a => ({ label: a.label, text: a.text(review.name.split(' ')[0]) }))]
+        const fallback = [...AI_RESPONSES.map(a => ({ label: a.label, text: a.text(review.name.split(' ')[0]) })),
+          ...(review.stars <= 2 ? [{ label: '🔴 Persönliche Kontaktaufnahme', text: `Es tut uns leid. Bitte melden Sie sich direkt bei uns: ${settings.contactEmail || 'kontakt@restaurant.de'}` }] : [])]
         setAiAnswers(fallback)
       }
     } catch (e) {
       console.error(e)
-      const fallback = [...AI_RESPONSES.map(a => ({ label: a.label, text: a.text(review.name.split(' ')[0]) }))]
+      const fallback = [...AI_RESPONSES.map(a => ({ label: a.label, text: a.text(review.name.split(' ')[0]) })),
+        ...(review.stars <= 2 ? [{ label: '🔴 Persönliche Kontaktaufnahme', text: `Es tut uns leid. Bitte melden Sie sich direkt bei uns: ${settings.contactEmail || 'kontakt@restaurant.de'}` }] : [])]
       setAiAnswers(fallback)
     }
     setAiLoading(false)
