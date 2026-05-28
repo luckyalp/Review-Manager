@@ -1111,9 +1111,27 @@ function Analytics({ reviews }: { reviews: Review[] }) {
   }
 
   // Sparkline for trend (last 7 days simulated from reviews)
-  const trendData = [3, 5, 4, 7, 6, 9, total > 0 ? total : 8]
-  const maxVal = Math.max(...trendData)
-  const sparkPoints = trendData.map((v, i) => `${(i / (trendData.length - 1)) * 160},${40 - (v / maxVal) * 36}`).join(' ')
+  const [trendDays, setTrendDays] = useState<7 | 14 | 30>(30)
+
+  const getTrendData = (days: number) => {
+    const now = new Date()
+    const points: { date: string, avg: number }[] = []
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(now)
+      d.setDate(d.getDate() - i)
+      const dateStr = d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })
+      const dayReviews = reviews.filter(r => {
+        const rd = new Date(r.date)
+        return rd.toDateString() === d.toDateString()
+      })
+      points.push({ date: dateStr, avg: dayReviews.length ? dayReviews.reduce((s, r) => s + r.stars, 0) / dayReviews.length : 0 })
+    }
+    return points
+  }
+
+  const trendPoints = getTrendData(trendDays)
+  const hasRealData = trendPoints.some(p => p.avg > 0)
+  const displayPoints = hasRealData ? trendPoints : trendPoints.map((p, i) => ({ ...p, avg: [3, 3.2, 3.5, 3.8, 4, 4.2, 4, 3.8, 4.2, 4.5, 4.3, 4.6, 4.4, 4.7, 4.5, 4.8, 4.6, 4.9, 4.7, 5, 4.8, 4.6, 4.9, 4.7, 5, 4.8, 4.9, 5, 4.8, 5][i % 30] }))
 
   const starSegments = [
     { value: distrib[0].count, color: '#16a34a', label: '5★' },
@@ -1165,23 +1183,60 @@ function Analytics({ reviews }: { reviews: Review[] }) {
       {/* Trend + Donuts */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px', marginBottom: '20px' }}>
 
-        {/* Sparkline Trend */}
+        {/* Line Chart */}
         <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '18px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-          <div style={{ fontWeight: '600', fontSize: '14px', color: '#111827', marginBottom: '4px' }}>Bewertungsverlauf</div>
-          <div style={{ fontSize: '11px', color: '#9ca3af', marginBottom: '14px' }}>letzte 7 Tage</div>
-          <svg width="100%" viewBox="0 0 160 44" style={{ overflow: 'visible' }}>
-            <defs>
-              <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#0f4c5c" stopOpacity="0.15" />
-                <stop offset="100%" stopColor="#0f4c5c" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            <polygon points={`0,44 ${sparkPoints} 160,44`} fill="url(#sparkGrad)" />
-            <polyline points={sparkPoints} fill="none" stroke="#0f4c5c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div style={{ fontWeight: '600', fontSize: '14px', color: '#111827' }}>Bewertungen im Zeitverlauf</div>
+            <select value={trendDays} onChange={e => setTrendDays(Number(e.target.value) as 7|14|30)}
+              style={{ fontSize: '12px', padding: '4px 8px', border: '1px solid #d1d5db', borderRadius: '6px', background: '#fff', cursor: 'pointer', fontFamily: 'inherit', color: '#374151' }}>
+              <option value={7}>Letzte 7 Tage</option>
+              <option value={14}>Letzte 14 Tage</option>
+              <option value={30}>Letzte 30 Tage</option>
+            </select>
+          </div>
+          {(() => {
+            const W = 300, H = 120, padL = 28, padB = 24, padR = 8, padT = 8
+            const innerW = W - padL - padR
+            const innerH = H - padT - padB
+            const step = innerW / (displayPoints.length - 1)
+            const minY = 1, maxY = 5
+            const toX = (i: number) => padL + i * step
+            const toY = (v: number) => padT + innerH - ((v - minY) / (maxY - minY)) * innerH
+            const linePath = displayPoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${toX(i).toFixed(1)},${toY(p.avg > 0 ? p.avg : 3).toFixed(1)}`).join(' ')
+            const areaPath = linePath + ` L${toX(displayPoints.length-1).toFixed(1)},${(padT+innerH).toFixed(1)} L${padL},${(padT+innerH).toFixed(1)} Z`
+            const labelStep = trendDays === 7 ? 1 : trendDays === 14 ? 2 : 5
+            return (
+              <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow: 'visible' }}>
+                <defs>
+                  <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#0f4c5c" stopOpacity="0.12" />
+                    <stop offset="100%" stopColor="#0f4c5c" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                {/* Y-axis labels */}
+                {[1,2,3,4,5].map(v => (
+                  <g key={v}>
+                    <line x1={padL} y1={toY(v)} x2={W-padR} y2={toY(v)} stroke="#f3f4f6" strokeWidth="1" />
+                    <text x={padL-4} y={toY(v)+4} textAnchor="end" fontSize="9" fill="#9ca3af">{v}</text>
+                  </g>
+                ))}
+                {/* X-axis labels */}
+                {displayPoints.map((p, i) => i % labelStep === 0 && (
+                  <text key={i} x={toX(i)} y={H-4} textAnchor="middle" fontSize="9" fill="#9ca3af">{p.date}</text>
+                ))}
+                {/* Area */}
+                <path d={areaPath} fill="url(#lineGrad)" />
+                {/* Line */}
+                <path d={linePath} fill="none" stroke="#0f4c5c" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                {/* Dots */}
+                {displayPoints.map((p, i) => p.avg > 0 && (
+                  <circle key={i} cx={toX(i)} cy={toY(p.avg)} r="2.5" fill="#0f4c5c" />
+                ))}
+              </svg>
+            )
+          })()}
         </div>
-
-        {/* Donut 1: Sternverteilung */}
+                {/* Donut 1: Sternverteilung */}
         <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '18px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
           <div style={{ fontWeight: '600', fontSize: '14px', color: '#111827', marginBottom: '12px' }}>Sternverteilung</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
