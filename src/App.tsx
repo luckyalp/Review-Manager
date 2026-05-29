@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Home, MessageSquare, BarChart2, User, Star, Clock, CheckCircle, XCircle, Percent } from 'lucide-react'
+import { Home, MessageSquare, BarChart2, User, Star, Clock, CheckCircle, Percent } from 'lucide-react'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
@@ -566,11 +566,7 @@ function Dashboard({ stats, reviews, openReview, onStatusChange }: { stats: any,
                   <button onClick={() => openReview(r)} style={{ padding: '6px 14px', background: '#0f4c5c', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontFamily: 'inherit', color: '#fff' }}>
                     Ansehen & Antworten
                   </button>
-                  {r.status === 'Ausstehend' && (
-                    <button onClick={() => onStatusChange(r.id, 'Abgelehnt')} style={{ padding: '6px 14px', background: '#fff', border: '1px solid #e5e7eb', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontFamily: 'inherit', color: '#6b7280' }}>
-                      ✕ Ablehnen
-                    </button>
-                  )}
+
                 </div>
               </div>
             ))}
@@ -671,7 +667,7 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview }: { reviews: R
             <option value="alle">Alle Status</option>
             <option value="ausstehend">Ausstehend</option>
             <option value="beantwortet">Beantwortet</option>
-            <option value="abgelehnt">Abgelehnt</option>
+            
           </select>
           <select style={sel} value={filterStars} onChange={e => setFilterStars(e.target.value)}>
             <option value="alle">Alle Sterne</option>
@@ -729,9 +725,8 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview }: { reviews: R
             {review.status !== 'Beantwortet' && (
               <button
                 onClick={() => onStatusChange(review.id, 'Abgelehnt')}
-                disabled={review.status === 'Abgelehnt'}
-                style={{ padding: '7px 14px', background: review.status === 'Abgelehnt' ? '#f3f4f6' : '#fff', border: `1px solid ${review.status === 'Abgelehnt' ? '#e5e7eb' : '#d1d5db'}`, borderRadius: '7px', cursor: review.status === 'Abgelehnt' ? 'default' : 'pointer', fontSize: '13px', fontFamily: 'inherit', color: review.status === 'Abgelehnt' ? '#9ca3af' : '#6b7280', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                {review.status === 'Abgelehnt' ? '✕ Abgelehnt' : '✕ Ablehnen'}
+                style={{ display: 'none' }}>
+                {''}
               </button>
             )}
 
@@ -1071,7 +1066,6 @@ function Analytics({ reviews }: { reviews: Review[] }) {
 
   const answered = reviews.filter(r => r.status === 'Beantwortet').length
   const pending = reviews.filter(r => r.status === 'Ausstehend').length
-  const rejected = reviews.filter(r => r.status === 'Abgelehnt').length
   const total = reviews.length
   const rate = total ? Math.round(answered / total * 100) : 0
   const avg = total ? (reviews.reduce((s, r) => s + r.stars, 0) / total).toFixed(1) : '–'
@@ -1152,7 +1146,6 @@ function Analytics({ reviews }: { reviews: Review[] }) {
   const statusSegments = [
     { value: answered, color: '#0f4c5c', label: 'Beantwortet' },
     { value: pending, color: '#fbbf24', label: 'Ausstehend' },
-    { value: rejected, color: '#e5e7eb', label: 'Abgelehnt' },
   ]
 
   return (
@@ -1160,8 +1153,8 @@ function Analytics({ reviews }: { reviews: Review[] }) {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h1 style={{ fontSize: '30px', fontWeight: '600', marginBottom: '4px', color: '#111827' }}>Analyse</h1>
-          <p style={{ color: '#6b7280', fontSize: '16px' }}>Statistiken & KI-Auswertung Ihrer Bewertungen.</p>
+          <h1 style={{ fontSize: '30px', fontWeight: '600', marginBottom: '4px', color: '#111827' }}>Insights</h1>
+          <p style={{ color: '#6b7280', fontSize: '16px' }}>Auswertung & KI-Analyse Ihrer Bewertungen.</p>
         </div>
         <button onClick={startAI} style={{ padding: '9px 18px', background: '#0f4c5c', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontFamily: 'inherit', fontWeight: '500' }}>
           ✨ KI-Analyse starten
@@ -1175,7 +1168,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
           { label: 'Beantwortet', value: answered, sub: `von ${total} gesamt`, Icon: CheckCircle },
           { label: 'Antwortquote', value: `${rate}%`, sub: rate >= 80 ? '🟢 Gut' : rate >= 50 ? '🟡 Mittel' : '🔴 Niedrig', Icon: Percent },
           { label: 'Ausstehend', value: pending, sub: 'noch offen', Icon: Clock },
-          { label: 'Abgelehnt', value: rejected, sub: 'nicht beantwortet', Icon: XCircle },
+
         ].map(s => (
           <div key={s.label} style={{ background: '#fff', borderRadius: '12px', padding: '16px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -1336,7 +1329,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: s.color, flexShrink: 0 }} />
                   <span style={{ fontSize: '11px', color: '#374151', flex: 1 }}>{s.label}</span>
-                  <span style={{ fontSize: '11px', color: '#9ca3af' }}>{[answered, pending, rejected][i]}</span>
+                  <span style={{ fontSize: '11px', color: '#9ca3af' }}>{s.value}</span>
                 </div>
               ))}
             </div>
