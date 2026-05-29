@@ -1138,14 +1138,6 @@ function Analytics({ reviews }: { reviews: Review[] }) {
   const hasRealData = trendPoints.some(p => p.count > 0)
   const displayPoints = hasRealData ? trendPoints : trendPoints.map((p, i) => ({ ...p, count: [2,0,1,3,0,2,1,0,3,2,1,0,2,3,1,0,2,1,3,0,2,1,0,3,2,1,0,2,3,1][i % 30] }))
 
-  const starSegments = [
-    { value: distrib[0].count, color: '#16a34a', label: '5★' },
-    { value: distrib[1].count, color: '#4ade80', label: '4★' },
-    { value: distrib[2].count, color: '#fbbf24', label: '3★' },
-    { value: distrib[3].count, color: '#f97316', label: '2★' },
-    { value: distrib[4].count, color: '#ef4444', label: '1★' },
-  ]
-
   const statusSegments = [
     { value: answered, color: '#0f4c5c', label: 'Beantwortet' },
     { value: pending, color: '#fbbf24', label: 'Ausstehend' },
