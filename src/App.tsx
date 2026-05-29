@@ -1026,6 +1026,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
   const [aiLoading, setAiLoading] = useState(false)
   const [aiDone, setAiDone] = useState(false)
   const [variantStats, setVariantStats] = useState<{label: string, index: string, count: number}[]>([])
+  const [ratingBreakdown, setRatingBreakdown] = useState<Record<number, Record<string, number>>>({})
 
   // Varianten-Daten aus Supabase laden
   useEffect(() => {
@@ -1033,20 +1034,29 @@ function Analytics({ reviews }: { reviews: Review[] }) {
       try {
         const { data } = await supabase
           .from('reviews')
-          .select('selected_variant_label, selected_variant_index')
+          .select('selected_variant_index, stars')
           .eq('status', 'Beantwortet')
           .not('selected_variant_index', 'is', null)
         if (!data) return
         const counts: Record<string, { label: string, index: string, count: number }> = {}
+        const breakdown: Record<number, Record<string, number>> = {}
         data.forEach((row: any) => {
           const key = row.selected_variant_index
           if (!key) return
+          // overall counts
           if (!counts[key]) counts[key] = { label: VARIANT_LABELS[key] || key, index: key, count: 0 }
           counts[key].count++
+          // per-rating breakdown
+          const stars = row.stars as number
+          if (stars) {
+            if (!breakdown[stars]) breakdown[stars] = {}
+            breakdown[stars][key] = (breakdown[stars][key] || 0) + 1
+          }
         })
         const order = ['1', '2', '3', 'recovery']
         const sorted = order.filter(k => counts[k]).map(k => counts[k])
         setVariantStats(sorted)
+        setRatingBreakdown(breakdown)
       } catch (e) { console.warn('Variant stats failed', e) }
     }
     loadVariantStats()
@@ -1205,6 +1215,59 @@ function Analytics({ reviews }: { reviews: Review[] }) {
                     <div style={{ height: '6px', background: '#f3f4f6', borderRadius: '3px', overflow: 'hidden' }}>
                       <div style={{ height: '100%', width: pct + '%', background: color, borderRadius: '3px', transition: 'width 0.4s ease' }} />
                     </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* Rating-Aufschlüsselung */}
+      {Object.keys(ratingBreakdown).length > 0 && (() => {
+        const variantColors: Record<string, string> = { '1': '#0f4c5c', '2': '#155e75', '3': '#1e7a8c', 'recovery': '#0e7490' }
+        const order = ['1', '2', '3', 'recovery']
+        const presentVariants = order.filter(k => variantStats.some(v => v.index === k))
+        const starRows = [5,4,3,2,1].filter(s => ratingBreakdown[s])
+        return (
+          <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden', marginBottom: '20px' }}>
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb' }}>
+              <div style={{ fontWeight: '600', fontSize: '15px', color: '#111827' }}>Welche Variante bei welchem Rating?</div>
+              <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>Aufschlüsselung nach Sternzahl</div>
+            </div>
+            <div style={{ padding: '0 18px 16px' }}>
+              {/* Header */}
+              <div style={{ display: 'grid', gridTemplateColumns: '60px ' + presentVariants.map(() => '1fr').join(' '), gap: '8px', padding: '10px 0 6px', borderBottom: '1px solid #f3f4f6' }}>
+                <div style={{ fontSize: '11px', color: '#9ca3af' }}></div>
+                {presentVariants.map(k => (
+                  <div key={k} style={{ fontSize: '11px', fontWeight: '600', color: variantColors[k], textAlign: 'center' }}>
+                    {VARIANT_LABELS[k]?.split(' & ')[0] || k}
+                  </div>
+                ))}
+              </div>
+              {/* Rows */}
+              {starRows.map(stars => {
+                const row = ratingBreakdown[stars]
+                const rowTotal = Object.values(row).reduce((s, n) => s + n, 0)
+                return (
+                  <div key={stars} style={{ display: 'grid', gridTemplateColumns: '60px ' + presentVariants.map(() => '1fr').join(' '), gap: '8px', padding: '8px 0', borderBottom: '1px solid #f9fafb', alignItems: 'center' }}>
+                    <div style={{ fontSize: '13px', color: '#374151', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                      <span style={{ fontWeight: '600' }}>{stars}</span>
+                      <span style={{ color: '#fbbf24', fontSize: '12px' }}>★</span>
+                    </div>
+                    {presentVariants.map(k => {
+                      const count = row[k] || 0
+                      const pct = rowTotal ? Math.round(count / rowTotal * 100) : 0
+                      const isMax = count > 0 && count === Math.max(...presentVariants.map(v => row[v] || 0))
+                      return (
+                        <div key={k} style={{ textAlign: 'center' }}>
+                          <div style={{ fontSize: '13px', fontWeight: isMax ? '700' : '400', color: isMax ? variantColors[k] : '#9ca3af' }}>
+                            {count > 0 ? `${pct}%` : '—'}
+                          </div>
+                          {count > 0 && <div style={{ fontSize: '10px', color: '#d1d5db' }}>{count}×</div>}
+                        </div>
+                      )
+                    })}
                   </div>
                 )
               })}
