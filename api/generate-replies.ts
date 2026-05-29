@@ -315,6 +315,54 @@ AUSGABE — NUR dieses JSON, kein anderer Text:
 }`
 }
 
+// ─── RECOVERY PROMPT ───────────────────────────────────────────────────────
+function buildRecoveryPrompt(reviewText: string, reviewerName: string, settings: any): string {
+  const {
+    businessName = 'das Restaurant',
+    salutation = 'Sie',
+    contactEmail = '',
+    responseSignature = '',
+    responseLanguage = 'Deutsch',
+  } = settings || {}
+
+  const duSie = salutation === 'Du' ? 'Du/Dein (Duzen)' : 'Sie/Ihr (Siezen)'
+  const signature = responseSignature || `Das Team von ${businessName}`
+  const firstName = reviewerName ? reviewerName.split(' ')[0] : ''
+
+  const langInstruction = responseLanguage === 'Sprache des Bewerters'
+    ? `Antworte in der Sprache der Bewertung.`
+    : responseLanguage === 'Englisch'
+    ? `Respond in English only.`
+    : `Antworte auf Deutsch.`
+
+  return `Du antwortest für das Restaurant "${businessName}" auf eine sehr negative Bewertung (1–2 Sterne).
+
+${langInstruction} Anredeform: ${duSie}
+
+BEWERTUNG von ${firstName || 'einem Gast'}:
+"${reviewText}"
+
+DEINE AUFGABE:
+Schreibe EINE kurze, deeskalierende Antwort. Ziel: Vertrauen zurückgewinnen, direkte Kontaktaufnahme anbieten.
+
+REGELN:
+- Konkret auf diese Bewertung eingehen — mindestens einen spezifischen Punkt benennen
+- Kein Kleinreden, keine Rechtfertigung
+- Kontaktangebot: ${contactEmail || 'unsere E-Mail'}
+- Anredeform konsequent: ${duSie}
+- Max. 3 Sätze
+- Endet mit: ${signature}
+
+ABSOLUT VERBOTEN:
+- "Vielen Dank für Ihr/dein Feedback"
+- "Das tut uns sehr leid"
+- "Wir nehmen das ernst"
+- Generische Floskeln ohne Bezug zur Bewertung
+
+AUSGABE — NUR dieses JSON:
+{"label":"Deeskalierend","text":"..."}`
+}
+
 // ─── HELPER: API CALL ──────────────────────────────────────────────────────
 async function callClaude(prompt: string): Promise<string> {
   const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -427,6 +475,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           ]
         }
         // changed === null → finalVariants bleibt unverändert (Generator-Output)
+      }
+    }
+
+    // ── SCHRITT 3: Recovery (nur bei 1–2 Sternen) ─────────────────────────
+    if (stars <= 2) {
+      try {
+        const recoveryPrompt = buildRecoveryPrompt(reviewText, reviewerName, settings)
+        const recoveryRaw = await callClaude(recoveryPrompt)
+        let recoveryJson = recoveryRaw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
+        const rs = recoveryJson.indexOf('{')
+        const re = recoveryJson.lastIndexOf('}')
+        if (rs !== -1 && re !== -1) {
+          recoveryJson = recoveryJson.substring(rs, re + 1)
+          const parsed = JSON.parse(recoveryJson)
+          if (parsed.text) {
+            const cleanText = (t: string) => t.replace(/\n\n/g, ' ').replace(/\n/g, ' ').trim()
+            finalVariants = [
+              ...finalVariants,
+              { label: parsed.label || 'Deeskalierend', text: cleanText(parsed.text), isRecovery: true }
+            ]
+          }
+        }
+      } catch (e) {
+        console.warn('Recovery generation failed', e)
+        // Kein Fallback nötig — die 3 Hauptvarianten sind bereits da
       }
     }
 

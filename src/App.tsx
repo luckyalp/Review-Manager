@@ -915,16 +915,8 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
       })
       const data = await response.json()
       if (data.success && data.answers) {
-        const firstName = review.name.split(' ')[0]
-        const contactEmail = settings.contactEmail || 'kontakt@restaurant.de'
-        const useDu = settings.salutation === 'Du'
-        const recoveryText = useDu
-          ? `${firstName}, diese Erfahrung tut uns leid — und wir verstehen, dass ein solcher Besuch nachwirkt. Wenn du möchtest, meld dich direkt bei uns: ${contactEmail}. Wir nehmen uns die Zeit. — Dein Team`
-          : `${firstName}, diese Erfahrung tut uns leid — und wir verstehen, dass ein solcher Besuch nachwirkt. Wenn Sie möchten, melden Sie sich direkt bei uns: ${contactEmail}. Wir nehmen uns die Zeit. — Ihr Team`
-        const withRecovery = review.stars <= 2
-          ? [...data.answers, { label: 'Deeskalierend', text: recoveryText, isRecovery: true }]
-          : data.answers
-        setAnswers(withRecovery)
+        // Recovery kommt jetzt direkt von der API (isRecovery: true bereits gesetzt)
+        setAnswers(data.answers)
       } else {
         const firstName = review.name.split(' ')[0]
         const contactEmail = settings.contactEmail || 'kontakt@restaurant.de'
