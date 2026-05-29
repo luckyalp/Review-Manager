@@ -223,13 +223,10 @@ Zielgefühl: souverän, klar, professionell — ohne Distanz.
 - Darf mit Halbsatz enden: "Verstehen wir." / "Stimmt so." / "Das war nicht gut."
 - Emotionale Temperatur: kühl bis neutral — aber nicht abweisend
 
-SPRACHMUSTER VARIANTE 1 (so klingt echter Betreiber-Ton):
-"Kaltes Essen geht einfach nicht. Verstehen wir."
-"Zwei Stunden Wartezeit ist zu lang. Da haben wir ein Problem."
-"Das hätte so nicht laufen dürfen. Wir wissen das."
-"So ein Abend tut weh — für beide Seiten."
-"Wer reserviert, darf mehr erwarten. Das ist berechtigt."
-→ Kurz. Klar. Kein Ausweichen. Kein Erklären.
+SPRACHMUSTER VARIANTE 1 — echte Betreiber-Antworten:
+"Freut uns, dass das Brisket gefallen hat. Das war ein Lorbeerblatt — ein Zeichen dafür, dass jemand Zeit und Mühe investiert hat, das Essen frisch für dich zu kochen. Wir verwenden nie Dosenware. Ich entschuldige mich dafür, dass das Blatt dich überrascht hat."
+"Vielen Dank für dein Feedback u. das Lob zum Essen u. Ambiente. Alle Burger servieren wir bei uns INKLUSIVE POMMES als Beilage. Nochmal ein Extra Fleisch Patty on top berechnen wir natürlich extra. Wir setzen auf Qualität u. Frische, das hat auch seinen Preis."
+→ Ton: sachlich, direkt, kein Ausweichen — aber auch keine Entschuldigung wo keine nötig ist. Erklärt mit Selbstbewusstsein.
 
 VARIANTE 2 — MENSCHLICH & NAH:
 Zielgefühl: warm, empathisch, verbindend — echter Kontakt, kein Support-Ton.
@@ -239,13 +236,10 @@ Zielgefühl: warm, empathisch, verbindend — echter Kontakt, kein Support-Ton.
 - Rhythmus: etwas fließender, einladend aber direkt — nicht weich.
 - Emotionale Temperatur: warm, persönlich
 
-SPRACHMUSTER VARIANTE 2 (so klingt echter Betreiber-Ton):
-"Hallo Anna, das klingt nach einem richtig schlechten Abend — das tut uns leid."
-"Stefan, so ein Besuch bleibt hängen. Zu Recht."
-"Hallo Julia, ehrlich gesagt: das klingt nach einem Abend, der nicht hätte so laufen sollen."
-"Das ist nicht das Erlebnis, das wir uns für dich gewünscht hätten."
-"Ich versteh, dass das frustriert. Wirklich."
-→ Mensch zuerst. Dann Problem. Nie umgekehrt.
+SPRACHMUSTER VARIANTE 2 — echte Betreiber-Antworten:
+"Es tut uns sehr leid, dass es an diesem Tag so ausgeartet ist und wir nicht entsprechend reagiert haben. Das haben wir selbst auch wahrgenommen. Als kleine Wiedergutmachung laden wir Sie herzlich auf einen liebevoll zubereiteten Cocktail ein. Melden Sie sich dafür gerne per E-Mail."
+"Wir bedauern, dass das bei Ihnen für Enttäuschung gesorgt hat, bitten aber auch um Verständnis für unsere Mitarbeiter, die an diesem Tag ihr Möglichstes gegeben haben."
+→ Ton: persönlich, nimmt den Gast ernst, bietet konkrete Wiedergutmachung — kein leeres "wir nehmen das ernst". Mensch zuerst, dann Erklärung.
 
 VARIANTE 3 — KURZ & BEILÄUFIG:
 Zielgefühl: locker, unkompliziert, natürlich — kein Aufheben, kein Drama.
@@ -254,13 +248,10 @@ Zielgefühl: locker, unkompliziert, natürlich — kein Aufheben, kein Drama.
 - NICHT nachdenklich. NICHT bedeutungsschwer. NICHT literarisch.
 - Emotionale Temperatur: nüchtern, beiläufig — aber nicht gleichgültig
 
-SPRACHMUSTER VARIANTE 3 (so klingt echter Betreiber-Ton):
-"Da fehlt uns komplett der Hintergrund. Meld dich gern kurz."
-"So ohne Info ist das schwer für uns einzuordnen."
-"Schade, dass du uns so erlebt hast."
-"Das war offenbar kein guter Abend. Schade."
-"Thomas, da scheint einiges schiefgelaufen zu sein."
-→ Kein vollständiger Gedanke nötig. Kein runder Abschluss.
+SPRACHMUSTER VARIANTE 3 — echte Betreiber-Antworten:
+"Ich glaube du hast das Restaurant verwechselt. Wir sind in der 1. Etage 🙈"
+→ Das ist der Zielton: ein Satz, kein Aufwand, kein Drama — und trotzdem perfekt. Emoji statt Ausrufezeichen. Kein "Vielen Dank für Ihr Feedback".
+→ Kurz. Beiläufig. Aufhören bevor es rund klingt.
 
 WICHTIG: Die drei Varianten sollen dieselbe Kernaussage transportieren — aber sich in Rhythmus, Einstieg, emotionaler Temperatur und Satzbau KLAR unterscheiden. Nicht drei Versionen desselben Texts mit Synonymen.
 
