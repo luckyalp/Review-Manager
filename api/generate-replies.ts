@@ -84,7 +84,7 @@ ABSOLUT VERBOTEN:
 - Jede Form von standardisierter Dankesformel
 
 AUSGABE — NUR dieses JSON:
-{"variant1":{"label":"Ruhig & klar","text":"..."},"variant2":{"label":"Warm & einladend","text":"..."},"variant3":{"label":"Atmosphärisch","text":"..."}}`
+{"variant1":{"label":"Herzlich","text":"..."},"variant2":{"label":"Persönlich","text":"..."},"variant3":{"label":"Kurz & warm","text":"..."}}`
   }
 
   // ─── EMPTY NEGATIVE ────────────────────────────────────────────────────────
@@ -112,7 +112,7 @@ ABSOLUT VERBOTEN:
 - "Wir nehmen Ihr/dein Feedback ernst"
 
 AUSGABE — NUR dieses JSON:
-{"variant1":{"label":"Ruhig & klar","text":"..."},"variant2":{"label":"Warm & einladend","text":"..."},"variant3":{"label":"Atmosphärisch","text":"..."}}`
+{"variant1":{"label":"Ruhig & offen","text":"..."},"variant2":{"label":"Direkt & menschlich","text":"..."},"variant3":{"label":"Kurz & klar","text":"..."}}`
   }
 
   // ─── CONTENT MODI (POSITIVE / MIXED / NEGATIVE) ────────────────────────────
@@ -214,19 +214,31 @@ Spiegelung muss IMMER konkret auf diese Bewertung eingehen. Niemals generisch.
 ==================================================
 MIKRO-PATTERNS — zur freien Nutzung (nicht alle, variieren):
 ==================================================
+Anredeform für ALLE Patterns: ${duSie} — konsequent durchhalten, kein Wechsel innerhalb einer Antwort.
+
 EINSTIEGE (wähle passende, nicht immer dieselben):
-"Hallo, danke erstmal für die ehrlichen Worte." /
+${salutation === 'Du'
+  ? `"Hallo, danke erstmal für die ehrlichen Worte." /
+"Das lesen wir natürlich nicht gerne." /
+"Ich habe deine Bewertung gerade gelesen." /
+"Danke für die direkten Worte." /
+"Schade, dass dein Besuch diesen Eindruck hinterlassen hat." /
+"Hallo, wir haben deine Bewertung aufmerksam gelesen." /
+"Danke, dass du das so offen ansprichst."`
+  : `"Hallo, danke erstmal für die ehrlichen Worte." /
 "Das lesen wir natürlich nicht gerne." /
 "Ich habe Ihre Bewertung gerade gelesen." /
 "Danke für die direkten Worte." /
 "Schade, dass Ihr Besuch diesen Eindruck hinterlassen hat." /
 "Hallo, wir haben Ihre Bewertung aufmerksam gelesen." /
-"Danke, dass Sie das so offen ansprechen."
+"Danke, dass Sie das so offen ansprechen."`}
 
 MENSCHLICHE SÄTZE:
 "Da haben wir offensichtlich keinen guten Eindruck hinterlassen." /
 "Das hätte definitiv besser laufen müssen." /
-"Ich kann Ihren Ärger absolut verstehen." /
+${salutation === 'Du'
+  ? `"Ich kann deinen Ärger absolut verstehen." /`
+  : `"Ich kann Ihren Ärger absolut verstehen." /`}
 "So möchten wir eigentlich nicht wahrgenommen werden." /
 "Da müssen wir uns ehrlich an die eigene Nase fassen." /
 "Das sollte so natürlich nicht passieren." /
@@ -235,9 +247,13 @@ MENSCHLICHE SÄTZE:
 "Da blieb leider kein guter Gesamteindruck hängen."
 
 LÖSUNGS-/KONTAKTTEILE:
-"Melden Sie sich gern direkt bei uns." /
+${salutation === 'Du'
+  ? `"Meld dich gern direkt bei uns." /
 "Wir würden das gern wiedergutmachen." /
-"Vielleicht geben Sie uns irgendwann nochmal eine Chance." /
+"Vielleicht gibst du uns irgendwann nochmal eine Chance." /`
+  : `"Melden Sie sich gern direkt bei uns." /
+"Wir würden das gern wiedergutmachen." /
+"Vielleicht geben Sie uns irgendwann nochmal eine Chance." /`}
 "Wir sprechen das intern nochmal an." /
 "Wir möchten aus solchen Rückmeldungen lernen."
 
@@ -253,17 +269,22 @@ Nicht ständig dieselben Einstiege, Abschlüsse oder Satzmuster.
 ==================================================
 ABSOLUT VERBOTEN (alle Varianten):
 ==================================================
-- "Wir bedauern Ihre Erfahrung"
+- "Wir bedauern Ihre Erfahrung" / "Wir bedauern deine Erfahrung"
 - "entspricht nicht unserem Anspruch"
-- "Vielen Dank für Ihr wertvolles Feedback"
-- "Ihre Zufriedenheit ist unser Ziel"
+- "Vielen Dank für Ihr wertvolles Feedback" / "Vielen Dank für dein wertvolles Feedback"
+- "Ihre Zufriedenheit ist unser Ziel" / "deine Zufriedenheit ist unser Ziel"
 - "nehmen wir sehr ernst"
 - "Das tut uns sehr leid"
 - "Wir bitten um Verständnis"
 - "Wir arbeiten daran" ohne konkreten Inhalt
+- "intern daran arbeiten"
+- "Maßnahmen ergriffen" / "Maßnahmen wurden ergriffen"
+- "Das nehmen wir ernst" / "Das nehmen wir sehr ernst"
+- "Wir versichern" / "es wurde versichert"
 - Alle Kritikpunkte einzeln aufzählen
 - Rechtfertigungen oder Überentschuldigungen
 - Mit dem Problem beginnen — erst Mensch abholen, dann Problem
+- Falsche Anredeform — IMMER ${duSie} verwenden, nie mischen
 
 ==================================================
 QUALITÄTSPRÜFUNG (intern vor Ausgabe):
@@ -280,10 +301,14 @@ Alle drei Varianten enden mit: ${signature}
 ==================================================
 AUSGABE — NUR dieses JSON, kein anderer Text:
 ==================================================
+Vergib für jede Variante ein kurzes, passendes Label (2–3 Wörter) das den Stil dieser Antwort beschreibt.
+Nicht immer dieselben Labels — sie sollen den tatsächlichen Ton widerspiegeln.
+Beispiele: "Direkt & klar" / "Warm & nah" / "Ruhig & souverän" / "Persönlich" / "Kurz & ehrlich"
+
 {
-  "variant1": {"label": "Ruhig & klar", "text": "..."},
-  "variant2": {"label": "Warm & einladend", "text": "..."},
-  "variant3": {"label": "Atmosphärisch", "text": "..."}
+  "variant1": {"label": "...", "text": "..."},
+  "variant2": {"label": "...", "text": "..."},
+  "variant3": {"label": "...", "text": "..."}
 }`
 }
 
@@ -342,9 +367,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const cleanText = (t: string) => t.replace(/\n\n/g, ' ').replace(/\n/g, ' ').trim()
 
     const answers = [
-      { label: parsed.variant1?.label || 'Ruhig & klar',     text: cleanText(parsed.variant1?.text || '') },
-      { label: parsed.variant2?.label || 'Warm & einladend', text: cleanText(parsed.variant2?.text || '') },
-      { label: parsed.variant3?.label || 'Atmosphärisch',    text: cleanText(parsed.variant3?.text || '') },
+      { label: parsed.variant1?.label || 'Variante 1', text: cleanText(parsed.variant1?.text || '') },
+      { label: parsed.variant2?.label || 'Variante 2', text: cleanText(parsed.variant2?.text || '') },
+      { label: parsed.variant3?.label || 'Variante 3', text: cleanText(parsed.variant3?.text || '') },
     ]
 
     return res.status(200).json({ success: true, answers })
