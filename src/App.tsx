@@ -329,7 +329,7 @@ function App() {
             </div>
           ) : (
             <>
-              {page === 'dashboard' && <Dashboard stats={stats} reviews={reviews} openReview={openReview} onStatusChange={updateReviewStatus} />}
+              {page === 'dashboard' && <Dashboard stats={stats} reviews={reviews} openReview={openReview} />}
               {page === 'reviews' && !selectedReview && <Reviews reviews={reviews} onStatusChange={updateReviewStatus} onDelete={deleteReview} openReview={openReview} />}
               {page === 'reviews' && selectedReview && <ReviewDetail review={selectedReview} onStatusChange={updateReviewStatus} onBack={() => setSelectedReview(null)} />}
               {page === 'analytics' && <Analytics reviews={reviews} />}
@@ -397,7 +397,7 @@ function StatusBadge({ status }: { status: ReviewStatus }) {
 
 // ─── DASHBOARD ───────────────────────────────────────────────────────────────
 
-function Dashboard({ stats, reviews, openReview, onStatusChange }: { stats: any, reviews: Review[], openReview: (r: Review) => void, onStatusChange: (id: number, s: ReviewStatus) => void }) {
+function Dashboard({ stats, reviews, openReview }: { stats: any, reviews: Review[], openReview: (r: Review) => void }) {
   const [testRunning, setTestRunning] = useState(false)
   const [testDone, setTestDone] = useState(false)
   const [testError, setTestError] = useState('')
