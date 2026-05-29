@@ -1181,7 +1181,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
         ))}
       </div>
 
-      {/* Rating-Aufschlüsselung */
+      {/* Rating-Aufschlüsselung */}
       {Object.keys(ratingBreakdown).length > 0 && (() => {
         const variantColors: Record<string, string> = { '1': '#0f4c5c', '2': '#155e75', '3': '#1e7a8c', 'recovery': '#0e7490' }
         const order = ['1', '2', '3', 'recovery']
