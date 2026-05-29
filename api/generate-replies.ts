@@ -113,10 +113,10 @@ Max. 3 Sätze. Schreibe wie gesprochen, nicht wie formuliert.
 Nie mit Dankesformel beginnen. Keine leeren Entschuldigungen.
 Alle drei enden mit: ${signature}
 
-BEISPIELE (genau dieser Ton):
-- "Schade, dass dein Eindruck von uns so negativ war. Falls du magst, schreib uns gern direkt was passiert ist."
-- "Mit einem Stern bleibt bei uns natürlich ein ungutes Gefühl zurück. Wenn du uns sagen möchtest, was dahintersteckt, hören wir gern zu."
-- "Irgendetwas scheint bei deinem Besuch ziemlich danebengegangen zu sein. Ohne Kontext können wir es schwer einordnen — melden darfst du dich trotzdem jederzeit."
+BEISPIELE (genau dieser Ton — beiläufig, nicht komponiert):
+- "Da scheint ja einiges schiefgelaufen zu sein. Ohne mehr zu wissen, können wir's schwer einordnen."
+- "So ganz ohne Kontext ist das schwer. Wenn du magst, schreib uns kurz."
+- "Schade, dass du uns so erlebt hast. Meld dich gern direkt, wenn du magst."
 
 ABSOLUT VERBOTEN:
 - "Vielen Dank für Ihre/deine Bewertung"
@@ -197,6 +197,22 @@ Die KI darf: Verständnis zeigen, Probleme anerkennen, neutral reagieren.
 Die KI darf NICHT: Schuld erfinden, Situationen interpretieren, falsche Hintergründe annehmen.
 
 ==================================================
+GRUNDHALTUNG — WICHTIGER ALS ALLE ANDEREN REGELN:
+==================================================
+Schreib nicht wie jemand, der eine Antwort verfasst.
+Schreib wie jemand, der kurz reagiert.
+
+Das bedeutet konkret:
+- Sätze dürfen mittendrin aufhören. Übergänge dürfen fehlen.
+- Nichts muss rund klingen. Nichts muss "fertig" sein.
+- Wenn ein kurzer Abbruch echter ist als ein vollständiger Satz: Abbruch nehmen.
+- Jedes Wort das weglassbar ist: weglassen.
+- Kein Satz der klingt als hätte jemand daran gefeilt.
+
+PRÜFTEST vor jedem Satz: "Würde ein echter Gastronom das so sagen — oder hat das jemand geschrieben?"
+Wenn jemand es geschrieben hat: kürzen, brechen, vereinfachen.
+
+==================================================
 3 VARIANTEN — JEDE HAT EINE ANDERE KOMMUNIKATIONS-LOGIK:
 ==================================================
 
@@ -217,13 +233,15 @@ VARIANTE 2 — MENSCHLICH & NAH:
 - Rhythmus: fließender, etwas länger, einladend aber direkt
 - Emotionale Temperatur: warm, persönlich — aber nicht weich
 
-VARIANTE 3 — REFLEKTIERT & DICHT:
-- Einstieg: eine Beobachtung — wie jemand, der kurz innegehalten hat
-- Nicht emotional. Nicht sachlich. Irgendwo dazwischen.
-- GUT: "Stefan, manchmal kippt ein Abend an zwei, drei Kleinigkeiten komplett. Kaltes Essen und ein Service, der nicht richtig da ist, reichen dafür leider schon."
-- SCHLECHT: "Das wissen wir. Wenn das Essen kalt kommt und der Service nicht mitgeht, bleibt vom Abend nicht viel übrig."
-- Höhere Sprachdichte. Jeder Satz trägt Gewicht. Kein Satz zu viel.
-- Emotionale Temperatur: nachdenklich, souverän
+VARIANTE 3 — KURZ & BEILÄUFIG:
+- Einstieg: eine knappe Feststellung — wie jemand der kurz nachdenkt und dann sagt was er denkt
+- NICHT nachdenklich-elegant. NICHT bedeutungsschwer. NICHT literarisch dicht.
+- Eher: jemand der was bemerkt und es direkt ausspricht, ohne es auszuformulieren
+- GUT: "Stefan, da ist offenbar einiges danebengegangen. Ohne mehr zu wissen, schwer einzuordnen."
+- GUT: "Das klingt nach einem richtig bescheidenen Abend. Verstehen wir."
+- SCHLECHT: "Stefan, manchmal kippt ein Abend an zwei, drei Kleinigkeiten komplett." — zu komponiert
+- Kürzer als Variante 1 und 2. Maximal 2 Sätze. Nichts erklären.
+- Emotionale Temperatur: nüchtern, nicht kalt — wie jemand dem das wirklich aufgefallen ist
 
 WICHTIG: Die drei Varianten sollen dieselbe Kernaussage transportieren — aber sich in Rhythmus, Einstieg, emotionaler Temperatur und Satzbau KLAR unterscheiden. Nicht drei Versionen desselben Texts mit Synonymen.
 
@@ -267,6 +285,11 @@ ABSOLUT VERBOTEN (alle Varianten):
 - Rechtfertigungen oder Überentschuldigungen
 - Literarisch glatte Sätze die zu "fertig" klingen
 - Sätze die rund und vollständig wirken wenn ein kurzer Abbruch echter wäre
+- Formulierungen die man so in einer Hotelbroschüre lesen würde
+- Sätze mit mehr als einem Nebensatz — zu konstruiert
+- "manchmal kippt ein Abend" — zu literarisch
+- "lässt uns ratlos zurück" — zu komponiert, niemand redet so
+- "tut weh" als emotionale Eröffnung — zu bewusst eingesetzt
 - Mit dem Problem beginnen in Variante 2 — dort erst Mensch abholen
 - Falsche Anredeform — IMMER ${duSie} verwenden, nie mischen
 - "Hi [Name]" — zu locker, stattdessen Name direkt oder "Hallo [Name]"
@@ -314,7 +337,7 @@ Prüfe diese 3 Varianten nach folgenden Kriterien:
 1. DIFFERENZIERUNG: Unterscheiden sie sich in Ton, Einstieg und emotionaler Temperatur?
    - Variante 1 sollte problem-first sein (sachliche Feststellung zuerst, kein Aufwärmsatz)
    - Variante 2 sollte mensch-first sein (Gast als Mensch abholen, bevor das Problem kommt)
-   - Variante 3 sollte reflektiert-dicht sein (nachdenkliche Beobachtung, hohe Sprachdichte)
+   - Variante 3 sollte kurz & beiläufig sein (knappe Feststellung, max. 2 Sätze, nichts ausformuliert — KEIN literarisch-dichter Ton)
    Wenn zwei Varianten denselben Einstiegstyp haben → eine ist schwach.
 
 2. TEMPLATE-SPRACHE: Klingt eine Variante nach KI-Standard oder Corporate-Sprache?
