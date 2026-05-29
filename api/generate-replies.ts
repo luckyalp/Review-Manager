@@ -186,7 +186,7 @@ VARIANTE 2 — MENSCHLICH & NAH:
 - Warmth first, dann Klarheit
 - Rhythmus: fließender, etwas länger, einladender Tonfall
 - Emotionale Temperatur: warm, empathisch, persönlich
-- Beispiel-Einstieg: "Hallo ${firstName || ''}," oder eine menschliche Feststellung
+- Beginnt mit Name wenn bekannt, sonst mit einer menschlichen Feststellung
 
 VARIANTE 3 — REFLEKTIERT & DICHT:
 - Einstieg: eine Beobachtung oder Einschätzung — wie jemand, der einen Moment innegehalten hat
@@ -194,7 +194,6 @@ VARIANTE 3 — REFLEKTIERT & DICHT:
 - Höhere Sprachdichte. Jeder Satz trägt Gewicht.
 - Rhythmus: bewusster, ruhiger, weniger Standardformulierungen
 - Emotionale Temperatur: nachdenklich, souverän
-- Beispiel-Einstieg: "${firstName ? firstName + ',' : 'Das'}" + eine Feststellung die zeigt: wir haben wirklich hingehört
 
 WICHTIG: Die drei Varianten sollen dieselbe Kernaussage transportieren — aber sich in Rhythmus, Einstieg, emotionaler Temperatur und Satzbau KLAR unterscheiden. Nicht drei Versionen desselben Texts mit Synonymen.
 
@@ -276,33 +275,40 @@ DEINE AUFGABE:
 ==================================================
 Prüfe diese 3 Varianten nach folgenden Kriterien:
 
-1. DIFFERENZIERUNG: Unterscheiden sie sich wirklich in Ton, Einstieg und emotionaler Temperatur?
-   Oder sind sie drei Versionen desselben Textes mit Synonymen?
+1. DIFFERENZIERUNG: Unterscheiden sie sich in Ton, Einstieg und emotionaler Temperatur?
+   - Variante 1 sollte problem-first sein (sachliche Feststellung zuerst, kein Aufwärmsatz)
+   - Variante 2 sollte mensch-first sein (Gast als Mensch abholen, bevor das Problem kommt)
+   - Variante 3 sollte reflektiert-dicht sein (nachdenkliche Beobachtung, hohe Sprachdichte)
+   Wenn zwei Varianten denselben Einstiegstyp haben → eine ist schwach.
 
-2. TEMPLATE-SPRACHE: Klingt eine Variante noch nach KI-Standard oder Corporate-Sprache?
-   Verbotene Muster: "entspricht nicht unserem Anspruch" / "nehmen wir sehr ernst" / 
+2. TEMPLATE-SPRACHE: Klingt eine Variante nach KI-Standard oder Corporate-Sprache?
+   Verboten: "entspricht nicht unserem Anspruch" / "nehmen wir sehr ernst" /
    "Das tut uns sehr leid" / "Vielen Dank für Ihr Feedback" / "Maßnahmen ergriffen"
 
-3. SPIEGELUNG: Geht mindestens eine Variante konkret auf die Bewertung ein (konkrete Momente, nicht Kategorien)?
+3. SPIEGELUNG: Greift mindestens eine Variante konkret auf einen Moment der Bewertung ein?
+   Schlecht: "Wir verstehen Ihre Frustration."
+   Gut: konkreter Moment aus der Bewertung wird direkt benannt.
 
-4. ANREDEFORM: Wird ${duSie} konsequent eingehalten?
+4. ANREDEFORM: Wird ${duSie} konsequent eingehalten — kein Wechsel innerhalb einer Antwort?
 
-5. ABSCHLUSS: Enden alle mit der richtigen Signatur (${signature})?
+5. ABSCHLUSS: Enden alle mit: ${signature}?
 
 ==================================================
-ENTSCHEIDUNG:
+ENTSCHEIDUNG — DU BIST KORREKTOR, NICHT ZWEITER AUTOR:
 ==================================================
-- Wenn alle 3 Varianten die Prüfung bestehen: gib sie UNVERÄNDERT zurück
-- Wenn eine Variante durchfällt: rewrite NUR diese eine Variante
-- Maximal eine Variante rewriten — nie alle drei
+- Wenn alle 3 bestehen: setze "changed": null — gib alle drei EXAKT unverändert zurück
+- Wenn genau eine schwach ist: rewrite NUR diese eine — setze "changed": 1, 2 oder 3
+- Maximal EINE Variante rewriten — nie mehr
+- Die beiden anderen gibst du WORTGENAU unverändert zurück (gleicher Text, gleiches Label)
 
-Beim Rewrite: die schwächste Variante durch eine ersetzen, die sich klar von den anderen beiden abhebt.
-Behalte dieselbe Länge (2–4 Sätze). Kein Label ändern wenn der Ton passt, sonst anpassen.
+Beim Rewrite: neue Version muss sich klar von den anderen beiden abheben.
+Gleiche Länge (2–4 Sätze). Label nur ändern wenn es zum neuen Ton nicht mehr passt.
 
 ==================================================
 AUSGABE — NUR dieses JSON, kein anderer Text:
 ==================================================
 {
+  "changed": null,
   "variant1": {"label": "...", "text": "..."},
   "variant2": {"label": "...", "text": "..."},
   "variant3": {"label": "...", "text": "..."}
@@ -389,7 +395,39 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (mode !== 'EMPTY_POSITIVE' && mode !== 'EMPTY_NEGATIVE') {
       const judgePrompt = buildJudgePrompt(generatedVariants, reviewText, salutation, signature)
       const judgeRaw = await callClaude(judgePrompt)
-      finalVariants = parseVariants(judgeRaw)
+
+      // Judge patcht nur die gemeldete schwache Variante — Rest bleibt Original
+      let judgeJson = judgeRaw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
+      const s = judgeJson.indexOf('{')
+      const e = judgeJson.lastIndexOf('}')
+
+      if (s !== -1 && e !== -1) {
+        judgeJson = judgeJson.substring(s, e + 1)
+        const judgeResult = JSON.parse(judgeJson)
+        const cleanText = (t: string) => t.replace(/\n\n/g, ' ').replace(/\n/g, ' ').trim()
+        const changed: number | null = judgeResult.changed ?? null
+
+        if (changed === 1 && judgeResult.variant1?.text) {
+          finalVariants = [
+            { label: judgeResult.variant1.label || generatedVariants[0].label, text: cleanText(judgeResult.variant1.text) },
+            generatedVariants[1],
+            generatedVariants[2],
+          ]
+        } else if (changed === 2 && judgeResult.variant2?.text) {
+          finalVariants = [
+            generatedVariants[0],
+            { label: judgeResult.variant2.label || generatedVariants[1].label, text: cleanText(judgeResult.variant2.text) },
+            generatedVariants[2],
+          ]
+        } else if (changed === 3 && judgeResult.variant3?.text) {
+          finalVariants = [
+            generatedVariants[0],
+            generatedVariants[1],
+            { label: judgeResult.variant3.label || generatedVariants[2].label, text: cleanText(judgeResult.variant3.text) },
+          ]
+        }
+        // changed === null → finalVariants bleibt unverändert (Generator-Output)
+      }
     }
 
     return res.status(200).json({ success: true, answers: finalVariants })
