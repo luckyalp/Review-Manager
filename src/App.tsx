@@ -1059,12 +1059,6 @@ function Analytics({ reviews }: { reviews: Review[] }) {
   const rate = total ? Math.round(answered / total * 100) : 0
   const avg = total ? (reviews.reduce((s, r) => s + r.stars, 0) / total).toFixed(1) : '–'
 
-  const distrib = [5,4,3,2,1].map(s => ({
-    stars: s,
-    count: reviews.filter(r => r.stars === s).length,
-    pct: total ? Math.round(reviews.filter(r => r.stars === s).length / total * 100) : 0,
-  }))
-
   const positiveThemen = [
     { thema: 'Essen & Qualität', anzahl: 12 },
     { thema: 'Atmosphäre & Ambiente', anzahl: 8 },
