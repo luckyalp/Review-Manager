@@ -92,7 +92,7 @@ ABSOLUT VERBOTEN:
 - Jede Form von standardisierter Dankesformel
 
 AUSGABE — NUR dieses JSON:
-{"variant1":{"text":"..."},"variant2":{"text":"..."},"variant3":{"text":"..."}}`
+{"variant1":{"label":"Herzlich","text":"..."},"variant2":{"label":"Persönlich","text":"..."},"variant3":{"label":"Kurz & warm","text":"..."}}`
   }
 
   // ─── EMPTY NEGATIVE ────────────────────────────────────────────────────────
@@ -216,32 +216,51 @@ Wenn jemand es geschrieben hat: kürzen, brechen, vereinfachen.
 3 VARIANTEN — JEDE HAT EINE ANDERE KOMMUNIKATIONS-LOGIK:
 ==================================================
 
-VARIANTE 1 — NÜCHTERN & DIREKT:
-- Einstieg: beginnt sofort mit dem Problem — eine Feststellung, kein Aufwärmsatz
-- KEIN emotionaler Einstieg davor
-- Kurz, klar, minimal. Kurze Sätze. Wenig Adjektive.
-- Darf mit einem Ein-Wort-Satz oder Halbsatz enden: "Verstehen wir." / "Stimmt so."
-- Emotionale Temperatur: kühl bis neutral
-- GUT: "Kaltes Essen geht einfach nicht. Und wenn der Service dann auch noch danebenliegt, bleibt nicht mehr viel übrig. Verstehen wir."
-- SCHLECHT: "Das hätte nicht passieren dürfen und wir verstehen deine Enttäuschung."
+VARIANTE 1 — RUHIG & DIREKT:
+Zielgefühl: souverän, klar, professionell — ohne Distanz.
+- Beginnt sofort mit dem Problem. Kein Aufwärmsatz, keine Anrede.
+- Kurze Sätze. Wenig Adjektive. Kein Kommentar zur eigenen Reaktion.
+- Darf mit Halbsatz enden: "Verstehen wir." / "Stimmt so." / "Das war nicht gut."
+- Emotionale Temperatur: kühl bis neutral — aber nicht abweisend
+
+SPRACHMUSTER VARIANTE 1 (so klingt echter Betreiber-Ton):
+"Kaltes Essen geht einfach nicht. Verstehen wir."
+"Zwei Stunden Wartezeit ist zu lang. Da haben wir ein Problem."
+"Das hätte so nicht laufen dürfen. Wir wissen das."
+"So ein Abend tut weh — für beide Seiten."
+"Wer reserviert, darf mehr erwarten. Das ist berechtigt."
+→ Kurz. Klar. Kein Ausweichen. Kein Erklären.
 
 VARIANTE 2 — MENSCHLICH & NAH:
-- Einstieg: holt den Gast zuerst als Mensch ab — BEVOR das Problem benannt wird
-- Warmth first, dann Klarheit. Kein Support-Ton.
-- GUT: "Hallo Stefan, das klingt ehrlich gesagt nach keinem guten Abend. Gerade bei den Preisen darf man erwarten, dass Essen heiß ankommt."
-- SCHLECHT: "Hallo Stefan, wir verstehen deine Enttäuschung und nehmen dein Feedback ernst."
-- Rhythmus: fließender, etwas länger, einladend aber direkt
-- Emotionale Temperatur: warm, persönlich — aber nicht weich
+Zielgefühl: warm, empathisch, verbindend — echter Kontakt, kein Support-Ton.
+- Holt den Gast zuerst als Mensch ab — BEVOR das Problem benannt wird.
+- Beginnt mit Name oder direkter persönlicher Ansprache.
+- Dann erst Klarheit über das Problem. Nie andersrum.
+- Rhythmus: etwas fließender, einladend aber direkt — nicht weich.
+- Emotionale Temperatur: warm, persönlich
+
+SPRACHMUSTER VARIANTE 2 (so klingt echter Betreiber-Ton):
+"Hallo Anna, das klingt nach einem richtig schlechten Abend — das tut uns leid."
+"Stefan, so ein Besuch bleibt hängen. Zu Recht."
+"Hallo Julia, ehrlich gesagt: das klingt nach einem Abend, der nicht hätte so laufen sollen."
+"Das ist nicht das Erlebnis, das wir uns für dich gewünscht hätten."
+"Ich versteh, dass das frustriert. Wirklich."
+→ Mensch zuerst. Dann Problem. Nie umgekehrt.
 
 VARIANTE 3 — KURZ & BEILÄUFIG:
-- Einstieg: eine knappe Feststellung — wie jemand der kurz nachdenkt und dann sagt was er denkt
-- NICHT nachdenklich-elegant. NICHT bedeutungsschwer. NICHT literarisch dicht.
-- Eher: jemand der was bemerkt und es direkt ausspricht, ohne es auszuformulieren
-- GUT: "Stefan, da ist offenbar einiges danebengegangen. Ohne mehr zu wissen, schwer einzuordnen."
-- GUT: "Das klingt nach einem richtig bescheidenen Abend. Verstehen wir."
-- SCHLECHT: "Stefan, manchmal kippt ein Abend an zwei, drei Kleinigkeiten komplett." — zu komponiert
-- Kürzer als Variante 1 und 2. Maximal 2 Sätze. Nichts erklären.
-- Emotionale Temperatur: nüchtern, nicht kalt — wie jemand dem das wirklich aufgefallen ist
+Zielgefühl: locker, unkompliziert, natürlich — kein Aufheben, kein Drama.
+- Eine knappe Feststellung. Maximal 2 Sätze. Nichts erklären.
+- Klingt wie jemand der kurz was sagt und dann aufhört.
+- NICHT nachdenklich. NICHT bedeutungsschwer. NICHT literarisch.
+- Emotionale Temperatur: nüchtern, beiläufig — aber nicht gleichgültig
+
+SPRACHMUSTER VARIANTE 3 (so klingt echter Betreiber-Ton):
+"Da fehlt uns komplett der Hintergrund. Meld dich gern kurz."
+"So ohne Info ist das schwer für uns einzuordnen."
+"Schade, dass du uns so erlebt hast."
+"Das war offenbar kein guter Abend. Schade."
+"Thomas, da scheint einiges schiefgelaufen zu sein."
+→ Kein vollständiger Gedanke nötig. Kein runder Abschluss.
 
 WICHTIG: Die drei Varianten sollen dieselbe Kernaussage transportieren — aber sich in Rhythmus, Einstieg, emotionaler Temperatur und Satzbau KLAR unterscheiden. Nicht drei Versionen desselben Texts mit Synonymen.
 
@@ -300,10 +319,13 @@ Alle drei Varianten enden mit: ${signature}
 ==================================================
 AUSGABE — NUR dieses JSON, kein anderer Text:
 ==================================================
+Vergib für jede Variante ein kurzes Label (2–3 Wörter) das den tatsächlichen Ton widerspiegelt.
+Nicht immer dieselben Labels.
+
 {
-  "variant1": {"text": "..."},
-  "variant2": {"text": "..."},
-  "variant3": {"text": "..."}
+  "variant1": {"label": "...", "text": "..."},
+  "variant2": {"label": "...", "text": "..."},
+  "variant3": {"label": "...", "text": "..."}
 }`
 }
 
@@ -355,19 +377,19 @@ ENTSCHEIDUNG — DU BIST KORREKTOR, NICHT ZWEITER AUTOR:
 - Wenn alle 3 bestehen: setze "changed": null — gib alle drei EXAKT unverändert zurück
 - Wenn genau eine schwach ist: rewrite NUR diese eine — setze "changed": 1, 2 oder 3
 - Maximal EINE Variante rewriten — nie mehr
-- Die beiden anderen gibst du WORTGENAU unverändert zurück (gleicher Text)
+- Die beiden anderen gibst du WORTGENAU unverändert zurück (gleicher Text, gleiches Label)
 
 Beim Rewrite: neue Version muss sich klar von den anderen beiden abheben.
-Gleiche Länge (2–4 Sätze).
+Gleiche Länge (2–4 Sätze). Label nur ändern wenn es zum neuen Ton nicht mehr passt.
 
 ==================================================
 AUSGABE — NUR dieses JSON, kein anderer Text:
 ==================================================
 {
   "changed": null,
-  "variant1": {"text": "..."},
-  "variant2": {"text": "..."},
-  "variant3": {"text": "..."}
+  "variant1": {"label": "...", "text": "..."},
+  "variant2": {"label": "...", "text": "..."},
+  "variant3": {"label": "...", "text": "..."}
 }`
 }
 
@@ -420,7 +442,7 @@ ABSOLUT VERBOTEN:
 - Generische Floskeln ohne Bezug zur Bewertung
 
 AUSGABE — NUR dieses JSON:
-{"text":"..."}`
+{"label":"Deeskalierend","text":"..."}`
 }
 
 // ─── HELPER: API CALL ──────────────────────────────────────────────────────
@@ -464,9 +486,9 @@ function parseVariants(raw: string): { label: string; text: string }[] {
   const cleanText = (t: string) => t.replace(/\n\n/g, ' ').replace(/\n/g, ' ').trim()
 
   return [
-    { label: 'Ruhig & direkt', text: cleanText(parsed.variant1?.text || '') },
-    { label: 'Menschlich & nah', text: cleanText(parsed.variant2?.text || '') },
-    { label: 'Kurz & beiläufig', text: cleanText(parsed.variant3?.text || '') },
+    { label: parsed.variant1?.label || 'Variante 1', text: cleanText(parsed.variant1?.text || '') },
+    { label: parsed.variant2?.label || 'Variante 2', text: cleanText(parsed.variant2?.text || '') },
+    { label: parsed.variant3?.label || 'Variante 3', text: cleanText(parsed.variant3?.text || '') },
   ]
 }
 
@@ -517,21 +539,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         if (changed === 1 && judgeResult.variant1?.text) {
           finalVariants = [
-            { label: generatedVariants[0].label, text: cleanText(judgeResult.variant1.text) },
+            { label: judgeResult.variant1.label || generatedVariants[0].label, text: cleanText(judgeResult.variant1.text) },
             generatedVariants[1],
             generatedVariants[2],
           ]
         } else if (changed === 2 && judgeResult.variant2?.text) {
           finalVariants = [
             generatedVariants[0],
-            { label: generatedVariants[1].label, text: cleanText(judgeResult.variant2.text) },
+            { label: judgeResult.variant2.label || generatedVariants[1].label, text: cleanText(judgeResult.variant2.text) },
             generatedVariants[2],
           ]
         } else if (changed === 3 && judgeResult.variant3?.text) {
           finalVariants = [
             generatedVariants[0],
             generatedVariants[1],
-            { label: generatedVariants[2].label, text: cleanText(judgeResult.variant3.text) },
+            { label: judgeResult.variant3.label || generatedVariants[2].label, text: cleanText(judgeResult.variant3.text) },
           ]
         }
         // changed === null → finalVariants bleibt unverändert (Generator-Output)
@@ -553,7 +575,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             const cleanText = (t: string) => t.replace(/\n\n/g, ' ').replace(/\n/g, ' ').trim()
             finalVariants = [
               ...finalVariants,
-              { label: 'Deeskalierend', text: cleanText(parsed.text), isRecovery: true }
+              { label: parsed.label || 'Deeskalierend', text: cleanText(parsed.text), isRecovery: true }
             ]
           }
         }
