@@ -1365,25 +1365,59 @@ function Analytics({ reviews }: { reviews: Review[] }) {
 
 
 
-      {/* Sternverteilung Balken */}
-      <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden', marginBottom: '20px' }}>
-        <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '15px', color: '#111827' }}>Sternverteilung</div>
-        <div style={{ padding: '16px 18px' }}>
-          {[5,4,3,2,1].map(stars => {
-            const count = reviews.filter(r => r.stars === stars).length
-            const pct = total ? Math.round(count / total * 100) : 0
-            return (
-              <div key={stars} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                <div style={{ width: '36px', fontSize: '13px', color: '#6b7280', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '3px' }}>
-                  <span>{stars}</span><span style={{ color: '#fbbf24' }}>★</span>
+      {/* Sternverteilung + Bewertungstrend */}
+      <div className="grid2i" style={{ marginBottom: '20px' }}>
+        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
+          <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '15px', color: '#111827' }}>Sternverteilung</div>
+          <div style={{ padding: '16px 18px' }}>
+            {[5,4,3,2,1].map(stars => {
+              const count = reviews.filter(r => r.stars === stars).length
+              const pct = total ? Math.round(count / total * 100) : 0
+              return (
+                <div key={stars} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                  <div style={{ width: '36px', fontSize: '13px', color: '#6b7280', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '3px' }}>
+                    <span>{stars}</span><span style={{ color: '#fbbf24' }}>★</span>
+                  </div>
+                  <div style={{ flex: 1, height: '10px', background: '#f3f4f6', borderRadius: '5px', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${pct}%`, background: '#fbbf24', borderRadius: '5px' }} />
+                  </div>
+                  <div style={{ width: '24px', fontSize: '13px', color: '#374151', textAlign: 'right', flexShrink: 0 }}>{count}</div>
                 </div>
-                <div style={{ flex: 1, height: '10px', background: '#f3f4f6', borderRadius: '5px', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${pct}%`, background: '#fbbf24', borderRadius: '5px' }} />
+              )
+            })}
+          </div>
+        </div>
+        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
+          <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '15px', color: '#111827' }}>Bewertungstrend (6 Monate)</div>
+          <div style={{ padding: '16px 18px' }}>
+            {(() => {
+              const months: { m: string, count: number }[] = []
+              for (let i = 5; i >= 0; i--) {
+                const d = new Date()
+                d.setDate(1)
+                d.setMonth(d.getMonth() - i)
+                const label = d.toLocaleDateString('de-DE', { month: 'short' })
+                const y = d.getFullYear(), mo = d.getMonth()
+                const count = reviews.filter(r => {
+                  const rd = new Date(r.date)
+                  return rd.getFullYear() === y && rd.getMonth() === mo
+                }).length
+                months.push({ m: label, count })
+              }
+              const maxVal = Math.max(...months.map(m => m.count), 1)
+              return (
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', height: '120px' }}>
+                  {months.map(d => (
+                    <div key={d.m} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', height: '100%', justifyContent: 'flex-end' }}>
+                      <div style={{ fontSize: '10px', color: '#6b7280', marginBottom: '2px' }}>{d.count > 0 ? d.count : ''}</div>
+                      <div style={{ width: '100%', background: '#0f4c5c', borderRadius: '4px 4px 0 0', height: `${Math.max((d.count / maxVal) * 88, d.count > 0 ? 4 : 0)}px`, opacity: 0.85 }} />
+                      <div style={{ fontSize: '11px', color: '#9ca3af' }}>{d.m}</div>
+                    </div>
+                  ))}
                 </div>
-                <div style={{ width: '24px', fontSize: '13px', color: '#374151', textAlign: 'right', flexShrink: 0 }}>{count}</div>
-              </div>
-            )
-          })}
+              )
+            })()}
+          </div>
         </div>
       </div>
 
