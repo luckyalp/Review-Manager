@@ -588,12 +588,6 @@ function Dashboard({ stats, reviews, openReview }: { stats: any, reviews: Review
 
 // ─── BEWERTUNGEN ─────────────────────────────────────────────────────────────
 
-const AI_RESPONSES = [
-  { label: '💬 Herzlich & persönlich', text: (name: string) => `Liebe/r ${name}, vielen herzlichen Dank für Ihre Bewertung! Es freut uns sehr zu hören, dass Sie bei uns waren. Wir heißen Sie jederzeit wieder herzlich willkommen!` },
-  { label: '👔 Professionell & freundlich', text: (name: string) => `Vielen Dank für Ihr Feedback, ${name}! Wir freuen uns über Ihre Rückmeldung und nehmen uns Ihre Anmerkungen zu Herzen. Wir freuen uns auf Ihren nächsten Besuch.` },
-  { label: '⚡ Kurz & direkt', text: (_: string) => `Vielen Dank für die Bewertung! Ihr Feedback ist uns wichtig. Wir freuen uns auf Ihren nächsten Besuch.` },
-]
-
 function Reviews({ reviews, onStatusChange, onDelete, openReview }: { reviews: Review[], onStatusChange: (id: number, s: ReviewStatus) => void, onDelete: (id: number) => void, openReview: (r: Review) => void }) {
   const [openAI, setOpenAI] = useState<number | null>(null)
   const [selected, setSelected] = useState<{[key: number]: number}>({})
@@ -615,11 +609,6 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview }: { reviews: R
   const settings = JSON.parse(localStorage.getItem('reviewManagerSettings') || '{}')
 
   const generateReplies = async (review: Review) => {
-    console.log('generateReplies aufgerufen für:', review.id)
-    if (aiAnswers[review.id]) {
-      setOpenAI(openAI === review.id ? null : review.id)
-      return
-    }
     setAiLoading(review.id)
     setOpenAI(review.id)
     try {
@@ -635,13 +624,10 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview }: { reviews: R
       if (data.success && data.answers) {
         setAiAnswers(prev => ({ ...prev, [review.id]: data.answers }))
       } else {
-        // Fallback auf statische Antworten
-        const fallback = [...AI_RESPONSES.map(a => ({ label: a.label, text: a.text(review.name.split(' ')[0]) }))]
-        setAiAnswers(prev => ({ ...prev, [review.id]: fallback }))
+        setAiAnswers(prev => ({ ...prev, [review.id]: [{ label: 'Fehler', text: 'Antworten konnten nicht geladen werden. Bitte nochmal versuchen.' }] }))
       }
     } catch {
-      const fallback = [...AI_RESPONSES.map(a => ({ label: a.label, text: a.text(review.name.split(' ')[0]) }))]
-      setAiAnswers(prev => ({ ...prev, [review.id]: fallback }))
+      setAiAnswers(prev => ({ ...prev, [review.id]: [{ label: 'Fehler', text: 'Antworten konnten nicht geladen werden. Bitte nochmal versuchen.' }] }))
     }
     setAiLoading(null)
   }
@@ -704,14 +690,6 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview }: { reviews: R
           </div>
 
           <div style={{ fontSize: '16px', color: '#374151', lineHeight: '1.6', marginBottom: '14px', cursor: 'pointer' }} onClick={() => openReview(review)}>{review.text}</div>
-
-          {/* Ausgewählte Antwort Box — grün wie Replit */}
-          {review.status === 'Beantwortet' && selected[review.id] !== undefined && (
-            <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '8px', padding: '12px 14px', marginBottom: '14px' }}>
-              <div style={{ fontSize: '13px', fontWeight: '600', color: '#166534', marginBottom: '6px' }}>Ausgewählte Antwort:</div>
-              <div style={{ fontSize: '13px', color: '#166534', lineHeight: '1.6' }}>{AI_RESPONSES[selected[review.id]].text(review.name.split(' ')[0])}</div>
-            </div>
-          )}
 
           {/* Actions */}
           <div className="review-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -915,27 +893,12 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
       })
       const data = await response.json()
       if (data.success && data.answers) {
-        // Recovery kommt jetzt direkt von der API (isRecovery: true bereits gesetzt)
         setAnswers(data.answers)
       } else {
-        const firstName = review.name.split(' ')[0]
-        const contactEmail = settings.contactEmail || 'kontakt@restaurant.de'
-        const useDu2 = settings.salutation === 'Du'
-        const fallback = [
-          ...AI_RESPONSES.map(a => ({ label: a.label, text: a.text(firstName) })),
-          ...(review.stars <= 2 ? [{ label: 'Deeskalierend', text: useDu2 ? `${firstName}, diese Erfahrung tut uns leid. Meld dich gerne direkt bei uns: ${contactEmail} — Dein Team` : `${firstName}, diese Erfahrung tut uns leid. Melden Sie sich gerne direkt bei uns: ${contactEmail} — Ihr Team`, isRecovery: true }] : [])
-        ]
-        setAnswers(fallback)
+        setAnswers([{ label: 'Fehler', text: 'Antworten konnten nicht geladen werden. Bitte nochmal versuchen.' }])
       }
     } catch {
-      const firstName = review.name.split(' ')[0]
-      const contactEmail = settings.contactEmail || 'kontakt@restaurant.de'
-      const useDu3 = settings.salutation === 'Du'
-      const fallback = [
-        ...AI_RESPONSES.map(a => ({ label: a.label, text: a.text(firstName) })),
-        ...(review.stars <= 2 ? [{ label: 'Deeskalierend', text: useDu3 ? `${firstName}, diese Erfahrung tut uns leid. Meld dich gerne direkt bei uns: ${contactEmail} — Dein Team` : `${firstName}, diese Erfahrung tut uns leid. Melden Sie sich gerne direkt bei uns: ${contactEmail} — Ihr Team`, isRecovery: true }] : [])
-      ]
-      setAnswers(fallback)
+      setAnswers([{ label: 'Fehler', text: 'Antworten konnten nicht geladen werden. Bitte nochmal versuchen.' }])
     }
     setAiLoading(false)
   }
