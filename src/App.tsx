@@ -1181,49 +1181,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
         ))}
       </div>
 
-      {/* Varianten-Auswahl */}
-      {variantStats.length > 0 && (() => {
-        const total = variantStats.reduce((s, v) => s + v.count, 0)
-        const variantColors: Record<string, string> = { '1': '#0f4c5c', '2': '#155e75', '3': '#1e7a8c', 'recovery': '#0e7490' }
-        const variantNames = VARIANT_LABELS
-        return (
-          <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden', marginBottom: '20px' }}>
-            <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <div style={{ fontWeight: '600', fontSize: '15px', color: '#111827' }}>Welche Variante wird gewählt?</div>
-                <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>Basierend auf {total} gesendeten Antworten</div>
-              </div>
-            </div>
-            <div style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {variantStats.map(v => {
-                const pct = total ? Math.round(v.count / total * 100) : 0
-                const color = variantColors[v.index] || '#0f4c5c'
-                const name = variantNames[v.index] || v.index
-                return (
-                  <div key={v.index}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: color, flexShrink: 0 }} />
-                        <span style={{ fontSize: '13px', fontWeight: '500', color: '#374151' }}>{name}</span>
-
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '12px', color: '#9ca3af' }}>{v.count}×</span>
-                        <span style={{ fontSize: '13px', fontWeight: '600', color: '#374151', minWidth: '36px', textAlign: 'right' }}>{pct}%</span>
-                      </div>
-                    </div>
-                    <div style={{ height: '6px', background: '#f3f4f6', borderRadius: '3px', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: pct + '%', background: color, borderRadius: '3px', transition: 'width 0.4s ease' }} />
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        )
-      })()}
-
-      {/* Rating-Aufschlüsselung */}
+      {/* Rating-Aufschlüsselung */
       {Object.keys(ratingBreakdown).length > 0 && (() => {
         const variantColors: Record<string, string> = { '1': '#0f4c5c', '2': '#155e75', '3': '#1e7a8c', 'recovery': '#0e7490' }
         const order = ['1', '2', '3', 'recovery']
@@ -1406,6 +1364,28 @@ function Analytics({ reviews }: { reviews: Review[] }) {
       </div>
 
 
+
+      {/* Sternverteilung Balken */}
+      <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden', marginBottom: '20px' }}>
+        <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '15px', color: '#111827' }}>Sternverteilung</div>
+        <div style={{ padding: '16px 18px' }}>
+          {[5,4,3,2,1].map(stars => {
+            const count = reviews.filter(r => r.stars === stars).length
+            const pct = total ? Math.round(count / total * 100) : 0
+            return (
+              <div key={stars} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                <div style={{ width: '36px', fontSize: '13px', color: '#6b7280', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '3px' }}>
+                  <span>{stars}</span><span style={{ color: '#fbbf24' }}>★</span>
+                </div>
+                <div style={{ flex: 1, height: '10px', background: '#f3f4f6', borderRadius: '5px', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${pct}%`, background: '#fbbf24', borderRadius: '5px' }} />
+                </div>
+                <div style={{ width: '24px', fontSize: '13px', color: '#374151', textAlign: 'right', flexShrink: 0 }}>{count}</div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
 
       {/* KI Analyse Box */}
       <div style={{ background: '#fff', borderRadius: '12px', border: aiDone ? '1px solid #86efac' : '1px dashed #d1d5db', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
