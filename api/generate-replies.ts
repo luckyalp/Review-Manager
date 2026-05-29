@@ -92,7 +92,7 @@ ABSOLUT VERBOTEN:
 - Jede Form von standardisierter Dankesformel
 
 AUSGABE — NUR dieses JSON:
-{"variant1":{"label":"Herzlich","text":"..."},"variant2":{"label":"Persönlich","text":"..."},"variant3":{"label":"Kurz & warm","text":"..."}}`
+{"variant1":{"text":"..."},"variant2":{"text":"..."},"variant3":{"text":"..."}}`
   }
 
   // ─── EMPTY NEGATIVE ────────────────────────────────────────────────────────
@@ -125,7 +125,7 @@ ABSOLUT VERBOTEN:
 - "Wir nehmen Ihr/dein Feedback ernst"
 
 AUSGABE — NUR dieses JSON:
-{"variant1":{"label":"Ruhig & offen","text":"..."},"variant2":{"label":"Direkt & menschlich","text":"..."},"variant3":{"label":"Kurz & klar","text":"..."}}`
+{"variant1":{"text":"..."},"variant2":{"text":"..."},"variant3":{"text":"..."}}`
   }
 
   // ─── CONTENT MODI (POSITIVE / MIXED / NEGATIVE) ────────────────────────────
@@ -300,13 +300,10 @@ Alle drei Varianten enden mit: ${signature}
 ==================================================
 AUSGABE — NUR dieses JSON, kein anderer Text:
 ==================================================
-Vergib für jede Variante ein kurzes Label (2–3 Wörter) das den tatsächlichen Ton widerspiegelt.
-Nicht immer dieselben Labels.
-
 {
-  "variant1": {"label": "...", "text": "..."},
-  "variant2": {"label": "...", "text": "..."},
-  "variant3": {"label": "...", "text": "..."}
+  "variant1": {"text": "..."},
+  "variant2": {"text": "..."},
+  "variant3": {"text": "..."}
 }`
 }
 
@@ -358,19 +355,19 @@ ENTSCHEIDUNG — DU BIST KORREKTOR, NICHT ZWEITER AUTOR:
 - Wenn alle 3 bestehen: setze "changed": null — gib alle drei EXAKT unverändert zurück
 - Wenn genau eine schwach ist: rewrite NUR diese eine — setze "changed": 1, 2 oder 3
 - Maximal EINE Variante rewriten — nie mehr
-- Die beiden anderen gibst du WORTGENAU unverändert zurück (gleicher Text, gleiches Label)
+- Die beiden anderen gibst du WORTGENAU unverändert zurück (gleicher Text)
 
 Beim Rewrite: neue Version muss sich klar von den anderen beiden abheben.
-Gleiche Länge (2–4 Sätze). Label nur ändern wenn es zum neuen Ton nicht mehr passt.
+Gleiche Länge (2–4 Sätze).
 
 ==================================================
 AUSGABE — NUR dieses JSON, kein anderer Text:
 ==================================================
 {
   "changed": null,
-  "variant1": {"label": "...", "text": "..."},
-  "variant2": {"label": "...", "text": "..."},
-  "variant3": {"label": "...", "text": "..."}
+  "variant1": {"text": "..."},
+  "variant2": {"text": "..."},
+  "variant3": {"text": "..."}
 }`
 }
 
@@ -423,7 +420,7 @@ ABSOLUT VERBOTEN:
 - Generische Floskeln ohne Bezug zur Bewertung
 
 AUSGABE — NUR dieses JSON:
-{"label":"Deeskalierend","text":"..."}`
+{"text":"..."}`
 }
 
 // ─── HELPER: API CALL ──────────────────────────────────────────────────────
@@ -467,9 +464,9 @@ function parseVariants(raw: string): { label: string; text: string }[] {
   const cleanText = (t: string) => t.replace(/\n\n/g, ' ').replace(/\n/g, ' ').trim()
 
   return [
-    { label: parsed.variant1?.label || 'Variante 1', text: cleanText(parsed.variant1?.text || '') },
-    { label: parsed.variant2?.label || 'Variante 2', text: cleanText(parsed.variant2?.text || '') },
-    { label: parsed.variant3?.label || 'Variante 3', text: cleanText(parsed.variant3?.text || '') },
+    { label: 'Ruhig & direkt', text: cleanText(parsed.variant1?.text || '') },
+    { label: 'Menschlich & nah', text: cleanText(parsed.variant2?.text || '') },
+    { label: 'Kurz & beiläufig', text: cleanText(parsed.variant3?.text || '') },
   ]
 }
 
@@ -520,21 +517,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         if (changed === 1 && judgeResult.variant1?.text) {
           finalVariants = [
-            { label: judgeResult.variant1.label || generatedVariants[0].label, text: cleanText(judgeResult.variant1.text) },
+            { label: generatedVariants[0].label, text: cleanText(judgeResult.variant1.text) },
             generatedVariants[1],
             generatedVariants[2],
           ]
         } else if (changed === 2 && judgeResult.variant2?.text) {
           finalVariants = [
             generatedVariants[0],
-            { label: judgeResult.variant2.label || generatedVariants[1].label, text: cleanText(judgeResult.variant2.text) },
+            { label: generatedVariants[1].label, text: cleanText(judgeResult.variant2.text) },
             generatedVariants[2],
           ]
         } else if (changed === 3 && judgeResult.variant3?.text) {
           finalVariants = [
             generatedVariants[0],
             generatedVariants[1],
-            { label: judgeResult.variant3.label || generatedVariants[2].label, text: cleanText(judgeResult.variant3.text) },
+            { label: generatedVariants[2].label, text: cleanText(judgeResult.variant3.text) },
           ]
         }
         // changed === null → finalVariants bleibt unverändert (Generator-Output)
@@ -556,7 +553,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             const cleanText = (t: string) => t.replace(/\n\n/g, ' ').replace(/\n/g, ' ').trim()
             finalVariants = [
               ...finalVariants,
-              { label: parsed.label || 'Deeskalierend', text: cleanText(parsed.text), isRecovery: true }
+              { label: 'Deeskalierend', text: cleanText(parsed.text), isRecovery: true }
             ]
           }
         }

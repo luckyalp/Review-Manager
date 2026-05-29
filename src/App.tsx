@@ -29,6 +29,15 @@ const INITIAL_REVIEWS: Review[] = [
   { id: 7, name: 'Lisa T.', initials: 'LI', stars: 5, date: '22. Mai 2026', status: 'Ausstehend', text: 'Absolut fantastisch! Jedes Gericht war ein Kunstwerk. Der Chef ist offensichtlich sehr talentiert. Wir werden definitiv wiederkommen und Freunde mitbringen!' },
 ]
 
+// ─── VARIANT LABELS (stabile Kategorien für Analytics) ───────────────────────
+
+const VARIANT_LABELS: Record<string, string> = {
+  '1': 'Ruhig & direkt',
+  '2': 'Menschlich & nah',
+  '3': 'Kurz & beiläufig',
+  'recovery': 'Deeskalierend',
+}
+
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
 const formatDate = (raw: string) => {
@@ -1032,7 +1041,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
         data.forEach((row: any) => {
           const key = row.selected_variant_index
           if (!key) return
-          if (!counts[key]) counts[key] = { label: row.selected_variant_label || key, index: key, count: 0 }
+          if (!counts[key]) counts[key] = { label: VARIANT_LABELS[key] || key, index: key, count: 0 }
           counts[key].count++
         })
         const order = ['1', '2', '3', 'recovery']
@@ -1180,7 +1189,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
       {variantStats.length > 0 && (() => {
         const total = variantStats.reduce((s, v) => s + v.count, 0)
         const variantColors: Record<string, string> = { '1': '#0f4c5c', '2': '#155e75', '3': '#1e7a8c', 'recovery': '#0e7490' }
-        const variantNames: Record<string, string> = { '1': 'Variante 1', '2': 'Variante 2', '3': 'Variante 3', 'recovery': 'Deeskalierend' }
+        const variantNames = VARIANT_LABELS
         return (
           <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden', marginBottom: '20px' }}>
             <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1200,7 +1209,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: color, flexShrink: 0 }} />
                         <span style={{ fontSize: '13px', fontWeight: '500', color: '#374151' }}>{name}</span>
-                        {v.label && v.label !== name && <span style={{ fontSize: '11px', color: '#9ca3af' }}>· {v.label}</span>}
+
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{ fontSize: '12px', color: '#9ca3af' }}>{v.count}×</span>
