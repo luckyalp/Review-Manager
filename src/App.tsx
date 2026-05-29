@@ -1016,6 +1016,32 @@ function Analytics({ reviews }: { reviews: Review[] }) {
   const [aiStarted, setAiStarted] = useState(false)
   const [aiLoading, setAiLoading] = useState(false)
   const [aiDone, setAiDone] = useState(false)
+  const [variantStats, setVariantStats] = useState<{label: string, index: string, count: number}[]>([])
+
+  // Varianten-Daten aus Supabase laden
+  useEffect(() => {
+    const loadVariantStats = async () => {
+      try {
+        const { data } = await supabase
+          .from('reviews')
+          .select('selected_variant_label, selected_variant_index')
+          .eq('status', 'Beantwortet')
+          .not('selected_variant_index', 'is', null)
+        if (!data) return
+        const counts: Record<string, { label: string, index: string, count: number }> = {}
+        data.forEach((row: any) => {
+          const key = row.selected_variant_index
+          if (!key) return
+          if (!counts[key]) counts[key] = { label: row.selected_variant_label || key, index: key, count: 0 }
+          counts[key].count++
+        })
+        const order = ['1', '2', '3', 'recovery']
+        const sorted = order.filter(k => counts[k]).map(k => counts[k])
+        setVariantStats(sorted)
+      } catch (e) { console.warn('Variant stats failed', e) }
+    }
+    loadVariantStats()
+  }, [reviews])
 
   const answered = reviews.filter(r => r.status === 'Beantwortet').length
   const pending = reviews.filter(r => r.status === 'Ausstehend').length
@@ -1149,6 +1175,48 @@ function Analytics({ reviews }: { reviews: Review[] }) {
           </div>
         ))}
       </div>
+
+      {/* Varianten-Auswahl */}
+      {variantStats.length > 0 && (() => {
+        const total = variantStats.reduce((s, v) => s + v.count, 0)
+        const variantColors: Record<string, string> = { '1': '#0f4c5c', '2': '#155e75', '3': '#1e7a8c', 'recovery': '#0e7490' }
+        const variantNames: Record<string, string> = { '1': 'Variante 1', '2': 'Variante 2', '3': 'Variante 3', 'recovery': 'Deeskalierend' }
+        return (
+          <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden', marginBottom: '20px' }}>
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontWeight: '600', fontSize: '15px', color: '#111827' }}>Welche Variante wird gewählt?</div>
+                <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>Basierend auf {total} gesendeten Antworten</div>
+              </div>
+            </div>
+            <div style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {variantStats.map(v => {
+                const pct = total ? Math.round(v.count / total * 100) : 0
+                const color = variantColors[v.index] || '#0f4c5c'
+                const name = variantNames[v.index] || v.index
+                return (
+                  <div key={v.index}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: color, flexShrink: 0 }} />
+                        <span style={{ fontSize: '13px', fontWeight: '500', color: '#374151' }}>{name}</span>
+                        {v.label && v.label !== name && <span style={{ fontSize: '11px', color: '#9ca3af' }}>· {v.label}</span>}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '12px', color: '#9ca3af' }}>{v.count}×</span>
+                        <span style={{ fontSize: '13px', fontWeight: '600', color: '#374151', minWidth: '36px', textAlign: 'right' }}>{pct}%</span>
+                      </div>
+                    </div>
+                    <div style={{ height: '6px', background: '#f3f4f6', borderRadius: '3px', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: pct + '%', background: color, borderRadius: '3px', transition: 'width 0.4s ease' }} />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Trend + Donuts */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px', marginBottom: '20px' }}>
