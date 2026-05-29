@@ -917,25 +917,31 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
       if (data.success && data.answers) {
         const firstName = review.name.split(' ')[0]
         const contactEmail = settings.contactEmail || 'kontakt@restaurant.de'
+        const useDu = settings.salutation === 'Du'
+        const recoveryText = useDu
+          ? `${firstName}, diese Erfahrung tut uns leid — und wir verstehen, dass ein solcher Besuch nachwirkt. Wenn du möchtest, meld dich direkt bei uns: ${contactEmail}. Wir nehmen uns die Zeit. — Dein Team`
+          : `${firstName}, diese Erfahrung tut uns leid — und wir verstehen, dass ein solcher Besuch nachwirkt. Wenn Sie möchten, melden Sie sich direkt bei uns: ${contactEmail}. Wir nehmen uns die Zeit. — Ihr Team`
         const withRecovery = review.stars <= 2
-          ? [...data.answers, { label: 'Deeskalierend', text: `${firstName}, diese Erfahrung tut uns leid — und wir verstehen, dass ein solcher Besuch nachwirkt. Wenn Sie möchten, melden Sie sich direkt bei uns: ${contactEmail}. Wir nehmen uns die Zeit. — Ihr Team`, isRecovery: true }]
+          ? [...data.answers, { label: 'Deeskalierend', text: recoveryText, isRecovery: true }]
           : data.answers
         setAnswers(withRecovery)
       } else {
         const firstName = review.name.split(' ')[0]
         const contactEmail = settings.contactEmail || 'kontakt@restaurant.de'
+        const useDu2 = settings.salutation === 'Du'
         const fallback = [
           ...AI_RESPONSES.map(a => ({ label: a.label, text: a.text(firstName) })),
-          ...(review.stars <= 2 ? [{ label: 'Deeskalierend', text: `${firstName}, diese Erfahrung tut uns leid. Melden Sie sich gerne direkt bei uns: ${contactEmail} — Ihr Team`, isRecovery: true }] : [])
+          ...(review.stars <= 2 ? [{ label: 'Deeskalierend', text: useDu2 ? `${firstName}, diese Erfahrung tut uns leid. Meld dich gerne direkt bei uns: ${contactEmail} — Dein Team` : `${firstName}, diese Erfahrung tut uns leid. Melden Sie sich gerne direkt bei uns: ${contactEmail} — Ihr Team`, isRecovery: true }] : [])
         ]
         setAnswers(fallback)
       }
     } catch {
       const firstName = review.name.split(' ')[0]
       const contactEmail = settings.contactEmail || 'kontakt@restaurant.de'
+      const useDu3 = settings.salutation === 'Du'
       const fallback = [
         ...AI_RESPONSES.map(a => ({ label: a.label, text: a.text(firstName) })),
-        ...(review.stars <= 2 ? [{ label: 'Deeskalierend', text: `${firstName}, diese Erfahrung tut uns leid. Melden Sie sich gerne direkt bei uns: ${contactEmail} — Ihr Team`, isRecovery: true }] : [])
+        ...(review.stars <= 2 ? [{ label: 'Deeskalierend', text: useDu3 ? `${firstName}, diese Erfahrung tut uns leid. Meld dich gerne direkt bei uns: ${contactEmail} — Dein Team` : `${firstName}, diese Erfahrung tut uns leid. Melden Sie sich gerne direkt bei uns: ${contactEmail} — Ihr Team`, isRecovery: true }] : [])
       ]
       setAnswers(fallback)
     }
