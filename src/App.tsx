@@ -329,7 +329,7 @@ function App() {
             </div>
           ) : (
             <>
-              {page === 'dashboard' && <Dashboard stats={stats} reviews={reviews} openReview={openReview} />}
+              {page === 'dashboard' && <Dashboard stats={stats} reviews={reviews} openReview={openReview} onStatusChange={updateReviewStatus} />}
               {page === 'reviews' && !selectedReview && <Reviews reviews={reviews} onStatusChange={updateReviewStatus} onDelete={deleteReview} openReview={openReview} />}
               {page === 'reviews' && selectedReview && <ReviewDetail review={selectedReview} onStatusChange={updateReviewStatus} onBack={() => setSelectedReview(null)} />}
               {page === 'analytics' && <Analytics reviews={reviews} />}
@@ -397,7 +397,7 @@ function StatusBadge({ status }: { status: ReviewStatus }) {
 
 // ─── DASHBOARD ───────────────────────────────────────────────────────────────
 
-function Dashboard({ stats, reviews, openReview }: { stats: any, reviews: Review[], openReview: (r: Review) => void }) {
+function Dashboard({ stats, reviews, openReview, onStatusChange }: { stats: any, reviews: Review[], openReview: (r: Review) => void, onStatusChange: (id: number, s: ReviewStatus) => void }) {
   const [testRunning, setTestRunning] = useState(false)
   const [testDone, setTestDone] = useState(false)
   const [testError, setTestError] = useState('')
@@ -562,9 +562,16 @@ function Dashboard({ stats, reviews, openReview }: { stats: any, reviews: Review
                 </div>
                 <Stars n={r.stars} />
                 <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px', lineHeight: '1.5' }}>{r.text.length > 100 ? r.text.slice(0, 100) + '…' : r.text}</div>
-                <button onClick={() => openReview(r)} style={{ marginTop: '10px', padding: '6px 14px', background: '#0f4c5c', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontFamily: 'inherit', color: '#fff' }}>
-                  Ansehen & Antworten
-                </button>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                  <button onClick={() => openReview(r)} style={{ padding: '6px 14px', background: '#0f4c5c', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontFamily: 'inherit', color: '#fff' }}>
+                    Ansehen & Antworten
+                  </button>
+                  {r.status === 'Ausstehend' && (
+                    <button onClick={() => onStatusChange(r.id, 'Abgelehnt')} style={{ padding: '6px 14px', background: '#fff', border: '1px solid #e5e7eb', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontFamily: 'inherit', color: '#6b7280' }}>
+                      ✕ Ablehnen
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
