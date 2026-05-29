@@ -44,9 +44,9 @@ function buildPrompt(reviewText: string, rating: number, reviewerName: string, s
   const nameRule = firstName
     ? `PERSONALISIERUNG:
 - Vorname: ${firstName}
-- Variante A: KEIN Name — neutral bleiben
-- Variante B: beginnt mit "Hallo ${firstName}," — direkt, menschlich
-- Variante C: beginnt mit "${firstName}," — subtil, würdevoll
+- Variante 1: KEIN Name — neutral bleiben
+- Variante 2: beginnt mit "Hallo ${firstName}," — direkt, menschlich
+- Variante 3: beginnt mit "${firstName}," — subtil, würdevoll
 - Name NIE mehrfach verwenden — nur am Anfang, nie mitten im Text`
     : `PERSONALISIERUNG: Kein Name bekannt — alle drei ohne persönliche Anrede`
 
@@ -116,7 +116,6 @@ AUSGABE — NUR dieses JSON:
   }
 
   // ─── CONTENT MODI (POSITIVE / MIXED / NEGATIVE) ────────────────────────────
-  // Master-Systemprompt V1 — Human Review Response Engine
   return `Du bist kein klassischer KI-Assistent.
 Du antwortest wie ein echter Restaurantinhaber oder ein echtes Teammitglied.
 
@@ -171,32 +170,39 @@ Die KI darf: Verständnis zeigen, Probleme anerkennen, neutral reagieren.
 Die KI darf NICHT: Schuld erfinden, Situationen interpretieren, falsche Hintergründe annehmen.
 
 ==================================================
-3 VARIANTEN GENERIEREN:
+3 VARIANTEN — JEDE HAT EINE ANDERE KOMMUNIKATIONS-LOGIK:
 ==================================================
-Wähle für jede Variante einen anderen Antwortstil aus dieser Liste:
-empathisch-warm / professionell-ruhig / sachlich-souverän /
-persönlich-menschlich / locker-modern / deeskalierend-beruhigend /
-lösungsorientiert / echter Inhaber-Vibe
 
-Die 3 Antworten sollen:
-- unterschiedliche kommunikative Richtungen haben
-- emotional variieren
-- unterschiedlichen Rhythmus, Wirkung, Intensität und Satzstruktur haben
-- gleiche Kernaussage, aber NICHT dieselbe Antwort mit Synonymen
+VARIANTE 1 — NÜCHTERN & DIREKT:
+- Einstieg: beginnt sofort mit dem Problem oder einer sachlichen Feststellung
+- KEIN emotionaler Aufwärmsatz davor
+- Kurz, klar, minimal
+- Rhythmus: kurze Sätze. Wenig Adjektive.
+- Emotionale Temperatur: kühl bis neutral
+- Beispiel-Einstieg: "Zwei Stunden Wartezeit ist zu lang." / "Das hätte nicht passieren dürfen."
 
-Länge: 2–4 kurze Sätze. Keine langen Erklärungen. Keine Rechtfertigungen.
+VARIANTE 2 — MENSCHLICH & NAH:
+- Einstieg: holt den Gast zuerst als Mensch ab — BEVOR das Problem benannt wird
+- Warmth first, dann Klarheit
+- Rhythmus: fließender, etwas länger, einladender Tonfall
+- Emotionale Temperatur: warm, empathisch, persönlich
+- Beispiel-Einstieg: "Hallo ${firstName || ''}," oder eine menschliche Feststellung
 
-${nameRule.includes('Vorname') ? `Namensregeln wie oben beschrieben einhalten.` : `Kein Name — alle drei ohne persönliche Anrede.`}
+VARIANTE 3 — REFLEKTIERT & DICHT:
+- Einstieg: eine Beobachtung oder Einschätzung — wie jemand, der einen Moment innegehalten hat
+- Nicht emotional. Nicht sachlich. Irgendwo dazwischen.
+- Höhere Sprachdichte. Jeder Satz trägt Gewicht.
+- Rhythmus: bewusster, ruhiger, weniger Standardformulierungen
+- Emotionale Temperatur: nachdenklich, souverän
+- Beispiel-Einstieg: "${firstName ? firstName + ',' : 'Das'}" + eine Feststellung die zeigt: wir haben wirklich hingehört
+
+WICHTIG: Die drei Varianten sollen dieselbe Kernaussage transportieren — aber sich in Rhythmus, Einstieg, emotionaler Temperatur und Satzbau KLAR unterscheiden. Nicht drei Versionen desselben Texts mit Synonymen.
+
+Länge: 2–4 kurze Sätze pro Variante. Keine langen Erklärungen. Keine Rechtfertigungen.
 
 KONTAKT- ODER LÖSUNGSANGEBOTE nur bei: starker Enttäuschung, echter Eskalation, sinnvoller Wiedergutmachung.
 NICHT bei: kleinen Beschwerden, aggressiven Gästen, neutralen Bewertungen, kleinen Hinweisen.
 ${contactEmail ? `Kontakt wenn sinnvoll: ${contactEmail}` : ''}
-
-BAUSTEIN-STRUKTUR (variabel — nicht alle müssen genutzt werden):
-1. Einstieg — direkter menschlicher Satz (kein Dank, keine Floskel)
-2. Menschlicher Satz — konkrete Spiegelung des Erlebnisses
-3. Optional: kurzer Lösungs- oder Kontaktteil
-4. Abschluss
 
 ==================================================
 SPIEGELUNG — BINDEND:
@@ -210,61 +216,6 @@ GUT (konkrete Momente):
 - "Zwei Stunden auf das Essen zu warten ist zu lang — das wissen wir."
 
 Spiegelung muss IMMER konkret auf diese Bewertung eingehen. Niemals generisch.
-
-==================================================
-MIKRO-PATTERNS — zur freien Nutzung (nicht alle, variieren):
-==================================================
-Anredeform für ALLE Patterns: ${duSie} — konsequent durchhalten, kein Wechsel innerhalb einer Antwort.
-
-EINSTIEGE (wähle passende, nicht immer dieselben):
-${salutation === 'Du'
-  ? `"Hallo, danke erstmal für die ehrlichen Worte." /
-"Das lesen wir natürlich nicht gerne." /
-"Ich habe deine Bewertung gerade gelesen." /
-"Danke für die direkten Worte." /
-"Schade, dass dein Besuch diesen Eindruck hinterlassen hat." /
-"Hallo, wir haben deine Bewertung aufmerksam gelesen." /
-"Danke, dass du das so offen ansprichst."`
-  : `"Hallo, danke erstmal für die ehrlichen Worte." /
-"Das lesen wir natürlich nicht gerne." /
-"Ich habe Ihre Bewertung gerade gelesen." /
-"Danke für die direkten Worte." /
-"Schade, dass Ihr Besuch diesen Eindruck hinterlassen hat." /
-"Hallo, wir haben Ihre Bewertung aufmerksam gelesen." /
-"Danke, dass Sie das so offen ansprechen."`}
-
-MENSCHLICHE SÄTZE:
-"Da haben wir offensichtlich keinen guten Eindruck hinterlassen." /
-"Das hätte definitiv besser laufen müssen." /
-${salutation === 'Du'
-  ? `"Ich kann deinen Ärger absolut verstehen." /`
-  : `"Ich kann Ihren Ärger absolut verstehen." /`}
-"So möchten wir eigentlich nicht wahrgenommen werden." /
-"Da müssen wir uns ehrlich an die eigene Nase fassen." /
-"Das sollte so natürlich nicht passieren." /
-"Gerade so etwas sollte natürlich besser laufen." /
-"Das klingt leider ziemlich chaotisch." /
-"Da blieb leider kein guter Gesamteindruck hängen."
-
-LÖSUNGS-/KONTAKTTEILE:
-${salutation === 'Du'
-  ? `"Meld dich gern direkt bei uns." /
-"Wir würden das gern wiedergutmachen." /
-"Vielleicht gibst du uns irgendwann nochmal eine Chance." /`
-  : `"Melden Sie sich gern direkt bei uns." /
-"Wir würden das gern wiedergutmachen." /
-"Vielleicht geben Sie uns irgendwann nochmal eine Chance." /`}
-"Wir sprechen das intern nochmal an." /
-"Wir möchten aus solchen Rückmeldungen lernen."
-
-ABSCHLÜSSE (variieren — nicht immer dasselbe):
-"Viele Grüße vom Team" /
-"Danke nochmal für den Hinweis." /
-"Beste Grüße vom ganzen Team" /
-"Liebe Grüße und vielleicht bis irgendwann nochmal."
-
-ROTATIONSLOGIK: Wiederholungen minimieren. Selten genutzte Patterns bevorzugen.
-Nicht ständig dieselben Einstiege, Abschlüsse oder Satzmuster.
 
 ==================================================
 ABSOLUT VERBOTEN (alle Varianten):
@@ -283,27 +234,16 @@ ABSOLUT VERBOTEN (alle Varianten):
 - "Wir versichern" / "es wurde versichert"
 - Alle Kritikpunkte einzeln aufzählen
 - Rechtfertigungen oder Überentschuldigungen
-- Mit dem Problem beginnen — erst Mensch abholen, dann Problem
+- Mit dem Problem beginnen in Variante 2 — dort erst Mensch abholen
 - Falsche Anredeform — IMMER ${duSie} verwenden, nie mischen
-
-==================================================
-QUALITÄTSPRÜFUNG (intern vor Ausgabe):
-==================================================
-- Klingt das menschlich?
-- Klingt das zu KI oder zu perfekt?
-- Wurde Schuld erfunden?
-- Klingt es zu aggressiv oder zu unterwürfig?
-- Unterscheiden sich die 3 Antworten genug?
-- Klingt es wie echte Restaurantkommunikation?
 
 Alle drei Varianten enden mit: ${signature}
 
 ==================================================
 AUSGABE — NUR dieses JSON, kein anderer Text:
 ==================================================
-Vergib für jede Variante ein kurzes, passendes Label (2–3 Wörter) das den Stil dieser Antwort beschreibt.
-Nicht immer dieselben Labels — sie sollen den tatsächlichen Ton widerspiegeln.
-Beispiele: "Direkt & klar" / "Warm & nah" / "Ruhig & souverän" / "Persönlich" / "Kurz & ehrlich"
+Vergib für jede Variante ein kurzes Label (2–3 Wörter) das den tatsächlichen Ton widerspiegelt.
+Nicht immer dieselben Labels.
 
 {
   "variant1": {"label": "...", "text": "..."},
@@ -312,6 +252,111 @@ Beispiele: "Direkt & klar" / "Warm & nah" / "Ruhig & souverän" / "Persönlich" 
 }`
 }
 
+// ─── JUDGE PROMPT ──────────────────────────────────────────────────────────
+function buildJudgePrompt(
+  variants: { label: string; text: string }[],
+  reviewText: string,
+  salutation: string,
+  signature: string
+): string {
+  const duSie = salutation === 'Du' ? 'Du/Dein (Duzen)' : 'Sie/Ihr (Siezen)'
+
+  return `Du bist ein Qualitätsprüfer für Restaurant-Antworten. Du bekommst 3 generierte Antworten auf eine Gästebewertung.
+
+BEWERTUNG:
+"${reviewText}"
+
+GENERIERTE VARIANTEN:
+Variante 1 (${variants[0]?.label}): "${variants[0]?.text}"
+Variante 2 (${variants[1]?.label}): "${variants[1]?.text}"
+Variante 3 (${variants[2]?.label}): "${variants[2]?.text}"
+
+==================================================
+DEINE AUFGABE:
+==================================================
+Prüfe diese 3 Varianten nach folgenden Kriterien:
+
+1. DIFFERENZIERUNG: Unterscheiden sie sich wirklich in Ton, Einstieg und emotionaler Temperatur?
+   Oder sind sie drei Versionen desselben Textes mit Synonymen?
+
+2. TEMPLATE-SPRACHE: Klingt eine Variante noch nach KI-Standard oder Corporate-Sprache?
+   Verbotene Muster: "entspricht nicht unserem Anspruch" / "nehmen wir sehr ernst" / 
+   "Das tut uns sehr leid" / "Vielen Dank für Ihr Feedback" / "Maßnahmen ergriffen"
+
+3. SPIEGELUNG: Geht mindestens eine Variante konkret auf die Bewertung ein (konkrete Momente, nicht Kategorien)?
+
+4. ANREDEFORM: Wird ${duSie} konsequent eingehalten?
+
+5. ABSCHLUSS: Enden alle mit der richtigen Signatur (${signature})?
+
+==================================================
+ENTSCHEIDUNG:
+==================================================
+- Wenn alle 3 Varianten die Prüfung bestehen: gib sie UNVERÄNDERT zurück
+- Wenn eine Variante durchfällt: rewrite NUR diese eine Variante
+- Maximal eine Variante rewriten — nie alle drei
+
+Beim Rewrite: die schwächste Variante durch eine ersetzen, die sich klar von den anderen beiden abhebt.
+Behalte dieselbe Länge (2–4 Sätze). Kein Label ändern wenn der Ton passt, sonst anpassen.
+
+==================================================
+AUSGABE — NUR dieses JSON, kein anderer Text:
+==================================================
+{
+  "variant1": {"label": "...", "text": "..."},
+  "variant2": {"label": "...", "text": "..."},
+  "variant3": {"label": "...", "text": "..."}
+}`
+}
+
+// ─── HELPER: API CALL ──────────────────────────────────────────────────────
+async function callClaude(prompt: string): Promise<string> {
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': ANTHROPIC_API_KEY!,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-5',
+      max_tokens: 2000,
+      messages: [{ role: 'user', content: prompt }],
+    }),
+  })
+
+  if (!response.ok) {
+    const err = await response.json()
+    throw new Error(`Claude API Fehler: ${JSON.stringify(err)}`)
+  }
+
+  const data = await response.json()
+  return data.content?.[0]?.text || ''
+}
+
+// ─── HELPER: JSON PARSE ────────────────────────────────────────────────────
+function parseVariants(raw: string): { label: string; text: string }[] {
+  let jsonStr = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
+  const startIdx = jsonStr.indexOf('{')
+  const endIdx = jsonStr.lastIndexOf('}')
+
+  if (startIdx === -1 || endIdx === -1) {
+    throw new Error('Kein JSON gefunden: ' + raw)
+  }
+
+  jsonStr = jsonStr.substring(startIdx, endIdx + 1)
+  const parsed = JSON.parse(jsonStr)
+
+  const cleanText = (t: string) => t.replace(/\n\n/g, ' ').replace(/\n/g, ' ').trim()
+
+  return [
+    { label: parsed.variant1?.label || 'Variante 1', text: cleanText(parsed.variant1?.text || '') },
+    { label: parsed.variant2?.label || 'Variante 2', text: cleanText(parsed.variant2?.text || '') },
+    { label: parsed.variant3?.label || 'Variante 3', text: cleanText(parsed.variant3?.text || '') },
+  ]
+}
+
+// ─── HANDLER ───────────────────────────────────────────────────────────────
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -323,56 +368,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({ error: 'ANTHROPIC_API_KEY nicht konfiguriert' })
   }
 
-  const prompt = buildPrompt(
-    review.reviewText || '',
-    review.stars || 3,
-    review.reviewerName || '',
-    settings
-  )
+  const reviewText = review.reviewText || ''
+  const stars = review.stars || 3
+  const reviewerName = review.reviewerName || ''
+
+  const salutation = settings?.salutation || 'Sie'
+  const businessName = settings?.businessName || 'das Restaurant'
+  const signature = settings?.responseSignature || `Das Team von ${businessName}`
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
-        max_tokens: 2000,
-        messages: [{ role: 'user', content: prompt }],
-      })
-    })
+    // ── SCHRITT 1: Generator ───────────────────────────────────────────────
+    const generatorPrompt = buildPrompt(reviewText, stars, reviewerName, settings)
+    const generatorRaw = await callClaude(generatorPrompt)
+    const generatedVariants = parseVariants(generatorRaw)
 
-    const data = await response.json()
+    // ── SCHRITT 2: Judge (nur für CONTENT-Modi, nicht für EMPTY) ──────────
+    const mode = classify(stars, reviewText)
+    let finalVariants = generatedVariants
 
-    if (!response.ok) {
-      return res.status(500).json({ error: 'Claude API Fehler', details: data })
+    if (mode !== 'EMPTY_POSITIVE' && mode !== 'EMPTY_NEGATIVE') {
+      const judgePrompt = buildJudgePrompt(generatedVariants, reviewText, salutation, signature)
+      const judgeRaw = await callClaude(judgePrompt)
+      finalVariants = parseVariants(judgeRaw)
     }
 
-    const text = data.content?.[0]?.text || ''
-
-    let jsonStr = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
-    const startIdx = jsonStr.indexOf('{')
-    const endIdx = jsonStr.lastIndexOf('}')
-
-    if (startIdx === -1 || endIdx === -1) {
-      return res.status(500).json({ error: 'Kein JSON gefunden', raw: text })
-    }
-
-    jsonStr = jsonStr.substring(startIdx, endIdx + 1)
-    const parsed = JSON.parse(jsonStr)
-
-    const cleanText = (t: string) => t.replace(/\n\n/g, ' ').replace(/\n/g, ' ').trim()
-
-    const answers = [
-      { label: parsed.variant1?.label || 'Variante 1', text: cleanText(parsed.variant1?.text || '') },
-      { label: parsed.variant2?.label || 'Variante 2', text: cleanText(parsed.variant2?.text || '') },
-      { label: parsed.variant3?.label || 'Variante 3', text: cleanText(parsed.variant3?.text || '') },
-    ]
-
-    return res.status(200).json({ success: true, answers })
+    return res.status(200).json({ success: true, answers: finalVariants })
 
   } catch (error) {
     return res.status(500).json({ error: 'Serverfehler', details: String(error) })
