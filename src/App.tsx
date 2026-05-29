@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Home, MessageSquare, BarChart2, User, Star, Clock, CheckCircle } from 'lucide-react'
+import { Home, MessageSquare, BarChart2, User, Star, Clock, CheckCircle, TrendingUp, XCircle, Percent } from 'lucide-react'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
@@ -1115,7 +1115,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
 
   const getTrendData = (days: number) => {
     const now = new Date()
-    const points: { date: string, avg: number }[] = []
+    const points: { date: string, count: number }[] = []
     for (let i = days - 1; i >= 0; i--) {
       const d = new Date(now)
       d.setDate(d.getDate() - i)
@@ -1124,14 +1124,14 @@ function Analytics({ reviews }: { reviews: Review[] }) {
         const rd = new Date(r.date)
         return rd.toDateString() === d.toDateString()
       })
-      points.push({ date: dateStr, avg: dayReviews.length ? dayReviews.reduce((s, r) => s + r.stars, 0) / dayReviews.length : 0 })
+      points.push({ date: dateStr, count: dayReviews.length })
     }
     return points
   }
 
   const trendPoints = getTrendData(trendDays)
-  const hasRealData = trendPoints.some(p => p.avg > 0)
-  const displayPoints = hasRealData ? trendPoints : trendPoints.map((p, i) => ({ ...p, avg: [3, 3.2, 3.5, 3.8, 4, 4.2, 4, 3.8, 4.2, 4.5, 4.3, 4.6, 4.4, 4.7, 4.5, 4.8, 4.6, 4.9, 4.7, 5, 4.8, 4.6, 4.9, 4.7, 5, 4.8, 4.9, 5, 4.8, 5][i % 30] }))
+  const hasRealData = trendPoints.some(p => p.count > 0)
+  const displayPoints = hasRealData ? trendPoints : trendPoints.map((p, i) => ({ ...p, count: [2,0,1,3,0,2,1,0,3,2,1,0,2,3,1,0,2,1,3,0,2,1,0,3,2,1,0,2,3,1][i % 30] }))
 
   const starSegments = [
     { value: distrib[0].count, color: '#16a34a', label: '5★' },
@@ -1163,16 +1163,16 @@ function Analytics({ reviews }: { reviews: Review[] }) {
       {/* 5 Stat Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', marginBottom: '20px' }}>
         {[
-          { label: 'Ø Bewertung', value: avg, sub: `${total} Bewertungen`, icon: '⭐' },
-          { label: 'Beantwortet', value: answered, sub: `von ${total} gesamt`, icon: '✅' },
-          { label: 'Antwortquote', value: `${rate}%`, sub: rate >= 80 ? '🟢 Gut' : rate >= 50 ? '🟡 Mittel' : '🔴 Niedrig', icon: '📊' },
-          { label: 'Ausstehend', value: pending, sub: 'noch offen', icon: '⏳' },
-          { label: 'Abgelehnt', value: rejected, sub: 'nicht beantwortet', icon: '✕' },
+          { label: 'Ø Bewertung', value: avg, sub: `${total} Bewertungen`, Icon: Star },
+          { label: 'Beantwortet', value: answered, sub: `von ${total} gesamt`, Icon: CheckCircle },
+          { label: 'Antwortquote', value: `${rate}%`, sub: rate >= 80 ? '🟢 Gut' : rate >= 50 ? '🟡 Mittel' : '🔴 Niedrig', Icon: Percent },
+          { label: 'Ausstehend', value: pending, sub: 'noch offen', Icon: Clock },
+          { label: 'Abgelehnt', value: rejected, sub: 'nicht beantwortet', Icon: XCircle },
         ].map(s => (
           <div key={s.label} style={{ background: '#fff', borderRadius: '12px', padding: '16px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
               <div style={{ fontSize: '12px', color: '#6b7280' }}>{s.label}</div>
-              <span style={{ fontSize: '16px' }}>{s.icon}</span>
+              <s.Icon size={16} strokeWidth={1.8} color="#0f4c5c" />
             </div>
             <div style={{ fontSize: '26px', fontWeight: '600', color: '#111827', marginBottom: '3px' }}>{s.value}</div>
             <div style={{ fontSize: '11px', color: '#9ca3af' }}>{s.sub}</div>
@@ -1199,10 +1199,12 @@ function Analytics({ reviews }: { reviews: Review[] }) {
             const innerW = W - padL - padR
             const innerH = H - padT - padB
             const step = innerW / (displayPoints.length - 1)
-            const minY = 1, maxY = 5
+            const maxCount = Math.max(...displayPoints.map(p => p.count), 1)
+            const yTicks = maxCount <= 5 ? [0,1,2,3,4,5].filter(v => v <= maxCount + 1) : [0, Math.round(maxCount/4), Math.round(maxCount/2), Math.round(maxCount*3/4), maxCount]
+            const minY = 0, maxY = Math.max(maxCount, 1)
             const toX = (i: number) => padL + i * step
             const toY = (v: number) => padT + innerH - ((v - minY) / (maxY - minY)) * innerH
-            const linePath = displayPoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${toX(i).toFixed(1)},${toY(p.avg > 0 ? p.avg : 3).toFixed(1)}`).join(' ')
+            const linePath = displayPoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${toX(i).toFixed(1)},${toY(p.count).toFixed(1)}`).join(' ')
             const areaPath = linePath + ` L${toX(displayPoints.length-1).toFixed(1)},${(padT+innerH).toFixed(1)} L${padL},${(padT+innerH).toFixed(1)} Z`
             const labelStep = trendDays === 7 ? 1 : trendDays === 14 ? 2 : 5
             return (
@@ -1214,7 +1216,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
                   </linearGradient>
                 </defs>
                 {/* Y-axis labels */}
-                {[1,2,3,4,5].map(v => (
+                {yTicks.map(v => (
                   <g key={v}>
                     <line x1={padL} y1={toY(v)} x2={W-padR} y2={toY(v)} stroke="#f3f4f6" strokeWidth="1" />
                     <text x={padL-4} y={toY(v)+4} textAnchor="end" fontSize="9" fill="#9ca3af">{v}</text>
@@ -1229,8 +1231,8 @@ function Analytics({ reviews }: { reviews: Review[] }) {
                 {/* Line */}
                 <path d={linePath} fill="none" stroke="#0f4c5c" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                 {/* Dots */}
-                {displayPoints.map((p, i) => p.avg > 0 && (
-                  <circle key={i} cx={toX(i)} cy={toY(p.avg)} r="2.5" fill="#0f4c5c" />
+                {displayPoints.map((p, i) => p.count > 0 && (
+                  <circle key={i} cx={toX(i)} cy={toY(p.count)} r="2.5" fill="#0f4c5c" />
                 ))}
               </svg>
             )
@@ -1308,7 +1310,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
                   <span>{row.stars}</span><span>☆</span>
                 </div>
                 <div style={{ flex: 1, height: '10px', background: '#f3f4f6', borderRadius: '5px', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${row.pct}%`, background: '#0f4c5c', borderRadius: '5px' }} />
+                  <div style={{ height: '100%', width: `${row.pct}%`, background: '#F0B100', borderRadius: '5px' }} />
                 </div>
                 <div style={{ width: '24px', fontSize: '13px', color: '#374151', textAlign: 'right', flexShrink: 0 }}>{row.count}</div>
               </div>
