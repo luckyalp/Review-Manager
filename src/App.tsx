@@ -877,7 +877,16 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
 
   const sendAnswer = async () => {
     const text = selectedId !== null ? answers[selectedId]?.text : null
-    try { await supabase.from('reviews').update({ selected_answer: text ?? null }).eq('id', review.id) } catch (e) { console.warn('Supabase save failed', e) }
+    const label = selectedId !== null ? answers[selectedId]?.label : null
+    const isRecovery = selectedId !== null ? !!answers[selectedId]?.isRecovery : false
+    const variantIndex = selectedId !== null ? (isRecovery ? 'recovery' : String(selectedId + 1)) : null
+    try {
+      await supabase.from('reviews').update({
+        selected_answer: text ?? null,
+        selected_variant_label: label ?? null,
+        selected_variant_index: variantIndex ?? null,
+      }).eq('id', review.id)
+    } catch (e) { console.warn('Supabase save failed', e) }
     onStatusChange(review.id, 'Beantwortet')
     setShowToast(true)
     setTimeout(() => { setShowToast(false); onBack() }, 1500)
