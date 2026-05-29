@@ -47,7 +47,8 @@ function buildPrompt(reviewText: string, rating: number, reviewerName: string, s
 - Variante 1: KEIN Name — neutral bleiben
 - Variante 2: beginnt mit "Hallo ${firstName}," — direkt, menschlich
 - Variante 3: beginnt mit "${firstName}," — subtil, würdevoll
-- Name NIE mehrfach verwenden — nur am Anfang, nie mitten im Text`
+- Name NIE mehrfach verwenden — nur am Anfang, nie mitten im Text
+- Vornamen IMMER großschreiben — auch wenn er in der Bewertung klein geschrieben ist (z.B. "genta" → "Genta")\`
     : `PERSONALISIERUNG: Kein Name bekannt — alle drei ohne persönliche Anrede`
 
   const context = [
