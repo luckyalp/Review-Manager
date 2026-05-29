@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Home, MessageSquare, BarChart2, User, Star, Clock, CheckCircle, TrendingUp, XCircle, Percent } from 'lucide-react'
+import { Home, MessageSquare, BarChart2, User, Star, Clock, CheckCircle, XCircle, Percent } from 'lucide-react'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
