@@ -75,13 +75,20 @@ ${nameRule}
 BEWERTUNG: ${rating} Sterne — kein Text.
 
 AUFGABE: 3 kurze, herzliche Antworten. Max. 2 Sätze. Keine Floskeln. Keine Dankesformeln.
-Direkt beginnen. Konkret auf die Sterne-Bewertung Bezug nehmen.
+Schreibe wie gesprochen, nicht wie formuliert. Direkt beginnen.
 Alle drei enden mit: ${signature}
+
+BEISPIELE (genau dieser Ton):
+- "Danke dir :) Schön, dass du bei uns warst."
+- "Freut uns, dass du einen guten Abend hattest. Bis bald :)"
+- "5 Sterne nehmen wir natürlich gern :D Danke dir."
 
 ABSOLUT VERBOTEN:
 - "Vielen Dank für Ihre/deine Bewertung"
 - "Wir freuen uns über Ihr/dein Feedback"
 - "Das freut uns sehr"
+- "Wir heißen Sie jederzeit wieder herzlich willkommen"
+- "Liebe/r [Name]" — kein Schrägstrich, nie
 - Jede Form von standardisierter Dankesformel
 
 AUSGABE — NUR dieses JSON:
@@ -102,9 +109,14 @@ BEWERTUNG: ${rating} Sterne — kein Text.
 
 AUFGABE: 3 Antworten. Anerkennen + Einladung zur direkten Kontaktaufnahme. Kein Druck.
 ${contactEmail ? `Kontakt: ${contactEmail}` : ''}
-Max. 3 Sätze. Direkt beginnen — z.B. "Schade, dass..." oder "Das bedauern wir."
+Max. 3 Sätze. Schreibe wie gesprochen, nicht wie formuliert.
 Nie mit Dankesformel beginnen. Keine leeren Entschuldigungen.
 Alle drei enden mit: ${signature}
+
+BEISPIELE (genau dieser Ton):
+- "Schade, dass dein Eindruck von uns so negativ war. Falls du magst, schreib uns gern direkt was passiert ist."
+- "Mit einem Stern bleibt bei uns natürlich ein ungutes Gefühl zurück. Wenn du uns sagen möchtest, was dahintersteckt, hören wir gern zu."
+- "Irgendetwas scheint bei deinem Besuch ziemlich danebengegangen zu sein. Ohne Kontext können wir es schwer einordnen — melden darfst du dich trotzdem jederzeit."
 
 ABSOLUT VERBOTEN:
 - "Vielen Dank für Ihre/deine Bewertung"
