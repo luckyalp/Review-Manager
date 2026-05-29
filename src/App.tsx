@@ -1285,21 +1285,31 @@ function Analytics({ reviews }: { reviews: Review[] }) {
             )
           })()}
         </div>
-                {/* Donut 1: Sternverteilung */}
+                {/* Donut: Varianten */}
         <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '18px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-          <div style={{ fontWeight: '600', fontSize: '14px', color: '#111827', marginBottom: '12px' }}>Sternverteilung</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <DonutChart segments={starSegments} size={100} />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
-              {starSegments.map((s, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: s.color, flexShrink: 0 }} />
-                  <span style={{ fontSize: '11px', color: '#374151', flex: 1 }}>{s.label}</span>
-                  <span style={{ fontSize: '11px', color: '#9ca3af' }}>{distrib[i].count}</span>
+          <div style={{ fontWeight: '600', fontSize: '14px', color: '#111827', marginBottom: '12px' }}>Gewählte Variante</div>
+          {(() => {
+            const variantColors: Record<string, string> = { '1': '#0f4c5c', '2': '#155e75', '3': '#1e7a8c', 'recovery': '#0e7490' }
+            const order = ['1','2','3','recovery']
+            const vtotal = variantStats.reduce((s, v) => s + v.count, 0)
+            const vSegments = variantStats.length > 0
+              ? variantStats.map(v => ({ value: v.count, color: variantColors[v.index] || '#0f4c5c', label: VARIANT_LABELS[v.index] || v.index }))
+              : order.map(k => ({ value: 0, color: variantColors[k], label: VARIANT_LABELS[k] }))
+            return (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <DonutChart segments={vSegments} size={100} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
+                  {vSegments.map((s, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: s.color, flexShrink: 0 }} />
+                      <span style={{ fontSize: '11px', color: '#374151', flex: 1 }}>{s.label}</span>
+                      <span style={{ fontSize: '11px', color: '#9ca3af' }}>{vtotal > 0 ? (variantStats.find(v => VARIANT_LABELS[v.index] === s.label)?.count ?? 0) : 0}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            )
+          })()}
         </div>
 
         {/* Donut 2: Status */}
@@ -1346,36 +1356,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
         </div>
       </div>
 
-      {/* Sternverteilung Balken */}
-      <div className="grid2i" style={{ marginBottom: '16px' }}>
-        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
-          <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '15px' }}>Sternverteilung</div>
-          <div style={{ padding: '16px 18px' }}>
-            {distrib.map(row => (
-              <div key={row.stars} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                <div style={{ width: '36px', fontSize: '13px', color: '#6b7280', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '3px' }}>
-                  <span>{row.stars}</span><span>☆</span>
-                </div>
-                <div style={{ flex: 1, height: '10px', background: '#f3f4f6', borderRadius: '5px', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${row.pct}%`, background: '#F0B100', borderRadius: '5px' }} />
-                </div>
-                <div style={{ width: '24px', fontSize: '13px', color: '#374151', textAlign: 'right', flexShrink: 0 }}>{row.count}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
-          <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '15px' }}>Bewertungstrend (6 Monate)</div>
-          <div style={{ padding: '16px 18px', display: 'flex', alignItems: 'flex-end', gap: '8px', height: '140px' }}>
-            {[{ m: 'Dez', v: 3 },{ m: 'Jan', v: 5 },{ m: 'Feb', v: 4 },{ m: 'Mär', v: 7 },{ m: 'Apr', v: 6 },{ m: 'Mai', v: 9 }].map(d => (
-              <div key={d.m} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                <div style={{ width: '100%', background: '#0f4c5c', borderRadius: '4px 4px 0 0', height: `${d.v * 10}px`, opacity: 0.85 }} />
-                <div style={{ fontSize: '11px', color: '#9ca3af' }}>{d.m}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+
 
       {/* KI Analyse Box */}
       <div style={{ background: '#fff', borderRadius: '12px', border: aiDone ? '1px solid #86efac' : '1px dashed #d1d5db', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
