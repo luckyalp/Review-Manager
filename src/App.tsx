@@ -293,7 +293,7 @@ function App() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', fontFamily: '"Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', background: '#f3f4f6' }}>
+    <div style={{ minHeight: '100vh', fontFamily: '"Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', background: '#f7f5f2' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
         * { box-sizing: border-box; font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
@@ -514,9 +514,7 @@ function Dashboard({ stats, reviews, openReview, onAddReview }: { stats: any, re
           <button onClick={() => setShowAddForm(true)} style={{ padding: '8px 16px', background: '#0f4c5c', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', color: '#fff', fontWeight: '500' }}>
             ✏️ Bewertung hinzufügen
           </button>
-          <button disabled style={{ padding: '8px 16px', background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', cursor: 'not-allowed', fontSize: '13px', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', color: '#d1d5db', fontWeight: '500' }} title="Erst Google verbinden">
-            🔄 Google Sync
-          </button>
+
         </div>
       </div>
 
@@ -572,7 +570,7 @@ function Dashboard({ stats, reviews, openReview, onAddReview }: { stats: any, re
           { label: 'Ausstehend', value: stats.pending, Icon: Clock },
           { label: 'Beantwortet', value: stats.answered, Icon: CheckCircle },
         ].map(s => (
-          <div key={s.label} style={{ background: '#fff', borderRadius: '12px', padding: '18px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+          <div key={s.label} style={{ background: '#fff', borderRadius: '12px', padding: '18px', border: '1px solid #e5e7eb', boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
               <div style={{ fontSize: '13px', color: '#6b7280' }}>{s.label}</div>
               <s.Icon size={18} strokeWidth={1.8} color="#0f4c5c" />
@@ -583,7 +581,7 @@ function Dashboard({ stats, reviews, openReview, onAddReview }: { stats: any, re
       </div>
 
       {/* Sync Status */}
-      <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '14px 18px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+      <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '14px 18px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap', boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#d1d5db', flexShrink: 0 }} />
           <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>Google Sync: Noch nicht verbunden</span>
@@ -611,7 +609,7 @@ function Dashboard({ stats, reviews, openReview, onAddReview }: { stats: any, re
       {/* Reviews + Distribution */}
       <div className="grid-dashboard">
         {/* Aktuelle Bewertungen */}
-        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
+        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
           <div style={{ padding: '16px 18px', borderBottom: '1px solid #e5e7eb' }}>
             <div style={{ fontWeight: '600', fontSize: '16px', color: '#111827' }}>Aktuelle Bewertungen</div>
             <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>Neueste Bewertungen Ihrer Kunden</div>
@@ -646,7 +644,7 @@ function Dashboard({ stats, reviews, openReview, onAddReview }: { stats: any, re
         </div>
 
         {/* Bewertungsverteilung */}
-        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden', alignSelf: 'start' }}>
+        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)', overflow: 'hidden', alignSelf: 'start' }}>
           <div style={{ padding: '16px 18px', borderBottom: '1px solid #e5e7eb' }}>
             <div style={{ fontWeight: '600', fontSize: '16px', color: '#111827' }}>Bewertungsverteilung</div>
             <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>Verteilung aller Bewertungen</div>
@@ -657,7 +655,7 @@ function Dashboard({ stats, reviews, openReview, onAddReview }: { stats: any, re
                 <div style={{ width: '36px', fontSize: '13px', color: '#6b7280', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '3px' }}>
                   <span>{row.stars}</span><span>☆</span>
                 </div>
-                <div style={{ flex: 1, height: '10px', background: '#f3f4f6', borderRadius: '5px', overflow: 'hidden' }}>
+                <div style={{ flex: 1, height: '10px', background: '#f7f5f2', borderRadius: '5px', overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: `${row.pct}%`, background: row.color, borderRadius: '5px', transition: 'width 0.3s' }} />
                 </div>
                 <div style={{ width: '36px', fontSize: '13px', color: '#374151', textAlign: 'right', flexShrink: 0 }}>{row.pct}%</div>
@@ -754,7 +752,7 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview }: { reviews: R
       </div>
 
       {filtered.map(review => (
-        <div key={review.id} style={{ background: '#fff', borderRadius: '12px', padding: '18px', border: '1px solid #e5e7eb', marginBottom: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', opacity: review.status === 'Abgelehnt' ? 0.65 : 1 }}>
+        <div key={review.id} style={{ background: '#fff', borderRadius: '12px', padding: '18px', border: '1px solid #e5e7eb', marginBottom: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)', opacity: review.status === 'Abgelehnt' ? 0.65 : 1 }}>
 
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '10px', cursor: 'pointer' }} onClick={() => openReview(review)}>
@@ -1242,7 +1240,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
           { label: 'Ausstehend', value: pending, sub: 'noch offen', Icon: Clock },
 
         ].map(s => (
-          <div key={s.label} style={{ background: '#fff', borderRadius: '12px', padding: '16px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+          <div key={s.label} style={{ background: '#fff', borderRadius: '12px', padding: '16px', border: '1px solid #e5e7eb', boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
               <div style={{ fontSize: '12px', color: '#6b7280' }}>{s.label}</div>
               <s.Icon size={16} strokeWidth={1.8} color="#0f4c5c" />
@@ -1260,7 +1258,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
         const presentVariants = order.filter(k => variantStats.some(v => v.index === k))
         const starRows = [5,4,3,2,1].filter(s => ratingBreakdown[s])
         return (
-          <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden', marginBottom: '20px' }}>
+          <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)', overflow: 'hidden', marginBottom: '20px' }}>
             <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb' }}>
               <div style={{ fontWeight: '600', fontSize: '15px', color: '#111827' }}>Welche Variante bei welchem Rating?</div>
               <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>Aufschlüsselung nach Sternzahl</div>
@@ -1310,7 +1308,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px', marginBottom: '20px' }}>
 
         {/* Line Chart */}
-        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '18px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '18px', boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <div style={{ fontWeight: '600', fontSize: '14px', color: '#111827' }}>Bewertungen im Zeitverlauf</div>
             <select value={trendDays} onChange={e => setTrendDays(Number(e.target.value) as 7|14|30)}
@@ -1365,7 +1363,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
           })()}
         </div>
                 {/* Donut: Varianten */}
-        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '18px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '18px', boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)' }}>
           <div style={{ fontWeight: '600', fontSize: '14px', color: '#111827', marginBottom: '12px' }}>Gewählte Variante</div>
           {(() => {
             const variantColors: Record<string, string> = { '1': '#0f4c5c', '2': '#155e75', '3': '#1e7a8c', 'recovery': '#0e7490' }
@@ -1392,7 +1390,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
         </div>
 
         {/* Donut 2: Status */}
-        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '18px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '18px', boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)' }}>
           <div style={{ fontWeight: '600', fontSize: '14px', color: '#111827', marginBottom: '12px' }}>Antwortstatus</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <DonutChart segments={statusSegments} size={100} />
@@ -1411,7 +1409,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
 
       {/* Positive & Negative Themen */}
       <div className="grid2i" style={{ marginBottom: '16px' }}>
-        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
+        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
           <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '15px', color: '#111827' }}>👍 Häufig positiv erwähnt</div>
           <div style={{ padding: '14px 18px' }}>
             {positiveThemen.map(t => (
@@ -1422,7 +1420,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
             ))}
           </div>
         </div>
-        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
+        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
           <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '15px', color: '#111827' }}>👎 Häufig negativ erwähnt</div>
           <div style={{ padding: '14px 18px' }}>
             {negativThemen.map(t => (
@@ -1439,7 +1437,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
 
       {/* Sternverteilung + Bewertungstrend */}
       <div className="grid2i" style={{ marginBottom: '20px' }}>
-        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
+        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
           <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '15px', color: '#111827' }}>Sternverteilung</div>
           <div style={{ padding: '16px 18px' }}>
             {[5,4,3,2,1].map(stars => {
@@ -1450,7 +1448,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
                   <div style={{ width: '36px', fontSize: '13px', color: '#6b7280', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '3px' }}>
                     <span>{stars}</span><span style={{ color: '#fbbf24' }}>★</span>
                   </div>
-                  <div style={{ flex: 1, height: '10px', background: '#f3f4f6', borderRadius: '5px', overflow: 'hidden' }}>
+                  <div style={{ flex: 1, height: '10px', background: '#f7f5f2', borderRadius: '5px', overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${pct}%`, background: '#fbbf24', borderRadius: '5px' }} />
                   </div>
                   <div style={{ width: '24px', fontSize: '13px', color: '#374151', textAlign: 'right', flexShrink: 0 }}>{count}</div>
@@ -1459,7 +1457,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
             })}
           </div>
         </div>
-        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
+        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
           <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '15px', color: '#111827' }}>Bewertungstrend (6 Monate)</div>
           <div style={{ padding: '16px 18px' }}>
             {(() => {
@@ -1494,7 +1492,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
       </div>
 
       {/* KI Analyse Box */}
-      <div style={{ background: '#fff', borderRadius: '12px', border: aiDone ? '1px solid #86efac' : '1px dashed #d1d5db', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
+      <div style={{ background: '#fff', borderRadius: '12px', border: aiDone ? '1px solid #86efac' : '1px dashed #d1d5db', boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
         {!aiStarted && (
           <div style={{ padding: '48px', textAlign: 'center' }}>
             <div style={{ fontSize: '32px', marginBottom: '12px' }}>✨</div>
@@ -1636,7 +1634,7 @@ function Settings({ onLogout }: { onLogout: () => void }) {
 
   const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '13px', marginTop: '4px', boxSizing: 'border-box', background: '#f9fafb', fontFamily: 'inherit' }
   const lbl: React.CSSProperties = { fontSize: '13px', fontWeight: '500', display: 'block', color: '#374151' }
-  const card: React.CSSProperties = { background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', marginBottom: '16px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }
+  const card: React.CSSProperties = { background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', marginBottom: '16px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)' }
   const cardH: React.CSSProperties = { padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '16px', color: '#111827' }
   const cardB: React.CSSProperties = { padding: '18px' }
   const hint: React.CSSProperties = { fontSize: '11px', color: '#9ca3af', marginTop: '4px' }
@@ -1808,7 +1806,7 @@ function Settings({ onLogout }: { onLogout: () => void }) {
       </div>
 
       {/* Account / Abmelden */}
-      <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', marginBottom: '40px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+      <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', marginBottom: '40px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)' }}>
         <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '16px', color: '#111827' }}>👤 Konto</div>
         <div style={{ padding: '18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           <div>
@@ -1841,84 +1839,96 @@ function AccountEmail() {
 function WelcomeScreen({ onLogin, onRegister }: { onLogin: () => void; onRegister: () => void }) {
   return (
     <div style={{
-      minHeight: '100vh', background: '#0f172a',
+      minHeight: '100vh',
+      background: 'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(15,76,92,0.35) 0%, transparent 70%), #0b1523',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '16px', fontFamily: '"Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
-        .wlc-btn-primary:hover { background: #0d3d4a !important; }
-        .wlc-btn-secondary:hover { background: rgba(255,255,255,0.08) !important; }
+        .wlc-btn-primary { transition: all 0.18s !important; }
+        .wlc-btn-primary:hover { background: #155e75 !important; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(15,76,92,0.4) !important; }
+        .wlc-btn-secondary { transition: all 0.18s !important; }
+        .wlc-btn-secondary:hover { background: rgba(255,255,255,0.1) !important; border-color: rgba(255,255,255,0.4) !important; }
+        .wlc-feature:hover { background: rgba(15,76,92,0.25) !important; border-color: rgba(30,122,140,0.5) !important; }
       `}</style>
 
-      <div style={{ width: '100%', maxWidth: '420px', textAlign: 'center' }}>
+      <div style={{ width: '100%', maxWidth: '400px', textAlign: 'center' }}>
 
         {/* Logo */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '28px' }}>
           <div style={{
-            width: 64, height: 64, borderRadius: '18px',
-            background: 'linear-gradient(135deg, #0f4c5c, #155e75)',
+            width: 68, height: 68, borderRadius: '20px',
+            background: 'linear-gradient(135deg, #0f4c5c, #1e7a8c)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 8px 32px rgba(15,76,92,0.4)',
+            boxShadow: '0 0 0 1px rgba(30,122,140,0.4), 0 8px 32px rgba(15,76,92,0.5)',
           }}>
-            <span style={{ fontSize: '30px' }}>⭐</span>
+            <span style={{ fontSize: '32px' }}>⭐</span>
           </div>
         </div>
 
         {/* Titel */}
-        <div style={{ fontSize: '32px', fontWeight: '700', color: '#fff', marginBottom: '10px', lineHeight: '1.2' }}>
-          Willkommen bei<br />Rezpond
+        <div style={{ fontSize: '34px', fontWeight: '700', color: '#ffffff', marginBottom: '8px', lineHeight: '1.15', letterSpacing: '-0.5px' }}>
+          Rezpond
         </div>
-        <div style={{ fontSize: '16px', color: '#94a3b8', marginBottom: '48px', lineHeight: '1.7' }}>
-          KI-Antworten auf Google-Bewertungen —<br />schnell, persönlich, in Ihrem Stil.
+        <div style={{ fontSize: '15px', color: '#7da8b8', marginBottom: '40px', lineHeight: '1.6', fontWeight: '400' }}>
+          KI-Antworten auf Google-Bewertungen —<br />schnell, persönlich, in deinem Stil.
         </div>
 
         {/* Features */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '48px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '40px', textAlign: 'left' }}>
           {[
-            { icon: '✨', text: 'KI generiert 3 Antwortvorschläge pro Bewertung' },
-            { icon: '📊', text: 'Übersicht & Analyse aller Google-Bewertungen' },
-            { icon: '📧', text: 'Automatische E-Mail bei neuen Bewertungen' },
+            { icon: '✨', text: '3 KI-Antworten pro Bewertung', sub: 'Verschiedene Tonalitäten, direkt anpassbar' },
+            { icon: '🎯', text: 'Recovery bei 1–2 Sternen', sub: 'Eigene Strategie für negative Bewertungen' },
+            { icon: '📊', text: 'Auswertung & Trends', sub: 'Sieh auf einen Blick was Gäste sagen' },
           ].map(f => (
-            <div key={f.text} style={{
-              display: 'flex', alignItems: 'center', gap: '12px',
-              background: 'rgba(255,255,255,0.05)', borderRadius: '12px',
-              padding: '12px 16px', textAlign: 'left',
-              border: '1px solid rgba(255,255,255,0.08)',
+            <div key={f.text} className="wlc-feature" style={{
+              display: 'flex', alignItems: 'center', gap: '14px',
+              background: 'rgba(15,76,92,0.15)', borderRadius: '12px',
+              padding: '13px 16px',
+              border: '1px solid rgba(30,122,140,0.25)',
+              cursor: 'default', transition: 'all 0.18s',
             }}>
-              <span style={{ fontSize: '20px', flexShrink: 0 }}>{f.icon}</span>
-              <span style={{ fontSize: '14px', color: '#cbd5e1', fontWeight: '500' }}>{f.text}</span>
+              <span style={{ fontSize: '22px', flexShrink: 0, width: 28, textAlign: 'center' }}>{f.icon}</span>
+              <div>
+                <div style={{ fontSize: '14px', color: '#e2e8f0', fontWeight: '600', marginBottom: '2px' }}>{f.text}</div>
+                <div style={{ fontSize: '12px', color: '#64899a', fontWeight: '400' }}>{f.sub}</div>
+              </div>
             </div>
           ))}
         </div>
 
         {/* Buttons */}
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <button
             onClick={onRegister}
             className="wlc-btn-primary"
             style={{
-              flex: 1, padding: '14px', borderRadius: '12px', border: 'none',
+              width: '100%', padding: '15px', borderRadius: '12px', border: 'none',
               background: '#0f4c5c', color: '#fff', fontSize: '15px',
-              fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit',
-              transition: 'background 0.15s',
+              fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit',
+              boxShadow: '0 4px 16px rgba(15,76,92,0.35)',
             }}
           >
-            Registrieren
+            Kostenlos starten →
           </button>
           <button
             onClick={onLogin}
             className="wlc-btn-secondary"
             style={{
-              flex: 1, padding: '14px', borderRadius: '12px',
-              border: '1.5px solid rgba(255,255,255,0.2)',
-              background: 'rgba(255,255,255,0.04)', color: '#e2e8f0',
-              fontSize: '15px', fontWeight: '600', cursor: 'pointer',
-              fontFamily: 'inherit', transition: 'background 0.15s',
+              width: '100%', padding: '13px', borderRadius: '12px',
+              border: '1.5px solid rgba(255,255,255,0.15)',
+              background: 'transparent', color: '#94a3b8',
+              fontSize: '14px', fontWeight: '500', cursor: 'pointer',
+              fontFamily: 'inherit',
             }}
           >
-            Anmelden
+            Bereits registriert? Anmelden
           </button>
+        </div>
+
+        <div style={{ marginTop: '24px', fontSize: '12px', color: '#3d5a66' }}>
+          Keine Kreditkarte erforderlich
         </div>
       </div>
     </div>
