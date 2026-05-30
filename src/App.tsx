@@ -96,7 +96,7 @@ function App() {
         if (data?.value?.businessName) { setOnboardingStep(0); return }
       } catch { /* ignore */ }
       try {
-        const local = localStorage.getItem('reviewManagerSettings')
+        const local = localStorage.getItem('rezpondSettings')
         if (local) {
           const parsed = JSON.parse(local)
           if (parsed?.businessName) { setOnboardingStep(0); return }
@@ -141,6 +141,7 @@ function App() {
   }, [user])
 
   const navigate = (id: string) => { setPage(id); setSelectedReview(null) }
+  const addManualReview = (r: Review) => { setReviews(prev => [r, ...prev]) }
   const openReview = (review: Review) => { setSelectedReview(review); setPage('reviews') }
 
   // URL-Parameter: direkt zur Bewertung springen wenn ?edit=true
@@ -208,7 +209,7 @@ function App() {
     setReviews([])
     setPage('dashboard')
     setShowAuth(false)
-    localStorage.removeItem('reviewManagerSettings')
+    localStorage.removeItem('rezpondSettings')
   }
 
   const stats = {
@@ -270,7 +271,7 @@ function App() {
         hasParking: false, isWheelchairAccessible: false,
         responseSignature: '', responseLanguage: 'Deutsch',
       }
-      localStorage.setItem('reviewManagerSettings', JSON.stringify(fullSettings))
+      localStorage.setItem('rezpondSettings', JSON.stringify(fullSettings))
       try {
         await supabase.from('settings').upsert(
           { key: 'restaurant_profile', value: fullSettings, updated_at: new Date().toISOString() },
@@ -329,7 +330,7 @@ function App() {
             </div>
           ) : (
             <>
-              {page === 'dashboard' && <Dashboard stats={stats} reviews={reviews} openReview={openReview} />}
+              {page === 'dashboard' && <Dashboard stats={stats} reviews={reviews} openReview={openReview} onAddReview={addManualReview} />}
               {page === 'reviews' && !selectedReview && <Reviews reviews={reviews} onStatusChange={updateReviewStatus} onDelete={deleteReview} openReview={openReview} />}
               {page === 'reviews' && selectedReview && <ReviewDetail review={selectedReview} onStatusChange={updateReviewStatus} onBack={() => setSelectedReview(null)} />}
               {page === 'analytics' && <Analytics reviews={reviews} />}
@@ -397,10 +398,35 @@ function StatusBadge({ status }: { status: ReviewStatus }) {
 
 // ─── DASHBOARD ───────────────────────────────────────────────────────────────
 
-function Dashboard({ stats, reviews, openReview }: { stats: any, reviews: Review[], openReview: (r: Review) => void }) {
+function Dashboard({ stats, reviews, openReview, onAddReview }: { stats: any, reviews: Review[], openReview: (r: Review) => void, onAddReview: (r: Review) => void }) {
   const [testRunning, setTestRunning] = useState(false)
   const [testDone, setTestDone] = useState(false)
   const [testError, setTestError] = useState('')
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [newName, setNewName] = useState('')
+  const [newStars, setNewStars] = useState(5)
+  const [newText, setNewText] = useState('')
+
+  const handleAddReview = () => {
+    if (!newText.trim()) return
+    const r: Review = {
+      id: Date.now(),
+      name: newName.trim() || 'Unbekannter Gast',
+      initials: newName.trim()
+        ? newName.trim().split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
+        : 'UG',
+      stars: newStars,
+      text: newText.trim(),
+      date: new Date().toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' }),
+      status: 'Ausstehend',
+    }
+    onAddReview(r)
+    openReview(r)
+    setShowAddForm(false)
+    setNewName('')
+    setNewStars(5)
+    setNewText('')
+  }
 
   const recent = reviews.filter(r => r.status === 'Ausstehend')
 
@@ -416,7 +442,7 @@ function Dashboard({ stats, reviews, openReview }: { stats: any, reviews: Review
     setTestError('')
     setTestDone(false)
 
-    const settings = JSON.parse(localStorage.getItem('reviewManagerSettings') || '{}')
+    const settings = JSON.parse(localStorage.getItem('rezpondSettings') || '{}')
     const email = settings.notificationEmail
 
     if (!email) {
@@ -484,10 +510,59 @@ function Dashboard({ stats, reviews, openReview }: { stats: any, reviews: Review
           <h1 style={{ fontSize: '30px', fontWeight: '600', marginBottom: '4px', color: '#111827' }}>Dashboard</h1>
           <p style={{ color: '#6b7280', fontSize: '16px' }}>Übersicht Ihrer Google-Unternehmensbewertungen.</p>
         </div>
-        <button style={{ padding: '8px 16px', background: '#fff', border: '1px solid #d1d5db', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', color: '#374151', fontWeight: '500' }}>
-          🔄 Jetzt synchronisieren
-        </button>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <button onClick={() => setShowAddForm(true)} style={{ padding: '8px 16px', background: '#0f4c5c', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', color: '#fff', fontWeight: '500' }}>
+            ✏️ Bewertung hinzufügen
+          </button>
+          <button disabled style={{ padding: '8px 16px', background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', cursor: 'not-allowed', fontSize: '13px', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', color: '#d1d5db', fontWeight: '500' }} title="Erst Google verbinden">
+            🔄 Google Sync
+          </button>
+        </div>
       </div>
+
+      {/* Bewertung manuell hinzufügen */}
+      {showAddForm && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', fontFamily: '"Plus Jakarta Sans", sans-serif' }}>
+          <div style={{ background: '#fff', borderRadius: '20px', width: '100%', maxWidth: '440px', padding: '28px', boxShadow: '0 24px 60px rgba(0,0,0,0.25)' }}>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: '#111827', marginBottom: '4px' }}>Bewertung hinzufügen</div>
+            <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '22px' }}>Google-Bewertung einfügen — KI generiert sofort 3 Antworten.</div>
+            <div style={{ marginBottom: '14px' }}>
+              <label style={{ fontSize: '13px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '5px' }}>Name des Gastes (optional)</label>
+              <input type="text" placeholder="z. B. Maria K." value={newName} onChange={e => setNewName(e.target.value)}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1.5px solid #d1d5db', fontSize: '14px', fontFamily: 'inherit', outline: 'none', background: '#f9fafb', boxSizing: 'border-box' as const }}
+                onFocus={e => { e.currentTarget.style.borderColor = '#0f4c5c' }}
+                onBlur={e => { e.currentTarget.style.borderColor = '#d1d5db' }}
+              />
+            </div>
+            <div style={{ marginBottom: '14px' }}>
+              <label style={{ fontSize: '13px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '8px' }}>Sternebewertung</label>
+              <div style={{ display: 'flex', gap: '4px' }}>
+                {[1,2,3,4,5].map(n => (
+                  <button key={n} onClick={() => setNewStars(n)} style={{ fontSize: '26px', background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: n <= newStars ? '#f59e0b' : '#d1d5db', transition: 'color 0.15s', lineHeight: 1 }}>★</button>
+                ))}
+              </div>
+            </div>
+            <div style={{ marginBottom: '22px' }}>
+              <label style={{ fontSize: '13px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '5px' }}>Bewertungstext *</label>
+              <textarea placeholder="Bewertungstext hier einfügen…" value={newText} onChange={e => setNewText(e.target.value)} rows={4}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1.5px solid #d1d5db', fontSize: '14px', fontFamily: 'inherit', outline: 'none', background: '#f9fafb', resize: 'none' as const, boxSizing: 'border-box' as const }}
+                onFocus={e => { e.currentTarget.style.borderColor = '#0f4c5c' }}
+                onBlur={e => { e.currentTarget.style.borderColor = '#d1d5db' }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button onClick={() => { setShowAddForm(false); setNewName(''); setNewStars(5); setNewText('') }}
+                style={{ padding: '10px 20px', background: '#fff', border: '1px solid #d1d5db', borderRadius: '10px', cursor: 'pointer', fontSize: '14px', fontFamily: 'inherit', color: '#374151', fontWeight: '500' }}>
+                Abbrechen
+              </button>
+              <button onClick={handleAddReview} disabled={!newText.trim()}
+                style={{ padding: '10px 22px', background: newText.trim() ? '#0f4c5c' : '#e5e7eb', border: 'none', borderRadius: '10px', cursor: newText.trim() ? 'pointer' : 'not-allowed', fontSize: '14px', fontFamily: 'inherit', color: newText.trim() ? '#fff' : '#9ca3af', fontWeight: '600' }}>
+                ✨ Antworten generieren →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid4" style={{ marginBottom: '16px' }}>
@@ -510,29 +585,26 @@ function Dashboard({ stats, reviews, openReview }: { stats: any, reviews: Review
       {/* Sync Status */}
       <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '14px 18px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e', flexShrink: 0 }} />
-          <span style={{ fontSize: '13px', color: '#374151', fontWeight: '500' }}>Automatischer Sync aktiv</span>
-          <span style={{ fontSize: '12px', color: '#9ca3af' }}>(stündlich)</span>
+          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#d1d5db', flexShrink: 0 }} />
+          <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>Google Sync: Noch nicht verbunden</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '13px', color: '#6b7280' }}>🕐 Sync läuft stündlich automatisch</span>
-        </div>
+        <span style={{ fontSize: '12px', color: '#9ca3af' }}>Bewertungen können manuell hinzugefügt werden</span>
       </div>
 
-      {/* System Test */}
-      <div style={{ background: '#fff', borderRadius: '12px', border: '1px dashed #d1d5db', padding: '16px 18px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+      {/* KI Beispiel */}
+      <div style={{ background: 'linear-gradient(135deg, #f0f7f8, #e8f4f6)', borderRadius: '12px', border: '1px solid #a5c8d0', padding: '18px 20px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', boxShadow: '0 1px 4px rgba(15,76,92,0.08)' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-          <span style={{ fontSize: '20px' }}>🧪</span>
+          <span style={{ fontSize: '22px' }}>✨</span>
           <div>
-            <div style={{ fontWeight: '600', fontSize: '16px', marginBottom: '3px', color: '#111827' }}>System-Test</div>
-            <div style={{ fontSize: '13px', color: '#6b7280' }}>Erstellt eine realistische Test-Bewertung, generiert 3 KI-Antworten und sendet (falls konfiguriert) eine Test-E-Mail.</div>
+            <div style={{ fontWeight: '600', fontSize: '15px', marginBottom: '3px', color: '#0f4c5c' }}>KI in 5 Sekunden erleben</div>
+            <div style={{ fontSize: '13px', color: '#374151' }}>Sieh sofort, wie Rezpond antwortet — 3 Varianten, direkt anpassbar.</div>
             {testError && <div style={{ fontSize: '12px', color: '#ef4444', marginTop: '6px' }}>⚠️ {testError}</div>}
-            {testDone && <div style={{ fontSize: '12px', color: '#16a34a', marginTop: '6px' }}>✅ Test-E-Mail wurde erfolgreich gesendet!</div>}
+            {testDone && <div style={{ fontSize: '12px', color: '#16a34a', marginTop: '6px' }}>✅ Beispiel erfolgreich generiert!</div>}
           </div>
         </div>
         <button onClick={runTest} disabled={testRunning}
-          style={{ padding: '8px 18px', background: testDone ? '#dcfce7' : '#fff', border: `1px solid ${testDone ? '#86efac' : '#d1d5db'}`, borderRadius: '8px', cursor: testRunning ? 'default' : 'pointer', fontSize: '13px', fontFamily: 'inherit', color: testDone ? '#166534' : '#374151', fontWeight: '500', whiteSpace: 'nowrap' }}>
-          {testRunning ? '⏳ Läuft...' : testDone ? '✅ Erfolgreich' : '🧪 Test starten'}
+          style={{ padding: '9px 20px', background: testDone ? '#dcfce7' : '#0f4c5c', border: `1px solid ${testDone ? '#86efac' : '#0f4c5c'}`, borderRadius: '8px', cursor: testRunning ? 'default' : 'pointer', fontSize: '13px', fontFamily: 'inherit', color: testDone ? '#166534' : '#fff', fontWeight: '600', whiteSpace: 'nowrap' }}>
+          {testRunning ? '⏳ Generiert...' : testDone ? '✅ Gesendet' : '✨ Beispiel ansehen'}
         </button>
       </div>
 
@@ -618,7 +690,7 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview }: { reviews: R
     setOpenAI(null)
   }
 
-  const settings = JSON.parse(localStorage.getItem('reviewManagerSettings') || '{}')
+  const settings = JSON.parse(localStorage.getItem('rezpondSettings') || '{}')
 
   const generateReplies = async (review: Review) => {
     setAiLoading(review.id)
@@ -862,7 +934,7 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [showToast, setShowToast] = useState(false)
   const textareaRefs = useRef<Record<number, HTMLTextAreaElement | null>>({})
-  const settings = JSON.parse(localStorage.getItem('reviewManagerSettings') || '{}')
+  const settings = JSON.parse(localStorage.getItem('rezpondSettings') || '{}')
 
   useEffect(() => {
     const id = 'rd2-styles'
@@ -1503,13 +1575,13 @@ function Settings({ onLogout }: { onLogout: () => void }) {
         if (data?.value) {
           const merged = merge(data.value, form)
           setForm(merged)
-          localStorage.setItem('reviewManagerSettings', JSON.stringify(merged))
+          localStorage.setItem('rezpondSettings', JSON.stringify(merged))
         } else {
-          const local = localStorage.getItem('reviewManagerSettings')
+          const local = localStorage.getItem('rezpondSettings')
           if (local) setForm(prev => merge(JSON.parse(local), prev))
         }
       } catch {
-        const local = localStorage.getItem('reviewManagerSettings')
+        const local = localStorage.getItem('rezpondSettings')
         if (local) setForm(prev => merge(JSON.parse(local), prev))
       }
       setLoading(false)
@@ -1523,7 +1595,7 @@ function Settings({ onLogout }: { onLogout: () => void }) {
     if (saveTimer) clearTimeout(saveTimer)
     const timer = setTimeout(async () => {
       setSaving(true)
-      localStorage.setItem('reviewManagerSettings', JSON.stringify(form))
+      localStorage.setItem('rezpondSettings', JSON.stringify(form))
       try {
         await supabase.from('settings').upsert(
           { key: 'restaurant_profile', value: form, updated_at: new Date().toISOString() },
@@ -1550,7 +1622,7 @@ function Settings({ onLogout }: { onLogout: () => void }) {
   const update = (k: string, v: any) => { setForm(p => ({ ...p, [k]: v })) }
   const save = async () => {
     setSaving(true)
-    localStorage.setItem('reviewManagerSettings', JSON.stringify(form))
+    localStorage.setItem('rezpondSettings', JSON.stringify(form))
     try {
       await supabase.from('settings').upsert(
         { key: 'restaurant_profile', value: form, updated_at: new Date().toISOString() },
@@ -1795,7 +1867,7 @@ function WelcomeScreen({ onLogin, onRegister }: { onLogin: () => void; onRegiste
 
         {/* Titel */}
         <div style={{ fontSize: '32px', fontWeight: '700', color: '#fff', marginBottom: '10px', lineHeight: '1.2' }}>
-          Willkommen bei<br />ReviewManager
+          Willkommen bei<br />Rezpond
         </div>
         <div style={{ fontSize: '16px', color: '#94a3b8', marginBottom: '48px', lineHeight: '1.7' }}>
           KI-Antworten auf Google-Bewertungen —<br />schnell, persönlich, in Ihrem Stil.
@@ -1924,9 +1996,11 @@ function AuthScreen({ initialMode = 'login' }: { initialMode?: 'login' | 'regist
         {/* Logo + Titel */}
         <div style={{ padding: '36px 32px 0', textAlign: 'center' }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-            <img src="/favicon.svg" alt="Logo" style={{ width: 48, height: 48 }} onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
+            <div style={{ width: 48, height: 48, borderRadius: '14px', background: 'linear-gradient(135deg, #0f4c5c, #155e75)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(15,76,92,0.3)' }}>
+              <span style={{ fontSize: '22px' }}>⭐</span>
+            </div>
           </div>
-          <div style={{ fontSize: '22px', fontWeight: '700', color: '#111827', marginBottom: '4px' }}>ReviewManager</div>
+          <div style={{ fontSize: '22px', fontWeight: '700', color: '#111827', marginBottom: '4px' }}>Rezpond</div>
           <div style={{ fontSize: '14px', color: '#6b7280' }}>KI-Antworten für Google-Bewertungen</div>
         </div>
 
@@ -2114,7 +2188,7 @@ function Onboarding({ step, data, onDataChange, onNext, onBack, onFinish }: {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
         @keyframes ob-spin { to { transform: rotate(360deg) } }
-        .ob-chip:hover { border-color: #7ab8c4 !important; background: #f5f3ff !important; }
+        .ob-chip:hover { border-color: #7ab8c4 !important; background: #f0f7f8 !important; }
       `}</style>
 
       <div style={{ background: '#fff', borderRadius: '24px', width: '100%', maxWidth: '460px', overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.6)' }}>
@@ -2148,10 +2222,12 @@ function Onboarding({ step, data, onDataChange, onNext, onBack, onFinish }: {
           {step === 1 && (
             <div style={{ textAlign: 'center' }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <img src="/favicon.svg" alt="Logo" style={{ width: 56, height: 56 }} />
+                <div style={{ width: 56, height: 56, borderRadius: '16px', background: 'linear-gradient(135deg, #0f4c5c, #155e75)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 20px rgba(15,76,92,0.35)' }}>
+                  <span style={{ fontSize: '28px' }}>⭐</span>
+                </div>
               </div>
               <div style={{ fontSize: '26px', fontWeight: '700', color: '#111827', marginBottom: '10px', lineHeight: '1.3' }}>
-                Willkommen bei<br />ReviewManager
+                Willkommen bei<br />Rezpond
               </div>
               <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '36px', lineHeight: '1.7' }}>
                 Smarte KI-Antworten auf Google-Bewertungen —<br />schnell, persönlich, in deinem Stil.
