@@ -611,20 +611,20 @@ function Dashboard({ stats, reviews, openReview, onAddReview }: { stats: any, re
         <span style={{ fontSize: '12px', color: '#9ca3af' }}>Bewertungen können manuell hinzugefügt werden</span>
       </div>
 
-      {/* KI Beispiel */}
-      <div style={{ background: 'linear-gradient(135deg, #f0f7f8, #e8f4f6)', borderRadius: '12px', border: '1px solid #a5c8d0', padding: '18px 20px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', boxShadow: '0 1px 4px rgba(15,76,92,0.08)' }}>
+      {/* Test-E-Mail */}
+      <div style={{ background: 'linear-gradient(135deg, #f0f7f8, #e8f4f6)', borderRadius: '12px', border: '1px solid #a5c8d0', padding: '18px 20px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', boxShadow: '0 2px 8px rgba(15,76,92,0.07), 0 1px 2px rgba(0,0,0,0.04)' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-          <span style={{ fontSize: '22px' }}>✨</span>
+          <span style={{ fontSize: '22px' }}>📧</span>
           <div>
-            <div style={{ fontWeight: '600', fontSize: '15px', marginBottom: '3px', color: '#0f4c5c' }}>KI in 5 Sekunden erleben</div>
-            <div style={{ fontSize: '13px', color: '#374151' }}>Sieh sofort, wie Rezpond antwortet — 3 Varianten, direkt anpassbar.</div>
+            <div style={{ fontWeight: '600', fontSize: '15px', marginBottom: '3px', color: '#0f4c5c' }}>Test-E-Mail senden</div>
+            <div style={{ fontSize: '13px', color: '#374151' }}>Schickt dir eine echte E-Mail — so siehst du auf dem Handy wie eine Bewertungs-Benachrichtigung aussieht.</div>
             {testError && <div style={{ fontSize: '12px', color: '#ef4444', marginTop: '6px' }}>⚠️ {testError}</div>}
-            {testDone && <div style={{ fontSize: '12px', color: '#16a34a', marginTop: '6px' }}>✅ Beispiel erfolgreich generiert!</div>}
+            {testDone && <div style={{ fontSize: '12px', color: '#16a34a', marginTop: '6px' }}>✅ Test-E-Mail wurde gesendet!</div>}
           </div>
         </div>
         <button onClick={runTest} disabled={testRunning}
           style={{ padding: '9px 20px', background: testDone ? '#dcfce7' : '#0f4c5c', border: `1px solid ${testDone ? '#86efac' : '#0f4c5c'}`, borderRadius: '8px', cursor: testRunning ? 'default' : 'pointer', fontSize: '13px', fontFamily: 'inherit', color: testDone ? '#166534' : '#fff', fontWeight: '600', whiteSpace: 'nowrap' }}>
-          {testRunning ? '⏳ Generiert...' : testDone ? '✅ Gesendet' : '✨ Beispiel ansehen'}
+          {testRunning ? '⏳ Wird gesendet...' : testDone ? '✅ Gesendet' : '📧 Test-E-Mail senden'}
         </button>
       </div>
 
