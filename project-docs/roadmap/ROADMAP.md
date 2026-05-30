@@ -59,9 +59,19 @@
 
 **Warum wichtig:** Wenn Unterschiede klarer → Analytics sinnvoller → Feedback-Loop stärker.
 
-### Google Business API
-**Warum:** Echte Bewertungen automatisch einlesen.
-**Was:** Google Service Account → Account-ID + Standort-ID → stündlicher Sync
+### Google Business API (OAuth)
+**Warum:** Echte Bewertungen automatisch einlesen — ohne manuellen Setup.
+**Was:**
+- OAuth-Button: Kunde klickt "Mit Google verbinden" → Login mit Google-Business-Account → fertig
+- Kein Service Account Key, keine manuellen IDs
+- Erster Sync: nur die letzten **90 Tage**, nur **unbeantwortete** Bewertungen
+  - Ältere Bewertungen zu beantworten macht keinen Sinn mehr
+  - Beim ersten Sync geht **keine einzige E-Mail raus** (sonst 90 E-Mails auf einmal)
+- Laufender Sync: **stündlich** via Vercel Cron-Job (`vercel.json`)
+  - Nur neue Bewertungen seit letztem Sync
+  - Bei jeder neuen Bewertung: E-Mail mit 3 KI-Antworten an den Gastronom
+- Neue Datei: `api/sync-reviews.ts`
+- Eintrag in `vercel.json`: `{ "crons": [{ "path": "/api/sync-reviews", "schedule": "0 * * * *" }] }`
 
 ### E-Mail Benachrichtigung (Resend)
 **Status:** Funktion existiert, RESEND_API_KEY in Vercel hinterlegen reicht.

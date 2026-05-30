@@ -403,6 +403,12 @@ function Dashboard({ stats, reviews, openReview, onAddReview }: { stats: any, re
   const [testDone, setTestDone] = useState(false)
   const [testError, setTestError] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
+  const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem('rezpondWelcomeDismissed'))
+
+  const dismissWelcome = () => {
+    localStorage.setItem('rezpondWelcomeDismissed', '1')
+    setShowWelcome(false)
+  }
   const [newName, setNewName] = useState('')
   const [newStars, setNewStars] = useState(5)
   const [newText, setNewText] = useState('')
@@ -517,6 +523,22 @@ function Dashboard({ stats, reviews, openReview, onAddReview }: { stats: any, re
 
         </div>
       </div>
+
+      {/* Willkommens-Hinweis — nur beim ersten Login */}
+      {showWelcome && (
+        <div style={{ background: 'linear-gradient(135deg, #f0f7f8, #e8f4f6)', border: '1px solid #a5c8d0', borderRadius: '14px', padding: '16px 20px', marginBottom: '20px', display: 'flex', alignItems: 'flex-start', gap: '14px', boxShadow: '0 2px 8px rgba(15,76,92,0.07), 0 1px 2px rgba(0,0,0,0.04)' }}>
+          <span style={{ fontSize: '22px', flexShrink: 0, marginTop: '1px' }}>👋</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: '600', fontSize: '15px', color: '#0f4c5c', marginBottom: '5px' }}>Herzlich willkommen bei Rezpond!</div>
+            <div style={{ fontSize: '13px', color: '#374151', lineHeight: '1.6' }}>
+              Sobald Google verbunden ist, zieht Rezpond automatisch deine letzten <strong>90 unbeantworteten Bewertungen</strong> rein — ohne E-Mail-Flut.
+              Neue Bewertungen kommen danach <strong>stündlich</strong> rein.<br />
+              <span style={{ color: '#6b7280' }}>Bis dahin: Klick auf <strong>✏️ Bewertung hinzufügen</strong> und probiere die KI direkt aus.</span>
+            </div>
+          </div>
+          <button onClick={dismissWelcome} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: '18px', padding: '0 4px', lineHeight: 1, flexShrink: 0 }} title="Schließen">×</button>
+        </div>
+      )}
 
       {/* Bewertung manuell hinzufügen */}
       {showAddForm && (
