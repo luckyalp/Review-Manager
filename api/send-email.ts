@@ -20,34 +20,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const starsEmpty = '☆'.repeat(5 - stars)
   const initials = reviewerName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
 
-  const petrol = '#0f4c5c'
-  const petrolMid = '#155e75'
-  const teal = '#0e7490'
-  const sand = '#f7f5f2'
-  const border = '#e2ddd8'
+  // Petrol-Palette — kein Lila
+  const petrol      = '#0f4c5c'
+  const petrolMid   = '#155e75'
+  const petrolLight = '#1e7a8c'
+  const teal        = '#0e7490'
+  const sand        = '#f7f5f2'
+  const border      = '#e2ddd8'
+  const bgBody      = '#f7f5f2'
 
-  const normalColors = [petrol, petrolMid, '#1e7a8c']
+  // Petrol-Abstufungen für die 3 normalen Karten
+  const normalColors = [petrol, petrolMid, petrolLight]
 
   const allAnswers: { label: string, text: string, isRecovery?: boolean }[] = answers
   const normalAnswers = allAnswers.filter(a => !a.isRecovery)
   const recoveryAnswer = allAnswers.find(a => a.isRecovery)
 
   const renderNormalCard = (a: { label: string, text: string }, i: number) => `
-    <div style="border: 1.5px solid ${border}; border-radius: 12px; padding: 16px; margin-bottom: 10px; background: #ffffff;">
-      <div style="display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 10px; border-radius: 20px; margin-bottom: 8px; letter-spacing: 0.5px; background: ${normalColors[i] || petrol}18; color: ${normalColors[i] || petrol}; text-transform: uppercase;">${a.label}</div>
+    <div style="border: 1.5px solid ${border}; border-radius: 12px; padding: 16px; margin-bottom: 10px; background: #ffffff; box-shadow: 0 1px 4px rgba(15,76,92,0.06);">
+      <div style="display: inline-block; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-bottom: 10px; letter-spacing: 0.6px; background: ${normalColors[i] || petrol}1a; color: ${normalColors[i] || petrol}; text-transform: uppercase; border: 1px solid ${normalColors[i] || petrol}30;">${a.label}</div>
       <div style="font-size: 13px; color: #374151; line-height: 1.65; margin-bottom: 14px;">${a.text}</div>
       <table cellpadding="0" cellspacing="0" width="100%" role="presentation">
         <tr>
-          <td style="padding-right: 6px;">
+          <td style="padding-right: 6px; width: 50%;">
             <a href="https://review-manager-mu.vercel.app/api/confirm-reply?reviewId=${encodeURIComponent(reviewerName + '_' + stars)}&answerIndex=${i}&answerText=${encodeURIComponent(a.text)}"
-              style="display: block; text-align: center; padding: 10px; border-radius: 40px; font-size: 13px; font-weight: 600; color: #ffffff; text-decoration: none; background: ${normalColors[i] || petrol};">
+              style="display: block; text-align: center; padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #ffffff; text-decoration: none; background: ${normalColors[i] || petrol};">
               ✓ Sofort senden
             </a>
           </td>
-          <td style="padding-left: 6px;">
+          <td style="padding-left: 6px; width: 50%;">
             <a href="https://review-manager-mu.vercel.app?reviewId=${encodeURIComponent(reviewerName + '_' + stars)}&edit=true"
-              style="display: block; text-align: center; padding: 10px; border-radius: 40px; font-size: 13px; font-weight: 600; color: ${teal}; text-decoration: none; background: #ffffff; border: 1.5px solid ${teal};">
-              ✏️ Bearbeiten
+              style="display: block; text-align: center; padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; color: ${petrol}; text-decoration: none; background: #ffffff; border: 1.5px solid ${border};">
+              ✏ Bearbeiten
             </a>
           </td>
         </tr>
@@ -64,22 +68,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           <td style="border-top: 1px solid ${border}; width: 40%;"></td>
         </tr>
       </table>
-      <div style="border: 1.5px solid ${teal}; border-left: 3px solid ${teal}; border-radius: 12px; padding: 16px; background: #ffffff;">
-        <div style="font-size: 11px; color: ${teal}; margin-bottom: 6px; opacity: 0.85;">Fokus auf Vertrauen und Deeskalation.</div>
-        <div style="display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 10px; border-radius: 20px; margin-bottom: 8px; letter-spacing: 0.5px; background: ${teal}18; color: ${teal}; text-transform: uppercase;">${a.label}</div>
+      <div style="border: 1.5px solid ${teal}; border-left: 3px solid ${teal}; border-radius: 12px; padding: 16px; background: #ffffff; box-shadow: 0 1px 4px rgba(14,116,144,0.08);">
+        <div style="font-size: 11px; color: ${teal}; margin-bottom: 6px; opacity: 0.9;">Fokus auf Vertrauen und Deeskalation.</div>
+        <div style="display: inline-block; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-bottom: 10px; letter-spacing: 0.6px; background: ${teal}1a; color: ${teal}; text-transform: uppercase; border: 1px solid ${teal}30;">${a.label}</div>
         <div style="font-size: 13px; color: #374151; line-height: 1.65; margin-bottom: 14px;">${a.text}</div>
         <table cellpadding="0" cellspacing="0" width="100%" role="presentation">
           <tr>
-            <td style="padding-right: 6px;">
+            <td style="padding-right: 6px; width: 50%;">
               <a href="https://review-manager-mu.vercel.app/api/confirm-reply?reviewId=${encodeURIComponent(reviewerName + '_' + stars)}&answerIndex=${idx}&answerText=${encodeURIComponent(a.text)}"
-                style="display: block; text-align: center; padding: 10px; border-radius: 40px; font-size: 13px; font-weight: 600; color: #ffffff; text-decoration: none; background: ${teal};">
+                style="display: block; text-align: center; padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #ffffff; text-decoration: none; background: ${teal};">
                 ✓ Sofort senden
               </a>
             </td>
-            <td style="padding-left: 6px;">
+            <td style="padding-left: 6px; width: 50%;">
               <a href="https://review-manager-mu.vercel.app?reviewId=${encodeURIComponent(reviewerName + '_' + stars)}&edit=true"
-                style="display: block; text-align: center; padding: 10px; border-radius: 40px; font-size: 13px; font-weight: 600; color: ${teal}; text-decoration: none; background: #ffffff; border: 1.5px solid ${teal};">
-                ✏️ Bearbeiten
+                style="display: block; text-align: center; padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; color: ${teal}; text-decoration: none; background: #ffffff; border: 1.5px solid ${border};">
+                ✏ Bearbeiten
               </a>
             </td>
           </tr>
@@ -97,22 +101,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   <meta name="supported-color-schemes" content="light">
   <style>
     :root { color-scheme: light only; }
-    body { background-color: #f7f5f2 !important; color: #1a1a1a !important; }
+    body { background-color: ${bgBody} !important; color: #1a1a1a !important; }
   </style>
 </head>
-<body style="margin:0; padding:20px; background-color:#f7f5f2 !important; font-family: Arial, sans-serif; color: #1a1a1a;" bgcolor="#f7f5f2">
+<body style="margin:0; padding:20px; background-color:${bgBody} !important; font-family: Arial, sans-serif; color: #1a1a1a;" bgcolor="${bgBody}">
 
   <div style="max-width: 580px; margin: 0 auto;">
 
-    <!-- Header -->
-    <div style="background-color: #0f4c5c; border-radius: 14px 14px 0 0; padding: 20px 24px;">
+    <!-- Header: Petrol-Verlauf, kein Lila -->
+    <div style="background: linear-gradient(135deg, ${petrol} 0%, ${petrolMid} 100%); border-radius: 14px 14px 0 0; padding: 20px 24px;">
       <table cellpadding="0" cellspacing="0" role="presentation">
         <tr>
-          <td style="vertical-align: middle; width: 44px;">
-            <div style="background-color: #1e7a8c; border-radius: 8px; width: 36px; height: 36px; line-height: 36px; text-align: center; font-size: 13px; font-weight: 700; color: #ffffff;">RM</div>
+          <td style="vertical-align: middle; width: 48px;">
+            <div style="background-color: ${petrolLight}; border-radius: 10px; width: 40px; height: 40px; line-height: 40px; text-align: center; font-size: 14px; font-weight: 700; color: #ffffff; letter-spacing: 0.5px;">RZ</div>
           </td>
           <td style="vertical-align: middle; padding-left: 12px;">
-            <div style="color: #ffffff; font-size: 17px; font-weight: 700;">ReviewMonitor</div>
+            <div style="color: #ffffff; font-size: 17px; font-weight: 700; letter-spacing: -0.2px;">Rezpond</div>
             <div style="color: #a5c8d0; font-size: 13px; margin-top: 2px;">${restaurantName || 'Neue Bewertung eingegangen'}</div>
           </td>
         </tr>
@@ -121,8 +125,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     <!-- Body -->
     <div style="background-color: #ffffff; padding: 24px; border-radius: 0 0 14px 14px; border: 1px solid ${border}; border-top: none;">
-
-
 
       <!-- Bewertung -->
       <div style="border: 1px solid ${border}; border-radius: 12px; padding: 16px; margin-bottom: 24px; background-color: #fdfcfa;">
@@ -157,7 +159,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       <!-- Footer -->
       <div style="text-align: center; margin-top: 24px; padding-top: 16px; border-top: 1px solid ${border};">
         <a href="https://review-manager-mu.vercel.app" style="color: ${petrol}; font-size: 13px; text-decoration: none; font-weight: 600;">Dashboard öffnen →</a>
-        <div style="font-size: 11px; color: #9ca3af; margin-top: 8px;">Diese E-Mail wurde automatisch von ReviewMonitor generiert.</div>
+        <div style="font-size: 11px; color: #9ca3af; margin-top: 8px;">Automatisch generiert von Rezpond</div>
       </div>
 
     </div>
@@ -174,7 +176,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'ReviewMonitor <noreply@hiptoys.de>',
+        from: 'Rezpond <noreply@hiptoys.de>',
         to: [to],
         subject: `⭐ Neue Bewertung von ${reviewerName} (${stars} Sterne)`,
         html,

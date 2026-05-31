@@ -40,12 +40,39 @@ function successPage() {
   <title>Antwort gesendet</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f3f4f6; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-    .card { background: #fff; border-radius: 16px; padding: 48px 40px; text-align: center; max-width: 400px; width: 90%; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
-    .icon { font-size: 56px; margin-bottom: 16px; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f7f5f2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 48px 40px;
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 4px 24px rgba(15,76,92,0.10);
+      border: 1px solid #e2ddd8;
+    }
+    .icon { font-size: 52px; margin-bottom: 16px; }
     h1 { font-size: 22px; font-weight: 700; color: #111827; margin-bottom: 8px; }
     p { font-size: 15px; color: #6b7280; margin-bottom: 24px; line-height: 1.5; }
-    .btn { display: inline-block; padding: 12px 28px; background: #4f46e5; color: #fff; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 600; }
+    .btn {
+      display: inline-block;
+      padding: 12px 28px;
+      background: #0f4c5c;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: #155e75; }
     .countdown { font-size: 13px; color: #9ca3af; margin-top: 16px; }
   </style>
   <script>
@@ -66,9 +93,9 @@ function successPage() {
   <div class="card">
     <div class="icon">✅</div>
     <h1>Antwort wurde gesendet!</h1>
-    <p>Ihre Antwort wurde erfolgreich übermittelt. Die Bewertung ist jetzt als beantwortet markiert.</p>
+    <p>Die Antwort wurde erfolgreich übermittelt. Die Bewertung ist jetzt als beantwortet markiert.</p>
     <a href="https://review-manager-mu.vercel.app" class="btn">Zum Dashboard →</a>
-    <div class="countdown">Dieses Fenster schließt sich in <span id="timer">3</span> Sekunden...</div>
+    <div class="countdown">Dieses Fenster schließt sich in <span id="timer">3</span> Sekunden …</div>
   </div>
 </body>
 </html>
@@ -79,10 +106,39 @@ function errorPage(message: string) {
   return `
 <!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><title>Fehler</title></head>
-<body style="font-family: sans-serif; text-align: center; padding: 40px;">
-  <h1>⚠️ ${message}</h1>
-  <a href="https://review-manager-mu.vercel.app">Zum Dashboard</a>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fehler</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f7f5f2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 40px;
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 4px 24px rgba(15,76,92,0.10);
+      border: 1px solid #e2ddd8;
+    }
+    h1 { font-size: 20px; font-weight: 700; color: #111827; margin-bottom: 12px; }
+    a { color: #0f4c5c; font-weight: 600; text-decoration: none; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>⚠️ ${message}</h1>
+    <a href="https://review-manager-mu.vercel.app">Zum Dashboard →</a>
+  </div>
 </body>
 </html>
   `
