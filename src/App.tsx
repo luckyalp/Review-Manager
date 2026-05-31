@@ -2065,6 +2065,11 @@ function AuthScreen({ initialMode = 'login' }: { initialMode?: 'login' | 'regist
             Mit Google {mode === 'login' ? 'anmelden' : 'registrieren'}
           </button>
 
+          {/* Google Hinweis */}
+          <div style={{ fontSize: '12px', color: '#9ca3af', textAlign: 'center', marginTop: '-12px', marginBottom: '20px', lineHeight: '1.5' }}>
+            Bitte melde dich mit dem Google-Account an,<br />mit dem dein Restaurant bei Google verwaltet wird.
+          </div>
+
           {/* Divider */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
             <div style={{ flex: 1, height: 1, background: '#e5e7eb' }} />
