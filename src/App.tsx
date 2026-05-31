@@ -527,81 +527,70 @@ function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews 
         </div>
       </div>
 
-      {/* ── MORNING CARD — nur wenn Bewertungen vorhanden ── */}
-      {reviews.length > 0 && (
-        <div style={{
-          background: 'linear-gradient(135deg, #0f4c5c 0%, #155e75 100%)',
-          borderRadius: '16px',
-          padding: '18px 20px',
-          marginBottom: '16px',
-          boxShadow: '0 4px 16px rgba(15,76,92,0.25)',
-        }}>
-          <div style={{ fontSize: '15px', fontWeight: '600', color: '#e8f4f7', marginBottom: '14px' }}>
-            Guten Morgen 👋
+      {/* ── MORNING CARD — Assistent, nicht Statistik ── */}
+      {reviews.length > 0 && (() => {
+        // Einzige Botschaft berechnen — Priorität: negativ > ausstehend > alles gut
+        const msg = newNegativeCount > 0
+          ? {
+              headline: newNegativeCount === 1
+                ? 'Eine negative Bewertung braucht deine Aufmerksamkeit.'
+                : `${newNegativeCount} negative Bewertungen brauchen deine Aufmerksamkeit.`,
+              sub: 'Negative Bewertungen ohne Antwort schaden dem Eindruck — je früher, desto besser.',
+              btnLabel: newNegativeCount === 1 ? '1 negative Bewertung öffnen →' : `${newNegativeCount} negative Bewertungen öffnen →`,
+              urgent: true,
+            }
+          : pendingCount > 0
+          ? {
+              headline: pendingCount === 1
+                ? 'Eine Bewertung wartet noch auf eine Antwort.'
+                : `${pendingCount} Bewertungen warten noch auf eine Antwort.`,
+              sub: 'Kein dringender Handlungsbedarf — aber es lohnt sich, sie heute noch zu beantworten.',
+              btnLabel: 'Bewertungen öffnen →',
+              urgent: false,
+            }
+          : {
+              headline: 'Alles beantwortet — gut gemacht.',
+              sub: todayCount > 0
+                ? `${todayCount === 1 ? 'Eine neue Bewertung' : `${todayCount} neue Bewertungen`} heute eingegangen.`
+                : 'Aktuell gibt es nichts zu tun.',
+              btnLabel: null,
+              urgent: false,
+            }
+
+        return (
+          <div style={{
+            background: 'linear-gradient(135deg, #0f4c5c 0%, #155e75 100%)',
+            borderRadius: '16px',
+            padding: '20px 22px',
+            marginBottom: '16px',
+            boxShadow: '0 4px 16px rgba(15,76,92,0.25)',
+          }}>
+            <div style={{ fontSize: '12px', fontWeight: '600', color: '#7ab8c4', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
+              Guten Morgen 👋
+            </div>
+            <div style={{ fontSize: '17px', fontWeight: '600', color: msg.urgent ? '#fca5a5' : '#e8f4f7', lineHeight: '1.4', marginBottom: '8px' }}>
+              {msg.headline}
+            </div>
+            <div style={{ fontSize: '13px', color: '#7ab8c4', lineHeight: '1.6', marginBottom: msg.btnLabel ? '16px' : '0' }}>
+              {msg.sub}
+            </div>
+            {msg.btnLabel && (
+              <button
+                onClick={onNavigateReviews}
+                style={{
+                  padding: '10px 18px', borderRadius: '9px',
+                  background: msg.urgent ? '#dc2626' : '#1e7a8c',
+                  border: 'none', cursor: 'pointer',
+                  fontSize: '13px', fontWeight: '600', color: '#ffffff',
+                  fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: '6px',
+                }}
+              >
+                {msg.btnLabel}
+              </button>
+            )}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-            {/* Offene Bewertungen */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{
-                minWidth: '28px', height: '24px', borderRadius: '6px',
-                background: pendingCount > 0 ? '#fee2e2' : 'rgba(255,255,255,0.12)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '12px', fontWeight: '600', padding: '0 6px',
-                color: pendingCount > 0 ? '#991b1b' : '#a0c4cc',
-              }}>
-                {pendingCount}
-              </div>
-              <span style={{ fontSize: '13px', color: pendingCount > 0 ? '#fca5a5' : '#a0c4cc' }}>
-                {pendingCount === 1 ? 'Bewertung wartet auf Antwort' : 'Bewertungen warten auf Antwort'}
-              </span>
-            </div>
-            {/* Negative ohne Antwort */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{
-                minWidth: '28px', height: '24px', borderRadius: '6px',
-                background: newNegativeCount > 0 ? '#fef3c7' : 'rgba(255,255,255,0.12)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '12px', fontWeight: '600', padding: '0 6px',
-                color: newNegativeCount > 0 ? '#92400e' : '#a0c4cc',
-              }}>
-                {newNegativeCount}
-              </div>
-              <span style={{ fontSize: '13px', color: newNegativeCount > 0 ? '#fde68a' : '#a0c4cc' }}>
-                {newNegativeCount === 1 ? 'Negative Bewertung ohne Antwort (1–2★)' : 'Negative Bewertungen ohne Antwort (1–2★)'}
-              </span>
-            </div>
-            {/* Heute eingegangen */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{
-                minWidth: '28px', height: '24px', borderRadius: '6px',
-                background: 'rgba(255,255,255,0.12)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '12px', fontWeight: '600', padding: '0 6px',
-                color: '#d0e8ed',
-              }}>
-                {todayCount}
-              </div>
-              <span style={{ fontSize: '13px', color: '#a0c4cc' }}>
-                {todayCount === 1 ? 'Neue Bewertung heute' : 'Neue Bewertungen heute'}
-              </span>
-            </div>
-          </div>
-          {pendingCount > 0 && (
-            <button
-              onClick={onNavigateReviews}
-              style={{
-                width: '100%', padding: '10px', borderRadius: '9px',
-                background: '#1e7a8c', border: 'none', cursor: 'pointer',
-                fontSize: '13px', fontWeight: '600', color: '#ffffff',
-                fontFamily: 'inherit', display: 'flex', alignItems: 'center',
-                justifyContent: 'center', gap: '6px',
-              }}
-            >
-              Jetzt beantworten →
-            </button>
-          )}
-        </div>
-      )}
+        )
+      })()}
 
       {/* Willkommens-Hinweis — nur beim ersten Login */}
       {showWelcome && (
@@ -663,35 +652,34 @@ function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews 
         </div>
       )}
 
-      {/* Stats */}
+      {/* Stats — 3 KPIs, kein Duplikat zu Morning-Card */}
       <div className="grid4" style={{ marginBottom: '16px' }}>
         {[
-          { label: 'Ausstehend', value: stats.pending, Icon: Clock },
           { label: 'Ø Bewertung', value: stats.avg, Icon: Star },
           { label: 'Beantwortet', value: stats.answered, Icon: CheckCircle },
           { label: 'Gesamt', value: stats.total, Icon: MessageSquare },
-        ].map((s, i) => (
+        ].map((s) => (
           <div key={s.label} style={{
             background: '#fff', borderRadius: '12px', padding: '18px',
-            border: i === 0 && stats.pending > 0 ? '1px solid #fca5a5' : '1px solid #e5e7eb',
+            border: '1px solid #e5e7eb',
             boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
               <div style={{ fontSize: '13px', color: '#6b7280' }}>{s.label}</div>
-              <s.Icon size={18} strokeWidth={1.8} color={i === 0 && stats.pending > 0 ? '#dc2626' : '#0f4c5c'} />
+              <s.Icon size={18} strokeWidth={1.8} color="#0f4c5c" />
             </div>
-            <div style={{ fontSize: '28px', fontWeight: '600', color: i === 0 && stats.pending > 0 ? '#dc2626' : '#111827' }}>{s.value}</div>
+            <div style={{ fontSize: '28px', fontWeight: '600', color: '#111827' }}>{s.value}</div>
           </div>
         ))}
       </div>
 
-      {/* Sync Status */}
-      <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '14px 18px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap', boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#d1d5db', flexShrink: 0 }} />
-          <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>Google Sync: Noch nicht verbunden</span>
+      {/* Sync Status — Banner-Style */}
+      <div style={{ background: 'linear-gradient(135deg, #f0f7f8, #e8f4f6)', border: '1px solid #a5c8d0', borderRadius: '14px', padding: '14px 18px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px', boxShadow: '0 2px 8px rgba(15,76,92,0.07), 0 1px 2px rgba(0,0,0,0.04)' }}>
+        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#a5c8d0', flexShrink: 0 }} />
+        <div>
+          <div style={{ fontSize: '13px', color: '#0f4c5c', fontWeight: '600' }}>Google Sync: Noch nicht verbunden</div>
+          <div style={{ fontSize: '12px', color: '#4a8fa0', marginTop: '2px' }}>Bewertungen können bis dahin manuell hinzugefügt werden.</div>
         </div>
-        <span style={{ fontSize: '12px', color: '#9ca3af' }}>Bewertungen können manuell hinzugefügt werden</span>
       </div>
 
       {/* Reviews + Distribution */}
