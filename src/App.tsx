@@ -2067,7 +2067,7 @@ function AuthScreen({ initialMode = 'login' }: { initialMode?: 'login' | 'regist
 
           {/* Google Hinweis */}
           <div style={{ fontSize: '12px', color: '#9ca3af', textAlign: 'center', marginTop: '-12px', marginBottom: '20px', lineHeight: '1.5' }}>
-            Bitte melde dich mit dem Google-Account an,<br />mit dem dein Restaurant bei Google verwaltet wird.
+            Bitte melde dich mit dem Google-Account an,<br />mit dem dein Unternehmen bei Google verwaltet wird.
           </div>
 
           {/* Divider */}
