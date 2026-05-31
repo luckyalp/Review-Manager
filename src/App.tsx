@@ -63,6 +63,7 @@ function App() {
   const [reviews, setReviews] = useState<Review[]>([])
   const [reviewsLoading, setReviewsLoading] = useState(true)
   const [selectedReview, setSelectedReview] = useState<Review | null>(null)
+  const [reviewsInitialFilter, setReviewsInitialFilter] = useState<string>('alle')
   const [onboardingStep, setOnboardingStep] = useState<number | null>(null)
   const [onboardingData, setOnboardingData] = useState({
     businessName: '', restaurantType: '',
@@ -140,7 +141,7 @@ function App() {
     loadReviews()
   }, [user])
 
-  const navigate = (id: string) => { setPage(id); setSelectedReview(null) }
+  const navigate = (id: string) => { setPage(id); setSelectedReview(null); setReviewsInitialFilter('alle') }
   const addManualReview = (r: Review) => { setReviews(prev => [r, ...prev]) }
   const openReview = (review: Review) => { setSelectedReview(review); setPage('reviews') }
 
@@ -330,8 +331,8 @@ function App() {
             </div>
           ) : (
             <>
-              {page === 'dashboard' && <Dashboard stats={stats} reviews={reviews} openReview={openReview} onAddReview={addManualReview} onNavigateReviews={() => navigate('reviews')} />}
-              {page === 'reviews' && !selectedReview && <Reviews reviews={reviews} onStatusChange={updateReviewStatus} onDelete={deleteReview} openReview={openReview} />}
+              {page === 'dashboard' && <Dashboard stats={stats} reviews={reviews} openReview={openReview} onAddReview={addManualReview} onNavigateReviews={(filter?: string) => { setReviewsInitialFilter(filter || 'alle'); setPage('reviews'); setSelectedReview(null) }} />}
+              {page === 'reviews' && !selectedReview && <Reviews reviews={reviews} onStatusChange={updateReviewStatus} onDelete={deleteReview} openReview={openReview} initialFilterStars={reviewsInitialFilter} />}
               {page === 'reviews' && selectedReview && <ReviewDetail review={selectedReview} onStatusChange={updateReviewStatus} onBack={() => setSelectedReview(null)} />}
               {page === 'analytics' && <Analytics reviews={reviews} />}
               {page === 'settings' && <Settings onLogout={handleLogout} />}
@@ -398,7 +399,7 @@ function StatusBadge({ status }: { status: ReviewStatus }) {
 
 // ─── DASHBOARD ───────────────────────────────────────────────────────────────
 
-function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews }: { stats: any, reviews: Review[], openReview: (r: Review) => void, onAddReview: (r: Review) => void, onNavigateReviews: () => void }) {
+function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews }: { stats: any, reviews: Review[], openReview: (r: Review) => void, onAddReview: (r: Review) => void, onNavigateReviews: (filter?: string) => void }) {
   const [testRunning, setTestRunning] = useState(false)
   const [testDone, setTestDone] = useState(false)
   const [testError, setTestError] = useState('')
@@ -576,7 +577,7 @@ function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews 
             </div>
             {msg.btnLabel && (
               <button
-                onClick={onNavigateReviews}
+                onClick={() => onNavigateReviews(msg.urgent ? 'negativ' : 'alle')}
                 style={{
                   padding: '10px 18px', borderRadius: '9px',
                   background: msg.urgent ? '#dc2626' : '#1e7a8c',
@@ -652,13 +653,12 @@ function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews 
         </div>
       )}
 
-      {/* Stats — 4 KPIs */}
+      {/* Stats — 3 KPIs, kein Duplikat zu Morning-Card */}
       <div className="grid4" style={{ marginBottom: '16px' }}>
         {[
           { label: 'Ø Bewertung', value: stats.avg, Icon: Star },
           { label: 'Beantwortet', value: stats.answered, Icon: CheckCircle },
           { label: 'Gesamt', value: stats.total, Icon: MessageSquare },
-          { label: 'Ausstehend', value: stats.pending, Icon: Clock },
         ].map((s) => (
           <div key={s.label} style={{
             background: '#fff', borderRadius: '12px', padding: '18px',
@@ -767,11 +767,11 @@ function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews 
 
 // ─── BEWERTUNGEN ─────────────────────────────────────────────────────────────
 
-function Reviews({ reviews, onStatusChange, onDelete, openReview }: { reviews: Review[], onStatusChange: (id: number, s: ReviewStatus) => void, onDelete: (id: number) => void, openReview: (r: Review) => void }) {
+function Reviews({ reviews, onStatusChange, onDelete, openReview, initialFilterStars = 'alle' }: { reviews: Review[], onStatusChange: (id: number, s: ReviewStatus) => void, onDelete: (id: number) => void, openReview: (r: Review) => void, initialFilterStars?: string }) {
   const [openAI, setOpenAI] = useState<number | null>(null)
   const [selected, setSelected] = useState<{[key: number]: number}>({})
   const [filterStatus, setFilterStatus] = useState('alle')
-  const [filterStars, setFilterStars] = useState('alle')
+  const [filterStars, setFilterStars] = useState(initialFilterStars)
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null)
   const [aiLoading, setAiLoading] = useState<number | null>(null)
   const [aiAnswers, setAiAnswers] = useState<{[key: number]: {label: string, text: string}[]}>({})
@@ -815,7 +815,8 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview }: { reviews: R
     if (filterStatus === 'ausstehend' && r.status !== 'Ausstehend') return false
     if (filterStatus === 'beantwortet' && r.status !== 'Beantwortet') return false
     if (filterStatus === 'abgelehnt' && r.status !== 'Abgelehnt') return false
-    if (filterStars !== 'alle' && r.stars !== parseInt(filterStars)) return false
+    if (filterStars === 'negativ' && r.stars > 2) return false
+    if (filterStars !== 'alle' && filterStars !== 'negativ' && r.stars !== parseInt(filterStars)) return false
     return true
   })
 
@@ -838,6 +839,7 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview }: { reviews: R
           </select>
           <select style={sel} value={filterStars} onChange={e => setFilterStars(e.target.value)}>
             <option value="alle">Alle Sterne</option>
+            <option value="negativ">1–2 Sterne (negativ)</option>
             <option value="5">5 Sterne</option>
             <option value="4">4 Sterne</option>
             <option value="3">3 Sterne</option>
