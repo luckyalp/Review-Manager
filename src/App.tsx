@@ -653,12 +653,13 @@ function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews 
         </div>
       )}
 
-      {/* Stats — 3 KPIs, kein Duplikat zu Morning-Card */}
+      {/* Stats — 4 KPIs */}
       <div className="grid4" style={{ marginBottom: '16px' }}>
         {[
           { label: 'Ø Bewertung', value: stats.avg, Icon: Star },
           { label: 'Beantwortet', value: stats.answered, Icon: CheckCircle },
           { label: 'Gesamt', value: stats.total, Icon: MessageSquare },
+          { label: 'Ausstehend', value: stats.pending, Icon: Clock },
         ].map((s) => (
           <div key={s.label} style={{
             background: '#fff', borderRadius: '12px', padding: '18px',
