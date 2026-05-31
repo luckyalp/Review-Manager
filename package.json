@@ -1,5 +1,5 @@
 {
-  "name": "review-manager",
+  "name": "rezpond",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -12,6 +12,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.106.1",
     "lucide-react": "^1.16.0",
+    "playwright": "^1.60.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
   },
