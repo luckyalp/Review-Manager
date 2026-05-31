@@ -113,7 +113,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       <table cellpadding="0" cellspacing="0" role="presentation">
         <tr>
           <td style="vertical-align: middle; width: 48px;">
-            <div style="background-color: ${petrolLight}; border-radius: 10px; width: 40px; height: 40px; line-height: 40px; text-align: center; font-size: 14px; font-weight: 700; color: #ffffff; letter-spacing: 0.5px;">RZ</div>
+            <div style="background-color: ${petrolLight}; border-radius: 10px; width: 40px; height: 40px; line-height: 40px; text-align: center; font-size: 22px;">⭐</div>
           </td>
           <td style="vertical-align: middle; padding-left: 12px;">
             <div style="color: #ffffff; font-size: 17px; font-weight: 700; letter-spacing: -0.2px;">Rezpond</div>
