@@ -330,7 +330,7 @@ function App() {
             </div>
           ) : (
             <>
-              {page === 'dashboard' && <Dashboard stats={stats} reviews={reviews} openReview={openReview} onAddReview={addManualReview} />}
+              {page === 'dashboard' && <Dashboard stats={stats} reviews={reviews} openReview={openReview} onAddReview={addManualReview} onNavigateReviews={() => navigate('reviews')} />}
               {page === 'reviews' && !selectedReview && <Reviews reviews={reviews} onStatusChange={updateReviewStatus} onDelete={deleteReview} openReview={openReview} />}
               {page === 'reviews' && selectedReview && <ReviewDetail review={selectedReview} onStatusChange={updateReviewStatus} onBack={() => setSelectedReview(null)} />}
               {page === 'analytics' && <Analytics reviews={reviews} />}
@@ -398,7 +398,7 @@ function StatusBadge({ status }: { status: ReviewStatus }) {
 
 // ─── DASHBOARD ───────────────────────────────────────────────────────────────
 
-function Dashboard({ stats, reviews, openReview, onAddReview }: { stats: any, reviews: Review[], openReview: (r: Review) => void, onAddReview: (r: Review) => void }) {
+function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews }: { stats: any, reviews: Review[], openReview: (r: Review) => void, onAddReview: (r: Review) => void, onNavigateReviews: () => void }) {
   const [testRunning, setTestRunning] = useState(false)
   const [testDone, setTestDone] = useState(false)
   const [testError, setTestError] = useState('')
@@ -436,6 +436,12 @@ function Dashboard({ stats, reviews, openReview, onAddReview }: { stats: any, re
 
   const recent = reviews.filter(r => r.status === 'Ausstehend')
 
+  // Morning-Card Berechnungen
+  const pendingCount = reviews.filter(r => r.status === 'Ausstehend').length
+  const newNegativeCount = reviews.filter(r => r.stars <= 2 && r.status === 'Ausstehend').length
+  const today = new Date().toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })
+  const todayCount = reviews.filter(r => formatDate(r.date) === today).length
+
   const distrib = [5,4,3,2,1].map(s => ({
     stars: s,
     count: reviews.filter(r => r.stars === s).length,
@@ -464,7 +470,6 @@ function Dashboard({ stats, reviews, openReview, onAddReview }: { stats: any, re
     }
 
     try {
-      // Schritt 1: Echte KI-Antworten generieren
       const repliesRes = await fetch('/api/generate-replies', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -478,7 +483,6 @@ function Dashboard({ stats, reviews, openReview, onAddReview }: { stats: any, re
         return
       }
 
-      // Schritt 2: Test-E-Mail mit echten Antworten senden
       const emailRes = await fetch('/api/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -511,7 +515,7 @@ function Dashboard({ stats, reviews, openReview, onAddReview }: { stats: any, re
   return (
     <div>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <h1 style={{ fontSize: '30px', fontWeight: '600', marginBottom: '4px', color: '#111827' }}>Dashboard</h1>
           <p style={{ color: '#6b7280', fontSize: '16px' }}>Übersicht Ihrer Google-Unternehmensbewertungen.</p>
@@ -520,13 +524,88 @@ function Dashboard({ stats, reviews, openReview, onAddReview }: { stats: any, re
           <button onClick={() => setShowAddForm(true)} style={{ padding: '8px 16px', background: '#0f4c5c', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', color: '#fff', fontWeight: '500' }}>
             ✏️ Bewertung hinzufügen
           </button>
-
         </div>
       </div>
 
+      {/* ── MORNING CARD — nur wenn Bewertungen vorhanden ── */}
+      {reviews.length > 0 && (
+        <div style={{
+          background: 'linear-gradient(135deg, #0f4c5c 0%, #155e75 100%)',
+          borderRadius: '16px',
+          padding: '18px 20px',
+          marginBottom: '16px',
+          boxShadow: '0 4px 16px rgba(15,76,92,0.25)',
+        }}>
+          <div style={{ fontSize: '15px', fontWeight: '600', color: '#e8f4f7', marginBottom: '14px' }}>
+            Guten Morgen 👋
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+            {/* Offene Bewertungen */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{
+                minWidth: '28px', height: '24px', borderRadius: '6px',
+                background: pendingCount > 0 ? '#fee2e2' : 'rgba(255,255,255,0.12)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '12px', fontWeight: '600', padding: '0 6px',
+                color: pendingCount > 0 ? '#991b1b' : '#a0c4cc',
+              }}>
+                {pendingCount}
+              </div>
+              <span style={{ fontSize: '13px', color: pendingCount > 0 ? '#fca5a5' : '#a0c4cc' }}>
+                {pendingCount === 1 ? 'Bewertung wartet auf Antwort' : 'Bewertungen warten auf Antwort'}
+              </span>
+            </div>
+            {/* Negative ohne Antwort */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{
+                minWidth: '28px', height: '24px', borderRadius: '6px',
+                background: newNegativeCount > 0 ? '#fef3c7' : 'rgba(255,255,255,0.12)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '12px', fontWeight: '600', padding: '0 6px',
+                color: newNegativeCount > 0 ? '#92400e' : '#a0c4cc',
+              }}>
+                {newNegativeCount}
+              </div>
+              <span style={{ fontSize: '13px', color: newNegativeCount > 0 ? '#fde68a' : '#a0c4cc' }}>
+                {newNegativeCount === 1 ? 'Negative Bewertung ohne Antwort (1–2★)' : 'Negative Bewertungen ohne Antwort (1–2★)'}
+              </span>
+            </div>
+            {/* Heute eingegangen */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{
+                minWidth: '28px', height: '24px', borderRadius: '6px',
+                background: 'rgba(255,255,255,0.12)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '12px', fontWeight: '600', padding: '0 6px',
+                color: '#d0e8ed',
+              }}>
+                {todayCount}
+              </div>
+              <span style={{ fontSize: '13px', color: '#a0c4cc' }}>
+                {todayCount === 1 ? 'Neue Bewertung heute' : 'Neue Bewertungen heute'}
+              </span>
+            </div>
+          </div>
+          {pendingCount > 0 && (
+            <button
+              onClick={onNavigateReviews}
+              style={{
+                width: '100%', padding: '10px', borderRadius: '9px',
+                background: '#1e7a8c', border: 'none', cursor: 'pointer',
+                fontSize: '13px', fontWeight: '600', color: '#ffffff',
+                fontFamily: 'inherit', display: 'flex', alignItems: 'center',
+                justifyContent: 'center', gap: '6px',
+              }}
+            >
+              Jetzt beantworten →
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Willkommens-Hinweis — nur beim ersten Login */}
       {showWelcome && (
-        <div style={{ background: 'linear-gradient(135deg, #f0f7f8, #e8f4f6)', border: '1px solid #a5c8d0', borderRadius: '14px', padding: '16px 20px', marginBottom: '20px', display: 'flex', alignItems: 'flex-start', gap: '14px', boxShadow: '0 2px 8px rgba(15,76,92,0.07), 0 1px 2px rgba(0,0,0,0.04)' }}>
+        <div style={{ background: 'linear-gradient(135deg, #f0f7f8, #e8f4f6)', border: '1px solid #a5c8d0', borderRadius: '14px', padding: '16px 20px', marginBottom: '16px', display: 'flex', alignItems: 'flex-start', gap: '14px', boxShadow: '0 2px 8px rgba(15,76,92,0.07), 0 1px 2px rgba(0,0,0,0.04)' }}>
           <span style={{ fontSize: '22px', flexShrink: 0, marginTop: '1px' }}>👋</span>
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: '600', fontSize: '15px', color: '#0f4c5c', marginBottom: '5px' }}>Herzlich willkommen bei Rezpond!</div>
@@ -587,17 +666,21 @@ function Dashboard({ stats, reviews, openReview, onAddReview }: { stats: any, re
       {/* Stats */}
       <div className="grid4" style={{ marginBottom: '16px' }}>
         {[
-          { label: 'Bewertungen gesamt', value: stats.total, Icon: MessageSquare },
-          { label: 'Ø Bewertung', value: stats.avg, Icon: Star },
           { label: 'Ausstehend', value: stats.pending, Icon: Clock },
+          { label: 'Ø Bewertung', value: stats.avg, Icon: Star },
           { label: 'Beantwortet', value: stats.answered, Icon: CheckCircle },
-        ].map(s => (
-          <div key={s.label} style={{ background: '#fff', borderRadius: '12px', padding: '18px', border: '1px solid #e5e7eb', boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)' }}>
+          { label: 'Gesamt', value: stats.total, Icon: MessageSquare },
+        ].map((s, i) => (
+          <div key={s.label} style={{
+            background: '#fff', borderRadius: '12px', padding: '18px',
+            border: i === 0 && stats.pending > 0 ? '1px solid #fca5a5' : '1px solid #e5e7eb',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)',
+          }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
               <div style={{ fontSize: '13px', color: '#6b7280' }}>{s.label}</div>
-              <s.Icon size={18} strokeWidth={1.8} color="#0f4c5c" />
+              <s.Icon size={18} strokeWidth={1.8} color={i === 0 && stats.pending > 0 ? '#dc2626' : '#0f4c5c'} />
             </div>
-            <div style={{ fontSize: '28px', fontWeight: '600', color: '#111827' }}>{s.value}</div>
+            <div style={{ fontSize: '28px', fontWeight: '600', color: i === 0 && stats.pending > 0 ? '#dc2626' : '#111827' }}>{s.value}</div>
           </div>
         ))}
       </div>
@@ -611,23 +694,6 @@ function Dashboard({ stats, reviews, openReview, onAddReview }: { stats: any, re
         <span style={{ fontSize: '12px', color: '#9ca3af' }}>Bewertungen können manuell hinzugefügt werden</span>
       </div>
 
-      {/* Test-E-Mail */}
-      <div style={{ background: 'linear-gradient(135deg, #f0f7f8, #e8f4f6)', borderRadius: '12px', border: '1px solid #a5c8d0', padding: '18px 20px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', boxShadow: '0 2px 8px rgba(15,76,92,0.07), 0 1px 2px rgba(0,0,0,0.04)' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-          <span style={{ fontSize: '22px' }}>📧</span>
-          <div>
-            <div style={{ fontWeight: '600', fontSize: '15px', marginBottom: '3px', color: '#0f4c5c' }}>Test-E-Mail senden</div>
-            <div style={{ fontSize: '13px', color: '#374151' }}>Schickt dir eine echte E-Mail — so siehst du auf dem Handy wie eine Bewertungs-Benachrichtigung aussieht.</div>
-            {testError && <div style={{ fontSize: '12px', color: '#ef4444', marginTop: '6px' }}>⚠️ {testError}</div>}
-            {testDone && <div style={{ fontSize: '12px', color: '#16a34a', marginTop: '6px' }}>✅ Test-E-Mail wurde gesendet!</div>}
-          </div>
-        </div>
-        <button onClick={runTest} disabled={testRunning}
-          style={{ padding: '9px 20px', background: testDone ? '#dcfce7' : '#0f4c5c', border: `1px solid ${testDone ? '#86efac' : '#0f4c5c'}`, borderRadius: '8px', cursor: testRunning ? 'default' : 'pointer', fontSize: '13px', fontFamily: 'inherit', color: testDone ? '#166534' : '#fff', fontWeight: '600', whiteSpace: 'nowrap' }}>
-          {testRunning ? '⏳ Wird gesendet...' : testDone ? '✅ Gesendet' : '📧 Test-E-Mail senden'}
-        </button>
-      </div>
-
       {/* Reviews + Distribution */}
       <div className="grid-dashboard">
         {/* Aktuelle Bewertungen */}
@@ -637,7 +703,11 @@ function Dashboard({ stats, reviews, openReview, onAddReview }: { stats: any, re
             <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>Neueste Bewertungen Ihrer Kunden</div>
           </div>
           <div style={{ padding: '12px' }}>
-            {recent.map(r => (
+            {recent.length === 0 ? (
+              <div style={{ padding: '24px', textAlign: 'center', color: '#9ca3af', fontSize: '13px' }}>
+                Keine offenen Bewertungen — alles beantwortet 🎉
+              </div>
+            ) : recent.map(r => (
               <div key={r.id} style={{ padding: '12px', borderRadius: '10px', border: '1px solid #f3f4f6', marginBottom: '8px', background: '#fafafa' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px', gap: '8px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -658,7 +728,6 @@ function Dashboard({ stats, reviews, openReview, onAddReview }: { stats: any, re
                   <button onClick={() => openReview(r)} style={{ padding: '6px 14px', background: '#0f4c5c', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontFamily: 'inherit', color: '#fff' }}>
                     Ansehen & Antworten
                   </button>
-
                 </div>
               </div>
             ))}
@@ -685,6 +754,23 @@ function Dashboard({ stats, reviews, openReview, onAddReview }: { stats: any, re
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Test-E-Mail — ganz unten */}
+      <div style={{ background: 'linear-gradient(135deg, #f0f7f8, #e8f4f6)', borderRadius: '12px', border: '1px solid #a5c8d0', padding: '18px 20px', marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', boxShadow: '0 2px 8px rgba(15,76,92,0.07), 0 1px 2px rgba(0,0,0,0.04)' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+          <span style={{ fontSize: '22px' }}>📧</span>
+          <div>
+            <div style={{ fontWeight: '600', fontSize: '15px', marginBottom: '3px', color: '#0f4c5c' }}>Test-E-Mail senden</div>
+            <div style={{ fontSize: '13px', color: '#374151' }}>Schickt dir eine echte E-Mail — so siehst du auf dem Handy wie eine Bewertungs-Benachrichtigung aussieht.</div>
+            {testError && <div style={{ fontSize: '12px', color: '#ef4444', marginTop: '6px' }}>⚠️ {testError}</div>}
+            {testDone && <div style={{ fontSize: '12px', color: '#16a34a', marginTop: '6px' }}>✅ Test-E-Mail wurde gesendet!</div>}
+          </div>
+        </div>
+        <button onClick={runTest} disabled={testRunning}
+          style={{ padding: '9px 20px', background: testDone ? '#dcfce7' : '#0f4c5c', border: `1px solid ${testDone ? '#86efac' : '#0f4c5c'}`, borderRadius: '8px', cursor: testRunning ? 'default' : 'pointer', fontSize: '13px', fontFamily: 'inherit', color: testDone ? '#166534' : '#fff', fontWeight: '600', whiteSpace: 'nowrap' }}>
+          {testRunning ? '⏳ Wird gesendet...' : testDone ? '✅ Gesendet' : '📧 Test-E-Mail senden'}
+        </button>
       </div>
     </div>
   )
