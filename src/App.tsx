@@ -64,6 +64,7 @@ function App() {
   const [reviewsLoading, setReviewsLoading] = useState(true)
   const [selectedReview, setSelectedReview] = useState<Review | null>(null)
   const [reviewsInitialFilter, setReviewsInitialFilter] = useState<string>('alle')
+  const [reviewsInitialStatusFilter, setReviewsInitialStatusFilter] = useState<string>('alle')
   const [onboardingStep, setOnboardingStep] = useState<number | null>(null)
   const [onboardingData, setOnboardingData] = useState({
     businessName: '', restaurantType: '',
@@ -141,7 +142,7 @@ function App() {
     loadReviews()
   }, [user])
 
-  const navigate = (id: string) => { setPage(id); setSelectedReview(null); setReviewsInitialFilter('alle') }
+  const navigate = (id: string) => { setPage(id); setSelectedReview(null); setReviewsInitialFilter('alle'); setReviewsInitialStatusFilter('alle') }
   const addManualReview = (r: Review) => { setReviews(prev => [r, ...prev]) }
   const openReview = (review: Review) => { setSelectedReview(review); setPage('reviews') }
 
@@ -213,11 +214,30 @@ function App() {
     localStorage.removeItem('rezpondSettings')
   }
 
+  // Trend-Berechnung: Ø dieser Monat vs. letzter Monat
+  const now = new Date()
+  const thisMonthReviews = reviews.filter(r => {
+    const d = new Date(r.date)
+    return !isNaN(d.getTime()) && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+  })
+  const lastMonthReviews = reviews.filter(r => {
+    const d = new Date(r.date)
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    return !isNaN(d.getTime()) && d.getMonth() === lastMonth.getMonth() && d.getFullYear() === lastMonth.getFullYear()
+  })
+  const avgThis = thisMonthReviews.length ? thisMonthReviews.reduce((s, r) => s + r.stars, 0) / thisMonthReviews.length : null
+  const avgLast = lastMonthReviews.length ? lastMonthReviews.reduce((s, r) => s + r.stars, 0) / lastMonthReviews.length : null
+  const avgTrend: 'up' | 'down' | 'neutral' =
+    avgThis !== null && avgLast !== null
+      ? avgThis > avgLast ? 'up' : avgThis < avgLast ? 'down' : 'neutral'
+      : 'neutral'
+
   const stats = {
     total: reviews.length,
     avg: reviews.length ? (reviews.reduce((s, r) => s + r.stars, 0) / reviews.length).toFixed(1) : '–',
     pending: reviews.filter(r => r.status === 'Ausstehend').length,
     answered: reviews.filter(r => r.status === 'Beantwortet').length,
+    avgTrend,
   }
 
   // ── Render-Logik ──
@@ -331,8 +351,17 @@ function App() {
             </div>
           ) : (
             <>
-              {page === 'dashboard' && <Dashboard stats={stats} reviews={reviews} openReview={openReview} onAddReview={addManualReview} onNavigateReviews={(filter?: string) => { setReviewsInitialFilter(filter || 'alle'); setPage('reviews'); setSelectedReview(null) }} />}
-              {page === 'reviews' && !selectedReview && <Reviews reviews={reviews} onStatusChange={updateReviewStatus} onDelete={deleteReview} openReview={openReview} initialFilterStars={reviewsInitialFilter} />}
+              {page === 'dashboard' && <Dashboard stats={stats} reviews={reviews} openReview={openReview} onAddReview={addManualReview} onNavigateReviews={(filter?: string) => {
+                if (filter === 'ausstehend') {
+                  setReviewsInitialStatusFilter('ausstehend')
+                  setReviewsInitialFilter('alle')
+                } else {
+                  setReviewsInitialFilter(filter || 'alle')
+                  setReviewsInitialStatusFilter('alle')
+                }
+                setPage('reviews'); setSelectedReview(null)
+              }} />}
+              {page === 'reviews' && !selectedReview && <Reviews reviews={reviews} onStatusChange={updateReviewStatus} onDelete={deleteReview} openReview={openReview} initialFilterStars={reviewsInitialFilter} initialFilterStatus={reviewsInitialStatusFilter} />}
               {page === 'reviews' && selectedReview && <ReviewDetail review={selectedReview} onStatusChange={updateReviewStatus} onBack={() => setSelectedReview(null)} />}
               {page === 'analytics' && <Analytics reviews={reviews} />}
               {page === 'settings' && <Settings onLogout={handleLogout} />}
@@ -655,24 +684,53 @@ function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews 
 
       {/* Stats — 4 KPIs */}
       <div className="grid4" style={{ marginBottom: '16px' }}>
-        {[
-          { label: 'Ø Bewertung', value: stats.avg, Icon: Star },
-          { label: 'Beantwortet', value: stats.answered, Icon: CheckCircle },
-          { label: 'Gesamt', value: stats.total, Icon: MessageSquare },
-          { label: 'Ausstehend', value: stats.pending, Icon: Clock },
-        ].map((s) => (
-          <div key={s.label} style={{
-            background: '#fff', borderRadius: '12px', padding: '18px',
-            border: '1px solid #e5e7eb',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-              <div style={{ fontSize: '13px', color: '#6b7280' }}>{s.label}</div>
-              <s.Icon size={18} strokeWidth={1.8} color="#0f4c5c" />
-            </div>
-            <div style={{ fontSize: '28px', fontWeight: '600', color: '#111827' }}>{s.value}</div>
+        {/* Ø Bewertung mit Trend-Pfeil */}
+        <div style={{ background: '#fff', borderRadius: '12px', padding: '18px', border: '1px solid #e5e7eb', boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+            <div style={{ fontSize: '13px', color: '#6b7280' }}>Ø Bewertung</div>
+            <Star size={18} strokeWidth={1.8} color="#0f4c5c" />
           </div>
-        ))}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ fontSize: '28px', fontWeight: '600', color: '#111827' }}>{stats.avg}</div>
+            {stats.avg !== '–' && (
+              <span style={{ fontSize: '18px', fontWeight: '700', lineHeight: 1, color: stats.avgTrend === 'up' ? '#16a34a' : stats.avgTrend === 'down' ? '#dc2626' : '#9ca3af' }}>
+                {stats.avgTrend === 'up' ? '↑' : stats.avgTrend === 'down' ? '↓' : '→'}
+              </span>
+            )}
+          </div>
+        </div>
+        {/* Beantwortet */}
+        <div style={{ background: '#fff', borderRadius: '12px', padding: '18px', border: '1px solid #e5e7eb', boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+            <div style={{ fontSize: '13px', color: '#6b7280' }}>Beantwortet</div>
+            <CheckCircle size={18} strokeWidth={1.8} color="#0f4c5c" />
+          </div>
+          <div style={{ fontSize: '28px', fontWeight: '600', color: '#111827' }}>{stats.answered}</div>
+        </div>
+        {/* Gesamt */}
+        <div style={{ background: '#fff', borderRadius: '12px', padding: '18px', border: '1px solid #e5e7eb', boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+            <div style={{ fontSize: '13px', color: '#6b7280' }}>Gesamt</div>
+            <MessageSquare size={18} strokeWidth={1.8} color="#0f4c5c" />
+          </div>
+          <div style={{ fontSize: '28px', fontWeight: '600', color: '#111827' }}>{stats.total}</div>
+        </div>
+        {/* Ausstehend — klickbar */}
+        <div
+          onClick={() => onNavigateReviews('ausstehend')}
+          onMouseOver={e => { if (stats.pending > 0) (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 14px rgba(15,76,92,0.18)' }}
+          onMouseOut={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)' }}
+          style={{ background: '#fff', borderRadius: '12px', padding: '18px', border: `1px solid ${stats.pending > 0 ? '#fbbf24' : '#e5e7eb'}`, boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)', cursor: stats.pending > 0 ? 'pointer' : 'default', transition: 'box-shadow 0.15s' }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+            <div style={{ fontSize: '13px', color: '#6b7280' }}>Ausstehend</div>
+            <Clock size={18} strokeWidth={1.8} color="#0f4c5c" />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ fontSize: '28px', fontWeight: '600', color: stats.pending > 0 ? '#92400e' : '#111827' }}>{stats.pending}</div>
+            {stats.pending > 0 && <span style={{ fontSize: '11px', color: '#92400e', fontWeight: '500' }}>→ öffnen</span>}
+          </div>
+        </div>
       </div>
 
       {/* Sync Status — Banner-Style */}
@@ -768,10 +826,10 @@ function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews 
 
 // ─── BEWERTUNGEN ─────────────────────────────────────────────────────────────
 
-function Reviews({ reviews, onStatusChange, onDelete, openReview, initialFilterStars = 'alle' }: { reviews: Review[], onStatusChange: (id: number, s: ReviewStatus) => void, onDelete: (id: number) => void, openReview: (r: Review) => void, initialFilterStars?: string }) {
+function Reviews({ reviews, onStatusChange, onDelete, openReview, initialFilterStars = 'alle', initialFilterStatus = 'alle' }: { reviews: Review[], onStatusChange: (id: number, s: ReviewStatus) => void, onDelete: (id: number) => void, openReview: (r: Review) => void, initialFilterStars?: string, initialFilterStatus?: string }) {
   const [openAI, setOpenAI] = useState<number | null>(null)
   const [selected, setSelected] = useState<{[key: number]: number}>({})
-  const [filterStatus, setFilterStatus] = useState('alle')
+  const [filterStatus, setFilterStatus] = useState(initialFilterStatus)
   const [filterStars, setFilterStars] = useState(initialFilterStars)
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null)
   const [aiLoading, setAiLoading] = useState<number | null>(null)
