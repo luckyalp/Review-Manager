@@ -250,6 +250,7 @@ Zielgefühl: locker, unkompliziert, natürlich — kein Aufheben, kein Drama.
 - Klingt wie jemand der kurz was sagt und dann aufhört.
 - NICHT nachdenklich. NICHT bedeutungsschwer. NICHT literarisch.
 - Emotionale Temperatur: nüchtern, beiläufig — aber nicht gleichgültig
+- STRIKTE REGEL: Trotz der Kürze darf NIEMALS das Subjekt fehlen. Schreibe "Ich verstehe..." oder "Wir verstehen...", NIEMALS nur "Verstehe...".
 
 SPRACHMUSTER VARIANTE 3 — echte Betreiber-Antworten:
 "Ich glaube du hast das Restaurant verwechselt. Wir sind in der 1. Etage 🙈"
@@ -376,7 +377,7 @@ Prüfe diese 3 Varianten nach folgenden Kriterien:
    → Wenn eine Variante dagegen verstößt, gilt sie als SCHWACH und MUSS neu geschrieben werden. Reduziere die Stelle auf die nackte, ehrliche und menschliche Tatsache (z. B. "Das war ein schwerer Fehler von uns. Punkt.").
 
 7. GRAMMATIK-CHECK:
-   Prüfe, ob eine Variante in abgehackte Telegramm-Sprache verfällt oder Wörter wie "Wir/Ich" weglässt (z. B. "Verstehen, dass..." / "Hoffen auf eine zweite Chance"). Jede Variante MUSS grammatikalisch vollständige Sätze enthalten. Wenn ein Pronomen fehlt → Variante als SCHWACH markieren und im Rewrite korrigieren.
+   Prüfe, ob eine Variante in abgehackte Telegramm-Sprache verfällt oder Wörter wie "Wir/Ich" weglässt (z. B. "Verstehen, dass..." / "Hoffen auf eine zweite Chance"). Dies gilt OHNE AUSNAHME für alle drei Varianten — auch für die kurze Variante 3. Jede Variante MUSS grammatikalisch vollständige Sätze enthalten. Wenn ein Pronomen fehlt → Variante als SCHWACH markieren und im Rewrite korrigieren.
 
 8. LÄNGEN-CHECK:
    - Haben Variante 1 und Variante 2 jeweils eine gesunde Länge von 3 bis 5 Sätzen?
