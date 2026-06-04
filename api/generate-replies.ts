@@ -144,10 +144,10 @@ VORGABEN ZUR SATZLÄNGE (BINDEND):
 
 BEISPIEL was der Unterschied ist:
 SCHLECHT (formuliert): "Wenn das Essen kalt kommt und der Service nicht mitgeht, bleibt vom Abend leider nicht viel übrig."
-GUT (gesprochen): "Kaltes Essen geht einfach nicht. Und wenn der Service dann auch noch danebenliegt, bleibt nicht mehr viel übrig. Verstehen wir."
+GUT (gesprochen): "Kaltes Essen geht einfach nicht. Und wenn der Service dann auch noch danebenliegt, bleibt am Ende einfach nicht mehr viel übrig. Wir verstehen vollkommen, dass das frustrierend ist."
 
 SCHLECHT (formuliert): "Wir verstehen deine Enttäuschung und nehmen dein Feedback ernst."
-GUT (gesprochen): "Das klingt nach keinem guten Abend. Gerade bei den Preisen darf man erwarten, dass Essen heiß ankommt."
+GUT (gesprochen): "Das klingt nach keinem guten Abend. Gerade bei den Preisen darf man absolut erwarten, dass das Essen heiß ankommt."
 
 Die Antworten sollen wirken: jemand sagt wirklich etwas — nicht gut formulierte Kommunikation.
 Niemals nach PR, nach Corporate-Sprache, nach Support-Text oder nach typischer KI klingen.
