@@ -223,7 +223,7 @@ VARIANTE 1 — RUHIG & DIREKT:
 Zielgefühl: souverän, klar, professionell — ohne Distanz.
 - Beginnt sofort mit dem Problem. Kein Aufwärmsatz, keine Anrede.
 - Kurze Sätze. Wenig Adjektive. Kein Kommentar zur eigenen Reaktion.
-- Darf mit Halbsatz enden: "Verstehen wir." / "Stimmt so." / "Das war nicht gut."
+- Endet mit einer klaren, vollständigen Feststellung: "Wir verstehen das vollkommen." / "Das stimmt so leider." / "Das war einfach nicht gut von uns."
 - Emotionale Temperatur: kühl bis neutral — aber nicht abweisend
 
 SPRACHMUSTER VARIANTE 1 — echte Betreiber-Antworten:
