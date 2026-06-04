@@ -350,9 +350,8 @@ Prüfe diese 3 Varianten nach folgenden Kriterien:
    - Variante 3 sollte kurz & beiläufig sein (knappe Feststellung, max. 2 Sätze, nichts ausformuliert — KEIN literarisch-dichter Ton)
    Wenn zwei Varianten denselben Einstiegstyp haben → eine ist schwach.
 
-2. TEMPLATE-SPRACHE: Klingt eine Variante nach KI-Standard oder Corporate-Sprache?
-   Verboten: "entspricht nicht unserem Anspruch" / "nehmen wir sehr ernst" /
-   "Das tut uns sehr leid" / "Vielen Dank für Ihr Feedback" / "Maßnahmen ergriffen"
+2. TEMPLATE-SPRACHE & COLD PHRASES: Klingt eine Variante nach KI-Standard, Support-Ausrede oder Corporate-Sprache?
+   Verboten: "entspricht nicht unserem Anspruch" / "nehmen wir sehr ernst" / "Das tut uns sehr leid" / "Vielen Dank für Ihr Feedback" / "Maßnahmen ergriffen"
 
 3. SPIEGELUNG: Greift mindestens eine Variante konkret auf einen Moment der Bewertung ein?
    Schlecht: "Wir verstehen Ihre Frustration."
@@ -362,13 +361,11 @@ Prüfe diese 3 Varianten nach folgenden Kriterien:
 
 5. ABSCHLUSS: Enden alle mit: ${signature}?
 
-6. ANTI-HALLUZINATIONS-CHECK (STRIKTES VERBOT):
-   Vergleiche jede Variante mit der originalen BEWERTUNG oben.
-   Enthält eine Variante eine Rechtfertigung, Ausrede oder Begründung, die NICHT im Originaltext des Gastes steht?
-   Typische erfundene Ursachen: "wir hatten viel zu tun" / "Personalengpass" / "volles Haus" / "Küche überlastet" / "stressiger Tag" / "unerwartet viele Gäste" / "besonders ausgelastet"
-   → Jede erfundene Ursache ist VERBOTEN — egal wie plausibel sie klingt.
-   → Wenn eine Variante eine solche Ursache enthält, gilt sie als SCHWACH und MUSS neu geschrieben werden.
-   → Reduziere auf die nackte Tatsache: z. B. "Das war ein Fehler von uns." — ohne jede Begründung die der Gast nicht selbst geliefert hat.
+6. STRIKTER ANTI-AUSREDEN- & PHRASEN-CHECK:
+   Vergleiche die Varianten mit der originalen BEWERTUNG.
+   - Es ist ABSOLUT VERBOTEN, Rechtfertigungen, Ausreden oder Hintergründe zu erfinden, die der Gast nicht selbst genannt hat (z. B. "wir hatten viel zu tun", "Personalengpass", "volles Haus", "Küche überlastet", "Stress").
+   - Es ist ebenfalls VERBOTEN, typische Support-Floskeln zu nutzen wie: "Wir haben das im Team direkt besprochen", "Wir haben intern bereits reagiert" oder "Wir schauen uns das intern an". Das klingt nach Textbaustein.
+   → Wenn eine Variante dagegen verstößt, gilt sie als SCHWACH und MUSS neu geschrieben werden. Reduziere die Stelle auf die nackte, ehrliche und menschliche Tatsache (z. B. "Das war ein schwerer Fehler von uns. Punkt.").
 
 ==================================================
 ENTSCHEIDUNG — DU BIST KORREKTOR, NICHT ZWEITER AUTOR:
