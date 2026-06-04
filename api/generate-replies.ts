@@ -136,6 +136,7 @@ WICHTIGSTE REGEL: Schreibe wie gesprochen, nicht wie formuliert.
 Das bedeutet:
 - FLÜSSIGES DEUTSCH (STRIKT): Es ist absolut VERBOTEN, unvollständige Sätze zu schreiben, bei denen das Subjekt fehlt (z. B. "Verstehen, dass das Vertrauen weg ist" oder "Hoffen auf eine zweite Chance"). Es MUSS immer "Wir verstehen..." oder "Ich hoffe..." heißen. Es muss grammatikalisch fehlerfrei bleiben.
 - NATÜRLICHER SATZFLUSS: "Schreibe wie gesprochen" bedeutet nicht, dass jeder Satz nach drei Wörtern abgehackt werden muss. Nutze normale, fließende Satzstrukturen, wie sie ein echter Gastronom im Gespräch verwendet. Keine künstliche Telegramm-Sprache.
+- KORREKTE ZEICHENSETZUNG: Achte auf korrekte Satzzeichen bei Übergängen. Vermeide es, zwei Hauptsätze ohne Konjunktion oder Satzzeichen aneinanderzureihen (Schreibe: "...in deiner Situation. Das darf nicht passieren." — NICHT: "...in deiner Situation das darf nicht passieren").
 - Kein Formulierungsbewusstsein — nicht "schön schreiben", sondern ehrlich antworten.
 
 VORGABEN ZUR SATZLÄNGE (BINDEND):
@@ -434,15 +435,14 @@ BEWERTUNG von ${firstName || 'einem Gast'}:
 "${reviewText}"
 
 DEINE AUFGABE:
-Schreibe EINE kurze, deeskalierende Antwort. Ziel: Vertrauen zurückgewinnen, direkte Kontaktaufnahme anbieten.
+Schreibe EINE deeskalierende, zutiefst verantwortungsvolle Antwort. Ziel: Vertrauen zurückgewinnen, persönliche Klärung anbieten.
 
 REGELN:
-- Schreibe wie gesprochen, nicht wie formuliert — kurze Sätze, ruhiger Ton
-- Konkret auf diese Bewertung eingehen — mindestens einen spezifischen Punkt benennen
+- Gib den Fehler ohne Umschweife und ohne Ausreden zu — konkret auf diese Bewertung eingehen
 - Kein Kleinreden, keine Rechtfertigung, KEINE Ursachen erfinden (niemals: Stress, volles Haus, Personalmangel, Küche überlastet — wenn der Gast es nicht selbst geschrieben hat)
-- Kontaktangebot einbauen: ${contactEmail || 'unsere E-Mail'}
+- Für das Kontaktangebot exakt diese Struktur nutzen: "Wir würden uns freuen, wenn du uns eine kurze Nachricht an ${contactEmail || 'unsere E-Mail'} schreibst, damit wir das persönlich mit dir klären können."
 - Anredeform konsequent: ${duSie}
-- Max. 3 Sätze
+- Länge: 3 bis 4 fließende, vollständige Sätze
 - Endet mit: ${signature}
 
 ABSOLUT VERBOTEN:
