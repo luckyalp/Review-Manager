@@ -362,6 +362,14 @@ Prüfe diese 3 Varianten nach folgenden Kriterien:
 
 5. ABSCHLUSS: Enden alle mit: ${signature}?
 
+6. ANTI-HALLUZINATIONS-CHECK (STRIKTES VERBOT):
+   Vergleiche jede Variante mit der originalen BEWERTUNG oben.
+   Enthält eine Variante eine Rechtfertigung, Ausrede oder Begründung, die NICHT im Originaltext des Gastes steht?
+   Typische erfundene Ursachen: "wir hatten viel zu tun" / "Personalengpass" / "volles Haus" / "Küche überlastet" / "stressiger Tag" / "unerwartet viele Gäste" / "besonders ausgelastet"
+   → Jede erfundene Ursache ist VERBOTEN — egal wie plausibel sie klingt.
+   → Wenn eine Variante eine solche Ursache enthält, gilt sie als SCHWACH und MUSS neu geschrieben werden.
+   → Reduziere auf die nackte Tatsache: z. B. "Das war ein Fehler von uns." — ohne jede Begründung die der Gast nicht selbst geliefert hat.
+
 ==================================================
 ENTSCHEIDUNG — DU BIST KORREKTOR, NICHT ZWEITER AUTOR:
 ==================================================
@@ -417,7 +425,7 @@ Schreibe EINE kurze, deeskalierende Antwort. Ziel: Vertrauen zurückgewinnen, di
 REGELN:
 - Schreibe wie gesprochen, nicht wie formuliert — kurze Sätze, ruhiger Ton
 - Konkret auf diese Bewertung eingehen — mindestens einen spezifischen Punkt benennen
-- Kein Kleinreden, keine Rechtfertigung
+- Kein Kleinreden, keine Rechtfertigung, KEINE Ursachen erfinden (niemals: Stress, volles Haus, Personalmangel, Küche überlastet — wenn der Gast es nicht selbst geschrieben hat)
 - Kontaktangebot einbauen: ${contactEmail || 'unsere E-Mail'}
 - Anredeform konsequent: ${duSie}
 - Max. 3 Sätze
