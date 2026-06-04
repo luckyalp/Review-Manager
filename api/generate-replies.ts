@@ -141,6 +141,8 @@ Das bedeutet:
   GUT: "...hätte niemals passieren dürfen. Gerade in deiner Situation ist das inakzeptabel."
   SCHLECHT: "...in deiner Situation das darf nicht passieren."
   GUT: "...in deiner Situation. Das darf nicht passieren."
+  SCHLECHT: "...verlassen können ohne wenn und aber."
+  GUT: "...verlassen können, ohne wenn und aber."
 - Kein Formulierungsbewusstsein — nicht "schön schreiben", sondern ehrlich antworten.
 
 VORGABEN ZUR SATZLÄNGE (BINDEND):
@@ -447,6 +449,11 @@ REGELN:
 - Für das Kontaktangebot exakt diese Struktur nutzen: "Wir würden uns freuen, wenn du uns eine kurze Nachricht an ${contactEmail || 'unsere E-Mail'} schreibst, damit wir das persönlich mit dir klären können."
 - Anredeform konsequent: ${duSie}
 - Länge: 3 bis 4 fließende, vollständige Sätze
+- KORREKTE ZEICHENSETZUNG: Jeder neue Hauptsatz beginnt nach einem Punkt. Niemals zwei Hauptsätze ohne Satzzeichen aneinanderreihen.
+  SCHLECHT: "...hätte niemals passieren dürfen gerade in deiner Situation ist das inakzeptabel."
+  GUT: "...hätte niemals passieren dürfen. Gerade in deiner Situation ist das inakzeptabel."
+  SCHLECHT: "...verlassen können gerade bei uns."
+  GUT: "...verlassen können, gerade bei uns."
 - Endet mit: ${signature}
 
 ABSOLUT VERBOTEN:
