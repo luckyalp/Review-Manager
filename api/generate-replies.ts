@@ -288,6 +288,10 @@ ABSOLUT VERBOTEN (alle Varianten):
 - "Wir arbeiten daran" ohne konkreten Inhalt
 - "intern daran arbeiten"
 - "Maßnahmen ergriffen" / "Maßnahmen wurden ergriffen"
+- "Wir haben intern nachgeschärft" / "nachschärfen"
+- "Wir haben das Team sensibilisiert" / "das Team sensibilisieren"
+- "Das entspricht nicht unserem Anspruch"
+- "Wir haben das intern besprochen" / "intern analysiert"
 - "Das nehmen wir ernst" / "Das nehmen wir sehr ernst"
 - "Wir versichern" / "es wurde versichert"
 - "Wir verstehen deine/Ihre Enttäuschung" — zu Support-mäßig
