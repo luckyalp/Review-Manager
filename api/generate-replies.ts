@@ -351,8 +351,11 @@ Prüfe diese 3 Varianten nach folgenden Kriterien:
    - Variante 3 sollte kurz & beiläufig sein (knappe Feststellung, max. 2 Sätze, nichts ausformuliert — KEIN literarisch-dichter Ton)
    Wenn zwei Varianten denselben Einstiegstyp haben → eine ist schwach.
 
-2. TEMPLATE-SPRACHE & COLD PHRASES: Klingt eine Variante nach KI-Standard, Support-Ausrede oder Corporate-Sprache?
-   Verboten: "entspricht nicht unserem Anspruch" / "nehmen wir sehr ernst" / "Das tut uns sehr leid" / "Vielen Dank für Ihr Feedback" / "Maßnahmen ergriffen"
+2. TEMPLATE-SPRACHE & AUSREDEN-SYNONYME (STRIKT):
+   Klingt eine Variante nach KI-Standard, Support-Floskel oder Corporate-PR?
+   - Es ist absolut VERBOTEN, Phrasen zu nutzen, die Handlungsfähigkeit vortäuschen oder wie Textbausteine wirken.
+   - Lösche oder korrigiere jede Formulierung wie: "Wir haben intern nachgeschärft" / "Wir haben das Team sensibilisiert" / "Wir haben das intern besprochen" / "Maßnahmen wurden ergriffen" / "entspricht nicht unserem Anspruch" / "nehmen wir sehr ernst"
+   → Ersatzlos streichen oder durch echtes, bodenständiges Deutsch ersetzen (z. B. "Das war Mist von uns, Punkt." oder "Wir passen ab jetzt doppelt auf.").
 
 3. SPIEGELUNG: Greift mindestens eine Variante konkret auf einen Moment der Bewertung ein?
    Schlecht: "Wir verstehen Ihre Frustration."
