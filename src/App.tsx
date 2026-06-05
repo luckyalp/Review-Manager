@@ -1394,20 +1394,6 @@ function Analytics({ reviews, userId }: { reviews: Review[], userId?: string }) 
           <h1 style={{ fontSize: '30px', fontWeight: '600', marginBottom: '4px', color: '#111827' }}>Insights</h1>
           <p style={{ color: '#6b7280', fontSize: '16px' }}>Auswertung & KI-Analyse Ihrer Bewertungen.</p>
         </div>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <select
-            value={zeitraum}
-            onChange={e => setZeitraum(e.target.value as '30' | '90' | 'all')}
-            style={{ padding: '9px 12px', border: '1px solid #e2ddd8', borderRadius: '8px', fontSize: '14px', fontFamily: 'inherit', background: '#fff', color: '#111827', cursor: 'pointer' }}
-          >
-            <option value="30">Letzte 30 Tage</option>
-            <option value="90">Letzte 90 Tage</option>
-            <option value="all">Alle Bewertungen</option>
-          </select>
-          <button onClick={startAI} disabled={aiLoading} style={{ padding: '9px 18px', background: aiLoading ? '#6b7280' : '#0f4c5c', color: '#fff', border: 'none', borderRadius: '8px', cursor: aiLoading ? 'not-allowed' : 'pointer', fontSize: '14px', fontFamily: 'inherit', fontWeight: '500' }}>
-            {aiLoading ? '⏳ Analysiert...' : '✨ KI-Analyse starten'}
-          </button>
-        </div>
       </div>
 
       {/* 5 Stat Cards */}
@@ -1678,7 +1664,21 @@ function Analytics({ reviews, userId }: { reviews: Review[], userId?: string }) 
           <div style={{ padding: '48px', textAlign: 'center' }}>
             <div style={{ fontSize: '32px', marginBottom: '12px' }}>✨</div>
             <div style={{ fontWeight: '600', fontSize: '16px', marginBottom: '6px', color: '#111827' }}>KI-Analyse noch nicht gestartet</div>
-            <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>Zeitraum oben auswählen und auf "KI-Analyse starten" klicken — Gemini wertet alle Bewertungen aus und liefert konkrete Handlungsempfehlungen.</div>
+            <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '20px' }}>Zeitraum wählen und Analyse starten — Gemini wertet alle Bewertungen aus und liefert konkrete Handlungsempfehlungen.</div>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'center' }}>
+              <select
+                value={zeitraum}
+                onChange={e => setZeitraum(e.target.value as '30' | '90' | 'all')}
+                style={{ padding: '9px 32px 9px 12px', border: '1px solid #e2ddd8', borderRadius: '8px', fontSize: '14px', fontFamily: 'inherit', background: '#fff', color: '#111827', cursor: 'pointer', appearance: 'auto' }}
+              >
+                <option value="30">Letzte 30 Tage</option>
+                <option value="90">Letzte 90 Tage</option>
+                <option value="all">Alle Bewertungen</option>
+              </select>
+              <button onClick={startAI} disabled={aiLoading} style={{ padding: '9px 18px', background: '#0f4c5c', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontFamily: 'inherit', fontWeight: '500' }}>
+                ✨ KI-Analyse starten
+              </button>
+            </div>
           </div>
         )}
         {aiLoading && (
@@ -1695,11 +1695,22 @@ function Analytics({ reviews, userId }: { reviews: Review[], userId?: string }) 
         )}
         {aiDone && !aiLoading && (
           <div>
-            <div style={{ padding: '16px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ padding: '16px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
               <span>✨ KI-Analyse Ergebnis</span>
-              <span style={{ fontSize: '12px', fontWeight: '400', color: '#6b7280' }}>
-                {zeitraum === '30' ? 'Letzte 30 Tage' : zeitraum === '90' ? 'Letzte 90 Tage' : 'Alle Bewertungen'}
-              </span>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <select
+                  value={zeitraum}
+                  onChange={e => setZeitraum(e.target.value as '30' | '90' | 'all')}
+                  style={{ padding: '6px 10px', border: '1px solid #e2ddd8', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', background: '#fff', color: '#111827', cursor: 'pointer', appearance: 'auto' }}
+                >
+                  <option value="30">Letzte 30 Tage</option>
+                  <option value="90">Letzte 90 Tage</option>
+                  <option value="all">Alle Bewertungen</option>
+                </select>
+                <button onClick={startAI} disabled={aiLoading} style={{ padding: '6px 14px', background: '#0f4c5c', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', fontWeight: '500' }}>
+                  {aiLoading ? '⏳' : '↺ Neu starten'}
+                </button>
+              </div>
             </div>
             <div style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {empfehlungen.length > 0 && (
