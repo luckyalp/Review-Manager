@@ -463,12 +463,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       const parsed = JSON.parse(generatorRaw_str)
       if (parsed._system && parsed._user) {
-        generatorRaw = await callGemini(parsed._user, parsed._system)
+        generatorRaw = await callClaude(parsed._user, parsed._system)
       } else {
-        generatorRaw = await callGemini(generatorRaw_str)
+        generatorRaw = await callClaude(generatorRaw_str)
       }
     } catch {
-      generatorRaw = await callGemini(generatorRaw_str)
+      generatorRaw = await callClaude(generatorRaw_str)
     }
 
     const generatedVariants = parseVariants(generatorRaw)
@@ -485,12 +485,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         try {
           const recoveryParsed = JSON.parse(recoveryPrompt_str)
           if (recoveryParsed._system && recoveryParsed._user) {
-            recoveryRaw = await callGemini(recoveryParsed._user, recoveryParsed._system)
+            recoveryRaw = await callClaude(recoveryParsed._user, recoveryParsed._system)
           } else {
-            recoveryRaw = await callGemini(recoveryPrompt_str)
+            recoveryRaw = await callClaude(recoveryPrompt_str)
           }
         } catch {
-          recoveryRaw = await callGemini(recoveryPrompt_str)
+          recoveryRaw = await callClaude(recoveryPrompt_str)
         }
         let recoveryJson = recoveryRaw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
         const rs = recoveryJson.indexOf('{')
