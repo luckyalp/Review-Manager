@@ -5,7 +5,7 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY
 
 function classify(rating: number, reviewText: string) {
   const wordCount = reviewText.trim().split(/\s+/).filter(Boolean).length
-  const hasText = wordCount >= 8
+  const hasText = wordCount >= 6
   if (!hasText && rating >= 4) return 'EMPTY_POSITIVE'
   if (!hasText && rating <= 2) return 'EMPTY_NEGATIVE'
   if (rating >= 4) return 'CONTENT_POSITIVE'
