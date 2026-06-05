@@ -13,11 +13,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).send('Kein Code erhalten')
   }
 
-  const redirectUri = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}/api/google-callback`
-    : 'http://localhost:5173/api/google-callback'
+  const redirectUri = 'https://review-manager-mu.vercel.app/api/google-callback'
 
-  // Token holen
   const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -36,7 +33,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).send('Token-Fehler: ' + JSON.stringify(tokenData))
   }
 
-  // Token in Supabase speichern
   await supabase.from('google_tokens').upsert({
     user_id: userId as string,
     access_token: tokenData.access_token,
@@ -45,6 +41,5 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     updated_at: new Date().toISOString(),
   }, { onConflict: 'user_id' })
 
-  // Zurück zur App
   res.redirect('/?google=connected')
 }
