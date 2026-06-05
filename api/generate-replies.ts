@@ -205,7 +205,7 @@ BEWERTUNG (${rating} Sterne):
 ${alreadyHandled}
 
 ${slot4}
-Abschluss-Signatur: ${signature}
+Abschluss: Waehle passend zum Ton "Viele Gruesse, ${signature}" oder "Herzliche Gruesse, ${signature}" oder "Beste Gruesse, ${signature}"
 
 Schreibe 3 Varianten:
 Variante 1 – Direkt & Ehrlich: Anredeform Du/dein. Direkt, klar.
@@ -454,47 +454,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const generatedVariants = parseVariants(generatorRaw)
 
-    // ── SCHRITT 2: Judge (nur für CONTENT-Modi, nicht für EMPTY) ──────────
+    // ── SCHRITT 2: Judge deaktiviert — Gemini Output direkt verwenden ───────
     const mode = classify(stars, reviewText)
-    let finalVariants = generatedVariants
-
-    if (mode !== 'EMPTY_POSITIVE' && mode !== 'EMPTY_NEGATIVE') {
-      const judgePrompt = buildJudgePrompt(generatedVariants, reviewText, salutation, signature)
-      const judgeRaw = await callClaude(judgePrompt)
-
-      // Judge patcht nur die gemeldete schwache Variante — Rest bleibt Original
-      let judgeJson = judgeRaw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
-      const s = judgeJson.indexOf('{')
-      const e = judgeJson.lastIndexOf('}')
-
-      if (s !== -1 && e !== -1) {
-        judgeJson = judgeJson.substring(s, e + 1)
-        const judgeResult = JSON.parse(judgeJson)
-        const cleanText = (t: string) => t.replace(/\n\n/g, ' ').replace(/\n/g, ' ').trim()
-        const changed: number | null = judgeResult.changed ?? null
-
-        if (changed === 1 && judgeResult.variant1?.text) {
-          finalVariants = [
-            { label: judgeResult.variant1.label || generatedVariants[0].label, text: cleanText(judgeResult.variant1.text) },
-            generatedVariants[1],
-            generatedVariants[2],
-          ]
-        } else if (changed === 2 && judgeResult.variant2?.text) {
-          finalVariants = [
-            generatedVariants[0],
-            { label: judgeResult.variant2.label || generatedVariants[1].label, text: cleanText(judgeResult.variant2.text) },
-            generatedVariants[2],
-          ]
-        } else if (changed === 3 && judgeResult.variant3?.text) {
-          finalVariants = [
-            generatedVariants[0],
-            generatedVariants[1],
-            { label: judgeResult.variant3.label || generatedVariants[2].label, text: cleanText(judgeResult.variant3.text) },
-          ]
-        }
-        // changed === null → finalVariants bleibt unverändert (Generator-Output)
-      }
-    }
+    const finalVariants = generatedVariants
 
     // ── SCHRITT 3: Recovery (nur bei 1–2 Sternen) ─────────────────────────
     if (stars <= 2) {
