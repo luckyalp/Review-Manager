@@ -18,6 +18,21 @@
   - 3 → "Kurz & beiläufig"
   - recovery → "Deeskalierend"
 - Mikrokalibrierung: Sprachmuster echter Gastronomie-Kommunikation
+- **KI-Engine auf Gemini 3 Flash Preview migriert** (Generator + Recovery, via Google REST API)
+  - Judge-Layer deaktiviert — Gemini Output wird direkt verwendet
+  - System/User-Prompt-Split für echte `systemInstruction`-Übergabe an die API
+  - Slot-Architektur (5 Slots: Stoßdämpfer → Abstraktion → Commitment → Brückenbauer → Abschluss)
+  - Anredeform (Du/Sie) einheitlich aus Profil-Settings für alle Varianten
+  - Recovery ebenfalls auf Gemini umgestellt (kein Claude mehr aktiv)
+  - Temperatur: 0.7 für natürlichere Ausgabe
+- **Neue Varianten-Struktur:**
+  - 1 → "Direkt & Ehrlich" (locker, direkt)
+  - 2 → "Ruhig & Professionell" (empathisch, Mensch zuerst)
+  - 3 → "Fokus auf Klärung" (kurz, Kontaktkanal im Vordergrund)
+  - recovery → "Deeskalierend"
+- **E-Mail-System vollständig implementiert** (send-email.ts + confirm-reply.ts)
+  - Zeigt Gemini-Antworten automatisch
+  - RESEND_API_KEY muss noch in Vercel eingetragen werden
 
 ---
 
@@ -100,7 +115,8 @@
 - Frontend: React + TypeScript (Vite)
 - Backend: Vercel Serverless Functions
 - Datenbank: Supabase (PostgreSQL)
-- KI: Claude API (claude-sonnet-4-5)
-- E-Mail: Resend (konfiguriert, Key fehlt noch)
+- KI: Gemini 3 Flash Preview (Google Generative AI REST API) — Generator + Recovery
+- KI Fallback: Claude Sonnet 4-6 (Anthropic) — Funktion im Code vorhanden, nicht aktiv
+- E-Mail: Resend (konfiguriert, RESEND_API_KEY in Vercel einzutragen)
 - Hosting: Vercel
 - Code: GitHub (luckyalp/Review-Manager)
