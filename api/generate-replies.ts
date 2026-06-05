@@ -43,11 +43,17 @@ function buildPrompt(reviewText: string, rating: number, reviewerName: string, s
       ? 'Antworte auf Deutsch und fuege direkt danach eine englische Uebersetzung in Klammern hinzu.'
       : 'Antworte auf Deutsch.'
 
-  const nameRule = firstName
-    ? `PERSONALISIERUNG (Vorname: ${firstName} — immer grossschreiben, auch wenn kleingeschrieben):
+  // Ersten Buchstaben gross, Rest klein — verhindert HEIKE-in-Caps-Bug
+  const firstNameCapitalized = firstName
+    ? firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase()
+    : ''
+
+  const nameRule = firstNameCapitalized
+    ? `PERSONALISIERUNG:
 - Variante 1 (Locker/Du): kein Name — direkt ins Thema
-- Variante 2 (Hoefl./Sie): beginnt mit "Hallo ${firstName},"
-- Variante 3 (Detektiv): kein Name — direkt die Frage`
+- Variante 2 (Hoefl./Sie): beginnt mit "Hallo ${firstNameCapitalized},"
+- Variante 3: kein Name — direkt ins Thema
+Schreibe den Namen IMMER genau so: ${firstNameCapitalized} — nie in Grossbuchstaben, nie in Kleinbuchstaben.`
     : 'PERSONALISIERUNG: Kein Name bekannt — alle drei ohne persoenliche Anrede'
 
   const context = [
@@ -205,7 +211,7 @@ BEWERTUNG (${rating} Sterne):
 ${alreadyHandled}
 
 ${slot4}
-Abschluss: Waehle passend zum Ton "Viele Gruesse, ${signature}" oder "Herzliche Gruesse, ${signature}" oder "Beste Gruesse, ${signature}"
+Abschluss: Waehle passend zum Ton "Viele Grüße, ${signature}" oder "Herzliche Grüße, ${signature}" oder "Beste Grüße, ${signature}"
 
 Schreibe 3 Varianten:
 Variante 1 – Direkt & Ehrlich: Anredeform Du/dein. Direkt, klar.
