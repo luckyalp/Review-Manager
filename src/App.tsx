@@ -1206,6 +1206,11 @@ function Analytics({ reviews, userId }: { reviews: Review[], userId?: string }) 
   const [aiStarted, setAiStarted] = useState(false)
   const [aiLoading, setAiLoading] = useState(false)
   const [aiDone, setAiDone] = useState(false)
+  const [aiError, setAiError] = useState<string | null>(null)
+  const [zeitraum, setZeitraum] = useState<'30' | '90' | 'all'>('30')
+  const [positiveThemenAI, setPositiveThemenAI] = useState<string[]>([])
+  const [negativThemenAI, setNegativThemenAI] = useState<string[]>([])
+  const [empfehlungen, setEmpfehlungen] = useState<string[]>([])
   const [variantStats, setVariantStats] = useState<{label: string, index: string, count: number}[]>([])
   const [ratingBreakdown, setRatingBreakdown] = useState<Record<number, Record<string, number>>>({})
 
@@ -1250,10 +1255,50 @@ function Analytics({ reviews, userId }: { reviews: Review[], userId?: string }) 
   const rate = total ? Math.round(answered / total * 100) : 0
   const avg = total ? (reviews.reduce((s, r) => s + r.stars, 0) / total).toFixed(1) : '–'
 
-  const positiveThemen: { thema: string, anzahl: number }[] = []
-  const negativThemen: { thema: string, anzahl: number }[] = []
+  const startAI = async () => {
+    setAiStarted(true)
+    setAiLoading(true)
+    setAiDone(false)
+    setAiError(null)
 
-  const startAI = () => { setAiStarted(true); setAiLoading(true); setTimeout(() => { setAiLoading(false); setAiDone(true) }, 3000) }
+    // Bewertungen nach Zeitraum filtern
+    const now = new Date()
+    const filtered = reviews.filter(r => {
+      if (zeitraum === 'all') return true
+      const days = zeitraum === '30' ? 30 : 90
+      const cutoff = new Date(now)
+      cutoff.setDate(cutoff.getDate() - days)
+      const rd = new Date(r.date)
+      return rd >= cutoff
+    })
+
+    if (filtered.length === 0) {
+      setAiError('Keine Bewertungen im gewählten Zeitraum.')
+      setAiLoading(false)
+      return
+    }
+
+    try {
+      const response = await fetch('/api/analyze-reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reviews: filtered.map(r => ({ stars: r.stars, text: r.text })),
+          language: 'Deutsch',
+        }),
+      })
+      const data = await response.json()
+      if (!data.success) throw new Error(data.error || 'Unbekannter Fehler')
+      setPositiveThemenAI(data.positiv || [])
+      setNegativThemenAI(data.negativ || [])
+      setEmpfehlungen(data.empfehlungen || [])
+      setAiDone(true)
+    } catch (e) {
+      setAiError('Analyse fehlgeschlagen. Bitte nochmal versuchen.')
+    } finally {
+      setAiLoading(false)
+    }
+  }
 
   // Donut SVG helper
   const DonutChart = ({ segments, size = 120 }: { segments: { value: number, color: string, label: string }[], size?: number }) => {
@@ -1326,9 +1371,20 @@ function Analytics({ reviews, userId }: { reviews: Review[], userId?: string }) 
           <h1 style={{ fontSize: '30px', fontWeight: '600', marginBottom: '4px', color: '#111827' }}>Insights</h1>
           <p style={{ color: '#6b7280', fontSize: '16px' }}>Auswertung & KI-Analyse Ihrer Bewertungen.</p>
         </div>
-        <button onClick={startAI} style={{ padding: '9px 18px', background: '#0f4c5c', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontFamily: 'inherit', fontWeight: '500' }}>
-          ✨ KI-Analyse starten
-        </button>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <select
+            value={zeitraum}
+            onChange={e => setZeitraum(e.target.value as '30' | '90' | 'all')}
+            style={{ padding: '9px 12px', border: '1px solid #e2ddd8', borderRadius: '8px', fontSize: '14px', fontFamily: 'inherit', background: '#fff', color: '#111827', cursor: 'pointer' }}
+          >
+            <option value="30">Letzte 30 Tage</option>
+            <option value="90">Letzte 90 Tage</option>
+            <option value="all">Alle Bewertungen</option>
+          </select>
+          <button onClick={startAI} disabled={aiLoading} style={{ padding: '9px 18px', background: aiLoading ? '#6b7280' : '#0f4c5c', color: '#fff', border: 'none', borderRadius: '8px', cursor: aiLoading ? 'not-allowed' : 'pointer', fontSize: '14px', fontFamily: 'inherit', fontWeight: '500' }}>
+            {aiLoading ? '⏳ Analysiert...' : '✨ KI-Analyse starten'}
+          </button>
+        </div>
       </div>
 
       {/* 5 Stat Cards */}
@@ -1512,12 +1568,11 @@ function Analytics({ reviews, userId }: { reviews: Review[], userId?: string }) 
         <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
           <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '15px', color: '#111827' }}>👍 Häufig positiv erwähnt</div>
           <div style={{ padding: '14px 18px' }}>
-            {positiveThemen.length === 0
-              ? <div style={{ fontSize: '14px', color: '#9ca3af', padding: '8px 0' }}>Noch keine Daten — erscheint sobald Bewertungen eingehen.</div>
-              : positiveThemen.map(t => (
-              <div key={t.thema} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f3f4f6' }}>
-                <span style={{ fontSize: '14px', color: '#374151' }}>{t.thema}</span>
-                <span style={{ fontSize: '13px', fontWeight: '600', color: '#166534', background: '#f0fdf4', padding: '2px 8px', borderRadius: '12px' }}>{t.anzahl}×</span>
+            {positiveThemenAI.length === 0
+              ? <div style={{ fontSize: '14px', color: '#9ca3af', padding: '8px 0' }}>Noch keine Daten — KI-Analyse starten um Themen zu sehen.</div>
+              : positiveThemenAI.map((t, i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f3f4f6' }}>
+                <span style={{ fontSize: '14px', color: '#374151' }}>{t}</span>
               </div>
             ))}
           </div>
@@ -1525,12 +1580,11 @@ function Analytics({ reviews, userId }: { reviews: Review[], userId?: string }) 
         <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
           <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '15px', color: '#111827' }}>👎 Häufig negativ erwähnt</div>
           <div style={{ padding: '14px 18px' }}>
-            {negativThemen.length === 0
-              ? <div style={{ fontSize: '14px', color: '#9ca3af', padding: '8px 0' }}>Noch keine Daten — erscheint sobald Bewertungen eingehen.</div>
-              : negativThemen.map(t => (
-              <div key={t.thema} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f3f4f6' }}>
-                <span style={{ fontSize: '14px', color: '#374151' }}>{t.thema}</span>
-                <span style={{ fontSize: '13px', fontWeight: '600', color: '#991b1b', background: '#fef2f2', padding: '2px 8px', borderRadius: '12px' }}>{t.anzahl}×</span>
+            {negativThemenAI.length === 0
+              ? <div style={{ fontSize: '14px', color: '#9ca3af', padding: '8px 0' }}>Noch keine Daten — KI-Analyse starten um Themen zu sehen.</div>
+              : negativThemenAI.map((t, i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f3f4f6' }}>
+                <span style={{ fontSize: '14px', color: '#374151' }}>{t}</span>
               </div>
             ))}
           </div>
@@ -1601,24 +1655,41 @@ function Analytics({ reviews, userId }: { reviews: Review[], userId?: string }) 
           <div style={{ padding: '48px', textAlign: 'center' }}>
             <div style={{ fontSize: '32px', marginBottom: '12px' }}>✨</div>
             <div style={{ fontWeight: '600', fontSize: '16px', marginBottom: '6px', color: '#111827' }}>KI-Analyse noch nicht gestartet</div>
-            <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>Klicken Sie auf "KI-Analyse starten" — Claude wertet alle Bewertungen aus und liefert konkrete Handlungsempfehlungen.</div>
-            <button onClick={startAI} style={{ padding: '9px 20px', background: '#0f4c5c', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontFamily: 'inherit', fontWeight: '500', color: '#fff' }}>✨ Jetzt analysieren</button>
+            <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>Zeitraum oben auswählen und auf "KI-Analyse starten" klicken — Gemini wertet alle Bewertungen aus und liefert konkrete Handlungsempfehlungen.</div>
           </div>
         )}
         {aiLoading && (
           <div style={{ padding: '48px', textAlign: 'center' }}>
             <div style={{ fontSize: '32px', marginBottom: '12px' }}>⏳</div>
             <div style={{ fontWeight: '600', fontSize: '16px', color: '#111827' }}>KI analysiert Ihre Bewertungen...</div>
+            <div style={{ fontSize: '14px', color: '#6b7280', marginTop: '8px' }}>Das dauert meist 5–10 Sekunden.</div>
           </div>
         )}
-        {aiDone && (
+        {aiError && !aiLoading && (
+          <div style={{ padding: '32px', textAlign: 'center' }}>
+            <div style={{ fontSize: '14px', color: '#991b1b' }}>⚠️ {aiError}</div>
+          </div>
+        )}
+        {aiDone && !aiLoading && (
           <div>
-            <div style={{ padding: '16px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '16px' }}>✨ KI-Analyse Ergebnis</div>
-            <div style={{ padding: '18px' }}>
-              <div style={{ background: '#f0f7f8', border: '1px solid #a5c8d0', borderRadius: '10px', padding: '14px 16px', marginBottom: '16px' }}>
-                <div style={{ fontSize: '12px', fontWeight: '600', color: '#0f4c5c', marginBottom: '6px' }}>WICHTIGSTE ERKENNTNIS</div>
-                <div style={{ fontSize: '14px', color: '#0f3340', lineHeight: '1.6' }}>Noch nicht genug Daten für eine aussagekräftige Analyse. Sobald echte Bewertungen eingehen, erscheint hier eine automatische Auswertung.</div>
-              </div>
+            <div style={{ padding: '16px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>✨ KI-Analyse Ergebnis</span>
+              <span style={{ fontSize: '12px', fontWeight: '400', color: '#6b7280' }}>
+                {zeitraum === '30' ? 'Letzte 30 Tage' : zeitraum === '90' ? 'Letzte 90 Tage' : 'Alle Bewertungen'}
+              </span>
+            </div>
+            <div style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {empfehlungen.length > 0 && (
+                <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '10px', padding: '14px 16px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: '600', color: '#92400e', marginBottom: '10px' }}>💡 HANDLUNGSEMPFEHLUNGEN</div>
+                  {empfehlungen.map((e, i) => (
+                    <div key={i} style={{ display: 'flex', gap: '10px', marginBottom: i < empfehlungen.length - 1 ? '10px' : '0' }}>
+                      <span style={{ fontSize: '14px', fontWeight: '600', color: '#92400e', flexShrink: 0 }}>{i + 1}.</span>
+                      <span style={{ fontSize: '14px', color: '#78350f', lineHeight: '1.6' }}>{e}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
