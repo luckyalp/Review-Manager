@@ -29,7 +29,10 @@ function buildPrompt(reviewText: string, rating: number, reviewerName: string, s
   } = settings || {}
 
   // V1 duzt immer, V2 siezt immer, V3 folgt den Settings
-  const duSieV3 = salutation === 'Du' ? 'Du/Dein (Duzen)' : 'Sie/Ihr (Siezen)'
+  const duSieAnrede = salutation === 'Du' ? 'Du/Dein (Duzen)' : 'Sie/Ihr (Siezen)'
+  const anredeHinweis = salutation === 'Du'
+    ? 'Nutze konsequent die Du-Form (du, dein, dir). Schreibe "dir" und "dein" klein.'
+    : 'Nutze konsequent die Sie-Form (Sie, Ihr, Ihnen). Schreibe "Sie" und "Ihr" immer groß.'
   const signature = responseSignature || `Das Team von ${businessName}`
   const mode = classify(rating, reviewText)
   const firstName = reviewerName ? reviewerName.split(' ')[0] : ''
@@ -48,12 +51,16 @@ function buildPrompt(reviewText: string, rating: number, reviewerName: string, s
     ? firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase()
     : ''
 
+  const begruessungV2 = salutation === 'Du'
+    ? `Hallo ${firstNameCapitalized},`
+    : `Hallo ${firstNameCapitalized},`
+
   const nameRule = firstNameCapitalized
     ? `PERSONALISIERUNG:
-- Variante 1 (Locker/Du): kein Name — direkt ins Thema
-- Variante 2 (Hoefl./Sie): beginnt mit "Hallo ${firstNameCapitalized},"
-- Variante 3: kein Name — direkt ins Thema
-Schreibe den Namen IMMER genau so: ${firstNameCapitalized} — nie in Grossbuchstaben, nie in Kleinbuchstaben.`
+- Variante 1: kein Name — direkt ins Thema starten
+- Variante 2: beginnt exakt mit "${begruessungV2}"
+- Variante 3: kein Name — direkt ins Thema starten
+Schreibe den Namen IMMER genau so: ${firstNameCapitalized} — nie in Grossbuchstaben.`
     : 'PERSONALISIERUNG: Kein Name bekannt — alle drei ohne persoenliche Anrede'
 
   const context = [
@@ -214,10 +221,11 @@ ${alreadyHandled}
 ${slot4}
 Abschluss: Waehle passend zum Ton "Viele Grüße, ${signature}" oder "Herzliche Grüße, ${signature}" oder "Beste Grüße, ${signature}"
 
-Schreibe 3 Varianten:
-Variante 1 – Direkt & Ehrlich: Anredeform Du/dein. Direkt, klar.
-Variante 2 – Ruhig & Professionell: Anredeform Sie/Ihr. Ruhig, Mensch zuerst.
-Variante 3 – Fokus auf Klaerung: Anredeform ${duSieV3}. Kuerzer, max. 3 Saetze, Slot 4 im Vordergrund.
+Schreibe 3 Varianten. Fuer ALLE gilt strikt: ${duSieAnrede}. ${anredeHinweis}
+
+Variante 1 – Direkt & Ehrlich: Locker, direkt, ehrlich — geht sofort ohne Umschweife ins Thema. Kein Name.
+Variante 2 – Ruhig & Professionell: Empathisch, ruhig, Mensch zuerst. Startet mit der vorgegebenen Begrüssung.
+Variante 3 – Fokus auf Klaerung: Kuerzer, max. 3 Saetze, direkter Kontaktkanal im Vordergrund. Kein Name.
 
 AUSGABE — NUR dieses JSON, kein anderer Text:
 {
