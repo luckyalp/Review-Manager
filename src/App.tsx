@@ -1250,17 +1250,8 @@ function Analytics({ reviews, userId }: { reviews: Review[], userId?: string }) 
   const rate = total ? Math.round(answered / total * 100) : 0
   const avg = total ? (reviews.reduce((s, r) => s + r.stars, 0) / total).toFixed(1) : '–'
 
-  const positiveThemen = [
-    { thema: 'Essen & Qualität', anzahl: 12 },
-    { thema: 'Atmosphäre & Ambiente', anzahl: 8 },
-    { thema: 'Freundlicher Service', anzahl: 6 },
-    { thema: 'Sauberkeit', anzahl: 4 },
-  ]
-  const negativThemen = [
-    { thema: 'Wartezeit', anzahl: 5 },
-    { thema: 'Lautstärke', anzahl: 2 },
-    { thema: 'Portionsgröße', anzahl: 1 },
-  ]
+  const positiveThemen: { thema: string, anzahl: number }[] = []
+  const negativThemen: { thema: string, anzahl: number }[] = []
 
   const startAI = () => { setAiStarted(true); setAiLoading(true); setTimeout(() => { setAiLoading(false); setAiDone(true) }, 3000) }
 
@@ -1321,7 +1312,7 @@ function Analytics({ reviews, userId }: { reviews: Review[], userId?: string }) 
 
   const trendPoints = getTrendData(trendDays)
   const hasRealData = trendPoints.some(p => p.count > 0)
-  const displayPoints = hasRealData ? trendPoints : trendPoints.map((p, i) => ({ ...p, count: [2,0,1,3,0,2,1,0,3,2,1,0,2,3,1,0,2,1,3,0,2,1,0,3,2,1,0,2,3,1][i % 30] }))
+  const displayPoints = trendPoints
 
   const statusSegments = [
     { value: answered, color: '#0f4c5c', label: 'Beantwortet' },
@@ -1522,7 +1513,9 @@ function Analytics({ reviews, userId }: { reviews: Review[], userId?: string }) 
         <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
           <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '15px', color: '#111827' }}>👍 Häufig positiv erwähnt</div>
           <div style={{ padding: '14px 18px' }}>
-            {positiveThemen.map(t => (
+            {positiveThemen.length === 0
+              ? <div style={{ fontSize: '14px', color: '#9ca3af', padding: '8px 0' }}>Noch keine Daten — erscheint sobald Bewertungen eingehen.</div>
+              : positiveThemen.map(t => (
               <div key={t.thema} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f3f4f6' }}>
                 <span style={{ fontSize: '14px', color: '#374151' }}>{t.thema}</span>
                 <span style={{ fontSize: '13px', fontWeight: '600', color: '#166534', background: '#f0fdf4', padding: '2px 8px', borderRadius: '12px' }}>{t.anzahl}×</span>
@@ -1533,7 +1526,9 @@ function Analytics({ reviews, userId }: { reviews: Review[], userId?: string }) 
         <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
           <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '15px', color: '#111827' }}>👎 Häufig negativ erwähnt</div>
           <div style={{ padding: '14px 18px' }}>
-            {negativThemen.map(t => (
+            {negativThemen.length === 0
+              ? <div style={{ fontSize: '14px', color: '#9ca3af', padding: '8px 0' }}>Noch keine Daten — erscheint sobald Bewertungen eingehen.</div>
+              : negativThemen.map(t => (
               <div key={t.thema} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f3f4f6' }}>
                 <span style={{ fontSize: '14px', color: '#374151' }}>{t.thema}</span>
                 <span style={{ fontSize: '13px', fontWeight: '600', color: '#991b1b', background: '#fef2f2', padding: '2px 8px', borderRadius: '12px' }}>{t.anzahl}×</span>
@@ -1623,15 +1618,7 @@ function Analytics({ reviews, userId }: { reviews: Review[], userId?: string }) 
             <div style={{ padding: '18px' }}>
               <div style={{ background: '#f0f7f8', border: '1px solid #a5c8d0', borderRadius: '10px', padding: '14px 16px', marginBottom: '16px' }}>
                 <div style={{ fontSize: '12px', fontWeight: '600', color: '#0f4c5c', marginBottom: '6px' }}>WICHTIGSTE ERKENNTNIS</div>
-                <div style={{ fontSize: '14px', color: '#0f3340', lineHeight: '1.6' }}>Ihre Gäste loben besonders das Essen und die Atmosphäre. Häufigster Kritikpunkt ist die Wartezeit beim Service.</div>
-              </div>
-              <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '10px', padding: '14px' }}>
-                <div style={{ fontWeight: '600', color: '#92400e', marginBottom: '8px', fontSize: '14px' }}>💡 Handlungsempfehlungen</div>
-                <div style={{ fontSize: '14px', color: '#78350f', lineHeight: '1.8' }}>
-                  1. Wartezeiten durch optimierte Abläufe reduzieren<br />
-                  2. Reservierungssystem einführen um Stoßzeiten zu verteilen<br />
-                  3. Aktiv auf 3-Sterne-Bewertungen antworten und um Feedback bitten
-                </div>
+                <div style={{ fontSize: '14px', color: '#0f3340', lineHeight: '1.6' }}>Noch nicht genug Daten für eine aussagekräftige Analyse. Sobald echte Bewertungen eingehen, erscheint hier eine automatische Auswertung.</div>
               </div>
             </div>
           </div>
