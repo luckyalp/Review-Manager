@@ -15,6 +15,7 @@ interface Review {
   date: string
   status: ReviewStatus
   photoUrl?: string
+  googleReviewId?: string
 }
 
 // ─── DATA ────────────────────────────────────────────────────────────────────
@@ -121,6 +122,7 @@ function App() {
       text: row.review_text,
       date: row.review_date,
       status: row.status as ReviewStatus,
+      googleReviewId: row.google_review_id ?? undefined,
     })
     const loadReviews = async () => {
       try {
@@ -1077,6 +1079,25 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
         selected_variant_index: variantIndex ?? null,
       }).eq('id', review.id)
     } catch (e) { console.warn('Supabase save failed', e) }
+
+    // Zu Google posten wenn echte google_review_id vorhanden
+    if (review.googleReviewId && text) {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          await fetch('/api/post-reply', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: user.id,
+              googleReviewId: review.googleReviewId,
+              answerText: text,
+            }),
+          })
+        }
+      } catch (e) { console.warn('Google Post fehlgeschlagen:', e) }
+    }
+
     onStatusChange(review.id, 'Beantwortet')
     setShowToast(true)
     setTimeout(() => { setShowToast(false); onBack() }, 1500)

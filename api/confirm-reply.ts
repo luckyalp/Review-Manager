@@ -14,6 +14,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const supabase = createClient(supabaseUrl, supabaseKey)
 
+    // Review in Supabase finden
+    const { data: review } = await supabase
+      .from('reviews')
+      .select('id, google_review_id, user_id')
+      .eq('google_review_id', reviewId as string)
+      .single()
+
+    // Supabase aktualisieren
     await supabase
       .from('reviews')
       .update({
@@ -22,6 +30,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         answered_at: new Date().toISOString()
       })
       .eq('google_review_id', reviewId as string)
+
+    // Zu Google posten wenn echte google_review_id vorhanden
+    if (review?.user_id && review?.google_review_id) {
+      try {
+        await fetch(`${process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : 'https://review-manager-mu.vercel.app'}/api/post-reply`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: review.user_id,
+            googleReviewId: review.google_review_id,
+            answerText: answerText as string,
+          }),
+        })
+      } catch (e) {
+        console.warn('Google Post fehlgeschlagen:', e)
+        // Kein Fehler zeigen — Supabase ist gespeichert, das ist Priorität
+      }
+    }
 
     return res.status(200).send(successPage())
   } catch (error) {
