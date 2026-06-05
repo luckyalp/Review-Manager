@@ -166,6 +166,7 @@ Keine internen Ablaeufe erklaeren.
 Keine leeren Floskeln verwenden.
 Kurz und natuerlich schreiben.
 Eher wie ein Gastronom als wie eine Pressestelle.
+Niemals diese Phrasen verwenden: "nehmen wir sehr ernst", "intern adressiert", "intern nachgeschaerft", "Massnahmen ergriffen".
 
 Antwortstruktur:
 
@@ -311,14 +312,15 @@ function buildRecoveryPrompt(reviewText: string, reviewerName: string, settings:
 Schreibe wie ein aufmerksamer Gastronom — nicht wie Kundenservice, PR-Agentur oder KI.
 
 Grundregeln:
-Beschwerden nicht nacherzaehlen oder woertlich wiederholen.
+Beschwerden nicht nacherzählen oder wörtlich wiederholen.
 Kritik nicht spiegeln.
 Keine Ursachen erfinden.
 Keine leeren Floskeln.
-Natuerliche Sprache, kurze Saetze.
+Natürliche Sprache, kurze Sätze.
+Nutze echte Umlaute: ä, ö, ü, ß — niemals ae, oe, ue als Ersatz.
 
-Ziel: Vertrauen zurueckgewinnen und persoenliche Klaerung anbieten.
-Laenge: 3 bis 4 vollstaendige, fliessende Saetze.
+Ziel: Vertrauen zurückgewinnen und persönliche Klärung anbieten.
+Länge: 3 bis 4 vollständige, fließende Sätze.
 Korrekte Zeichensetzung — jeder Hauptsatz beginnt nach einem Punkt.`
 
   const userMessage = `${langInstruction} Anredeform: ${duSie}
