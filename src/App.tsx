@@ -1214,6 +1214,29 @@ function Analytics({ reviews, userId }: { reviews: Review[], userId?: string }) 
   const [variantStats, setVariantStats] = useState<{label: string, index: string, count: number}[]>([])
   const [ratingBreakdown, setRatingBreakdown] = useState<Record<number, Record<string, number>>>({})
 
+  // Themen-Karten automatisch laden wenn Bewertungen vorhanden
+  useEffect(() => {
+    if (reviews.length === 0) return
+    const loadThemen = async () => {
+      try {
+        const response = await fetch('/api/analyze-reviews', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reviews: reviews.map(r => ({ stars: r.stars, text: r.text })),
+            language: 'Deutsch',
+          }),
+        })
+        const data = await response.json()
+        if (data.success) {
+          setPositiveThemenAI(data.positiv || [])
+          setNegativThemenAI(data.negativ || [])
+        }
+      } catch (e) { console.warn('Themen-Analyse fehlgeschlagen', e) }
+    }
+    loadThemen()
+  }, [reviews])
+
   // Varianten-Daten aus Supabase laden
   useEffect(() => {
     const loadVariantStats = async () => {
