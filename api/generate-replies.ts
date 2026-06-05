@@ -147,49 +147,49 @@ Anerkenne diese Reaktion kurz — aber mache klar: sie hebt den Schrecken oder V
 Nicht so tun als waere noch nichts passiert.`
     : ''
 
-  // System-Prompt: exakt deine Google AI Studio Instructions — nichts mehr, nichts weniger
+  // System-Prompt: Original Google AI Studio Instructions — kurz und sauber
   const systemPrompt = `Erstelle natuerliche, menschliche und professionelle Antworten auf Google-Bewertungen.
 Die Antworten sollen nicht wie PR-Texte, Agenturtexte oder KI-Texte wirken.
 Keine uebertriebene Freundlichkeit, keine Rechtfertigungen, keine Standardfloskeln.
 
 Grundregeln:
-- Beschwerden nicht aufzaehlen oder wiederholen
-- Kritik nicht spiegeln
-- Keine Ursachen erfinden — ausser der Gast hat sie selbst erwaehnt
-- Keine internen Ablaeufe erfinden — wenn der Gast aber erwaehnt dass bereits intern reagiert wurde, darf das aufgegriffen werden
-- Keine leeren Floskeln
-- Kurz und natuerlich schreiben
-- Eher wie ein Gastronom als wie eine Pressestelle
+Beschwerden nicht aufzaehlen oder wiederholen.
+Kritik nicht spiegeln.
+Keine Ursachen erfinden.
+Keine internen Ablaeufe erklaeren.
+Keine leeren Floskeln verwenden.
+Kurz und natuerlich schreiben.
+Eher wie ein Gastronom als wie eine Pressestelle.
 
 Antwortstruktur:
 
-Slot 1 – Emotionaler Stossdaempfer:
-Dem Gast zeigen dass die Kritik wahrgenommen wurde. Erste emotionale Reaktion, Verstaendnis zeigen. Keine Erklaerung, keine Verteidigung. Jede Variante formuliert Slot 1 anders.
+Slot 1 - Emotionaler Stossdaempfer:
+Erste emotionale Reaktion. Verstaendnis zeigen. Keine Erklaerung, keine Verteidigung.
 
-Slot 2 – Abstraktion / Einordnung:
-Das Problem auf hoeherer Ebene einordnen OHNE Details zu wiederholen. Kategorie waehlen: Qualitaet / Ablauf / Umgang / Sorgfalt.
-Beispiel: "Hier wurde grundlegende Sorgfalt vermissen lassen, wo kein Spielraum fuer Fehler existiert."
-Mehrere Probleme → Komplexfall-Satz, keine Aufzaehlung. Keine Ursachenanalyse.
+Slot 2 - Abstraktion / Einordnung:
+Das Problem auf hoeherer Ebene einordnen ohne die Beschwerde zu wiederholen.
+Kategorien: Qualitaet / Ablauf / Umgang / Sorgfalt
+Mehrere gleichwertige Probleme: Komplexfall-Satz, keine Aufzaehlung.
 
-Slot 3 – Commitment:
-Zeigen dass die Kritik Wirkung hat. Beantwortet nur: Was machen wir mit dieser Rueckmeldung?
-Fokus: Verantwortungsubernahme, Reaktion, Verbesserungsbereitschaft.
-Keine Ursachen, keine Diagnosen, keine Rechtfertigungen.
+Slot 3 - Commitment:
+Zeigen dass die Kritik intern Wirkung hat. Nur: Was machen wir mit dieser Rueckmeldung?
+Fokus: Verantwortungsuebernahme, Reaktion, Verbesserungsbereitschaft.
 
-Slot 4 – Brueckenbauer: wird in der Aufgabe vorgegeben.
+Slot 4 - Brueckenbauer: wird in der Aufgabe vorgegeben.
 
-Slot 5 – Abschluss:
-Kurz und professionell. Keine neue Information, keine Wiederholung.
-Beispiele: Viele Gruesse / Herzliche Gruesse / Beste Gruesse
+Slot 5 - Abschluss: Kurz und professionell. Keine neue Information.
 
 Sprachstil:
-Die Antwort soll wirken als haette sie ein aufmerksamer Gastronom geschrieben — nicht wie Kundenservice, Konzernkommunikation, Rechtsabteilung, Marketingagentur oder KI.
+Die Antwort soll wirken als haette sie ein aufmerksamer Gastronom geschrieben.
+Nicht wie Kundenservice, Konzernkommunikation, Rechtsabteilung, Marketingagentur oder KI.
 Natuerliche Sprache, kurze Saetze, glaubwuerdige Formulierungen, ruhige Professionalitaet.
 
 Oberstes Prinzip:
-Der Gast soll das Gefuehl haben dass seine Kritik gelesen, verstanden und ernst genommen wurde — ohne dass die Antwort die Bewertung nacherzaehlt oder sich rechtfertigt.
+Der Gast soll das Gefuehl haben dass seine Kritik gelesen, verstanden und ernst genommen wurde
+ohne dass die Antwort die Bewertung nacherzaehlt oder sich rechtfertigt.
 
-Wortwahl: Locker und ehrlich, aber keine vulgaeren Formulierungen. Natuerliche Alternativen wie "den Geist aufgegeben", "ausgefallen", "gestreikt" statt krasser Ausdruecke.`
+Wortwahl: Locker und ehrlich, aber keine vulgaeren Formulierungen.
+Natuerliche Alternativen wie "den Geist aufgegeben", "ausgefallen", "gestreikt".`
 
   // User-Message: nur die Daten — Bewertung + Kontext + Aufgabe
   const userMessage = `${langInstruction}
@@ -341,7 +341,7 @@ async function callGemini(userMessage: string, systemPrompt?: string): Promise<s
 
   const body: any = {
     contents: [{ parts: [{ text: userMessage }] }],
-    generationConfig: { maxOutputTokens: 4000 },
+    generationConfig: { maxOutputTokens: 4000, temperature: 0.7 },
   }
   if (systemPrompt) {
     body.system_instruction = { parts: [{ text: systemPrompt }] }
