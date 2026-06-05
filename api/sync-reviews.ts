@@ -20,13 +20,19 @@ async function refreshAccessToken(refreshToken: string) {
   return res.json()
 }
 
+function starRatingToNumber(rating: string): number {
+  const map: Record<string, number> = {
+    FIVE: 5, FOUR: 4, THREE: 3, TWO: 2, ONE: 1
+  }
+  return map[rating] ?? 3
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Alle gespeicherten Google Tokens holen
   const { data: tokens, error } = await supabase
     .from('google_tokens')
     .select('*')
 
-  if (error || !tokens?.length) {
+  if (error || !tokens || tokens.length === 0) {
     return res.status(200).json({ message: 'Keine verbundenen Accounts' })
   }
 
@@ -36,20 +42,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       let accessToken = token.access_token
 
-      // Token erneuern wenn abgelaufen
       if (token.expires_at < Math.floor(Date.now() / 1000)) {
         const refreshed = await refreshAccessToken(token.refresh_token)
         if (!refreshed.access_token) continue
 
         accessToken = refreshed.access_token
-        await supabase.from('google_tokens').update({
-          access_token: refreshed.access_token,
-          expires_at: Math.floor(Date.now() / 1000) + refreshed.expires_in,
-          updated_at: new Date().toISOString(),
-        }).eq('user_id', token.user_id)
+        await supabase
+          .from('google_tokens')
+          .update({
+            access_token: refreshed.access_token,
+            expires_at: Math.floor(Date.now() / 1000) + refreshed.expires_in,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('user_id', token.user_id)
       }
 
-      // Google Business Accounts holen
       const accountsRes = await fetch(
         'https://mybusinessaccountmanagement.googleapis.com/v1/accounts',
         { headers: { Authorization: `Bearer ${accessToken}` } }
@@ -58,7 +65,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const account = accountsData.accounts?.[0]
       if (!account) continue
 
-      // Locations holen
       const locationsRes = await fetch(
         `https://mybusinessbusinessinformation.googleapis.com/v1/${account.name}/locations`,
         { headers: { Authorization: `Bearer ${accessToken}` } }
@@ -67,7 +73,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const location = locationsData.locations?.[0]
       if (!location) continue
 
-      // Reviews holen
       const reviewsRes = await fetch(
         `https://mybusiness.googleapis.com/v4/${location.name}/reviews`,
         { headers: { Authorization: `Bearer ${accessToken}` } }
@@ -75,16 +80,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const reviewsData = await reviewsRes.json()
       const reviews = reviewsData.reviews || []
 
-      // 90 Tage Grenze
       const cutoff = new Date()
       cutoff.setDate(cutoff.getDate() - 90)
 
       for (const review of reviews) {
         const reviewDate = new Date(review.createTime)
         if (reviewDate < cutoff) continue
-        if (review.reviewReply) continue // bereits beantwortet
+        if (review.reviewReply) continue
 
-        // Prüfen ob schon in Supabase
         const { data: existing } = await supabase
           .from('reviews')
           .select('id')
@@ -93,7 +96,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         if (existing) continue
 
-        // Neue Bewertung speichern
         await supabase.from('reviews').insert({
           google_review_id: review.reviewId,
           review_text: review.comment || '',
@@ -101,9 +103,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           status: 'Ausstehend',
           user_id: token.user_id,
           reviewer_name: review.reviewer?.displayName || 'Anonym',
-          stars: review.starRating === 'FIVE' ? 5
-            : review.starRating === 'FOUR' ? 4
-            : review.starRating === 'THREE' ? 3
-            : review.starRating === 'TWO' ? 2 : 1,
+          stars: starRatingToNumber(review.starRating),
         })
         totalNew++
+      }
+    } catch (err) {
+      console.error('Fehler bei User', token.user_id, err)
+    }
+  }
+
+  return res.status(200).json({ message: `${totalNew} neue Bewertungen synchronisiert` })
+}
