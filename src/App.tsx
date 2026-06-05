@@ -676,12 +676,20 @@ function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews 
       </div>
 
       {/* Sync Status — Banner-Style */}
-      <div style={{ background: 'linear-gradient(135deg, #f0f7f8, #e8f4f6)', border: '1px solid #a5c8d0', borderRadius: '14px', padding: '14px 18px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px', boxShadow: '0 2px 8px rgba(15,76,92,0.07), 0 1px 2px rgba(0,0,0,0.04)' }}>
-        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#a5c8d0', flexShrink: 0 }} />
-        <div>
-          <div style={{ fontSize: '13px', color: '#0f4c5c', fontWeight: '600' }}>Google Sync: Noch nicht verbunden</div>
-          <div style={{ fontSize: '12px', color: '#4a8fa0', marginTop: '2px' }}>Bewertungen können bis dahin manuell hinzugefügt werden.</div>
+      <div style={{ background: 'linear-gradient(135deg, #f0f7f8, #e8f4f6)', border: '1px solid #a5c8d0', borderRadius: '14px', padding: '14px 18px', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', boxShadow: '0 2px 8px rgba(15,76,92,0.07), 0 1px 2px rgba(0,0,0,0.04)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#a5c8d0', flexShrink: 0 }} />
+          <div>
+            <div style={{ fontSize: '13px', color: '#0f4c5c', fontWeight: '600' }}>Google Sync: Noch nicht verbunden</div>
+            <div style={{ fontSize: '12px', color: '#4a8fa0', marginTop: '2px' }}>Bewertungen können bis dahin manuell hinzugefügt werden.</div>
+          </div>
         </div>
+        <button
+          onClick={() => { window.location.href = `/api/google-auth?userId=${user?.id}` }}
+          style={{ background: '#0f4c5c', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 14px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, fontFamily: 'inherit' }}
+        >
+          Mit Google verbinden
+        </button>
       </div>
 
       {/* Reviews + Distribution */}
