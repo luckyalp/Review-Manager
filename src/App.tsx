@@ -93,7 +93,7 @@ function App() {
     const checkOnboarding = async () => {
       try {
         const { data } = await supabase
-          .from('settings').select('value').eq('key', 'restaurant_profile').single()
+          .from('settings').select('value').eq('key', 'restaurant_profile').eq('user_id', user.id).single()
         if (data?.value?.businessName) { setOnboardingStep(0); return }
       } catch { /* ignore */ }
       try {
@@ -127,6 +127,7 @@ function App() {
         const { data, error } = await supabase
           .from('reviews')
           .select('*')
+          .eq('user_id', user.id)
           .order('created_at', { ascending: false })
         if (data && !error) {
           setReviews(data.map(mapRow))
@@ -275,8 +276,8 @@ function App() {
       localStorage.setItem('rezpondSettings', JSON.stringify(fullSettings))
       try {
         await supabase.from('settings').upsert(
-          { key: 'restaurant_profile', value: fullSettings, updated_at: new Date().toISOString() },
-          { onConflict: 'key' }
+          { key: 'restaurant_profile', user_id: user?.id, value: fullSettings, updated_at: new Date().toISOString() },
+          { onConflict: 'key,user_id' }
         )
       } catch (e) { console.warn('Supabase save failed', e) }
       setOnboardingStep(0)
@@ -334,8 +335,8 @@ function App() {
               {page === 'dashboard' && <Dashboard stats={stats} reviews={reviews} openReview={openReview} onAddReview={addManualReview} userId={user?.id} onNavigateReviews={(filter?: string) => { setReviewsInitialFilter(filter || 'alle'); setPage('reviews'); setSelectedReview(null) }} />}
               {page === 'reviews' && !selectedReview && <Reviews reviews={reviews} onStatusChange={updateReviewStatus} onDelete={deleteReview} openReview={openReview} initialFilterStars={reviewsInitialFilter} />}
               {page === 'reviews' && selectedReview && <ReviewDetail review={selectedReview} onStatusChange={updateReviewStatus} onBack={() => setSelectedReview(null)} />}
-              {page === 'analytics' && <Analytics reviews={reviews} />}
-              {page === 'settings' && <Settings onLogout={handleLogout} />}
+              {page === 'analytics' && <Analytics reviews={reviews} userId={user?.id} />}
+              {page === 'settings' && <Settings onLogout={handleLogout} userId={user?.id} />}
             </>
           )}
         </div>
@@ -1201,7 +1202,7 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
 
 // ─── ANALYSE ─────────────────────────────────────────────────────────────────
 
-function Analytics({ reviews }: { reviews: Review[] }) {
+function Analytics({ reviews, userId }: { reviews: Review[], userId?: string }) {
   const [aiStarted, setAiStarted] = useState(false)
   const [aiLoading, setAiLoading] = useState(false)
   const [aiDone, setAiDone] = useState(false)
@@ -1216,6 +1217,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
           .from('reviews')
           .select('selected_variant_index, stars')
           .eq('status', 'Beantwortet')
+          .eq('user_id', userId)
           .not('selected_variant_index', 'is', null)
         if (!data) return
         const counts: Record<string, { label: string, index: string, count: number }> = {}
@@ -1642,7 +1644,7 @@ function Analytics({ reviews }: { reviews: Review[] }) {
 
 // ─── EINSTELLUNGEN ────────────────────────────────────────────────────────────
 
-function Settings({ onLogout }: { onLogout: () => void }) {
+function Settings({ onLogout, userId }: { onLogout: () => void, userId?: string }) {
   const [form, setForm] = useState({
     businessName: '', description: '', restaurantType: '', cuisineType: '',
     priceRange: '', dietaryOptions: '', openingHours: '',
@@ -1677,6 +1679,7 @@ function Settings({ onLogout }: { onLogout: () => void }) {
           .from('settings')
           .select('value')
           .eq('key', 'restaurant_profile')
+          .eq('user_id', userId)
           .single()
         if (data?.value) {
           const merged = merge(data.value, form)
@@ -1704,8 +1707,8 @@ function Settings({ onLogout }: { onLogout: () => void }) {
       localStorage.setItem('rezpondSettings', JSON.stringify(form))
       try {
         await supabase.from('settings').upsert(
-          { key: 'restaurant_profile', value: form, updated_at: new Date().toISOString() },
-          { onConflict: 'key' }
+          { key: 'restaurant_profile', user_id: userId, value: form, updated_at: new Date().toISOString() },
+          { onConflict: 'key,user_id' }
         )
       } catch (e) { console.warn('Supabase save failed', e) }
       setSaving(false)
@@ -1731,8 +1734,8 @@ function Settings({ onLogout }: { onLogout: () => void }) {
     localStorage.setItem('rezpondSettings', JSON.stringify(form))
     try {
       await supabase.from('settings').upsert(
-        { key: 'restaurant_profile', value: form, updated_at: new Date().toISOString() },
-        { onConflict: 'key' }
+        { key: 'restaurant_profile', user_id: userId, value: form, updated_at: new Date().toISOString() },
+        { onConflict: 'key,user_id' }
       )
     } catch (e) { console.warn('Supabase save failed', e) }
     setSaving(false)
