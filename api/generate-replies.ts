@@ -297,48 +297,47 @@ function buildRecoveryPrompt(reviewText: string, reviewerName: string, settings:
   const duSie = salutation === 'Du' ? 'Du/Dein (Duzen)' : 'Sie/Ihr (Siezen)'
   const signature = responseSignature || `Das Team von ${businessName}`
   const firstName = reviewerName ? reviewerName.split(' ')[0] : ''
+  const firstNameClean = firstName
+    ? firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase()
+    : ''
 
   const langInstruction = responseLanguage === 'Sprache des Bewerters'
-    ? `Antworte in der Sprache der Bewertung.`
+    ? 'Antworte in der Sprache der Bewertung.'
     : responseLanguage === 'Englisch'
-    ? `Respond in English only.`
-    : `Antworte auf Deutsch.`
+    ? 'Respond in English only.'
+    : 'Antworte auf Deutsch.'
 
-  return `Du antwortest für das Restaurant "${businessName}" auf eine sehr negative Bewertung (1–2 Sterne).
+  const systemPrompt = `Erstelle eine deeskalierende, menschliche und verantwortungsvolle Antwort auf eine sehr negative Google-Bewertung.
+Schreibe wie ein aufmerksamer Gastronom — nicht wie Kundenservice, PR-Agentur oder KI.
 
-${langInstruction} Anredeform: ${duSie}
+Grundregeln:
+Beschwerden nicht nacherzaehlen oder woertlich wiederholen.
+Kritik nicht spiegeln.
+Keine Ursachen erfinden.
+Keine leeren Floskeln.
+Natuerliche Sprache, kurze Saetze.
 
-BEWERTUNG von ${firstName || 'einem Gast'}:
+Ziel: Vertrauen zurueckgewinnen und persoenliche Klaerung anbieten.
+Laenge: 3 bis 4 vollstaendige, fliessende Saetze.
+Korrekte Zeichensetzung — jeder Hauptsatz beginnt nach einem Punkt.`
+
+  const userMessage = `${langInstruction} Anredeform: ${duSie}
+
+Restaurant: ${businessName}
+${contactEmail ? `Kontakt-E-Mail: ${contactEmail}` : ''}
+
+Bewertung von ${firstNameClean || 'einem Gast'} (1-2 Sterne):
 "${reviewText}"
 
-DEINE AUFGABE:
-Schreibe EINE deeskalierende, zutiefst verantwortungsvolle Antwort. Ziel: Vertrauen zurückgewinnen, persönliche Klärung anbieten.
-
-REGELN:
-- Gib den Fehler ohne Umschweife und ohne Ausreden zu — konkret auf diese Bewertung eingehen
-- Kein Kleinreden, keine Rechtfertigung, KEINE Ursachen erfinden (niemals: Stress, volles Haus, Personalmangel, Küche überlastet — wenn der Gast es nicht selbst geschrieben hat)
-- Für das Kontaktangebot exakt diese Struktur nutzen: "Wir würden uns freuen, wenn du uns eine kurze Nachricht an ${contactEmail || 'unsere E-Mail'} schreibst, damit wir das persönlich mit dir klären können."
-- Anredeform konsequent: ${duSie}
-- Länge: 3 bis 4 fließende, vollständige Sätze
-- KORREKTE ZEICHENSETZUNG: Jeder neue Hauptsatz beginnt nach einem Punkt. Niemals zwei Hauptsätze ohne Satzzeichen aneinanderreihen.
-  SCHLECHT: "...hätte niemals passieren dürfen gerade in deiner Situation ist das inakzeptabel."
-  GUT: "...hätte niemals passieren dürfen. Gerade in deiner Situation ist das inakzeptabel."
-  SCHLECHT: "...verlassen können gerade bei uns."
-  GUT: "...verlassen können, gerade bei uns."
-- Endet mit: ${signature}
-
-ABSOLUT VERBOTEN:
-- "Hi [Name]" — stattdessen Name direkt oder "Hallo [Name]"
-- Großgeschriebenes "Dir" / "Dein" außer am Satzanfang
-- "Vielen Dank für Ihr/dein Feedback"
-- "Das tut uns sehr leid"
-- "Wir nehmen das ernst"
-- "Wir verstehen deine Enttäuschung"
-- "Wir arbeiten intern daran" / "intern daran arbeiten" / "intern nachgeschärft" / "das Team sensibilisiert" / "Maßnahmen ergriffen" / "intern analysiert"
-- Generische Floskeln ohne Bezug zur Bewertung
+Schreibe EINE deeskalierende Antwort.
+${firstNameClean ? `Beginne mit "Hallo ${firstNameClean},"` : 'Kein Name bekannt — ohne persoenliche Anrede beginnen.'}
+Kontaktangebot wenn E-Mail vorhanden: "Wir wuerden uns freuen, wenn ${duSie === 'Du/Dein (Duzen)' ? 'du uns eine kurze Nachricht an ' + (contactEmail || 'unsere E-Mail') + ' schreibst' : 'Sie uns eine kurze Nachricht an ' + (contactEmail || 'unsere E-Mail') + ' schreiben'}, damit wir das persoenlich klaeren koennen."
+Endet mit: ${signature}
 
 AUSGABE — NUR dieses JSON:
 {"label":"Deeskalierend","text":"..."}`
+
+  return JSON.stringify({ _system: systemPrompt, _user: userMessage })
 }
 
 // ─── HELPER: GEMINI API CALL (Generator) ──────────────────────────────────
@@ -467,8 +466,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // ── SCHRITT 3: Recovery (nur bei 1–2 Sternen) ─────────────────────────
     if (stars <= 2) {
       try {
-        const recoveryPrompt = buildRecoveryPrompt(reviewText, reviewerName, settings)
-        const recoveryRaw = await callClaude(recoveryPrompt)
+        const recoveryPrompt_str = buildRecoveryPrompt(reviewText, reviewerName, settings)
+        let recoveryRaw: string
+        try {
+          const recoveryParsed = JSON.parse(recoveryPrompt_str)
+          if (recoveryParsed._system && recoveryParsed._user) {
+            recoveryRaw = await callGemini(recoveryParsed._user, recoveryParsed._system)
+          } else {
+            recoveryRaw = await callGemini(recoveryPrompt_str)
+          }
+        } catch {
+          recoveryRaw = await callGemini(recoveryPrompt_str)
+        }
         let recoveryJson = recoveryRaw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
         const rs = recoveryJson.indexOf('{')
         const re = recoveryJson.lastIndexOf('}')
