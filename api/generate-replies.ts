@@ -349,7 +349,7 @@ AUSGABE — NUR dieses JSON:
 // ─── HELPER: API CALL ──────────────────────────────────────────────────────
 async function callClaude(userMessage: string, systemPrompt?: string): Promise<string> {
   const body: any = {
-    model: 'claude-sonnet-4-5',
+    model: 'claude-sonnet-4-6',
     max_tokens: 4000,
     messages: [{ role: 'user', content: userMessage }],
   }
