@@ -1311,7 +1311,6 @@ function Analytics({ reviews, userId }: { reviews: Review[], userId?: string }) 
   }
 
   const trendPoints = getTrendData(trendDays)
-  const hasRealData = trendPoints.some(p => p.count > 0)
   const displayPoints = trendPoints
 
   const statusSegments = [
