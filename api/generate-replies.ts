@@ -174,6 +174,8 @@ Keine leeren Floskeln verwenden.
 Kurz und natuerlich schreiben.
 Eher wie ein Gastronom als wie eine Pressestelle.
 Niemals diese Phrasen verwenden: "nehmen wir sehr ernst", "intern adressiert", "intern nachgeschaerft", "Massnahmen ergriffen".
+Bei positiven Bewertungen niemals: "Das freut uns sehr/riesig", "Danke fuer die tollen Worte", "zeigt uns dass wir auf dem richtigen Weg sind", "Wir hoffen dich bald wieder begruessen zu duerfen", "Vielen Dank fuer deine Bewertung/dein Feedback".
+Starte bei Lob direkt mit einer echten Reaktion — nie mit einem generischen Dankeschoen.
 
 Antwortstruktur:
 
