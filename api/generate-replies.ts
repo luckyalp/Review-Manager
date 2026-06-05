@@ -141,17 +141,50 @@ AUSGABE — NUR dieses JSON:
     reviewText.toLowerCase().includes('reagiert') ||
     reviewText.toLowerCase().includes('versichert') ||
     reviewText.toLowerCase().includes('aufgenommen'))
-    ? `HINWEIS: Der Gast erwaehnt, dass das Team bereits vor Ort reagiert hat.
-→ Diese Reaktion kurz anerkennen.
-→ Aber klar machen: eine Reaktion vor Ort hebt den Schrecken oder Vertrauensverlust nicht auf.
-→ Nicht so tun als waere noch nichts passiert.`
+    ? `WICHTIG: Der Gast erwaehnt, dass das Team bereits vor Ort reagiert hat.
+Anerkenne diese Reaktion kurz — aber mache klar: sie hebt den Schrecken oder Vertrauensverlust nicht auf.
+Nicht so tun als waere noch nichts passiert.`
     : ''
 
-  return `Du schreibst Antworten auf Google-Bewertungen fuer das Restaurant "${businessName}".
-Schreibe wie ein aufmerksamer Gastronom — nicht wie Kundenservice, Konzernkommunikation oder KI.
-${langInstruction}
+  // System-Prompt: die Regeln — hoechste Autoritaet
+  const systemPrompt = `Du schreibst Antworten auf Google-Bewertungen fuer Restaurants.
+Schreibe wie ein aufmerksamer Gastronom — nicht wie Kundenservice, Konzernkommunikation, Agentur oder KI.
 
-RESTAURANT:
+OBERSTES PRINZIP:
+Der Gast soll das Gefuehl haben, dass seine Kritik gelesen, verstanden und ernst genommen wurde —
+ohne dass die Antwort die Bewertung nacherzaehlt oder sich rechtfertigt.
+
+GRUNDREGELN:
+- Beschwerden nicht aufzaehlen oder wiederholen
+- Kritik NICHT spiegeln — keine woertliche Uebernahme von Details aus der Bewertung
+- Keine Ursachen erfinden
+- Keine internen Ablaeufe erklaeren
+- Keine leeren Floskeln
+- Kurz und natuerlich schreiben
+
+ANTWORTSTRUKTUR (Slot-Logik — alle 3 Varianten folgen ihr):
+
+Slot 1 – Emotionaler Stossdaempfer:
+Erste Reaktion. Kritik wahrnehmen. Keine Erklaerung, keine Verteidigung.
+WICHTIG: Slot 1 darf die Beschwerde NICHT inhaltlich wiederholen.
+Jede Variante muss Slot 1 anders formulieren — nie denselben Eroefffnungssatz.
+
+Slot 2 – Abstraktion:
+Problem auf hoeherer Ebene einordnen. Eine Kategorie waehlen: Qualitaet / Ablauf / Umgang / Sorgfalt
+Mehrere Probleme → Komplexfall-Satz, keine Aufzaehlung. Keine Details, keine Ursachen.
+
+Slot 3 – Commitment:
+Nur: Was machen wir mit dieser Rueckmeldung? Verantwortung uebernehmen. Keine Ausreden.
+
+Slot 5 – Abschluss:
+Kurz. Professionell. Viele Gruesse / Herzliche Gruesse / Beste Gruesse.
+
+SPRACHSTIL: Natuerliche Sprache. Kurze Saetze. Ruhige Professionalitaet. Wie ein Mensch, nicht wie ein System.`
+
+  // User-Message: nur die Daten — Bewertung + Kontext + Aufgabe
+  const userMessage = `${langInstruction}
+
+RESTAURANT: ${businessName}
 ${context}
 
 ${nameRule}
@@ -161,48 +194,13 @@ BEWERTUNG (${rating} Sterne):
 
 ${alreadyHandled}
 
-OBERSTES PRINZIP:
-Der Gast soll das Gefuehl haben, dass seine Kritik gelesen, verstanden und ernst genommen wurde —
-ohne dass die Antwort die Bewertung nacherzaehlt oder sich rechtfertigt.
-
-GRUNDREGELN:
-- Beschwerden nicht aufzaehlen oder wiederholen
-- Kritik nicht spiegeln
-- Keine Ursachen erfinden
-- Keine internen Ablaeufe erklaeren
-- Keine leeren Floskeln
-- Kurz und natuerlich schreiben
-- Eher wie ein Gastronom als wie eine Pressestelle
-
-ANTWORTSTRUKTUR (alle 3 Varianten folgen dieser Slot-Logik):
-
-Slot 1 – Emotionaler Stossdaempfer:
-Erste Reaktion zeigen. Kritik wahrnehmen. Keine Erklaerung, keine Verteidigung.
-
-Slot 2 – Abstraktion:
-Problem einordnen ohne Details zu wiederholen. Eine Hauptkategorie waehlen:
-Qualitaet / Ablauf / Umgang / Sorgfalt
-Bei mehreren gleichwertigen Problemen: allgemeinen Komplexfall-Satz nutzen, keine Aufzaehlung.
-
-Slot 3 – Commitment:
-Nur: Was machen wir mit dieser Rueckmeldung?
-Verantwortung uebernehmen. Keine Ursachen, keine Rechtfertigungen.
-
 ${slot4}
+Abschluss-Signatur: ${signature}
 
-Slot 5 – Abschluss:
-Kurz. Professionell. Keine neue Information.
-Beispiele: Viele Gruesse / Herzliche Gruesse / Beste Gruesse — ${signature}
-
-SPRACHSTIL:
-Natuerliche Sprache, kurze Saetze, glaubwuerdige Formulierungen, ruhige Professionalitaet.
-Keine Standardfloskel die in jeder Antwort gleich klingt — Slot 1 muss in jeder Variante anders formuliert sein.
-
-3 VARIANTEN — GLEICHE SLOT-LOGIK, UNTERSCHIEDLICHER TON:
-
-Variante 1 – Direkt & Ehrlich: Anredeform Du/dein. Direkt, klar, ohne Aufwaermsatz.
-Variante 2 – Ruhig & Professionell: Anredeform Sie/Ihr. Ruhig, respektvoll, Mensch zuerst.
-Variante 3 – Fokus auf Klaerung: Anredeform ${duSieV3}. Kuerzer, Slot 4 im Vordergrund, max. 3 Saetze.
+Schreibe 3 Varianten:
+Variante 1 – Direkt & Ehrlich: Anredeform Du/dein. Direkt, klar.
+Variante 2 – Ruhig & Professionell: Anredeform Sie/Ihr. Ruhig, Mensch zuerst.
+Variante 3 – Fokus auf Klaerung: Anredeform ${duSieV3}. Kuerzer, max. 3 Saetze, Slot 4 im Vordergrund.
 
 AUSGABE — NUR dieses JSON, kein anderer Text:
 {
@@ -210,6 +208,8 @@ AUSGABE — NUR dieses JSON, kein anderer Text:
   "variant2": {"label": "Ruhig & Professionell", "text": "..."},
   "variant3": {"label": "Fokus auf Klaerung", "text": "..."}
 }`
+
+  return JSON.stringify({ _system: systemPrompt, _user: userMessage })
 }
 
 // ─── JUDGE PROMPT ──────────────────────────────────────────────────────────
@@ -337,7 +337,16 @@ AUSGABE — NUR dieses JSON:
 }
 
 // ─── HELPER: API CALL ──────────────────────────────────────────────────────
-async function callClaude(prompt: string): Promise<string> {
+async function callClaude(userMessage: string, systemPrompt?: string): Promise<string> {
+  const body: any = {
+    model: 'claude-sonnet-4-5',
+    max_tokens: 2000,
+    messages: [{ role: 'user', content: userMessage }],
+  }
+  if (systemPrompt) {
+    body.system = systemPrompt
+  }
+
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -345,11 +354,7 @@ async function callClaude(prompt: string): Promise<string> {
       'x-api-key': ANTHROPIC_API_KEY!,
       'anthropic-version': '2023-06-01',
     },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-5',
-      max_tokens: 2000,
-      messages: [{ role: 'user', content: prompt }],
-    }),
+    body: JSON.stringify(body),
   })
 
   if (!response.ok) {
@@ -405,8 +410,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     // ── SCHRITT 1: Generator ───────────────────────────────────────────────
-    const generatorPrompt = buildPrompt(reviewText, stars, reviewerName, settings)
-    const generatorRaw = await callClaude(generatorPrompt)
+    const generatorRaw_str = buildPrompt(reviewText, stars, reviewerName, settings)
+    let generatorRaw: string
+
+    // CONTENT-Modi liefern JSON mit _system/_user (system-prompt-split)
+    // EMPTY-Modi liefern direkt den Prompt-String
+    try {
+      const parsed = JSON.parse(generatorRaw_str)
+      if (parsed._system && parsed._user) {
+        generatorRaw = await callClaude(parsed._user, parsed._system)
+      } else {
+        generatorRaw = await callClaude(generatorRaw_str)
+      }
+    } catch {
+      generatorRaw = await callClaude(generatorRaw_str)
+    }
+
     const generatedVariants = parseVariants(generatorRaw)
 
     // ── SCHRITT 2: Judge (nur für CONTENT-Modi, nicht für EMPTY) ──────────
