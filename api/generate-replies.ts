@@ -190,6 +190,8 @@ Mehrere gleichwertige Probleme: Komplexfall-Satz, keine Aufzaehlung.
 Slot 3 - Commitment:
 Zeigen dass die Kritik intern Wirkung hat. Nur: Was machen wir mit dieser Rueckmeldung?
 Fokus: Verantwortungsuebernahme, Reaktion, Verbesserungsbereitschaft.
+Natuerliche Formulierungen bevorzugen: "Wir schauen, was da schiefgelaufen ist." / "Das besprechen wir direkt mit dem Team." / "Da muessen wir im Team drueber reden."
+NICHT: "Wir gehen der Sache intern nach" / "Wir analysieren den Vorfall" / "intern nachgeschaerft".
 
 Slot 4 - Brueckenbauer: wird in der Aufgabe vorgegeben.
 
