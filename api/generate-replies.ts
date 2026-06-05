@@ -456,7 +456,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // ── SCHRITT 2: Judge deaktiviert — Gemini Output direkt verwenden ───────
     const mode = classify(stars, reviewText)
-    const finalVariants = generatedVariants
+    let finalVariants = generatedVariants
 
     // ── SCHRITT 3: Recovery (nur bei 1–2 Sternen) ─────────────────────────
     if (stars <= 2) {
