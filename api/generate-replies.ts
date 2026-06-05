@@ -345,7 +345,7 @@ Bewertung von ${firstNameClean || 'einem Gast'} (1-2 Sterne):
 
 Schreibe EINE deeskalierende Antwort.
 ${firstNameClean ? `Beginne mit "Hallo ${firstNameClean},"` : 'Kein Name bekannt — ohne persoenliche Anrede beginnen.'}
-Kontaktangebot wenn E-Mail vorhanden: "Wir wuerden uns freuen, wenn ${duSie === 'Du/Dein (Duzen)' ? 'du uns eine kurze Nachricht an ' + (contactEmail || 'unsere E-Mail') + ' schreibst' : 'Sie uns eine kurze Nachricht an ' + (contactEmail || 'unsere E-Mail') + ' schreiben'}, damit wir das persoenlich klaeren koennen."
+${contactEmail ? `Kontaktangebot: Bitte melde dich kurz unter ${contactEmail}, damit wir das persönlich klären können.` : ''}
 Endet mit: ${signature}
 
 AUSGABE — NUR dieses JSON:
@@ -507,8 +507,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           }
         }
       } catch (e) {
-        console.warn('Recovery generation failed', e)
-        // Kein Fallback nötig — die 3 Hauptvarianten sind bereits da
+        console.error('Recovery generation failed:', e)
       }
     }
 
