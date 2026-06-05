@@ -166,10 +166,9 @@ Slot 1 – Emotionaler Stossdaempfer:
 Dem Gast zeigen dass die Kritik wahrgenommen wurde. Erste emotionale Reaktion, Verstaendnis zeigen. Keine Erklaerung, keine Verteidigung. Jede Variante formuliert Slot 1 anders.
 
 Slot 2 – Abstraktion / Einordnung:
-Das Problem auf hoeherer Ebene einordnen ohne die Beschwerde zu wiederholen.
-Kategorien: Qualitaet / Ablauf / Umgang / Sorgfalt
-Mehrere gleichwertige Probleme → allgemeiner Komplexfall-Satz, keine Aufzaehlung.
-Keine Detailwiederholung, keine Ursachenanalyse.
+Das Problem auf hoeherer Ebene einordnen OHNE Details zu wiederholen. Kategorie waehlen: Qualitaet / Ablauf / Umgang / Sorgfalt.
+Beispiel: "Hier wurde grundlegende Sorgfalt vermissen lassen, wo kein Spielraum fuer Fehler existiert."
+Mehrere Probleme → Komplexfall-Satz, keine Aufzaehlung. Keine Ursachenanalyse.
 
 Slot 3 – Commitment:
 Zeigen dass die Kritik Wirkung hat. Beantwortet nur: Was machen wir mit dieser Rueckmeldung?
@@ -229,58 +228,47 @@ function buildJudgePrompt(
   salutation: string,
   signature: string
 ): string {
-  // signature wird im Judge-Prompt genutzt, salutation nicht mehr direkt
+  return `Du bist ein Qualitaetspruefer fuer Restaurant-Antworten. Du optimierst menschliche Tiefe und filterst KI-Floskeln heraus.
 
-  return `Du bist ein Qualitaetspruefer fuer Restaurant-Antworten. Du bekommst 3 generierte Antworten auf eine Gaestebewertung.
-
-BEWERTUNG:
+BEWERTUNG DES GASTES:
 "${reviewText}"
 
-GENERIERTE VARIANTEN:
+ZUR PRUEFUNG:
 Variante 1 (${variants[0]?.label}): "${variants[0]?.text}"
 Variante 2 (${variants[1]?.label}): "${variants[1]?.text}"
 Variante 3 (${variants[2]?.label}): "${variants[2]?.text}"
 
 ==================================================
-DEINE AUFGABE: Pruefe nach diesen Kriterien:
+PRUEKLISTE:
 ==================================================
 
 1. SLOT-STRUKTUR:
-   Folgt jede Antwort der 5-Slot-Logik?
-   - Slot 1: Emotionaler Stossdaempfer (Reaktion ohne Erklaerung)?
-   - Slot 2: Abstraktion (Einordnung ohne Wiederholung der Beschwerde)?
-   - Slot 3: Commitment (Verantwortung ohne Ausreden)?
-   - Slot 4: Brueckenbauer passend zur Bewertung?
-   - Slot 5: Sauberer, kurzer Abschluss?
-   Wenn ein Slot fehlt oder falsch ausgefuehrt → SCHWACH
+   Folgen Variante 1 & 2 der 5-Slot-Logik?
+   WICHTIG ZU VARIANTE 3: Variante 3 darf kuerzer sein (max. 3 Saetze) und muss NICHT alle 5 Slots ausformulieren.
+   Sie ist gut wenn sie schnell auf Slot 1 (Stossdaempfer) und Slot 4 (Kontaktangebot) fokussiert.
+   Variante 3 NIEMALS als schwach einstufen nur weil sie kurz ist!
 
-2. KEINE WIEDERHOLUNG: Wird die Beschwerde irgendwo nacherzaehlt oder aufgezaehlt?
-   Wenn ja → SCHWACH
+2. NACHERZAEHLUNG:
+   Wiederholt eine Variante den konkreten Fehler woertlich? (z.B. "Dass Ihnen ein falscher Cocktail serviert wurde")
+   Das ist stumpfes KI-Plappern → SCHWACH. Ersetze durch abstrakte Einordnung (Sorgfalt / Ablauf / Umgang / Qualitaet).
 
-3. ANREDEFORM:
-   - Variante 1 muss konsequent "du/dein" verwenden
-   - Variante 2 muss konsequent "Sie/Ihr" verwenden
-   - Variante 3: beliebig aber konsistent
-   Mischung innerhalb einer Variante → SCHWACH
+3. VERBOTENE PHRASEN — ABSOLUT SPERREN:
+   Enthaelt eine Variante: "intern nachgeschaerft" / "Team sensibilisiert" / "Konsequenzen gezogen" /
+   "entspricht nicht unserem Anspruch" / "nehmen wir sehr ernst" / "intern klar gemacht" / "Massnahmen ergriffen"?
+   Wenn JA → SCHWACH. Durch echtes, lebendiges Deutsch eines Gastronoms ersetzen.
 
-4. VERBOTENE PHRASEN: Enthaelt eine Variante Formulierungen wie "intern nachgeschaerft", "Team sensibilisiert", "entspricht nicht unserem Anspruch", "nehmen wir sehr ernst"?
-   Wenn ja → SCHWACH, durch echtes bodenstaendiges Deutsch ersetzen
+4. GRAMMATIK: Fehlen Subjekte ("Verstehen Ihren Aerger" statt "Wir verstehen Ihren Aerger")? → SCHWACH
 
-5. GRAMMATIK: Fehlt irgendwo das Subjekt ("Verstehen, dass..." statt "Wir verstehen...")?
-   Wenn ja → SCHWACH
-
-6. ABSCHLUSS: Enden alle mit: ${signature}?
+5. ABSCHLUSS: Enden alle mit: ${signature}?
 
 ==================================================
 ENTSCHEIDUNG:
 ==================================================
-- Alle 3 gut → "changed": null, alle drei EXAKT unveraendert zurueck
-- Genau eine schwach → rewrite NUR diese, "changed": 1, 2 oder 3
-- Die anderen beiden WORTGENAU zurueckgeben
+- Alle 3 gut → "changed": null, alle drei WORTGENAU zurueck
+- Genau eine schwach → NUR diese neu schreiben, "changed": 1, 2 oder 3
+- Die anderen beiden EXAKT unveraendert kopieren
 
-==================================================
 AUSGABE — NUR dieses JSON:
-==================================================
 {
   "changed": null,
   "variant1": {"label": "Direkt & Ehrlich", "text": "..."},
