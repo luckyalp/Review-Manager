@@ -5,7 +5,8 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   const redirectUri = 'https://review-manager-mu.vercel.app/api/google-callback'
 
   const scopes = [
-    'https://www.googleapis.com/auth/business.manage'
+    'https://www.googleapis.com/auth/plus.business.manage',
+    'https://www.googleapis.com/auth/business.manage',
   ].join(' ')
 
   const params = new URLSearchParams({
