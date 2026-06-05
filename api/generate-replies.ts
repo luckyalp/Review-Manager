@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY
 
 function classify(rating: number, reviewText: string) {
   const wordCount = reviewText.trim().split(/\s+/).filter(Boolean).length
@@ -334,10 +335,37 @@ AUSGABE — NUR dieses JSON:
 {"label":"Deeskalierend","text":"..."}`
 }
 
-// ─── HELPER: API CALL ──────────────────────────────────────────────────────
+// ─── HELPER: GEMINI API CALL (Generator) ──────────────────────────────────
+async function callGemini(userMessage: string, systemPrompt?: string): Promise<string> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${GEMINI_API_KEY}`
+
+  const body: any = {
+    contents: [{ parts: [{ text: userMessage }] }],
+    generationConfig: { maxOutputTokens: 4000 },
+  }
+  if (systemPrompt) {
+    body.system_instruction = { parts: [{ text: systemPrompt }] }
+  }
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+
+  if (!response.ok) {
+    const err = await response.json()
+    throw new Error(`Gemini API Fehler: ${JSON.stringify(err)}`)
+  }
+
+  const data = await response.json()
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+}
+
+// ─── HELPER: CLAUDE API CALL (Judge & Recovery) ────────────────────────────
 async function callClaude(userMessage: string, systemPrompt?: string): Promise<string> {
   const body: any = {
-    model: 'claude-opus-4-6',
+    model: 'claude-sonnet-4-6',
     max_tokens: 4000,
     messages: [{ role: 'user', content: userMessage }],
   }
@@ -407,21 +435,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const signature = settings?.responseSignature || `Das Team von ${businessName}`
 
   try {
-    // ── SCHRITT 1: Generator ───────────────────────────────────────────────
+    // ── SCHRITT 1: Generator (Gemini) ─────────────────────────────────────
     const generatorRaw_str = buildPrompt(reviewText, stars, reviewerName, settings)
     let generatorRaw: string
 
-    // CONTENT-Modi liefern JSON mit _system/_user (system-prompt-split)
+    // CONTENT-Modi liefern JSON mit _system/_user — geht an Gemini
     // EMPTY-Modi liefern direkt den Prompt-String
     try {
       const parsed = JSON.parse(generatorRaw_str)
       if (parsed._system && parsed._user) {
-        generatorRaw = await callClaude(parsed._user, parsed._system)
+        generatorRaw = await callGemini(parsed._user, parsed._system)
       } else {
-        generatorRaw = await callClaude(generatorRaw_str)
+        generatorRaw = await callGemini(generatorRaw_str)
       }
     } catch {
-      generatorRaw = await callClaude(generatorRaw_str)
+      generatorRaw = await callGemini(generatorRaw_str)
     }
 
     const generatedVariants = parseVariants(generatorRaw)
