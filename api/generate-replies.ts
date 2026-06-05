@@ -350,7 +350,7 @@ async function callGemini(userMessage: string, systemPrompt?: string): Promise<s
     generationConfig: { maxOutputTokens: 4000, temperature: 0.7 },
   }
   if (systemPrompt) {
-    body.system_instruction = { parts: [{ text: systemPrompt }] }
+    body.systemInstruction = { parts: [{ text: systemPrompt }] }
   }
 
   const response = await fetch(url, {
