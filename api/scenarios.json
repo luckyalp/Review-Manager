@@ -1,0 +1,112 @@
+{
+  "scenarios": [
+    {
+      "id": "A_TEILLOB",
+      "name": "Das Teillob",
+      "description": "Gemischte Bewertung: ein Aspekt positiv, ein anderer negativ",
+      "priority": 1,
+      "triggers": {
+        "min_stars": 3,
+        "max_stars": 4,
+        "requires_positive_keywords": true,
+        "requires_negative_keywords": true,
+        "positive_keywords": [
+          "top", "super", "toll", "lecker", "perfekt", "ausgezeichnet",
+          "hervorragend", "wunderbar", "fantastisch", "köstlich", "sehr gut",
+          "klasse", "traumhaft", "grandios", "exzellent", "vorzüglich",
+          "hauptspeise", "vorspeise", "hauptgericht", "steak", "fisch",
+          "atmosphäre", "ambiente", "service war gut", "bedienung war nett"
+        ],
+        "negative_keywords": [
+          "aber", "leider", "schade", "enttäuschend", "kalt", "lang gewart",
+          "warten musste", "lange warten", "zu lang", "nicht so",
+          "dessert", "nachtisch", "nachspeise", "enttäuscht", "weniger gut",
+          "könnte besser", "nicht überzeugt", "leider nicht", "jedoch",
+          "allerdings", "dagegen", "hingegen"
+        ]
+      },
+      "rule": "Nicht pauschal entschuldigen. Das Positive zuerst und ehrlich verstärken. Beim Negativen echtes, neugieriges Interesse zeigen — nicht defensiv, sondern lernbereit. Den Gast einladen, mehr zu erzählen.",
+      "tone_note": "Überraschend direkt, fast wie unter Kollegen. Kein 'Es tut uns leid, dass...'. Stattdessen: 'mich würde interessieren' oder 'ich bin gespannt, was genau'.",
+      "example_du": "Hi {name}, mega, dass dir das {positives_element} so gut geschmeckt hat! Beim {negatives_element} tut es mir leid — mich würde aber wirklich brennend interessieren: War es geschmacklich einfach nicht dein Ding oder hat es handwerklich nicht gepasst? Meld dich mal kurz bei mir unter {kontakt}.",
+      "example_sie": "Hallo {name}, schön, dass Ihnen das {positives_element} so gut gefallen hat! Beim {negatives_element} möchte ich mich entschuldigen — mich würde aber wirklich interessieren: War es geschmacklich nicht Ihr Ding oder hat es handwerklich nicht gepasst? Melden Sie sich gerne kurz bei uns unter {kontakt}.",
+      "example_generic_du": "Hi, mega, dass dir ein Teil des Abends so gut gefallen hat. Bei dem, was nicht gestimmt hat — da würde mich wirklich interessieren, was genau nicht gepasst hat. Magst du dich kurz melden?",
+      "example_generic_sie": "Schön, dass Ihnen Teile des Abends gefallen haben. Bei dem, was nicht gestimmt hat, würde ich wirklich gerne mehr erfahren — damit wir es beim nächsten Mal besser machen. Melden Sie sich gerne."
+    },
+    {
+      "id": "B_HAUSREGELN",
+      "name": "Hausregeln & No-Gos",
+      "description": "Beschwerde über Hausregeln: Hundeverbot, Wartezeit bei vollem Haus, Kleiderordnung, etc.",
+      "priority": 2,
+      "triggers": {
+        "min_stars": 1,
+        "max_stars": 3,
+        "requires_positive_keywords": false,
+        "requires_negative_keywords": false,
+        "rule_keywords": [
+          "hund", "hunde", "vierbeiner", "hündchen", "haustier", "tier", "welpe",
+          "keine hunde", "kein hund", "hundeverbot",
+          "warten mussten obwohl", "reservierung", "trotz reservierung",
+          "kleiderordnung", "dresscode", "krawatte", "jacket",
+          "draußen warten", "rauswarten", "stehen mussten",
+          "kein platz obwohl", "obwohl wir reserviert"
+        ]
+      },
+      "rule": "Kein Einknicken. Die Regel charmant und menschlich erklären — nicht entschuldigend, sondern mit der Logik dahinter. Verständnis zeigen für den Frust, aber die Entscheidung als vernünftig darstellen. Nie die Regel in Frage stellen.",
+      "tone_note": "Ruhig und selbstsicher. Nicht defensiv, nicht arrogant. So wie ein Gastgeber, der eine Regel erklären muss, hinter der er steht.",
+      "example_du": "Hey {name}, ich kann total verstehen, dass du {kontext_des_problems}. {regel_erklaerung} Ich hoffe, du verstehst das — beim nächsten Mal freuen wir uns trotzdem auf dich.",
+      "example_sie": "Hallo {name}, ich verstehe gut, dass {kontext_des_problems}. {regel_erklaerung} Wir hoffen, Sie haben dafür Verständnis — und freuen uns beim nächsten Besuch auf Sie.",
+      "example_hund_du": "Hey {name}, ich kann total verstehen, dass du deinen Vierbeiner gerne dabei gehabt hättest. Bei uns in der offenen Küche müssen wir uns aber strikt an die Hygienevorgaben halten — das ist leider nicht verhandelbar. Ich hoffe, du verstehst das.",
+      "example_hund_sie": "Hallo {name}, ich verstehe gut, dass Sie Ihren Vierbeiner gerne dabei gehabt hätten. In unserer offenen Küche sind wir an strenge Hygienevorgaben gebunden — das ist leider nicht verhandelbar. Wir hoffen, Sie haben Verständnis dafür.",
+      "example_wartezeit_du": "Hey {name}, ich verstehe, dass Warten frustrierend ist — besonders wenn man hungrig ist. An dem Abend war bei uns wirklich Land unter, und ich gebe zu, dass das bei der Kommunikation nicht ideal war. Beim nächsten Mal kriegst du einen besseren Überblick von uns.",
+      "example_wartezeit_sie": "Hallo {name}, eine lange Wartezeit ist frustrierend, das verstehe ich. An dem Abend war bei uns wirklich viel los — aber das entschuldigt nicht, wenn die Kommunikation dazu nicht gepasst hat. Beim nächsten Besuch machen wir das besser."
+    },
+    {
+      "id": "C_STANDARD_KRITIK",
+      "name": "Die Standard-Kritik",
+      "description": "Typische Gastro-Beschwerden: Essen kalt, Service langsam, lange Wartezeit, falsche Bestellung",
+      "priority": 3,
+      "triggers": {
+        "min_stars": 1,
+        "max_stars": 3,
+        "requires_positive_keywords": false,
+        "requires_negative_keywords": false,
+        "standard_keywords": [
+          "kalt", "kalt serviert", "kalt ankam", "kalt war",
+          "langsam", "zu langsam", "lange warten", "lange gewartet",
+          "über eine stunde", "45 minuten", "eine stunde",
+          "falsch", "falsches gericht", "falsche bestellung", "verwechselt",
+          "vergessen", "vergessen worden", "nicht gebracht",
+          "desinteressiert", "unfreundlich", "unhöflich", "genervt",
+          "service schlecht", "bedienung schlecht", "service war mäßig"
+        ]
+      },
+      "rule": "Sofort eine menschliche Verbindung herstellen. Den Fehler klar eingestehen — keine Ausreden, keine Erklärungen. Dann den Ball zurückspielen: eine zweite Chance anbieten, konkret und glaubwürdig.",
+      "tone_note": "Ehrlich und geerdet. Klingt wie jemand, der weiß dass es schiefgelaufen ist und das auch sagt. Keine diplomatische Weichspülung. 'Das ist schiefgelaufen' ist besser als 'Das entspricht nicht unseren Standards'.",
+      "example_du": "Hör mal, das ist gestern Abend echt schiefgelaufen. Normalerweise haben wir {aspekt} im Griff — gestern war aber Land unter. Beim nächsten Mal läuft das besser, versprochen!",
+      "example_sie": "Das ist tatsächlich nicht gut gelaufen, und das tut mir leid. Normalerweise haben wir {aspekt} gut unter Kontrolle — das war kein normaler Abend für uns. Beim nächsten Besuch machen wir das besser.",
+      "example_kalt_du": "Hör mal, kaltes Essen geht gar nicht — das ist schiefgelaufen und das weiß ich. Normalerweise haben wir da die Kurve. Beim nächsten Mal läuft das besser, versprochen.",
+      "example_kalt_sie": "Kaltes Essen geht gar nicht — das ist schiefgelaufen, und das tut mir leid. Normalerweise haben wir das besser im Griff. Beim nächsten Besuch machen wir das besser.",
+      "example_service_du": "Hör mal, das ist gestern Abend echt schiefgelaufen. Normalerweise haben wir den Service im Griff, gestern war aber Land unter. Beim nächsten Mal läuft das besser, versprochen!",
+      "example_service_sie": "Das hätte nicht so laufen sollen, und das tut mir leid. An dem Abend war bei uns einiges nicht optimal — aber das ist keine Entschuldigung. Beim nächsten Besuch machen wir das besser."
+    },
+    {
+      "id": "D_REINES_LOB",
+      "name": "Reines Lob",
+      "description": "Durchweg positive Bewertung ohne nennenswerte Kritik",
+      "priority": 4,
+      "triggers": {
+        "min_stars": 4,
+        "max_stars": 5,
+        "requires_positive_keywords": false,
+        "requires_negative_keywords": false,
+        "exclude_negative_keywords": true
+      },
+      "rule": "Kein generisches 'Danke für Ihre Bewertung'. Direkt auf etwas Konkretes aus der Bewertung eingehen. Kurz und aufrichtig — nicht überschwänglich.",
+      "tone_note": "So wie wenn ein Gastronom nach dem Essen kurz an den Tisch kommt und sich freut. Authentisch, nicht formuliert.",
+      "example_du": "Das freut mich wirklich — {konkreter_bezug}. Bis bald!",
+      "example_sie": "Das hört man gerne — {konkreter_bezug}. Wir freuen uns auf Ihren nächsten Besuch.",
+      "example_generic_du": "Danke — so ein Feedback macht den Tag besser. Bis bald!",
+      "example_generic_sie": "Das hört man gerne. Wir freuen uns auf Ihren nächsten Besuch."
+    }
+  ]
+}

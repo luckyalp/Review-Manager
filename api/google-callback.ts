@@ -41,5 +41,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     updated_at: new Date().toISOString(),
   }, { onConflict: 'user_id' })
 
+  // Sofort ersten Sync auslösen
+  try {
+    await fetch('https://review-manager-mu.vercel.app/api/sync-reviews', {
+      method: 'GET',
+    })
+  } catch (e) {
+    console.warn('Erster Sync fehlgeschlagen:', e)
+    // Kein Fehler zeigen — stündlicher Cron übernimmt
+  }
+
   res.redirect('/?google=connected')
 }
