@@ -73,8 +73,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const location = locationsData.locations?.[0]
       if (!location) continue
 
+      // location.name Format: "locations/123456" oder "accounts/xxx/locations/xxx"
+      // Für Reviews brauchen wir: accounts/{accountId}/locations/{locationId}
+      const locationName = location.name.startsWith('accounts/')
+        ? location.name
+        : `${account.name}/locations/${location.name.split('/').pop()}`
+
       const reviewsRes = await fetch(
-        `https://mybusiness.googleapis.com/v4/${location.name}/reviews`,
+        `https://mybusiness.googleapis.com/v4/${locationName}/reviews`,
         { headers: { Authorization: `Bearer ${accessToken}` } }
       )
       const reviewsData = await reviewsRes.json()
