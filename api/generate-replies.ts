@@ -218,7 +218,7 @@ BEI KRITIK AM ESSEN OHNE KONKRETEN MANGEL:
 Nutze exakt eine dieser beiden Fragen: "War es einfach nicht dein persoenlicher Geschmack oder hat bei der Zubereitung etwas nicht gestimmt?" ODER "Schade, dass es dir nicht geschmeckt hat. Lag es einfach am persoenlichen Geschmack oder lief bei uns im Service oder in der Kueche etwas schief?"
 
 BEI KRITIK AN PREISEN ODER PORTIONSGROESSEN:
-Preise sind bewusst gesetzt — weil bei Qualitaet keine Abstriche gemacht werden. Nicht entschuldigend formulieren, sondern als klare Haltung.
+Niemals rechtfertigen oder fuer die Preise entschuldigen. Baue zwingend diesen Kernsatz woertlich in die Antwort ein: "Unsere Preise haben einen Grund — wir setzen auf frische Ware und Qualitaet, die sich im Preis widerspiegelt. Dafuer stehen wir." Dieser Satz darf inhaltlich nicht veraendert oder verweichlicht werden. Er darf aber fliessend in die jeweilige Variante eingebettet werden.
 
 BEI KRITIK AN LAUTSTAERKE ODER AMBIENTE:
 Je nach Auslastung kann es in einem gut besuchten Restaurant laut und turbulent werden. Kurz anerkennen, nicht dramatisieren.`
