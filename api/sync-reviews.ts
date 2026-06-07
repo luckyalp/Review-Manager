@@ -112,6 +112,70 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           stars: starRatingToNumber(review.starRating),
         })
         totalNew++
+
+        // ── E-Mail Benachrichtigung ──────────────────────────────────────────
+        try {
+          // Settings des Gastronoms laden
+          const { data: settingsRow } = await supabase
+            .from('settings')
+            .select('value')
+            .eq('key', 'restaurant_profile')
+            .eq('user_id', token.user_id)
+            .single()
+
+          const settings = settingsRow?.value || {}
+          const notificationEmail = settings.notificationEmail
+          if (!notificationEmail) continue
+
+          const reviewData = {
+            reviewerName: review.reviewer?.displayName || 'Anonym',
+            stars: starRatingToNumber(review.starRating),
+            reviewText: review.comment || '',
+          }
+
+          // KI-Antworten generieren
+          const baseUrl = 'https://review-manager-mu.vercel.app'
+          const repliesRes = await fetch(`${baseUrl}/api/generate-replies`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ review: reviewData, settings }),
+          })
+          const repliesData = await repliesRes.json()
+
+          if (repliesData.missingContext) {
+            // E-Mail mit Hinweis senden
+            await fetch(`${baseUrl}/api/send-email`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                to: notificationEmail,
+                ...reviewData,
+                restaurantName: settings.businessName || '',
+                salutation: settings.salutation || 'Sie',
+                missingContext: true,
+                missingInfo: repliesData.missingInfo,
+                answers: [],
+              }),
+            })
+          } else if (repliesData.success && repliesData.answers) {
+            // Normale E-Mail mit Antworten senden
+            await fetch(`${baseUrl}/api/send-email`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                to: notificationEmail,
+                ...reviewData,
+                restaurantName: settings.businessName || '',
+                salutation: settings.salutation || 'Sie',
+                answers: repliesData.answers,
+              }),
+            })
+          }
+        } catch (emailErr) {
+          console.error('E-Mail Versand fehlgeschlagen:', emailErr)
+          // Kein Abbruch — Bewertung ist gespeichert, das ist Priorität
+        }
+        // ── Ende E-Mail ──────────────────────────────────────────────────────
       }
     } catch (err) {
       console.error('Fehler bei User', token.user_id, err)
