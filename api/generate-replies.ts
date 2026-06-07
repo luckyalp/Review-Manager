@@ -433,6 +433,55 @@ function parseVariants(raw: string): { label: string; text: string; isRecovery?:
   ]
 }
 
+// ─── CONTEXT CHECK ─────────────────────────────────────────────────────────
+// Prüft ob die Description genug Kontext liefert um die Bewertung sicher zu beantworten.
+// Läuft VOR der eigentlichen Generierung. Ändert nichts am bestehenden Code darunter.
+async function checkContext(reviewText: string, description: string): Promise<{ ok: boolean; missing?: string }> {
+  // Wenn kein Text in der Bewertung — kein Kontext nötig, immer OK
+  const wordCount = reviewText.trim().split(/\s+/).filter(Boolean).length
+  if (wordCount < 6) return { ok: true }
+
+  const systemPrompt = `Du bist ein strikter Qualitätsprüfer für Restaurant-Antworten.
+Deine einzige Aufgabe: Entscheide ob das Restaurantprofil genug Informationen enthält um auf diese Bewertung sicher zu antworten — ohne etwas erfinden zu müssen.
+
+Antworte NUR mit einem dieser zwei Formate:
+OK
+MISSING: [kurze Beschreibung was fehlt, max. 1 Satz auf Deutsch]
+
+Wann ist MISSING korrekt?
+- Die Bewertung enthält einen konkreten Vorwurf über eine spezifische Situation oder Entscheidung des Restaurants (z.B. Platzvergabe, Reservierungspolitik, Hausregeln, spezifische Abläufe)
+- UND das Profil enthält dazu keine Erklärung oder Regel
+
+Wann ist OK korrekt?
+- Allgemeine Kritik (Essen, Service, Wartezeit, Atmosphäre) — hier braucht die KI keine Hausregeln
+- Das Profil enthält eine passende Erklärung zur Situation
+- Die Bewertung ist positiv oder neutral
+
+Sei NICHT überstreng. Im Zweifel: OK.`
+
+  const userMessage = `RESTAURANTPROFIL:
+${description || '(keine Beschreibung eingetragen)'}
+
+BEWERTUNG:
+"${reviewText}"
+
+Ist das Profil ausreichend um sicher zu antworten?`
+
+  try {
+    const result = await callClaude(userMessage, systemPrompt)
+    const trimmed = result.trim()
+    if (trimmed.startsWith('MISSING:')) {
+      const missing = trimmed.replace('MISSING:', '').trim()
+      return { ok: false, missing }
+    }
+    return { ok: true }
+  } catch (e) {
+    // Im Fehlerfall: immer OK — lieber generieren als blockieren
+    console.error('Context check failed, proceeding anyway:', e)
+    return { ok: true }
+  }
+}
+
 // ─── HANDLER ───────────────────────────────────────────────────────────────
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -454,6 +503,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const signature = settings?.responseSignature || `Das Team von ${businessName}`
 
   try {
+    // ── SCHRITT 0: Context Check ──────────────────────────────────────────
+    const description = settings?.description || ''
+    const contextCheck = await checkContext(reviewText, description)
+    if (!contextCheck.ok) {
+      return res.status(200).json({
+        success: false,
+        missingContext: true,
+        missingInfo: contextCheck.missing || 'Fehlende Informationen im Restaurantprofil',
+      })
+    }
+
     // ── SCHRITT 1: Generator (Gemini) ─────────────────────────────────────
     const generatorRaw_str = buildPrompt(reviewText, stars, reviewerName, settings)
     let generatorRaw: string
