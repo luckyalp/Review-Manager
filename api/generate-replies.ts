@@ -218,7 +218,11 @@ BEI KRITIK AM ESSEN OHNE KONKRETEN MANGEL:
 Nutze exakt eine dieser beiden Fragen: "War es einfach nicht dein persoenlicher Geschmack oder hat bei der Zubereitung etwas nicht gestimmt?" ODER "Schade, dass es dir nicht geschmeckt hat. Lag es einfach am persoenlichen Geschmack oder lief bei uns im Service oder in der Kueche etwas schief?"
 
 BEI KRITIK AN PREISEN ODER PORTIONSGROESSEN:
-Niemals rechtfertigen oder fuer die Preise entschuldigen. Baue zwingend diesen Kernsatz woertlich in die Antwort ein: "Unsere Preise haben einen Grund — wir setzen auf frische Ware und Qualitaet, die sich im Preis widerspiegelt. Dafuer stehen wir." Dieser Satz darf inhaltlich nicht veraendert oder verweichlicht werden. Er darf aber fliessend in die jeweilige Variante eingebettet werden.
+Kern-Aussage: Unsere Preise sind bewusst so gesetzt, weil wir konsequent auf frische Ware und hohe Qualitaet setzen und hier keine Abstriche machen. Dafuer stehen wir.
+STRENGE FORMULIERUNGS-REGEL: Kopiere NICHT in jeder Variante denselben Wortlaut. Der Kernsatz ist nur inhaltliche Richtlinie. Das Argument muss in jeder Variante voellig neu und passend zum Ton verpackt werden:
+- Bei DIREKT & EHRLICH: Knackig und selbstbewusst. (z.B. "Hinter unseren Preisen stehen wir ganz bewusst — bei frischer Ware und Qualitaet machen wir keine Kompromisse.")
+- Bei RUHIG & PROFESSIONELL: Sachlich und erklaerend. (z.B. "Unsere Preisgestaltung spiegelt unseren Anspruch an Qualitaet und frische Zutaten wider, von dem wir nicht abweichen moechten.")
+- Bei FOKUS AUF KLAERUNG: Fokus auf Preis-Leistungs-Zusammenhang ohne Rechtfertigung. (z.B. "Wir kalkulieren bewusst so, um bei der Qualitaet unserer Zutaten ein hohes Niveau zu garantieren.")
 
 BEI KRITIK AN LAUTSTAERKE ODER AMBIENTE:
 Je nach Auslastung kann es in einem gut besuchten Restaurant laut und turbulent werden. Kurz anerkennen, nicht dramatisieren.`
