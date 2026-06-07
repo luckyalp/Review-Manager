@@ -274,9 +274,10 @@ Abschluss: Waehle passend zum Ton "Viele Grüße, ${signature}" oder "Herzliche 
 
 Schreibe 3 Varianten. Fuer ALLE gilt strikt: ${duSieAnrede}. ${anredeHinweis}
 
-Variante 1 – Direkt & Ehrlich: Locker, direkt, ehrlich — geht sofort ohne Umschweife ins Thema. Kein Name.
-Variante 2 – Ruhig & Professionell: Empathisch, ruhig, Mensch zuerst. Startet mit der vorgegebenen Begrüssung.
-Variante 3 – Fokus auf Klaerung: Kuerzer, max. 3 Saetze, direkter Kontaktkanal im Vordergrund. Kein Name.
+Variante 1 – Direkt & Ehrlich: Locker, direkt, ehrlich. Startet mit "Hi ${firstNameCapitalized}," oder "Hey ${firstNameCapitalized}," (kein Name bekannt: "Hi," oder "Hey,")
+Variante 2 – Ruhig & Professionell: Empathisch, ruhig, Mensch zuerst. Startet mit "Hallo ${firstNameCapitalized}," (kein Name bekannt: "Hallo,")
+Variante 3 – Fokus auf Klaerung: Kuerzer, max. 3 Saetze, direkter Kontaktkanal im Vordergrund. Startet mit "Hi ${firstNameCapitalized}," oder "Hallo ${firstNameCapitalized}," (kein Name bekannt: "Hi," oder "Hallo,")
+WICHTIG: Beziehe dich bei Hausregeln NICHT auf den spezifischen Tag aus der Bewertung (z.B. "Samstagabend") sondern auf die generelle Regel wie sie im Profil steht.
 
 AUSGABE — NUR dieses JSON, kein anderer Text:
 {
