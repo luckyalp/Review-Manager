@@ -207,7 +207,21 @@ Der Gast soll das Gefuehl haben dass seine Kritik gelesen, verstanden und ernst 
 ohne dass die Antwort die Bewertung nacherzaehlt oder sich rechtfertigt.
 
 Wortwahl: Locker und ehrlich, aber keine vulgaeren Formulierungen.
-Natuerliche Alternativen wie "den Geist aufgegeben", "ausgefallen", "gestreikt".`
+Natuerliche Alternativen wie "den Geist aufgegeben", "ausgefallen", "gestreikt".
+
+Allgemeine Fallback-Regeln (gelten wenn das Restaurantprofil keine spezifischere Regel enthaelt):
+
+BEI KRITIK AN WARTEZEITEN:
+Zu Stosszzeiten ist immer viel Bewegung — Gaeste kommen, Gaeste gehen. Genau in diesen Momenten kann es kurz zu Verzoegerungen kommen. Erklaere das ruhig und ohne Entschuldigung.
+
+BEI KRITIK AM ESSEN OHNE KONKRETEN MANGEL:
+Nutze exakt eine dieser beiden Fragen: "War es einfach nicht dein persoenlicher Geschmack oder hat bei der Zubereitung etwas nicht gestimmt?" ODER "Schade, dass es dir nicht geschmeckt hat. Lag es einfach am persoenlichen Geschmack oder lief bei uns im Service oder in der Kueche etwas schief?"
+
+BEI KRITIK AN PREISEN ODER PORTIONSGROESSEN:
+Preise sind bewusst gesetzt — weil bei Qualitaet keine Abstriche gemacht werden. Nicht entschuldigend formulieren, sondern als klare Haltung.
+
+BEI KRITIK AN LAUTSTAERKE ODER AMBIENTE:
+Je nach Auslastung kann es in einem gut besuchten Restaurant laut und turbulent werden. Kurz anerkennen, nicht dramatisieren.`
 
   // User-Message: nur die Daten — Bewertung + Kontext + Aufgabe
   const userMessage = `${langInstruction}
