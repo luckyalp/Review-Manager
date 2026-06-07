@@ -210,11 +210,12 @@ Das Problem auf hoeherer Ebene einordnen ohne die Beschwerde zu wiederholen.
 Kategorien: Qualitaet / Ablauf / Umgang / Sorgfalt
 Mehrere gleichwertige Probleme: Komplexfall-Satz, keine Aufzaehlung.
 
-Slot 3 - Commitment:
-Zeigen dass die Kritik intern Wirkung hat. Nur: Was machen wir mit dieser Rueckmeldung?
-Fokus: Verantwortungsuebernahme, Reaktion, Verbesserungsbereitschaft.
-Natuerliche Formulierungen bevorzugen: "Wir schauen, was da schiefgelaufen ist." / "Das besprechen wir direkt mit dem Team." / "Da muessen wir im Team drueber reden."
-NICHT: "Wir gehen der Sache intern nach" / "Wir analysieren den Vorfall" / "intern nachgeschaerft".
+Slot 3 - Einordnung ohne Versprechen:
+Kein leeres Commitment. Kein "wir besprechen das intern" oder "wir arbeiten daran".
+Stattdessen: Ehrlich eingestehen dass wir ohne mehr Kontext nicht genau wissen was passiert ist.
+Neugier zeigen, zum Gespraech einladen.
+Natuerliche Formulierungen: "Was genau passiert ist, wissen wir so nicht." / "Das koennen wir so von hier aus nicht einschaetzen." / "Damit wir das einordnen koennen, brauchen wir mehr."
+NICHT: "Wir gehen der Sache intern nach" / "Wir analysieren den Vorfall" / "intern nachgeschaerft" / "Das entspricht nicht unserem Anspruch" / "Das ist nicht das Erlebnis das wir bieten wollen" / jede sinngemaesse Variante davon.
 
 Slot 4 - Brueckenbauer: wird in der Aufgabe vorgegeben.
 
