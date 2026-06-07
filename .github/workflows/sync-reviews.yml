@@ -2,17 +2,12 @@ name: Stündlicher Bewertungs-Sync
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Jede volle Stunde
-  workflow_dispatch:       # Auch manuell auslösbar
+    - cron: '0 * * * *'
+  workflow_dispatch:
 
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
       - name: Sync Reviews
-        run: |
-          curl -X GET "https://review-manager-mu.vercel.app/api/sync-reviews" \
-            --fail \
-            --silent \
-            --show-error \
-            --max-time 30
+        run: curl -s "https://review-manager-mu.vercel.app/api/sync-reviews"
