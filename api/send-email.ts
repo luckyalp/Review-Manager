@@ -7,7 +7,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { to, reviewerName, stars, reviewText, answers, restaurantName, isTest, salutation, contactEmail } = req.body
+  const { to, reviewerName, stars, reviewText, answers, restaurantName, isTest, salutation, contactEmail, missingContext, missingInfo } = req.body
   if (!RESEND_API_KEY) {
     return res.status(500).json({ error: 'RESEND_API_KEY nicht konfiguriert' })
   }
@@ -28,6 +28,98 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const sand        = '#f7f5f2'
   const border      = '#e2ddd8'
   const bgBody      = '#f7f5f2'
+
+  // ─── MISSING CONTEXT EMAIL ─────────────────────────────────────────────────
+  if (missingContext) {
+    const missingHtml = `<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root { color-scheme: light only; }
+    body { background-color: ${bgBody} !important; color: #1a1a1a !important; }
+  </style>
+</head>
+<body style="margin:0; padding:20px; background-color:${bgBody} !important; font-family: Arial, sans-serif; color: #1a1a1a;" bgcolor="${bgBody}">
+  <div style="max-width: 580px; margin: 0 auto;">
+
+    <div style="background: linear-gradient(135deg, ${petrol} 0%, ${petrolMid} 100%); border-radius: 14px 14px 0 0; padding: 20px 24px;">
+      <table cellpadding="0" cellspacing="0" role="presentation">
+        <tr>
+          <td style="vertical-align: middle; width: 48px;">
+            <div style="background-color: ${petrolLight}; border-radius: 10px; width: 40px; height: 40px; line-height: 40px; text-align: center; font-size: 22px;">⭐</div>
+          </td>
+          <td style="vertical-align: middle; padding-left: 12px;">
+            <div style="color: #ffffff; font-size: 17px; font-weight: 700; letter-spacing: -0.2px;">Rezpond</div>
+            <div style="color: #a5c8d0; font-size: 13px; margin-top: 2px;">${restaurantName || 'Neue Bewertung eingegangen'}</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div style="background-color: #ffffff; padding: 24px; border-radius: 0 0 14px 14px; border: 1px solid ${border}; border-top: none;">
+
+      <!-- Bewertung -->
+      <div style="border: 1px solid ${border}; border-radius: 12px; padding: 16px; margin-bottom: 24px; background-color: #fdfcfa;">
+        <table cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 10px;" role="presentation">
+          <tr>
+            <td style="vertical-align: middle; width: 48px;">
+              <div style="width: 40px; height: 40px; border-radius: 50%; background-color: #e2ddd8; line-height: 40px; text-align: center; font-weight: 700; font-size: 14px; color: #374151;">${initials}</div>
+            </td>
+            <td style="vertical-align: middle; padding-left: 12px;">
+              <div style="font-weight: 700; font-size: 15px; color: #111827;">${reviewerName}</div>
+              <div style="margin-top: 3px;">
+                <span style="color: #F0B100; font-size: 16px;">${starsFilled}</span><span style="color: #d1d5db; font-size: 16px;">${starsEmpty}</span>
+                <span style="font-size: 11px; color: #6b7280; background-color: #f3f0ec; padding: 2px 8px; border-radius: 10px; margin-left: 6px;">Google · ${stars}/5 Sterne</span>
+              </div>
+            </td>
+          </tr>
+        </table>
+        <div style="font-size: 14px; color: #374151; line-height: 1.6; font-style: italic;">"${reviewText}"</div>
+      </div>
+
+      <!-- Hinweis-Block -->
+      <div style="border: 1.5px solid #d97706; border-left: 4px solid #d97706; border-radius: 12px; padding: 20px; background: #fffbeb; margin-bottom: 20px;">
+        <div style="font-size: 22px; margin-bottom: 10px;">🤔</div>
+        <div style="font-weight: 700; font-size: 15px; color: #92400e; margin-bottom: 10px;">Kurz eine Frage, bevor ich antworte...</div>
+        <div style="font-size: 14px; color: #78350f; line-height: 1.6; margin-bottom: 14px;">
+          Diese Bewertung enthält einen konkreten Vorwurf — ich möchte keine Antwort erfinden, die vielleicht nicht stimmt.<br><br>
+          <strong>Was mir fehlt:</strong> ${missingInfo || 'Fehlende Informationen im Restaurantprofil'}<br><br>
+          Wenn du das kurz in deinem Profil ergänzt, kann ich beim nächsten Mal direkt eine passende Antwort liefern.
+        </div>
+        <a href="https://review-manager-mu.vercel.app" style="display: inline-block; padding: 10px 20px; background: #d97706; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 13px; font-weight: 600;">→ Jetzt Profil ergänzen</a>
+      </div>
+
+      <div style="text-align: center; margin-top: 24px; padding-top: 16px; border-top: 1px solid ${border};">
+        <a href="https://review-manager-mu.vercel.app" style="color: ${petrol}; font-size: 13px; text-decoration: none; font-weight: 600;">Dashboard öffnen →</a>
+        <div style="font-size: 11px; color: #9ca3af; margin-top: 8px;">Automatisch generiert von Rezpond</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`
+
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'Rezpond <noreply@hiptoys.de>',
+        to: [to],
+        subject: `⚠️ Neue Bewertung von ${reviewerName} — Profil-Ergänzung nötig`,
+        html: missingHtml,
+      }),
+    })
+    const data = await response.json()
+    if (!response.ok) {
+      return res.status(500).json({ error: 'E-Mail konnte nicht gesendet werden', details: data })
+    }
+    return res.status(200).json({ success: true, id: data.id })
+  }
+  // ─── END MISSING CONTEXT ───────────────────────────────────────────────────
 
   // Petrol-Abstufungen für die 3 normalen Karten
   const normalColors = [petrol, petrolMid, petrolLight]
