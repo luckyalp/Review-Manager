@@ -804,7 +804,8 @@ function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews,
         </div>
       </div>
 
-      {/* Test-E-Mail — ganz unten */}
+      {/* Test-E-Mail — nur für Admins */}
+      {(userId === '6ae1a7a5-72c9-4b75-88d5-042a703b5b54' || userId === '81df2fe7-aab5-4527-b512-fa58eb9ee55f') && (
       <div style={{ background: 'linear-gradient(135deg, #f0f7f8, #e8f4f6)', borderRadius: '12px', border: '1px solid #a5c8d0', padding: '18px 20px', marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', boxShadow: '0 2px 8px rgba(15,76,92,0.07), 0 1px 2px rgba(0,0,0,0.04)' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
           <span style={{ fontSize: '22px' }}>📧</span>
@@ -820,6 +821,7 @@ function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews,
           {testRunning ? '⏳ Wird gesendet...' : testDone ? '✅ Gesendet' : '📧 Test-E-Mail senden'}
         </button>
       </div>
+      )}
     </div>
   )
 }
@@ -1242,19 +1244,19 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
           )}
           {missingContext && !aiLoading && (
             <div className="rd2-state-box" style={{borderLeft: '4px solid #d97706', background: '#fffbeb'}}>
-              <div className="rd2-state-icon">⚠️</div>
-              <div className="rd2-state-title" style={{color: '#92400e'}}>Antwort konnte nicht generiert werden</div>
+              <div className="rd2-state-icon">🤔</div>
+              <div className="rd2-state-title" style={{color: '#92400e'}}>Kurz eine Frage, bevor ich antworte...</div>
               <div className="rd2-state-desc" style={{color: '#78350f'}}>
-                <strong>Was fehlt:</strong> {missingContext}
+                Diese Bewertung enthält einen konkreten Vorwurf — und ich möchte keine Antwort erfinden, die vielleicht nicht stimmt. Was mir fehlt: <strong>{missingContext}</strong>
                 <br/><br/>
-                Bitte ergänze deine Profilbeschreibung mit den relevanten Hausregeln oder Informationen. Danach kannst du die Antwort erneut generieren.
+                Wenn du das kurz in deinem Profil ergänzt, kann ich beim nächsten Mal direkt eine passende Antwort liefern. Oder du sagst mir: "Generier trotzdem" — dann mach ich das Beste draus.
               </div>
               <button
                 onClick={() => { setMissingContext(null); onBack() }}
                 className="rd2-gen-btn"
                 style={{background: '#d97706', marginTop: '8px'}}
               >
-                → Zu den Einstellungen (Profil ergänzen)
+                → Profil ergänzen
               </button>
               <button
                 onClick={() => { setMissingContext(null); generateReplies() }}
