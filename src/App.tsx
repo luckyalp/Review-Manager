@@ -2065,9 +2065,14 @@ function Settings({ onLogout, userId }: { onLogout: () => void, userId?: string 
         </div>
         <label style={lbl}>Benachrichtigungs-E-Mail</label>
         <input style={inp} type="email" placeholder="z. B. inhaber@meinrestaurant.de" value={form.notificationEmail} onChange={e => update('notificationEmail', e.target.value)} />
-        <div style={{ background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: '8px', padding: '10px 12px', fontSize: '12px', color: '#92400e', marginTop: '10px' }}>
-          ⚠️ E-Mail-Dienst nicht konfiguriert. Registrieren Sie sich auf <strong>resend.com</strong> und fügen Sie <code style={{ background: '#fde68a', padding: '1px 4px', borderRadius: '3px' }}>RESEND_API_KEY</code> hinzu.
-        </div>
+        {form.notificationEmail
+          ? <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '8px', padding: '10px 12px', fontSize: '12px', color: '#166534', marginTop: '10px' }}>
+              ✅ Benachrichtigungen werden an diese Adresse gesendet.
+            </div>
+          : <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '10px 12px', fontSize: '12px', color: '#6b7280', marginTop: '10px' }}>
+              Bitte E-Mail-Adresse eintragen um Benachrichtigungen zu erhalten.
+            </div>
+        }
       </div></div>
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px', paddingBottom: '16px' }}>
