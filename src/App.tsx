@@ -1089,6 +1089,7 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
   const [answers, setAnswers] = useState<{label: string, text: string, isRecovery?: boolean}[]>([])
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [showToast, setShowToast] = useState(false)
+  const [missingContext, setMissingContext] = useState<string | null>(null)
   const textareaRefs = useRef<Record<number, HTMLTextAreaElement | null>>({})
   const settings = JSON.parse(localStorage.getItem('rezpondSettings') || '{}')
 
@@ -1152,6 +1153,7 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
 
   const generateReplies = async () => {
     setAiLoading(true)
+    setMissingContext(null)
     try {
       const response = await fetch('/api/generate-replies', {
         method: 'POST',
@@ -1159,7 +1161,9 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
         body: JSON.stringify({ review: { reviewerName: review.name, stars: review.stars, reviewText: review.text }, settings })
       })
       const data = await response.json()
-      if (data.success && data.answers) {
+      if (data.missingContext) {
+        setMissingContext(data.missingInfo || 'Fehlende Informationen im Restaurantprofil')
+      } else if (data.success && data.answers) {
         setAnswers(data.answers)
       } else {
         setAnswers([{ label: 'Fehler', text: 'Antworten konnten nicht geladen werden. Bitte nochmal versuchen.' }])
@@ -1222,7 +1226,7 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
 
       {review.status !== 'Beantwortet' && (
         <>
-          {answers.length === 0 && !aiLoading && (
+          {answers.length === 0 && !aiLoading && !missingContext && (
             <div className="rd2-state-box">
               <div className="rd2-state-icon">✨</div>
               <div className="rd2-state-title">Noch keine Antworten generiert</div>
@@ -1234,6 +1238,31 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
             <div className="rd2-state-box">
               <div className="rd2-state-icon">⏳</div>
               <div className="rd2-state-title">KI generiert Antworten…</div>
+            </div>
+          )}
+          {missingContext && !aiLoading && (
+            <div className="rd2-state-box" style={{borderLeft: '4px solid #d97706', background: '#fffbeb'}}>
+              <div className="rd2-state-icon">⚠️</div>
+              <div className="rd2-state-title" style={{color: '#92400e'}}>Antwort konnte nicht generiert werden</div>
+              <div className="rd2-state-desc" style={{color: '#78350f'}}>
+                <strong>Was fehlt:</strong> {missingContext}
+                <br/><br/>
+                Bitte ergänze deine Profilbeschreibung mit den relevanten Hausregeln oder Informationen. Danach kannst du die Antwort erneut generieren.
+              </div>
+              <button
+                onClick={() => { setMissingContext(null); onBack() }}
+                className="rd2-gen-btn"
+                style={{background: '#d97706', marginTop: '8px'}}
+              >
+                → Zu den Einstellungen (Profil ergänzen)
+              </button>
+              <button
+                onClick={() => { setMissingContext(null); generateReplies() }}
+                className="rd2-gen-btn"
+                style={{background: '#6b7280', marginTop: '4px'}}
+              >
+                Trotzdem generieren
+              </button>
             </div>
           )}
           {answers.length > 0 && (
