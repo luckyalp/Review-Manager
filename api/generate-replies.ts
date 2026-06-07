@@ -110,6 +110,7 @@ ABSOLUT VERBOTEN:
 - "Das freut uns sehr"
 - "Wir heissen Sie jederzeit wieder herzlich willkommen"
 - Jede Form von standardisierter Dankesformel
+- Gedankenstriche (weder "—" noch " - ") — nutze Punkt oder Komma stattdessen.
 
 AUSGABE — NUR dieses JSON:
 {"variant1":{"label":"Herzlich","text":"..."},"variant2":{"label":"Persoenlich","text":"..."},"variant3":{"label":"Kurz & warm","text":"..."}}`
@@ -143,9 +144,10 @@ ABSOLUT VERBOTEN:
 - "Das tut uns sehr leid"
 - "Wir bitten um Verstaendnis"
 - "Wir nehmen Ihr/dein Feedback ernst"
+- Gedankenstriche (weder "—" noch " - ") — nutze Punkt oder Komma stattdessen.
 
 AUSGABE — NUR dieses JSON:
-{"variant1":{"text":"..."},"variant2":{"text":"..."},"variant3":{"text":"..."}}`
+{"variant1":{"label":"Direkt & Ehrlich","text":"..."},"variant2":{"label":"Ruhig & Professionell","text":"..."},"variant3":{"label":"Fokus auf Klaerung","text":"..."}}`
   }
 
   // ─── CONTENT MODI (POSITIVE / MIXED / NEGATIVE) ────────────────────────────
