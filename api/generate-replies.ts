@@ -625,6 +625,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ success: true, answers: finalVariants })
 
   } catch (error) {
-    return res.status(500).json({ error: 'Serverfehler', details: String(error) })
+    const errMsg = error instanceof Error ? error.message : String(error)
+    console.error('generate-replies FEHLER:', errMsg)
+    return res.status(500).json({ error: 'Serverfehler', details: errMsg })
   }
 }
