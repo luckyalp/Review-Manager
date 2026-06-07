@@ -56,12 +56,17 @@ function buildPrompt(reviewText: string, rating: number, reviewerName: string, s
     : `Hallo ${firstNameCapitalized},`
 
   const nameRule = firstNameCapitalized
-    ? `PERSONALISIERUNG:
-- Variante 1: kein Name — direkt ins Thema starten
-- Variante 2: beginnt exakt mit "${begruessungV2}"
-- Variante 3: kein Name — direkt ins Thema starten
+    ? `PERSONALISIERUNG UND BEGRUESSUNGS-PFLICHT:
+Alle drei Varianten MUESSEN mit einer Begruessung inkl. Name starten.
+- DIREKT & EHRLICH: beginnt mit "Hi ${firstNameCapitalized}," oder "Hey ${firstNameCapitalized},"
+- RUHIG & PROFESSIONELL: beginnt mit "Hallo ${firstNameCapitalized},"
+- FOKUS AUF KLAERUNG: beginnt mit "Hi ${firstNameCapitalized}," oder "Hallo ${firstNameCapitalized},"
 Schreibe den Namen IMMER genau so: ${firstNameCapitalized} — nie in Grossbuchstaben.`
-    : 'PERSONALISIERUNG: Kein Name bekannt — alle drei ohne persoenliche Anrede'
+    : `PERSONALISIERUNG UND BEGRUESSUNGS-PFLICHT:
+Kein Name bekannt. Alle drei Varianten starten trotzdem mit einer Begruessung:
+- DIREKT & EHRLICH: "Hi," oder "Hey,"
+- RUHIG & PROFESSIONELL: "Hallo,"
+- FOKUS AUF KLAERUNG: "Hi," oder "Hallo,"`
 
   const context = [
     `Restaurant: ${businessName}`,
@@ -181,14 +186,7 @@ Starte bei Lob direkt mit einer echten Reaktion — nie mit einem generischen Da
 STRENGES FORMATIERUNGS-VERBOT (MENSCHLICHER SCHREIBSTIL):
 VERBOT VON GEDANKENSTRICHEN: Nutze NIEMALS Gedankenstriche (weder "—" noch "-") um Saetze zu trennen oder Zusaetze einzufuegen. Nutze stattdessen einen Punkt oder ein Komma.
 
-DYNAMISCHE BEGRUESSUNGS-PFLICHT:
-Jede Antwort MUSS mit einer passenden Begruessung starten. Die Begruessung variiert je nach Tonfall:
-- Bei DIREKT & EHRLICH: "Hi ${firstNameCapitalized}," oder "Hey ${firstNameCapitalized},"
-- Bei RUHIG & PROFESSIONELL: "Hallo ${firstNameCapitalized}," oder "Guten Tag ${firstNameCapitalized},"
-- Bei FOKUS AUF KLAERUNG: "Hi ${firstNameCapitalized}," oder "Hallo ${firstNameCapitalized},"
-- Bei DEESKALIEREND: "Hallo ${firstNameCapitalized},"
-Kein Name bekannt: Starte ohne Namen aber trotzdem mit "Hi," oder "Hallo,".
-Nach der Begruessung folgt der eigentliche Einstieg (z.B. "Schade, dass..."). Die Begruessung darf NIEMALS weggelassen werden.
+
 Wenn die KI eine logische Ursache fuer eine Situation erklaert (z.B. hohe Auslastung, volles Haus, lebhafte Atmosphaere), darf sie danach NIEMALS so klingen als haette das Restaurant ein ungeloestes Problem oder muesste Besserung geloben.
 VERBOTEN: "Das ist etwas, dem wir mehr Aufmerksamkeit widmen muessen" oder "Wir haben das auf dem Schirm" (wenn es sich um eine normale Gegebenheit handelt).
 ERLAUBT: Die Situation als Gegebenheit stehen lassen und loesungsorientiert nach vorne blicken (z.B. einen anderen Tisch anbieten). Die KI waehlt EINE klare Linie: Entweder wir stehen zur lebhaften Atmosphaere eines vollen Hauses, ODER wir bieten eine diskrete Loesung an. Niemals beides vermischen.
