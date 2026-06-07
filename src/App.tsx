@@ -628,8 +628,7 @@ function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews,
             <div style={{ fontWeight: '600', fontSize: '15px', color: '#0f4c5c', marginBottom: '5px' }}>Herzlich willkommen bei Rezpond!</div>
             <div style={{ fontSize: '13px', color: '#374151', lineHeight: '1.6' }}>
               Sobald Google verbunden ist, zieht Rezpond automatisch deine letzten <strong>90 unbeantworteten Bewertungen</strong> rein — ohne E-Mail-Flut.
-              Neue Bewertungen kommen danach <strong>stündlich</strong> rein.<br />
-              <span style={{ color: '#6b7280' }}>Bis dahin: Klick auf <strong>✏️ Bewertung hinzufügen</strong> und probiere die KI direkt aus.</span>
+              Neue Bewertungen kommen danach <strong>stündlich</strong> rein.
             </div>
           </div>
           <button onClick={dismissWelcome} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: '18px', padding: '0 4px', lineHeight: 1, flexShrink: 0 }} title="Schließen">×</button>
