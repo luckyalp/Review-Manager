@@ -408,6 +408,30 @@ function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews,
   const [testError, setTestError] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
   const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem('rezpondWelcomeDismissed'))
+  const [googleConnected, setGoogleConnected] = useState<boolean | null>(null)
+  const [lastSync, setLastSync] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!userId) return
+    const checkGoogleToken = async () => {
+      try {
+        const { data } = await supabase
+          .from('google_tokens')
+          .select('updated_at')
+          .eq('user_id', userId)
+          .single()
+        if (data) {
+          setGoogleConnected(true)
+          setLastSync(data.updated_at)
+        } else {
+          setGoogleConnected(false)
+        }
+      } catch {
+        setGoogleConnected(false)
+      }
+    }
+    checkGoogleToken()
+  }, [userId])
 
   const dismissWelcome = () => {
     localStorage.setItem('rezpondWelcomeDismissed', '1')
@@ -679,20 +703,43 @@ function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews,
       </div>
 
       {/* Sync Status — Banner-Style */}
-      <div style={{ background: 'linear-gradient(135deg, #f0f7f8, #e8f4f6)', border: '1px solid #a5c8d0', borderRadius: '14px', padding: '14px 18px', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', boxShadow: '0 2px 8px rgba(15,76,92,0.07), 0 1px 2px rgba(0,0,0,0.04)' }}>
+      <div style={{ background: googleConnected ? 'linear-gradient(135deg, #f0fdf4, #dcfce7)' : 'linear-gradient(135deg, #f0f7f8, #e8f4f6)', border: `1px solid ${googleConnected ? '#86efac' : '#a5c8d0'}`, borderRadius: '14px', padding: '14px 18px', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', boxShadow: '0 2px 8px rgba(15,76,92,0.07), 0 1px 2px rgba(0,0,0,0.04)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#a5c8d0', flexShrink: 0 }} />
+          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: googleConnected ? '#22c55e' : '#a5c8d0', flexShrink: 0 }} />
           <div>
-            <div style={{ fontSize: '13px', color: '#0f4c5c', fontWeight: '600' }}>Google Sync: Noch nicht verbunden</div>
-            <div style={{ fontSize: '12px', color: '#4a8fa0', marginTop: '2px' }}>Bewertungen können bis dahin manuell hinzugefügt werden.</div>
+            {googleConnected === null && (
+              <div style={{ fontSize: '13px', color: '#6b7280' }}>Verbindungsstatus wird geprüft...</div>
+            )}
+            {googleConnected === true && (
+              <>
+                <div style={{ fontSize: '13px', color: '#166534', fontWeight: '600' }}>✅ Google verbunden — Bewertungen werden automatisch synchronisiert</div>
+                {lastSync && <div style={{ fontSize: '12px', color: '#4a8fa0', marginTop: '2px' }}>Letzter Sync: {new Date(lastSync).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })} Uhr</div>}
+              </>
+            )}
+            {googleConnected === false && (
+              <>
+                <div style={{ fontSize: '13px', color: '#0f4c5c', fontWeight: '600' }}>Google Sync: Noch nicht verbunden</div>
+                <div style={{ fontSize: '12px', color: '#4a8fa0', marginTop: '2px' }}>Bewertungen können bis dahin manuell hinzugefügt werden.</div>
+              </>
+            )}
           </div>
         </div>
-        <button
-          onClick={() => { window.location.href = `/api/google-auth?userId=${userId}` }}
-          style={{ background: '#0f4c5c', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 14px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, fontFamily: 'inherit' }}
-        >
-          Mit Google verbinden
-        </button>
+        {googleConnected === false && (
+          <button
+            onClick={() => { window.location.href = `/api/google-auth?userId=${userId}` }}
+            style={{ background: '#0f4c5c', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 14px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, fontFamily: 'inherit' }}
+          >
+            Mit Google verbinden
+          </button>
+        )}
+        {googleConnected === true && (
+          <button
+            onClick={() => { window.location.href = `/api/google-auth?userId=${userId}` }}
+            style={{ background: 'transparent', color: '#4a8fa0', border: '1px solid #a5c8d0', borderRadius: '8px', padding: '8px 14px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, fontFamily: 'inherit' }}
+          >
+            Neu verbinden
+          </button>
+        )}
       </div>
 
       {/* Reviews + Distribution */}
