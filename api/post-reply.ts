@@ -72,7 +72,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const locationsRes = await fetch(
-    `https://mybusinessbusinessinformation.googleapis.com/v1/${account.name}/locations`,
+    `https://mybusinessbusinessinformation.googleapis.com/v1/${account.name}/locations?readMask=name,title`,
     { headers: { Authorization: `Bearer ${accessToken}` } }
   )
   const locationsData = await locationsRes.json()
