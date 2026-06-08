@@ -106,7 +106,6 @@ function successPage() {
     function countdown() {
       document.getElementById('timer').textContent = seconds;
       if (seconds <= 0) {
-        window.close();
         window.location.href = 'https://review-manager-mu.vercel.app';
       }
       seconds--;
