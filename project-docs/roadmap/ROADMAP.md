@@ -12,7 +12,10 @@
 - Slot-Architektur (5 Slots: Stoßdämpfer → Abstraktion → Commitment → Brückenbauer → Abschluss)
 - Anredeform (Du/Sie) einheitlich aus Profil-Settings
 - Temperatur: 0.7 für natürlichere Ausgabe
-- KI-Engine: umgestellt auf Claude Sonnet 4-6 (Anthropic) — Gemini als Fallback im Code
+- KI-Engine: umgestellt auf Claude Sonnet 4-6 (Anthropic) — Gemini als Fallback im Code (callGemini Funktion vorhanden aber nicht aktiv)
+- Welcome-Box: veralteter Hinweis auf "Bewertung hinzufügen" entfernt (08.06.2026)
+- post-reply.ts: readMask-Fix — locations API 400-Fehler behoben (08.06.2026)
+- generate-replies.ts: besseres Error-Logging — 500er liefern jetzt konkrete Fehlermeldung (08.06.2026)
 - KI-Analyse in Insights: echte Gemini-Auswertung mit Zeitraum-Auswahl
 
 ### Varianten-Labels (fest)
@@ -120,6 +123,25 @@
 ### App-Code aufräumen
 - App.tsx in einzelne Komponenten aufteilen
 - Erst nach stabilem Betrieb mit echten Daten
+
+---
+
+## Modell-Wechsel: Was müsste geändert werden?
+
+Aktuell läuft der **Generator** (Antworten erstellen), der **Judge** (Qualitätsprüfung), der **Context Check** und die **Recovery-Karte** alle über Claude (callClaude in generate-replies.ts).
+
+Die callGemini Funktion ist im Code vorhanden und einsatzbereit — wird aber nicht aufgerufen.
+
+### Falls du zurück zu Gemini willst:
+In generate-replies.ts an drei Stellen `callClaude` → `callGemini` ersetzen:
+1. Schritt 0: Context Check → `callClaude` in `checkContext()`
+2. Schritt 1: Generator → `callClaude` im Handler
+3. Schritt 3: Recovery → `callClaude` im Recovery-Block
+
+**Außerdem:** Gemini-Modellname in `callGemini` prüfen — aktuell steht dort `gemini-3-flash-preview` (war beim letzten Wechsel der aktuelle Name, könnte veraltet sein).
+
+### KI-Analyse (Insights-Tab):
+Läuft bereits separat über Gemini — wird vom Modell-Wechsel oben nicht berührt.
 
 ---
 
