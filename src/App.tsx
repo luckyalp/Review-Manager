@@ -16,6 +16,7 @@ interface Review {
   status: ReviewStatus
   photoUrl?: string
   googleReviewId?: string
+  selectedAnswer?: string
 }
 
 // ─── DATA ────────────────────────────────────────────────────────────────────
@@ -123,6 +124,7 @@ function App() {
       date: row.review_date,
       status: row.status as ReviewStatus,
       googleReviewId: row.google_review_id ?? undefined,
+      selectedAnswer: row.selected_answer ?? undefined,
     })
     const loadReviews = async () => {
       try {
@@ -944,10 +946,17 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview, initialFilterS
               </button>
             )}
 
-            {/* Antwort ausgewählt Badge */}
+            {/* Antwort ausgewählt Badge + gesendeter Text */}
             {review.status === 'Beantwortet' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#16a34a', fontSize: '13px', fontWeight: '500' }}>
-                ✅ Antwort ausgewählt
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#16a34a', fontSize: '13px', fontWeight: '500' }}>
+                  ✅ Gesendet
+                </div>
+                {review.selectedAnswer && (
+                  <div style={{ fontSize: '12px', color: '#6b7280', background: '#f3f4f6', borderRadius: '6px', padding: '8px 10px', maxWidth: '480px', lineHeight: '1.5', fontStyle: 'italic' }}>
+                    „{review.selectedAnswer}"
+                  </div>
+                )}
               </div>
             )}
 
