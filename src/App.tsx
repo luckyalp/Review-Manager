@@ -835,68 +835,9 @@ function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews,
 // ─── BEWERTUNGEN ─────────────────────────────────────────────────────────────
 
 function Reviews({ reviews, onStatusChange, onDelete, openReview, initialFilterStars = 'alle' }: { reviews: Review[], onStatusChange: (id: number, s: ReviewStatus) => void, onDelete: (id: number) => void, openReview: (r: Review) => void, initialFilterStars?: string }) {
-  const [openAI, setOpenAI] = useState<number | null>(null)
-  const [selected, setSelected] = useState<{[key: number]: number}>({})
   const [filterStatus, setFilterStatus] = useState('alle')
   const [filterStars, setFilterStars] = useState(initialFilterStars)
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null)
-  const [aiLoading, setAiLoading] = useState<number | null>(null)
-  const [aiAnswers, setAiAnswers] = useState<{[key: number]: {label: string, text: string}[]}>({})
-
-  const sendAnswer = async (review: Review) => {
-    const text = aiAnswers[review.id]?.[selected[review.id]]?.text
-    try {
-      await supabase.from('reviews').update({ selected_answer: text ?? null }).eq('id', review.id)
-    } catch (e) { console.warn('Supabase save failed', e) }
-
-    // Zu Google posten wenn echte google_review_id vorhanden
-    if (review.googleReviewId && text) {
-      try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          await fetch('/api/post-reply', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              userId: user.id,
-              googleReviewId: review.googleReviewId,
-              answerText: text,
-            }),
-          })
-        }
-      } catch (e) { console.warn('Google Post fehlgeschlagen:', e) }
-    }
-
-    onStatusChange(review.id, 'Beantwortet')
-    setOpenAI(null)
-  }
-
-  const settings = JSON.parse(localStorage.getItem('rezpondSettings') || '{}')
-
-  const generateReplies = async (review: Review) => {
-    setAiLoading(review.id)
-    setOpenAI(review.id)
-    try {
-      const response = await fetch('/api/generate-replies', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          review: { reviewerName: review.name, stars: review.stars, reviewText: review.text },
-          settings,
-        })
-      })
-      const data = await response.json()
-      if (data.success && data.answers) {
-        setAiAnswers(prev => ({ ...prev, [review.id]: data.answers }))
-      } else {
-        setAiAnswers(prev => ({ ...prev, [review.id]: [{ label: 'Fehler', text: 'Antworten konnten nicht geladen werden. Bitte nochmal versuchen.' }] }))
-      }
-    } catch {
-      setAiAnswers(prev => ({ ...prev, [review.id]: [{ label: 'Fehler', text: 'Antworten konnten nicht geladen werden. Bitte nochmal versuchen.' }] }))
-    }
-    setAiLoading(null)
-  }
-
   const filtered = reviews.filter(r => {
     if (filterStatus === 'ausstehend' && r.status !== 'Ausstehend') return false
     if (filterStatus === 'beantwortet' && r.status !== 'Beantwortet') return false
