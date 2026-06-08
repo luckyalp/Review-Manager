@@ -89,6 +89,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const cutoff = new Date()
       cutoff.setDate(cutoff.getDate() - 90)
 
+      // Szenario 1: Gelöschte Bewertungen aus Supabase entfernen
+      const googleReviewIds = reviews.map((r: any) => r.reviewId)
+      const { data: supabaseReviews } = await supabase
+        .from('reviews')
+        .select('id, google_review_id')
+        .eq('user_id', token.user_id)
+        .not('google_review_id', 'is', null)
+
+      if (supabaseReviews) {
+        for (const sr of supabaseReviews) {
+          if (!googleReviewIds.includes(sr.google_review_id)) {
+            await supabase.from('reviews').delete().eq('id', sr.id)
+            console.log('Gelöschte Bewertung entfernt:', sr.google_review_id)
+          }
+        }
+      }
+
       for (const review of reviews) {
         const reviewDate = new Date(review.createTime)
         if (reviewDate < cutoff) continue
@@ -96,11 +113,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         const { data: existing } = await supabase
           .from('reviews')
-          .select('id')
+          .select('id, review_text')
           .eq('google_review_id', review.reviewId)
           .single()
 
-        if (existing) continue
+        // Szenario 3: Bearbeitete Bewertung aktualisieren
+        if (existing) {
+          const newText = review.comment || ''
+          if (existing.review_text !== newText) {
+            await supabase.from('reviews').update({
+              review_text: newText,
+              reviewer_name: review.reviewer?.displayName || 'Anonym',
+              stars: starRatingToNumber(review.starRating),
+            }).eq('id', existing.id)
+            console.log('Bewertung aktualisiert:', review.reviewId)
+          }
+          continue
+        }
 
         await supabase.from('reviews').insert({
           google_review_id: review.reviewId,
