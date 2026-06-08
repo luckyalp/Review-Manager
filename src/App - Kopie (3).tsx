@@ -343,7 +343,7 @@ function App() {
             <>
               {page === 'dashboard' && <Dashboard stats={stats} reviews={reviews} openReview={openReview} onAddReview={addManualReview} userId={user?.id} onNavigateReviews={(filter?: string) => { setReviewsInitialFilter(filter || 'alle'); setPage('reviews'); setSelectedReview(null) }} />}
               {page === 'reviews' && !selectedReview && <Reviews reviews={reviews} onStatusChange={updateReviewStatus} onDelete={deleteReview} openReview={openReview} initialFilterStars={reviewsInitialFilter} />}
-              {page === 'reviews' && selectedReview && <ReviewDetail review={selectedReview} onStatusChange={updateReviewStatus} onBack={() => setSelectedReview(null)} onNavigateSettings={() => { setSelectedReview(null); setPage('settings') }} />}
+              {page === 'reviews' && selectedReview && <ReviewDetail review={selectedReview} onStatusChange={updateReviewStatus} onBack={() => setSelectedReview(null)} />}
               {page === 'analytics' && <Analytics reviews={reviews} userId={user?.id} />}
               {page === 'settings' && <Settings onLogout={handleLogout} userId={user?.id} />}
             </>
@@ -1030,7 +1030,7 @@ const rdStyles = `
 
 // ─── REVIEW DETAIL ───────────────────────────────────────────────────────────
 
-function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings }: { review: Review, onStatusChange: (id: number, s: ReviewStatus) => void, onBack: () => void, onNavigateSettings: () => void }) {
+function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onStatusChange: (id: number, s: ReviewStatus) => void, onBack: () => void }) {
   const [aiLoading, setAiLoading] = useState(false)
   const [answers, setAnswers] = useState<{label: string, text: string, isRecovery?: boolean}[]>([])
   const [selectedId, setSelectedId] = useState<number | null>(null)
@@ -1196,7 +1196,7 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings }: { 
                 Wenn du das kurz in deinem Profil ergänzt, kann ich beim nächsten Mal direkt eine passende Antwort liefern. Oder du sagst mir: "Generier trotzdem" — dann mach ich das Beste draus.
               </div>
               <button
-                onClick={() => { setMissingContext(null); onNavigateSettings() }}
+                onClick={() => { setMissingContext(null); onBack() }}
                 className="rd2-gen-btn"
                 style={{background: '#d97706', marginTop: '8px'}}
               >
