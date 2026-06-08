@@ -848,6 +848,25 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview, initialFilterS
     try {
       await supabase.from('reviews').update({ selected_answer: text ?? null }).eq('id', review.id)
     } catch (e) { console.warn('Supabase save failed', e) }
+
+    // Zu Google posten wenn echte google_review_id vorhanden
+    if (review.googleReviewId && text) {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          await fetch('/api/post-reply', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: user.id,
+              googleReviewId: review.googleReviewId,
+              answerText: text,
+            }),
+          })
+        }
+      } catch (e) { console.warn('Google Post fehlgeschlagen:', e) }
+    }
+
     onStatusChange(review.id, 'Beantwortet')
     setOpenAI(null)
   }
