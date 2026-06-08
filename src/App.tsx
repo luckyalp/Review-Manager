@@ -2284,11 +2284,13 @@ function AuthScreen({ initialMode = 'login' }: { initialMode?: 'login' | 'regist
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [alreadyRegistered, setAlreadyRegistered] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setSuccess('')
+    setAlreadyRegistered(false)
     setLoading(true)
 
     if (mode === 'login') {
@@ -2297,13 +2299,19 @@ function AuthScreen({ initialMode = 'login' }: { initialMode?: 'login' | 'regist
         ? 'E-Mail oder Passwort ist falsch.'
         : error.message)
     } else {
-      const { error } = await supabase.auth.signUp({ email, password })
+      const { data, error } = await supabase.auth.signUp({ email, password })
       if (error) {
-        setError(error.message === 'User already registered'
-          ? 'Diese E-Mail ist bereits registriert. Bitte einloggen.'
-          : error.message)
+        if (error.message === 'User already registered') {
+          setAlreadyRegistered(true)
+        } else {
+          setError(error.message)
+        }
+      } else if (data.user && !data.session) {
+        // Supabase gibt manchmal keinen Fehler zurück, obwohl die E-Mail schon existiert
+        // In dem Fall: user existiert aber keine aktive Session → E-Mail bereits registriert
+        setAlreadyRegistered(true)
       } else {
-        setSuccess('Registrierung erfolgreich! Bitte bestätigen Sie Ihre E-Mail-Adresse.')
+        setSuccess('Registrierung erfolgreich! Bitte bestätige deine E-Mail-Adresse.')
       }
     }
     setLoading(false)
@@ -2407,6 +2415,18 @@ function AuthScreen({ initialMode = 'login' }: { initialMode?: 'login' | 'regist
                 placeholder={mode === 'register' ? 'Mindestens 6 Zeichen' : '••••••••'} value={password} onChange={e => setPassword(e.target.value)} />
             </div>
 
+            {alreadyRegistered && (
+              <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '8px', padding: '10px 12px', fontSize: '13px', color: '#dc2626', marginBottom: '16px' }}>
+                ⚠️ Diese E-Mail ist bereits registriert.{' '}
+                <button
+                  type="button"
+                  onClick={() => { setMode('login'); setError(''); setSuccess(''); setAlreadyRegistered(false) }}
+                  style={{ background: 'none', border: 'none', color: '#0f4c5c', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', fontSize: '13px', padding: 0, textDecoration: 'underline' }}
+                >
+                  Jetzt anmelden →
+                </button>
+              </div>
+            )}
             {error && (
               <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '8px', padding: '10px 12px', fontSize: '13px', color: '#dc2626', marginBottom: '16px' }}>
                 ⚠️ {error}
