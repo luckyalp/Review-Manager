@@ -1022,7 +1022,7 @@ const rdStyles = `
   .rd2-state-icon { font-size: 32px; margin-bottom: 14px; }
   .rd2-state-title { font-weight: 600; font-size: 16px; color: var(--rd2-text); margin-bottom: 7px; }
   .rd2-state-desc { font-size: 13.5px; color: var(--rd2-text-muted); margin-bottom: 24px; line-height: 1.6; max-width: 340px; margin-left: auto; margin-right: auto; }
-  .rd2-gen-btn { display: inline-flex; align-items: center; gap: 7px; padding: 10px 26px; background: var(--rd2-petrol); color: #fff; border: none; border-radius: 40px; cursor: pointer; font-size: 13.5px; font-family: 'DM Sans', sans-serif; font-weight: 600; box-shadow: 0 2px 8px rgba(15,76,92,0.22); transition: background 0.18s, transform 0.1s; }
+  .rd2-gen-btn { display: inline-flex; align-items: center; gap: 7px; padding: 10px 26px; background: var(--rd2-petrol); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 13.5px; font-family: 'DM Sans', sans-serif; font-weight: 600; box-shadow: 0 2px 8px rgba(15,76,92,0.22); transition: background 0.18s, transform 0.1s; }
   .rd2-gen-btn:hover { background: var(--rd2-petrol-mid); transform: translateY(-1px); }
   .rd2-toast { position: fixed; bottom: 72px; left: 50%; transform: translateX(-50%) translateY(16px); background: var(--rd2-success); color: white; padding: 10px 24px; border-radius: 40px; font-size: 13px; font-weight: 500; font-family: 'DM Sans', sans-serif; opacity: 0; transition: opacity 0.25s, transform 0.25s; pointer-events: none; white-space: nowrap; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
   .rd2-toast.rd2-toast-show { opacity: 1; transform: translateX(-50%) translateY(0); }
