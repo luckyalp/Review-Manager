@@ -29,6 +29,11 @@
 - Multi-Tenant Login — jeder Nutzer sieht nur seine eigenen Daten
 - Row Level Security — Datenbank auf Datenbankebene abgesichert
 - Google OAuth Login (E-Mail + Google)
+- Auth: Fehlermeldung bei bereits registrierter E-Mail mit "Jetzt anmelden"-Button (08.06.2026)
+- Auth: Passwort vergessen Funktion eingebaut (08.06.2026)
+- Auth: Doppelte E-Mail zuverlässig via identities-Check erkannt (08.06.2026)
+- Supabase SMTP auf Resend umgestellt — Auth-E-Mails laufen über noreply@hiptoys.de (08.06.2026)
+- Supabase Site URL von localhost:3000 auf https://review-manager-mu.vercel.app umgestellt (08.06.2026)
 - Google Business Profile OAuth — Bewertungen automatisch einlesen
 - Stündlicher Vercel Cron-Job (sync-reviews.ts)
 - Erster Sync: nur letzte 90 Tage, nur unbeantwortete Bewertungen, keine E-Mails
@@ -155,3 +160,28 @@ Läuft bereits separat über Gemini — wird vom Modell-Wechsel oben nicht berü
 - E-Mail: Resend (domain verifiziert, key eingetragen)
 - Hosting: Vercel (auto-deploy via GitHub)
 - Code: GitHub (luckyalp/Review-Manager, branch: main)
+
+---
+
+## Domain-Wechsel (wenn rezpond.com live geht) 🔄
+
+Wenn die echte Domain aktiv ist, sind genau **3 Schritte** nötig:
+
+### Schritt 1 — Resend
+- resend.com → Domains → "Add domain"
+- `rezpond.com` hinzufügen
+- DNS-Einträge beim Domain-Anbieter setzen (Resend zeigt sie an)
+- Warten bis Status "Verified" erscheint (~5–30 Min)
+
+### Schritt 2 — Supabase SMTP
+- supabase.com → Authentication → Emails → SMTP Settings
+- **Sender email address** ändern: `noreply@hiptoys.de` → `noreply@rezpond.com`
+- Save changes
+
+### Schritt 3 — Supabase URL
+- supabase.com → Authentication → URL Configuration
+- **Site URL** ändern: `https://review-manager-mu.vercel.app` → `https://rezpond.com`
+- Unter **Redirect URLs** die neue Domain ergänzen
+- Save changes
+
+**Was NICHT geändert werden muss:** API Key, SMTP Host/Port/Username, Code, Vercel, GitHub — alles bleibt.
