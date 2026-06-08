@@ -120,7 +120,12 @@ function App() {
         ? row.reviewer_name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
         : '??',
       stars: row.stars,
-      text: row.review_text,
+      text: (() => {
+        const t: string = row.review_text ?? ''
+        // Google schickt manchmal "(Translated by Google) ... (Original) ..." — nur Original behalten
+        const match = t.match(/\(Original\)\s*(.+)$/s)
+        return match ? match[1].trim() : t
+      })(),
       date: row.review_date,
       status: row.status as ReviewStatus,
       googleReviewId: row.google_review_id ?? undefined,
@@ -953,7 +958,7 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview, initialFilterS
                   ✅ Gesendet
                 </div>
                 {review.selectedAnswer && (
-                  <div style={{ fontSize: '12px', color: '#6b7280', background: '#f3f4f6', borderRadius: '6px', padding: '8px 10px', maxWidth: '480px', lineHeight: '1.5', fontStyle: 'italic' }}>
+                  <div style={{ fontSize: '14px', color: '#374151', background: '#f3f4f6', borderRadius: '6px', padding: '10px 14px', lineHeight: '1.6', fontStyle: 'italic', borderLeft: '3px solid #0f4c5c' }}>
                     „{review.selectedAnswer}"
                   </div>
                 )}
