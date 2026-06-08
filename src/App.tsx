@@ -600,13 +600,13 @@ function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews,
             marginBottom: '16px',
             boxShadow: '0 4px 16px rgba(15,76,92,0.25)',
           }}>
-            <div style={{ fontSize: '12px', fontWeight: '600', color: '#7ab8c4', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
+            <div style={{ fontSize: '12px', fontWeight: '600', color: "#ffffff", textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
               Guten Morgen 👋
             </div>
             <div style={{ fontSize: '17px', fontWeight: '600', color: msg.urgent ? '#fca5a5' : '#e8f4f7', lineHeight: '1.4', marginBottom: '8px' }}>
               {msg.headline}
             </div>
-            <div style={{ fontSize: '13px', color: '#7ab8c4', lineHeight: '1.6', marginBottom: msg.btnLabel ? '16px' : '0' }}>
+            <div style={{ fontSize: '13px', color: "#ffffffcc", lineHeight: '1.6', marginBottom: msg.btnLabel ? '16px' : '0' }}>
               {msg.sub}
             </div>
             {msg.btnLabel && (
@@ -1176,7 +1176,7 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
             <div className="rd2-state-box">
               <div className="rd2-state-icon">✨</div>
               <div className="rd2-state-title">Noch keine Antworten generiert</div>
-              <div className="rd2-state-desc">Klicken Sie auf „Antworten generieren", um passende Antwortmöglichkeiten zu erstellen.</div>
+              <div className="rd2-state-desc">Klick auf „Antworten generieren", um passende Antwortmöglichkeiten zu erstellen.</div>
               <button onClick={generateReplies} className="rd2-gen-btn">✨ Antworten generieren</button>
             </div>
           )}
@@ -2056,7 +2056,7 @@ function Settings({ onLogout, userId }: { onLogout: () => void, userId?: string 
 
       <div style={card}><div style={cardH}>🔔 Benachrichtigungen</div><div style={cardB}>
         <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '8px', padding: '10px 12px', fontSize: '12px', color: '#0c4a6e', marginBottom: '14px' }}>
-          📧 Sobald eine neue Bewertung synchronisiert wird, erhalten Sie automatisch eine E-Mail mit 3 fertigen KI-Antworten.
+          📧 Sobald eine neue Bewertung synchronisiert wird, erhältst du automatisch eine E-Mail mit 3 fertigen KI-Antworten.
         </div>
         <label style={lbl}>Benachrichtigungs-E-Mail</label>
         <input style={inp} type="email" placeholder="z. B. inhaber@meinrestaurant.de" value={form.notificationEmail} onChange={e => update('notificationEmail', e.target.value)} />
