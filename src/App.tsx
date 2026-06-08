@@ -601,7 +601,7 @@ function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews,
             boxShadow: '0 4px 16px rgba(15,76,92,0.25)',
           }}>
             <div style={{ fontSize: '12px', fontWeight: '600', color: "#ffffff", textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
-              Guten Morgen 👋
+              {(() => { const h = new Date().getHours(); return h < 12 ? 'Guten Morgen 👋' : h < 18 ? 'Guten Nachmittag 👋' : h < 22 ? 'Guten Abend 👋' : 'Gute Nacht 🌙' })()}
             </div>
             <div style={{ fontSize: '17px', fontWeight: '600', color: msg.urgent ? '#fca5a5' : '#e8f4f7', lineHeight: '1.4', marginBottom: '8px' }}>
               {msg.headline}

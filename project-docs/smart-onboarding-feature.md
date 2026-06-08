@@ -76,5 +76,33 @@ Kein Formular. Kein Stress. Der Gastronom baut sein Regelwerk Stück für Stück
 - Fortschrittsbalken erhöht die Bindung ans Produkt
 - E-Mail-Kanal via Resend bereits vorhanden
 
+## Technische Umsetzung — Phase 1 fertig
+
+Neue Datei `api/analyze-onboarding.ts` wurde gebaut und deployed.
+
+**Was sie macht:**
+1. Holt alle User aus `google_tokens`
+2. Prüft ob User schon analysiert wurde — wenn ja, überspringen
+3. Lädt Bewertungen der letzten 12 Monate aus Supabase
+4. Claude Haiku analysiert die Texte
+5. Ergebnis wird in Tabelle `profile_questions` gespeichert
+
+**Manuell aufrufbar unter:**
+`https://review-manager-mu.vercel.app/api/analyze-onboarding`
+
+**Supabase Tabelle `profile_questions`** wurde angelegt mit den Feldern:
+`user_id`, `thema`, `anzahl`, `typ` (positiv/negativ), `regel`, `status` (offen/beantwortet)
+
+**Erster Test — Ergebnis für Henrys Sandbar:**
+- 6 positive Themen erkannt (u.a. Gutes Essen 16×, Freundlicher Service 12×, Schönes Ambiente 8×)
+- 6 negative Themen erkannt (u.a. Laute Akustik 3×, Diskoordination Service 2×, Kurze Verweildauer erzwungen 2×)
+
+## Was noch fehlt
+
+- Dashboard-Seite wo der Gastronom die erkannten Themen sieht und Regeln dazu eingeben kann
+- Wöchentliche E-Mail mit einer offenen Frage pro Woche
+- Insights-Seite soll langfristig aus `profile_questions` lesen statt live zu berechnen
+- Automatischer Trigger nach OAuth-Verbindung (aktuell noch manuell)
+
 ## Status
-Geplant — noch nicht gebaut.
+Phase 1 live. Phase 2 (Dashboard + E-Mail) noch nicht gebaut.
