@@ -1986,7 +1986,27 @@ function Settings({ onLogout, userId }: { onLogout: () => void, userId?: string 
 
       <div style={card}><div style={cardH}>🏢 Basisinformationen</div><div style={cardB}>
         <div style={{ marginBottom: '12px' }}><label style={lbl}>Restaurantname *</label><input style={inp} placeholder="z. B. Trattoria Bella Italia" value={form.businessName} onChange={e => update('businessName', e.target.value)} /></div>
-        <div><label style={lbl}>Hausregeln & Profil</label><textarea style={{ ...inp, height: '180px', resize: 'vertical' }} placeholder={"HAUSREGELN:\nWas Gäste manchmal kritisieren — erkläre kurz warum.\n- z.B. Reservierungen nur telefonisch, keine Online-Buchung\n- z.B. Wartezeiten am Wochenende sind normal, kein Fast-Food-Betrieb\n\nBESONDERHEITEN:\nWas uns auszeichnet — für positive Antworten nutzbar.\n- z.B. Frische Zutaten vom Wochenmarkt\n- z.B. Hausgemachte Desserts, täglich neu\n\nNICHT SAGEN:\nBetriebsspezifische Verbote.\n- z.B. Nie versprechen, dass Wartezeiten kürzer werden\n- z.B. Nie den Gast um eine neue Bewertung bitten"} value={form.description} onChange={e => update('description', e.target.value)} /><div style={hint}>Die KI nutzt diese Infos bei jeder Antwort. Nur ausfüllen was wirklich relevant ist.</div></div>
+        <div>
+          <label style={lbl}>Hausregeln & Profil</label>
+          <textarea
+            style={{ ...inp, height: '180px', resize: 'vertical' }}
+            placeholder="Klicke auf 'Vorlage einfügen' um loszulegen…"
+            value={form.description}
+            onChange={e => update('description', e.target.value)}
+          />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '6px' }}>
+            <div style={hint}>Die KI nutzt diese Infos bei jeder Antwort.</div>
+            {!form.description && (
+              <button
+                type="button"
+                onClick={() => update('description', "HAUSREGELN:\nWas Gäste manchmal kritisieren — erkläre kurz warum.\n- z.B. Reservierungen nur telefonisch, keine Online-Buchung\n- z.B. Wartezeiten am Wochenende sind normal, kein Fast-Food-Betrieb\n\nBESONDERHEITEN:\nWas uns auszeichnet — für positive Antworten nutzbar.\n- z.B. Frische Zutaten vom Wochenmarkt\n- z.B. Hausgemachte Desserts, täglich neu\n\nNICHT SAGEN:\nBetriebsspezifische Verbote.\n- z.B. Nie versprechen, dass Wartezeiten kürzer werden\n- z.B. Nie den Gast um eine neue Bewertung bitten")}
+                style={{ background: 'none', border: '1px solid #d1d5db', borderRadius: '8px', padding: '4px 10px', fontSize: '12px', color: '#374151', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}
+              >
+                📋 Vorlage einfügen
+              </button>
+            )}
+          </div>
+        </div>
       </div></div>
 
       <div style={card}><div style={cardH}>🍽️ Restaurant-Identität</div><div style={cardB}>
