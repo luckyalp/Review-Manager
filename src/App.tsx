@@ -2320,12 +2320,14 @@ function AuthScreen({ initialMode = 'login' }: { initialMode?: 'login' | 'regist
         } else {
           setError(error.message)
         }
-      } else if (data.user && !data.session) {
-        // Supabase gibt manchmal keinen Fehler zurück, obwohl die E-Mail schon existiert
-        // In dem Fall: user existiert aber keine aktive Session → E-Mail bereits registriert
+      } else if (data.user?.identities && data.user.identities.length === 0) {
+        // Supabase gibt bei bereits registrierter E-Mail einen User zurück,
+        // aber ohne Identities — das ist das zuverlässigste Erkennungsmerkmal
         setAlreadyRegistered(true)
+      } else if (data.user) {
+        setSuccess('Fast geschafft! Wir haben dir einen Bestätigungslink geschickt — bitte schau in dein Postfach.')
       } else {
-        setSuccess('Registrierung erfolgreich! Bitte bestätige deine E-Mail-Adresse.')
+        setAlreadyRegistered(true)
       }
     }
     setLoading(false)
