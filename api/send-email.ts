@@ -156,12 +156,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 12px;" role="presentation">
         <tr>
           <td style="border-top: 1px solid ${border}; width: 40%;"></td>
-          <td style="padding: 0 10px; white-space: nowrap; font-size: 10px; font-weight: 700; color: ${teal}; text-transform: uppercase; letter-spacing: 0.08em; text-align: center;">Empfohlen bei 1–2 Sternen</td>
+          <td style="padding: 0 10px; white-space: nowrap; font-size: 10px; font-weight: 700; color: ${teal}; text-transform: uppercase; letter-spacing: 0.08em; text-align: center;">Nur wenn wirklich etwas schiefgelaufen ist</td>
           <td style="border-top: 1px solid ${border}; width: 40%;"></td>
         </tr>
       </table>
       <div style="border: 1.5px solid ${teal}; border-left: 3px solid ${teal}; border-radius: 12px; padding: 16px; background: #ffffff; box-shadow: 0 1px 4px rgba(14,116,144,0.08);">
-        <div style="font-size: 11px; color: ${teal}; margin-bottom: 6px; opacity: 0.9;">Fokus auf Vertrauen und Deeskalation.</div>
+        <div style="font-size: 11px; color: ${teal}; margin-bottom: 6px; opacity: 0.9;">Für echte Probleme — nicht für Policy-Beschwerden.</div>
         <div style="display: inline-block; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-bottom: 10px; letter-spacing: 0.6px; background: ${teal}1a; color: ${teal}; text-transform: uppercase; border: 1px solid ${teal}30;">${a.label}</div>
         <div style="font-size: 13px; color: #374151; line-height: 1.65; margin-bottom: 14px;">${a.text}</div>
         <table cellpadding="0" cellspacing="0" width="100%" role="presentation">
