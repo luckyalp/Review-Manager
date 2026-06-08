@@ -2285,6 +2285,20 @@ function AuthScreen({ initialMode = 'login' }: { initialMode?: 'login' | 'regist
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [alreadyRegistered, setAlreadyRegistered] = useState(false)
+  const [showForgot, setShowForgot] = useState(false)
+  const [forgotEmail, setForgotEmail] = useState('')
+  const [forgotLoading, setForgotLoading] = useState(false)
+  const [forgotSuccess, setForgotSuccess] = useState(false)
+
+  const handleForgot = async () => {
+    if (!forgotEmail.includes('@')) return
+    setForgotLoading(true)
+    await supabase.auth.resetPasswordForEmail(forgotEmail, {
+      redirectTo: window.location.origin,
+    })
+    setForgotLoading(false)
+    setForgotSuccess(true)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -2410,7 +2424,15 @@ function AuthScreen({ initialMode = 'login' }: { initialMode?: 'login' | 'regist
                 placeholder="name@restaurant.de" value={email} onChange={e => setEmail(e.target.value)} />
             </div>
             <div style={{ marginBottom: '20px' }}>
-              <label style={{ fontSize: '13px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '5px' }}>Passwort</label>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '5px' }}>
+                <label style={{ fontSize: '13px', fontWeight: '500', color: '#374151' }}>Passwort</label>
+                {mode === 'login' && (
+                  <button type="button" onClick={() => { setShowForgot(true); setForgotEmail(email); setForgotSuccess(false) }}
+                    style={{ background: 'none', border: 'none', color: '#0f4c5c', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>
+                    Passwort vergessen?
+                  </button>
+                )}
+              </div>
               <input className="auth-inp" style={inp} type="password" required autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
                 placeholder={mode === 'register' ? 'Mindestens 6 Zeichen' : '••••••••'} value={password} onChange={e => setPassword(e.target.value)} />
             </div>
@@ -2454,6 +2476,50 @@ function AuthScreen({ initialMode = 'login' }: { initialMode?: 'login' | 'regist
           </div>
         </div>
       </div>
+
+      {/* Passwort vergessen Overlay */}
+      {showForgot && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div style={{ background: '#fff', borderRadius: '20px', width: '100%', maxWidth: '380px', padding: '32px', boxShadow: '0 24px 60px rgba(0,0,0,0.5)' }}>
+            {forgotSuccess ? (
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '40px', marginBottom: '16px' }}>📬</div>
+                <div style={{ fontSize: '18px', fontWeight: '700', color: '#111827', marginBottom: '8px' }}>E-Mail verschickt!</div>
+                <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '24px', lineHeight: '1.6' }}>
+                  Schau in dein Postfach — der Reset-Link ist unterwegs.
+                </div>
+                <button onClick={() => setShowForgot(false)}
+                  style={{ width: '100%', padding: '12px', borderRadius: '10px', border: 'none', background: '#0f4c5c', color: '#fff', fontSize: '15px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}>
+                  Zurück zum Login
+                </button>
+              </div>
+            ) : (
+              <>
+                <div style={{ fontSize: '18px', fontWeight: '700', color: '#111827', marginBottom: '6px' }}>Passwort zurücksetzen</div>
+                <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '20px', lineHeight: '1.5' }}>
+                  Gib deine E-Mail ein — wir schicken dir einen Link zum Zurücksetzen.
+                </div>
+                <input
+                  type="email" placeholder="name@restaurant.de"
+                  value={forgotEmail} onChange={e => setForgotEmail(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleForgot()}
+                  style={{ ...inp, marginBottom: '16px' }}
+                  autoFocus
+                />
+                <button onClick={handleForgot} disabled={forgotLoading || !forgotEmail.includes('@')}
+                  style={{ width: '100%', padding: '12px', borderRadius: '10px', border: 'none', background: forgotLoading || !forgotEmail.includes('@') ? '#e5e7eb' : '#0f4c5c', color: forgotLoading || !forgotEmail.includes('@') ? '#9ca3af' : '#fff', fontSize: '15px', fontWeight: '600', cursor: forgotLoading || !forgotEmail.includes('@') ? 'not-allowed' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '12px' }}>
+                  {forgotLoading && <div style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'ob-spin 0.7s linear infinite' }} />}
+                  Reset-Link senden
+                </button>
+                <button onClick={() => setShowForgot(false)}
+                  style={{ width: '100%', padding: '10px', borderRadius: '10px', border: '1.5px solid #e5e7eb', background: 'transparent', color: '#6b7280', fontSize: '14px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit' }}>
+                  Abbrechen
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
