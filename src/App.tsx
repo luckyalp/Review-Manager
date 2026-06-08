@@ -1220,7 +1220,7 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
         <div className="rd2-answer-top">
           <div className="rd2-answer-indicator"><span className="rd2-check-icon">✓</span></div>
           <div style={{ flex: 1 }}>
-            {isRecovery && <div className="rd2-recovery-note">Fokus auf Vertrauen und Deeskalation.</div>}
+            {isRecovery && <div className="rd2-recovery-note">Für echte Probleme — nicht für Policy-Beschwerden.</div>}
             <div className="rd2-answer-style">{answer.label}</div>
             <textarea
               ref={el => { textareaRefs.current[idx] = el }}
@@ -1309,7 +1309,7 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
                 <>
                   <div className="rd2-recovery-separator">
                     <div className="rd2-recovery-separator-line" />
-                    <span className="rd2-recovery-separator-label">Empfohlen bei 1–2 Sternen</span>
+                    <span className="rd2-recovery-separator-label">Nur wenn wirklich etwas schiefgelaufen ist</span>
                     <div className="rd2-recovery-separator-line" />
                   </div>
                   <div className="rd2-answers">
