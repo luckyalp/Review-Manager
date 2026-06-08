@@ -961,12 +961,12 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview, initialFilterS
           {/* Actions */}
           <div className="review-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
-            {/* Antworten generieren — nur wenn noch nicht beantwortet */}
+            {/* Antworten generieren — führt direkt auf Einzelseite */}
             {review.status !== 'Beantwortet' && (
               <button
-                onClick={() => generateReplies(review)}
+                onClick={() => openReview(review)}
                 style={{ padding: '7px 14px', background: '#0f4c5c', color: '#fff', border: 'none', borderRadius: '7px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                {aiLoading === review.id ? '⏳ KI generiert...' : openAI === review.id && aiAnswers[review.id]?.[0]?.label === 'Fehler' ? '🔄 Nochmal versuchen' : openAI === review.id ? '✨ Ausblenden' : '✨ Antworten generieren'}
+                ✨ Antworten generieren
               </button>
             )}
 
@@ -1004,35 +1004,6 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview, initialFilterS
             )}
           </div>
 
-          {/* AI Responses */}
-          {openAI === review.id && review.status !== 'Beantwortet' && (
-            <div style={{ marginTop: '14px', padding: '14px', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-              {aiLoading === review.id ? (
-                <div style={{ textAlign: 'center', padding: '20px', color: '#6b7280', fontSize: '14px' }}>
-                  ✨ KI generiert Antworten basierend auf Ihrem Restaurantprofil...
-                </div>
-              ) : (
-                <>
-                  <div style={{ fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '10px' }}>
-                    {(aiAnswers[review.id]?.length ?? 0)} KI-Antwortvorschläge — bitte auswählen:
-                  </div>
-                  {(aiAnswers[review.id] || []).map((a, i) => (
-                    <div key={i} onClick={() => setSelected({...selected, [review.id]: i})}
-                      style={{ padding: '12px', borderRadius: '8px', border: `1.5px solid ${selected[review.id] === i ? '#0f4c5c' : '#e5e7eb'}`, background: selected[review.id] === i ? '#f0f7f8' : '#fff', cursor: 'pointer', marginBottom: '8px', fontSize: '13px', lineHeight: '1.6' }}>
-                      <div style={{ fontWeight: '600', fontSize: '12px', marginBottom: '4px', color: '#0f4c5c' }}>{a.label}</div>
-                      {a.text}
-                    </div>
-                  ))}
-                  {selected[review.id] !== undefined && (
-                    <button onClick={() => sendAnswer(review)}
-                      style={{ padding: '8px 18px', background: '#22c55e', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', fontWeight: '500' }}>
-                      ✅ Ausgewählte Antwort senden
-                    </button>
-                  )}
-                </>
-              )}
-            </div>
-          )}
         </div>
       ))}
     </div>
