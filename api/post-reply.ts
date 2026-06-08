@@ -81,10 +81,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(404).json({ error: 'Kein Google Business Standort gefunden' })
   }
 
+  // Location Name korrigieren — Google braucht accounts/xxx/locations/xxx Format
+  const locationName = location.name.startsWith('accounts/')
+    ? location.name
+    : `${account.name}/locations/${location.name.split('/').pop()}`
+
   // Antwort auf Google posten — bei 401 Token auffrischen und nochmal versuchen
   const postReply = async (token: string) => {
     return fetch(
-      `https://mybusiness.googleapis.com/v4/${location.name}/reviews/${googleReviewId}/reply`,
+      `https://mybusiness.googleapis.com/v4/${locationName}/reviews/${googleReviewId}/reply`,
       {
         method: 'PUT',
         headers: {
