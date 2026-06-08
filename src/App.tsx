@@ -966,7 +966,7 @@ function Reviews({ reviews, onStatusChange, onDelete, openReview, initialFilterS
               <button
                 onClick={() => generateReplies(review)}
                 style={{ padding: '7px 14px', background: '#0f4c5c', color: '#fff', border: 'none', borderRadius: '7px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                {aiLoading === review.id ? '⏳ KI generiert...' : openAI === review.id ? '✨ Ausblenden' : '✨ Antworten generieren'}
+                {aiLoading === review.id ? '⏳ KI generiert...' : openAI === review.id && aiAnswers[review.id]?.[0]?.label === 'Fehler' ? '🔄 Nochmal versuchen' : openAI === review.id ? '✨ Ausblenden' : '✨ Antworten generieren'}
               </button>
             )}
 
