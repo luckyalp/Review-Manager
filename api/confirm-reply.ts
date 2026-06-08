@@ -34,7 +34,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Zu Google posten wenn echte google_review_id vorhanden
     if (review?.user_id && review?.google_review_id) {
       try {
-        await fetch(`${process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : 'https://review-manager-mu.vercel.app'}/api/post-reply`, {
+        await fetch('https://review-manager-mu.vercel.app/api/post-reply', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
