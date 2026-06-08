@@ -81,18 +81,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(404).json({ error: 'Kein Google Business Standort gefunden' })
   }
 
-  // Antwort auf Google posten
-  const replyRes = await fetch(
-    `https://mybusiness.googleapis.com/v4/${location.name}/reviews/${googleReviewId}/reply`,
-    {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ comment: answerText }),
+  // Antwort auf Google posten — bei 401 Token auffrischen und nochmal versuchen
+  const postReply = async (token: string) => {
+    return fetch(
+      `https://mybusiness.googleapis.com/v4/${location.name}/reviews/${googleReviewId}/reply`,
+      {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ comment: answerText }),
+      }
+    )
+  }
+
+  let replyRes = await postReply(accessToken)
+
+  // Bei 401: Token auffrischen und nochmal versuchen
+  if (replyRes.status === 401) {
+    console.warn('Access Token abgelaufen — versuche Refresh...')
+    const refreshed = await refreshAccessToken(token.refresh_token)
+    if (!refreshed.access_token) {
+      return res.status(401).json({ error: 'Token konnte nicht aufgefrischt werden — bitte Google neu verbinden' })
     }
-  )
+    accessToken = refreshed.access_token
+    await supabase
+      .from('google_tokens')
+      .update({
+        access_token: refreshed.access_token,
+        expires_at: Math.floor(Date.now() / 1000) + refreshed.expires_in,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('user_id', userId)
+
+    replyRes = await postReply(accessToken)
+  }
 
   if (!replyRes.ok) {
     const err = await replyRes.json()
