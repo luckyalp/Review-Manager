@@ -7,7 +7,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { to, reviewerName, stars, reviewText, answers, restaurantName, isTest, salutation, contactEmail, missingContext, missingInfo } = req.body
+  const { to, reviewerName, stars, reviewText, answers, restaurantName, isTest, salutation, contactEmail, missingContext, missingInfo, googleReviewId } = req.body
   if (!RESEND_API_KEY) {
     return res.status(500).json({ error: 'RESEND_API_KEY nicht konfiguriert' })
   }
@@ -135,13 +135,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       <table cellpadding="0" cellspacing="0" width="100%" role="presentation">
         <tr>
           <td style="padding-right: 6px; width: 50%;">
-            <a href="https://review-manager-mu.vercel.app/api/confirm-reply?reviewId=${encodeURIComponent(reviewerName + '_' + stars)}&answerIndex=${i}&answerText=${encodeURIComponent(a.text)}"
+            <a href="https://review-manager-mu.vercel.app/api/confirm-reply?reviewId=${encodeURIComponent(googleReviewId || '')}&answerIndex=${i}&answerText=${encodeURIComponent(a.text)}"
               style="display: block; text-align: center; padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #ffffff; text-decoration: none; background: ${normalColors[i] || petrol};">
               ✓ Sofort senden
             </a>
           </td>
           <td style="padding-left: 6px; width: 50%;">
-            <a href="https://review-manager-mu.vercel.app?reviewId=${encodeURIComponent(reviewerName + '_' + stars)}&edit=true"
+            <a href="https://review-manager-mu.vercel.app?reviewId=${encodeURIComponent(googleReviewId || '')}&edit=true"
               style="display: block; text-align: center; padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; color: ${petrol}; text-decoration: none; background: #ffffff; border: 1.5px solid ${border};">
               ✏ Bearbeiten
             </a>
@@ -167,13 +167,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         <table cellpadding="0" cellspacing="0" width="100%" role="presentation">
           <tr>
             <td style="padding-right: 6px; width: 50%;">
-              <a href="https://review-manager-mu.vercel.app/api/confirm-reply?reviewId=${encodeURIComponent(reviewerName + '_' + stars)}&answerIndex=${idx}&answerText=${encodeURIComponent(a.text)}"
+              <a href="https://review-manager-mu.vercel.app/api/confirm-reply?reviewId=${encodeURIComponent(googleReviewId || '')}&answerIndex=${idx}&answerText=${encodeURIComponent(a.text)}"
                 style="display: block; text-align: center; padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #ffffff; text-decoration: none; background: ${teal};">
                 ✓ Sofort senden
               </a>
             </td>
             <td style="padding-left: 6px; width: 50%;">
-              <a href="https://review-manager-mu.vercel.app?reviewId=${encodeURIComponent(reviewerName + '_' + stars)}&edit=true"
+              <a href="https://review-manager-mu.vercel.app?reviewId=${encodeURIComponent(googleReviewId || '')}&edit=true"
                 style="display: block; text-align: center; padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; color: ${teal}; text-decoration: none; background: #ffffff; border: 1.5px solid ${border};">
                 ✏ Bearbeiten
               </a>

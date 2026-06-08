@@ -150,6 +150,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               body: JSON.stringify({
                 to: notificationEmail,
                 ...reviewData,
+                googleReviewId: review.reviewId,
                 restaurantName: settings.businessName || '',
                 salutation: settings.salutation || 'Sie',
                 missingContext: true,
@@ -165,6 +166,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               body: JSON.stringify({
                 to: notificationEmail,
                 ...reviewData,
+                googleReviewId: review.reviewId,
                 restaurantName: settings.businessName || '',
                 salutation: settings.salutation || 'Sie',
                 answers: repliesData.answers,
