@@ -127,10 +127,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           const notificationEmail = settings.notificationEmail
           if (!notificationEmail) continue
 
+          // Google-Übersetzung rausfiltern — nur Originaltext behalten
+          const rawText: string = review.comment || ''
+          const translationMatch = rawText.match(/\(Original\)\s*(.+)$/s)
+          const cleanText = translationMatch ? translationMatch[1].trim() : rawText
+
           const reviewData = {
             reviewerName: review.reviewer?.displayName || 'Anonym',
             stars: starRatingToNumber(review.starRating),
-            reviewText: review.comment || '',
+            reviewText: cleanText,
           }
 
           // KI-Antworten generieren
