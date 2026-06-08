@@ -780,7 +780,7 @@ function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews,
                 <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px', lineHeight: '1.5' }}>{r.text.length > 100 ? r.text.slice(0, 100) + '…' : r.text}</div>
                 <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
                   <button onClick={() => openReview(r)} style={{ padding: '6px 14px', background: '#0f4c5c', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontFamily: 'inherit', color: '#fff' }}>
-                    Ansehen & Antworten
+                    ✨ Antworten generieren
                   </button>
                 </div>
               </div>
@@ -1176,8 +1176,8 @@ function ReviewDetail({ review, onStatusChange, onBack }: { review: Review, onSt
             <div className="rd2-state-box">
               <div className="rd2-state-icon">✨</div>
               <div className="rd2-state-title">Noch keine Antworten generiert</div>
-              <div className="rd2-state-desc">Klicken Sie auf „KI-Antworten generieren", um passende Antwortmöglichkeiten zu erstellen.</div>
-              <button onClick={generateReplies} className="rd2-gen-btn">✨ KI-Antworten generieren</button>
+              <div className="rd2-state-desc">Klicken Sie auf „Antworten generieren", um passende Antwortmöglichkeiten zu erstellen.</div>
+              <button onClick={generateReplies} className="rd2-gen-btn">✨ Antworten generieren</button>
             </div>
           )}
           {aiLoading && (
