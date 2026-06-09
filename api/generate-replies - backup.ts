@@ -251,7 +251,6 @@ Es ist VERBOTEN, eines dieser beiden Elemente wegzulassen um den Text kuerzer zu
 
 BEI KRITIK AN PREISEN ODER PORTIONSGROESSEN:
 Kern-Aussage: Unsere Preise sind bewusst so gesetzt, weil wir konsequent auf frische Ware und hohe Qualitaet setzen und hier keine Abstriche machen. Dafuer stehen wir.
-KEIN KONTAKTANGEBOT: Bei reiner Preis- oder Portionskritik KEIN Kontaktangebot machen. Es gibt nichts zu klaeren. Die Antwort endet nach der Haltung — klar und ohne Einladung zur weiteren Diskussion.
 STRENGE FORMULIERUNGS-REGEL: Kopiere NICHT in jeder Variante denselben Wortlaut. Der Kernsatz ist nur inhaltliche Richtlinie. Das Argument muss in jeder Variante voellig neu und passend zum Ton verpackt werden:
 - Bei DIREKT & EHRLICH: Knackig und selbstbewusst. (z.B. "Hinter unseren Preisen stehen wir ganz bewusst — bei frischer Ware und Qualitaet machen wir keine Kompromisse.")
 - Bei RUHIG & PROFESSIONELL: Sachlich und erklaerend. (z.B. "Unsere Preisgestaltung spiegelt unseren Anspruch an Qualitaet und frische Zutaten wider, von dem wir nicht abweichen moechten.")
