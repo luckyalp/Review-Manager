@@ -1183,7 +1183,7 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings }: { 
           {aiLoading && (
             <div className="rd2-state-box">
               <div className="rd2-state-icon">⏳</div>
-              <div className="rd2-state-title">KI generiert Antworten…</div>
+              <div className="rd2-state-title">Gleich fertig — ich denke mir was aus…</div>
             </div>
           )}
           {missingContext && !aiLoading && (
