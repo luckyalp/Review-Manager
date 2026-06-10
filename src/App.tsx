@@ -342,7 +342,7 @@ function App() {
             </div>
           ) : (
             <>
-              {page === 'dashboard' && <Dashboard stats={stats} reviews={reviews} openReview={openReview} onAddReview={addManualReview} userId={user?.id} onNavigateReviews={(filter?: string) => { setReviewsInitialFilter(filter || 'alle'); setPage('reviews'); setSelectedReview(null) }} />}
+              {page === 'dashboard' && <Dashboard stats={stats} reviews={reviews} openReview={openReview} onAddReview={addManualReview} userId={user?.id} onNavigateReviews={(filter?: string) => { setReviewsInitialFilter(filter || 'alle'); setPage('reviews'); setSelectedReview(null) }} engineTest={engineTest} />}
               {page === 'reviews' && !selectedReview && <Reviews reviews={reviews} onStatusChange={updateReviewStatus} onDelete={deleteReview} openReview={openReview} initialFilterStars={reviewsInitialFilter} />}
               {page === 'reviews' && selectedReview && <ReviewDetail review={selectedReview} onStatusChange={updateReviewStatus} onBack={() => setSelectedReview(null)} onNavigateSettings={() => { setSelectedReview(null); setPage('settings') }} engineTest={engineTest} />}
               {page === 'analytics' && <Analytics reviews={reviews} userId={user?.id} />}
@@ -410,7 +410,7 @@ function StatusBadge({ status }: { status: ReviewStatus }) {
 
 // ─── DASHBOARD ───────────────────────────────────────────────────────────────
 
-function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews, userId }: { stats: any, reviews: Review[], openReview: (r: Review) => void, onAddReview: (r: Review) => void, onNavigateReviews: (filter?: string) => void, userId?: string }) {
+function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews, userId, engineTest }: { stats: any, reviews: Review[], openReview: (r: Review) => void, onAddReview: (r: Review) => void, onNavigateReviews: (filter?: string) => void, userId?: string, engineTest: boolean }) {
   const [testRunning, setTestRunning] = useState(false)
   const [testDone, setTestDone] = useState(false)
   const [testError, setTestError] = useState('')
