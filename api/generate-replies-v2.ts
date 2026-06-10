@@ -71,9 +71,10 @@ Beispiel: "Ich verstehe vollkommen, dass das bloed ruberkommt, wenn der Besuch p
 Bruecke zum verdeckten Marketing (NICHT bei Kategorie UNFREUNDLICHKEIT verwenden):
 Baue die Bruecke als nahtlose Fortsetzung des Empathie-Satzes ein — mit Komma verbunden, nicht als neuer Satz.
 Formulierungsmuster: "[Empathie-Satz], [Bruecke]."
-Waehle eine dieser Bruecken-Formulierungen:
-- "bei uns kann es schon ordentlich lebhaft zugehen."
-- "bei uns geht es oft richtig lebendig zu, das ist einfach wie unser Laden tickt."
+Waehle eine dieser Bruecken-Formulierungen — variiere bei jeder Antwort:
+- "bei uns kann es schon mal etwas turbulenter zugehen, da wir ein gut besuchtes Lokal sind."
+- "bei uns geht es oft richtig lebendig zu, das kommt einfach daher dass wir meistens gut besucht sind."
+- "bei uns kann es schon ordentlich lebhaft zugehen, wir sind einfach ein gut besuchtes Haus."
 
 VERBOTEN in der Bruecke:
 - NICHT "wir sind bekannt dafuer" oder "wir sind immer voll" — das klingt nach "nimm es oder lass es" und macht Schritt 3 unglaubwuerdig.
@@ -83,7 +84,7 @@ VERBOTEN in der Bruecke:
 - Kein "fuer manche das Richtige, fuer andere nicht" — klingt wie eine Absage, nicht wie ein Gastgeber.
 
 BEISPIEL guter Fluss (Technik 2, ERLEBNIS):
-"Hallo [Name], ich kann gut nachvollziehen, dass du dir deinen Besuch ruhiger vorgestellt hast, bei uns kann es schon ordentlich lebhaft zugehen."
+"Hallo [Name], ich kann gut nachvollziehen, dass du dir deinen Besuch ruhiger vorgestellt hast, bei uns kann es schon mal etwas turbulenter zugehen, da wir ein gut besuchtes Lokal sind."
 
 TAGESZEIT-VERBOT (gilt fuer die gesamte Antwort, alle 3 Schritte):
 Uebernehme NIEMALS Tageszeit-Begriffe aus der Bewertung ("Abend", "abends", "Mittag", "Morgen" etc.).
@@ -247,7 +248,14 @@ AUFGABE:
 1. Erkenne die Hauptkategorie nach der Prioritaetshierarchie (output im "category"-Feld).
 2. Pruefe ob Gemischt-Flag gilt.
 3. Schreibe 3 Varianten nach dem Drei-Schritt-System mit den passenden Bausteinen.
-4. Jede Variante endet mit: ${signature}
+4. Jede Variante endet mit einer Verabschiedung (waehle eine aus dem Pool, rotiere zwischen den Varianten) gefolgt von der Signatur auf einer neuen Zeile.
+
+Verabschiedungs-Pool (je nach Anredeform anpassen):
+- "Herzliche Gruesse"
+- "Beste Gruesse"
+- "Bis zu deinem naechsten Besuch" (Du-Form) / "Bis zu Ihrem naechsten Besuch" (Sie-Form)
+
+Signatur: ${signature}
 
 Variante 1 — Direkt & Ehrlich:
 Technik 1 (Persoenliche Resonanz) fuer Schritt 2. Locker, ich-Form.
