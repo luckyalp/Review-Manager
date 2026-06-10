@@ -60,8 +60,8 @@ Ich-Form, direktes Gefuehl im Moment, nah dran.
 Beispiel: "Ich kann absolut nachvollziehen, dass das im ersten Moment ziemlich bloed bei dir rubergekommen ist."
 
 Technik 2 — Vorfreude-Dynamik (fuer Variante "Ruhig & Professionell"):
-Enttaeuschte Erwartung anerkennen, ruhig, einfu ehlsam.
-Beispiel: "Ich verstehe vollkommen, dass das enttaeuschend gewirkt hat, wenn man mit einer anderen Erwartung zu uns kommt."
+Enttaeuschte Erwartung anerkennen, ruhig, einfuehlsam.
+Beispiel: "Ich verstehe vollkommen, dass das enttaeuschend gewirkt hat, wenn du mit einer anderen Erwartung zu uns kommst."
 
 Technik 3 — Ablauf-Perspektive (fuer Variante "Fokus auf Klaerung"):
 Sachlicher, loesungsorientiert, kuerzer.
@@ -69,9 +69,13 @@ Beispiel: "Ich verstehe vollkommen, dass das bloed ruberkommt, wenn der Besuch p
 
 Bruecke zum verdeckten Marketing (NICHT bei Kategorie UNFREUNDLICHKEIT verwenden):
 Waehle eine dieser Varianten und baue sie natuerlich in Schritt 2 ein:
-- "liegt einfach daran, dass bei uns zu dem Zeitpunkt richtig was los war und es sehr lebhaft zuging."
-- "bei uns war zu deinem Besuch halt richtig viel los und es ging sehr lebhaft zu."
-- "man muss dazu sagen, dass es bei uns zu dem Zeitpunkt richtig voll und lebhaft war."
+- "bei uns geht es oft richtig lebhaft zu und es ist entsprechend viel los."
+- "wir sind bekannt dafuer, dass es bei uns lebendig und voll zugeht."
+
+VERBOTEN in der Bruecke:
+- Keine Tageszeit ("abends", "mittags", "morgens") — wir wissen nicht wann der Gast da war.
+- Kein "zu dem Zeitpunkt" oder "zu deinem Besuch" — wir behaupten nicht was beim konkreten Besuch so war.
+- Kein "man" — immer "du" oder "Sie" je nach Anredeform.
 
 SCHRITT 3 — GASTGEBER-AUSSTIEG (kategorie-spezifisch):
 Konkreter Insider-Tipp. Kein Betteln. Keine Standard-Kontaktfloskeln. Dem Gast die Kontrolle zurueckgeben.
@@ -95,16 +99,13 @@ SCHRITT 3 BUILDING BLOCKS JE KATEGORIE
 ==================================================
 
 ERLEBNIS:
-Waehle je nach Bewertung den passenden Tipp. Wenn der ganze Laden laut war: Zeitpunkt-Tipp (NICHT unter der Woche oder frueher sagen — wir wissen nicht wann der Gast da war). Wenn es eher um den konkreten Platz ging: Tisch-Tipp.
-  Direkt & Ehrlich:
-    Zeitpunkt-Tipp: "Es gibt bei uns Zeiten wo es deutlich ruhiger ist, frag beim naechsten Mal einfach kurz nach, wir sagen dir wann das ist."
-    Tisch-Tipp:     "Frag beim naechsten Mal einfach kurz nach einem ruhigeren Platz, wir schauen was wir machen koennen."
-  Ruhig & Professionell:
-    Zeitpunkt-Tipp: "Nicht immer ist bei uns gleich viel los. Beim naechsten Besuch einfach kurz fragen, wir helfen dir einen passenden Zeitpunkt zu finden."
-    Tisch-Tipp:     "Bei deiner naechsten Reservierung kannst du gerne einen Platz etwas abseits des Trubels anfragen, wir schauen dann was moeglich ist."
-  Fokus auf Klaerung:
-    Zeitpunkt-Tipp: "Bei uns ist nicht immer gleich viel los, beim naechsten Mal kurz fragen, wir finden einen ruhigeren Moment."
-    Tisch-Tipp:     "Sag beim naechsten Mal kurz Bescheid was du brauchst, wir finden eine Loesung."
+Biete an beim naechsten Besuch zu helfen — ohne zu versprechen was wir nicht garantieren koennen.
+VERBOTEN: "Es gibt Zeiten wo es ruhiger ist" — wir wissen nicht ob das stimmt und wir wissen nicht wann der Gast kommt.
+VERBOTEN: Tageszeiten ("abends", "mittags") — wir wissen nicht wann der Gast da war.
+Nutze stattdessen neutrale Woerter: "Besuch", "Aufenthalt", "wenn du wiederkommst".
+  Direkt & Ehrlich:      "Frag beim naechsten Besuch einfach kurz nach, ob wir dir einen ruhigeren Platz freihalten koennen, wir schauen was moeglich ist."
+  Ruhig & Professionell: "Beim naechsten Besuch einfach kurz Bescheid geben, wir schauen dann was wir fuer dich tun koennen."
+  Fokus auf Klaerung:    "Sag beim naechsten Mal kurz Bescheid was du brauchst, wir finden einen Weg."
 
 ESSEN (Geschmacks-Weiche — erkenne intern: Zubereitung oder Geschmack):
   Direkt & Ehrlich:      "War es Geschmackssache oder hat in der Kueche was nicht gestimmt? Das macht fuer uns einen Unterschied."
@@ -343,51 +344,39 @@ AUSGABE — NUR dieses JSON:
 {"variant1":{"label":"Direkt & Ehrlich","text":"..."},"variant2":{"label":"Ruhig & Professionell","text":"..."},"variant3":{"label":"Fokus auf Klaerung","text":"..."}}`
 }
 
-// ─── RECOVERY PROMPT (1–2 Sterne, 4. Variante) ────────────────────────────
-function buildRecoveryPrompt(reviewText: string, reviewerName: string, settings: any): string {
+// ─── RECOVERY TEXT (1–2 Sterne, fester Notfall-Text) ─────────────────────
+// Kein AI-Call — festes Template fuer ernste Vorfaelle (Vergiftung, Unfall etc.)
+function buildRecoveryText(reviewerName: string, settings: any): string {
   const {
     businessName = 'das Restaurant',
     salutation = 'Sie',
     contactEmail = '',
     responseSignature = '',
-    responseLanguage = 'Deutsch',
   } = settings || {}
 
-  const duSie = salutation === 'Du' ? 'Du/Dein (Duzen)' : 'Sie/Ihr (Siezen)'
   const signature = responseSignature || `Das Team von ${businessName}`
   const firstName = reviewerName ? reviewerName.split(' ')[0] : ''
-  const firstNameClean = firstName
+  const name = firstName
     ? firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase()
     : ''
 
-  const langInstruction = responseLanguage === 'Sprache des Bewerters'
-    ? 'Antworte in der Sprache der Bewertung.'
-    : responseLanguage === 'Englisch' ? 'Respond in English only.'
-    : 'Antworte auf Deutsch.'
+  const isDu = salutation === 'Du'
 
-  const systemPrompt = `Erstelle eine deeskalierende, menschliche und verantwortungsvolle Antwort auf eine sehr negative Google-Bewertung.
-Schreibe wie ein aufmerksamer Gastronom — nicht wie Kundenservice, PR-Agentur oder KI.
-Grundregeln: Keine Nacherzaehlung. Keine Floskeln. Natuerliche Sprache, kurze Saetze.
-Ziel: Vertrauen zurueckgewinnen und persoenliche Klaerung anbieten.
-Laenge: 3 bis 4 vollstaendige Saetze.`
+  const greeting = name ? `Hallo ${name},` : 'Hallo,'
 
-  const userMessage = `${langInstruction} Anredeform: ${duSie}
+  const body = isDu
+    ? `was du da erlebt hast, macht uns wirklich betroffen. Bitte melde dich direkt bei uns, damit wir das persoenlich mit dir klaeren koennen.`
+    : `was Sie da erlebt haben, macht uns wirklich betroffen. Bitte melden Sie sich direkt bei uns, damit wir das persoenlich mit Ihnen klaeren koennen.`
 
-Restaurant: ${businessName}
-${contactEmail ? `Kontakt-E-Mail: ${contactEmail}` : ''}
+  const contactLine = contactEmail
+    ? (isDu ? `Du erreichst uns unter ${contactEmail}.` : `Sie erreichen uns unter ${contactEmail}.`)
+    : ''
 
-Bewertung von ${firstNameClean || 'einem Gast'} (1-2 Sterne):
-"${reviewText}"
+  const text = [greeting, body, contactLine, signature]
+    .filter(Boolean)
+    .join(' ')
 
-Schreibe EINE deeskalierende Antwort.
-${firstNameClean ? `Beginne mit "Hallo ${firstNameClean},"` : 'Kein Name bekannt — ohne persoenliche Anrede beginnen.'}
-${contactEmail ? `Kontaktangebot: Bitte meld dich kurz unter ${contactEmail}, damit wir das persoenlich klaeren koennen.` : ''}
-Endet mit: ${signature}
-
-AUSGABE — NUR dieses JSON:
-{"label":"Deeskalierend","text":"..."}`
-
-  return JSON.stringify({ _system: systemPrompt, _user: userMessage })
+  return text
 }
 
 // ─── HELPER: CLAUDE API CALL ───────────────────────────────────────────────
@@ -590,33 +579,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { category, variants: generatedVariants } = parseResponse(generatorRaw)
 
     // ── SCHRITT 3: Recovery (nur bei 1–2 Sternen als 4. Variante) ─────────
+    // Fester Notfall-Text — kein AI-Call, kein Spielraum fuer Variationen
     let finalVariants: { label: string; text: string; isRecovery?: boolean }[] = generatedVariants
 
     if (stars <= 2) {
       try {
-        const recoveryStr = buildRecoveryPrompt(reviewText, reviewerName, settings)
-        let recoveryRaw: string
+        const recoveryText = buildRecoveryText(reviewerName, settings)
+        if (recoveryText) {
+          finalVariants = [
+            ...finalVariants,
+            { label: 'Nur wenn wirklich etwas schiefgelaufen ist', text: recoveryText, isRecovery: true },
+          ]
 
-        try {
-          const recoveryParsed = JSON.parse(recoveryStr)
-          recoveryRaw = await callClaude(recoveryParsed._user, recoveryParsed._system)
-        } catch {
-          recoveryRaw = await callClaude(recoveryStr)
-        }
-
-        let recoveryJson = recoveryRaw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
-        const rs = recoveryJson.indexOf('{')
-        const re = recoveryJson.lastIndexOf('}')
-        if (rs !== -1 && re !== -1) {
-          recoveryJson = recoveryJson.substring(rs, re + 1)
-          const parsed = JSON.parse(recoveryJson)
-          if (parsed.text) {
-            const cleanText = (t: string) => t.replace(/\n\n/g, ' ').replace(/\n/g, ' ').trim()
-            finalVariants = [
-              ...finalVariants,
-              { label: parsed.label || 'Deeskalierend', text: cleanText(parsed.text), isRecovery: true },
-            ]
-          }
         }
       } catch (e) {
         console.error('Recovery generation failed:', e)
