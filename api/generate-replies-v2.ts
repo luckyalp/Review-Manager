@@ -136,13 +136,13 @@ Wähle EINE Formulierung aus dem jeweiligen Pool — variiere bei jeder Antwort,
   - "Gib einfach kurz bei der nächsten Reservierung dein Anliegen mit an, wir schauen was wir möglich machen können."
 
   Ruhig & Professionell (Pool — eine davon wählen):
-  - "Teile uns bei der nächsten Reservierung kurz dein Anliegen mit, wir gucken was wir für dich tun können."
+  - "Teile uns bei der nächsten Reservierung kurz dein Anliegen mit, wir schauen was wir für dich tun können."
   - "Sag uns bei der nächsten Reservierung kurz was du dir vorstellst, wir schauen was wir möglich machen können."
   - "Gib bei der nächsten Reservierung einfach kurz dein Anliegen mit an, wir kümmern uns darum."
 
   Fokus auf Klärung (Pool — eine davon wählen):
   - "Bei der nächsten Reservierung einfach kurz dein Anliegen mitteilen, wir schauen was geht."
-  - "Sag uns bei der nächsten Reservierung kurz dein Anliegen, wir gucken was wir drehen können."
+  - "Sag uns bei der nächsten Reservierung kurz dein Anliegen, wir schauen was wir drehen können."
   - "Einfach kurz bei der Reservierung Bescheid geben, wir schauen was möglich ist."
 
 ESSEN (Geschmacks-Weiche — erkenne intern: Zubereitung oder Geschmack):
