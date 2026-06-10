@@ -115,6 +115,19 @@
 
 ## Irgendwann 🔵
 
+### Brückensätze-Bibliothek in Prompt einbauen
+Vorgefertigte Sätze pro Kategorie — die KI greift darauf zurück statt selbst zu erfinden.
+Kategorien bereits recherchiert (brueckensaetze_bewertungsantworten.html gespeichert):
+- Wartezeit Tisch: Satz 1 + 3 verwendbar
+- Wartezeit Bestellung: Satz 1 + 2 verwendbar
+- Wartezeit Rechnung: Satz 2 verwendbar
+- Service allgemein: Satz 1 verwendbar
+- Essen Geschmack: Satz 1 + 3 verwendbar
+- Lautstärke / Atmosphäre: Satz 2 verwendbar
+- Beschwerde ohne konkreten Grund: Satz 1 verwendbar
+
+Nächster Schritt: Sätze final abstimmen und in generate-replies.ts als Fallback-Regeln einbauen.
+
 ### WhatsApp Benachrichtigung
 - Nach E-Mail als zweiter Kanal (WhatsApp Business API)
 
