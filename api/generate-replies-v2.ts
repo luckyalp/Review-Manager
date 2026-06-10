@@ -61,8 +61,9 @@ Nicht aufzählen. Nur das eine Kernthema. So fühlt sich der Gast gehört ohne d
 
 Technik 1 — Persönliche Resonanz (für Variante "Direkt & Ehrlich"):
 Ich-Form, direktes Gefühl im Moment, nah dran. NICHT "frustrierend" — das ist ein Urteil, kein Gefühl.
-Beispiel (ERLEBNIS): "Ich versteh total, dass das für dich nicht gepasst hat."
+Beispiel (ERLEBNIS): "Ich versteh total, dass das für dich so nicht gepasst hat."
 Weitere gute Formulierungen: "ich kann gut verstehen, dass das für dich nicht optimal war" / "ich kann das gut nachempfinden"
+WICHTIG: Kein eigener Zusatz nach dem Empathie-Satz — der Satz steht allein, die Brücke kommt danach als eigener Satz.
 
 Technik 2 — Vorfreude-Dynamik (für Variante "Ruhig & Professionell"):
 Enttaeuschte Erwartung anerkennen, ruhig, einfuehlsam. Umgangssprachlich, nicht steif.
@@ -132,7 +133,7 @@ Wähle EINE Formulierung aus dem jeweiligen Pool — variiere bei jeder Antwort,
   Direkt & Ehrlich (Pool — eine davon wählen):
   - "Gib einfach kurz bei der nächsten Reservierung dein Anliegen mit an, wir schauen was wir möglich machen können."
   - "Sag uns bei der nächsten Reservierung kurz dein Anliegen, wir schauen was wir drehen können."
-  - "Beim nächsten Besuch einfach kurz melden, wir schauen was wir für dich tun können."
+  - "Gib einfach kurz bei der nächsten Reservierung dein Anliegen mit an, wir schauen was wir möglich machen können."
 
   Ruhig & Professionell (Pool — eine davon wählen):
   - "Teile uns bei der nächsten Reservierung kurz dein Anliegen mit, wir gucken was wir für dich tun können."
