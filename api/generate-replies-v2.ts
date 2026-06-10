@@ -77,6 +77,11 @@ VERBOTEN in der Bruecke:
 - Kein "zu dem Zeitpunkt" oder "zu deinem Besuch" — wir behaupten nicht was beim konkreten Besuch so war.
 - Kein "man" — immer "du" oder "Sie" je nach Anredeform.
 
+TAGESZEIT-VERBOT (gilt fuer die gesamte Antwort, alle 3 Schritte):
+Uebernehme NIEMALS Tageszeit-Begriffe aus der Bewertung ("Abend", "abends", "Mittag", "Morgen" etc.).
+Auch wenn der Gast "einen ruhigen Abend" schreibt — antworte mit "Besuch" oder "Aufenthalt", nie mit "Abend".
+Beispiel: "einen ruhigen Abend" in der Bewertung → "einen ruhigen Besuch" oder "einen entspannten Aufenthalt" in der Antwort.
+
 SCHRITT 3 — GASTGEBER-AUSSTIEG (kategorie-spezifisch):
 Konkreter Insider-Tipp. Kein Betteln. Keine Standard-Kontaktfloskeln. Dem Gast die Kontrolle zurueckgeben.
 
@@ -365,8 +370,8 @@ function buildRecoveryText(reviewerName: string, settings: any): string {
   const greeting = name ? `Hallo ${name},` : 'Hallo,'
 
   const body = isDu
-    ? `was du da erlebt hast, macht uns wirklich betroffen. Bitte melde dich direkt bei uns, damit wir das persoenlich mit dir klaeren koennen.`
-    : `was Sie da erlebt haben, macht uns wirklich betroffen. Bitte melden Sie sich direkt bei uns, damit wir das persoenlich mit Ihnen klaeren koennen.`
+    ? `was du da erlebt hast, macht uns wirklich betroffen. Bitte melde dich direkt bei uns, damit wir das persönlich mit dir klären können.`
+    : `was Sie da erlebt haben, macht uns wirklich betroffen. Bitte melden Sie sich direkt bei uns, damit wir das persönlich mit Ihnen klären können.`
 
   const contactLine = contactEmail
     ? (isDu ? `Du erreichst uns unter ${contactEmail}.` : `Sie erreichen uns unter ${contactEmail}.`)
