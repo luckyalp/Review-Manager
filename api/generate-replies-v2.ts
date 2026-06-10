@@ -82,7 +82,7 @@ Das Verbindungsstück erklärt WARUM es so ist — das ist der entscheidende Unt
 Wähle eine dieser Brücken-Formulierungen — variiere bei jeder Antwort:
 - "Das liegt einfach daran, dass wir ein gut besuchtes Lokal sind und es bei uns oft richtig lebendig zugeht."
 - "Das kommt daher, dass bei uns meistens gut was los ist und es schon mal etwas turbulenter zugehen kann."
-- "Wir sind halt einfach ein gut besuchtes Haus und da kann es schon ordentlich lebhaft werden."
+- "Das kommt einfach daher, dass wir ein gut besuchtes Lokal sind und bei uns oft richtig was los ist."
 
 VERBOTEN in der Brücke:
 - NICHT "wir sind bekannt dafür" oder "wir sind immer voll" — das klingt nach "nimm es oder lass es" und macht Schritt 3 unglaubwürdig.
@@ -130,19 +130,19 @@ Nutze stattdessen neutrale Wörter: "Besuch", "Aufenthalt", "wenn du wiederkomms
 Wähle EINE Formulierung aus dem jeweiligen Pool — variiere bei jeder Antwort, nutze nicht immer dieselbe:
 
   Direkt & Ehrlich (Pool — eine davon wählen):
-  - "Frag beim nächsten Mal kurz nach, wir schauen wie wir dir helfen können."
-  - "Komm nochmal vorbei und sag kurz was du brauchst, wir finden gemeinsam was für dich passt."
+  - "Gib einfach kurz bei der nächsten Reservierung dein Anliegen mit an, wir schauen was wir möglich machen können."
+  - "Sag uns bei der nächsten Reservierung kurz dein Anliegen, wir schauen was wir drehen können."
   - "Beim nächsten Besuch einfach kurz melden, wir schauen was wir für dich tun können."
 
   Ruhig & Professionell (Pool — eine davon wählen):
-  - "Sag kurz Bescheid beim nächsten Besuch, wir finden gemeinsam was für dich passt."
-  - "Beim nächsten Mal einfach kurz Bescheid geben, wir schauen wie wir dir helfen können."
-  - "Komm nochmal rein und sag kurz was du dir vorstellst, wir kümmern uns darum."
+  - "Teile uns bei der nächsten Reservierung kurz dein Anliegen mit, wir gucken was wir für dich tun können."
+  - "Sag uns bei der nächsten Reservierung kurz was du dir vorstellst, wir schauen was wir möglich machen können."
+  - "Gib bei der nächsten Reservierung einfach kurz dein Anliegen mit an, wir kümmern uns darum."
 
   Fokus auf Klärung (Pool — eine davon wählen):
-  - "Sag beim nächsten Mal kurz Bescheid was du brauchst, wir schauen wie wir dir helfen können."
-  - "Beim nächsten Besuch kurz melden, wir finden was für dich passt."
-  - "Einfach kurz Bescheid geben, wir kümmern uns darum."
+  - "Bei der nächsten Reservierung einfach kurz dein Anliegen mitteilen, wir schauen was geht."
+  - "Sag uns bei der nächsten Reservierung kurz dein Anliegen, wir gucken was wir drehen können."
+  - "Einfach kurz bei der Reservierung Bescheid geben, wir schauen was möglich ist."
 
 ESSEN (Geschmacks-Weiche — erkenne intern: Zubereitung oder Geschmack):
   Direkt & Ehrlich:      "War es Geschmackssache oder hat in der Küche was nicht gestimmt? Das macht für uns einen Unterschied."
