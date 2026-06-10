@@ -73,7 +73,7 @@ NICHT: "ich verstehe vollkommen, dass das enttäuschend gewirkt hat, wenn du mit
 
 Technik 3 — Ablauf-Perspektive (für Variante "Fokus auf Klärung"):
 Sachlicher, kürzer. Kernthema der Bewertung einbauen, kein "ins Stocken geraten" bei ERLEBNIS.
-Beispiel (ERLEBNIS): "Ich verstehe vollkommen, dass das blöd ruberkommt, wenn du dir einen ruhigeren Besuch vorgestellt hast."
+Beispiel (ERLEBNIS): "Ich kann mir gut vorstellen, dass du mit ganz anderen Erwartungen zu uns reingekommen bist."
 
 Brücke zum verdeckten Marketing (NICHT bei Kategorie UNFREUNDLICHKEIT verwenden):
 Der Empathie-Satz und die Brücke sind ZWEI separate Sätze — getrennt durch einen Punkt, nicht durch ein Komma.
