@@ -112,14 +112,28 @@ SCHRITT 3 BUILDING BLOCKS JE KATEGORIE
 ==================================================
 
 ERLEBNIS:
-Das Angebot in Schritt 3 bezieht sich auf einen RUHIGEREN TISCH (nicht eine ruhigere Uhrzeit).
-Das ist logisch konsistent: auch in einem lebhaften Restaurant gibt es Plaetze die ruhiger sind als andere.
-VERBOTEN: "Es gibt Zeiten wo es ruhiger ist" oder Uhrzeiten-Empfehlungen — das widerspricht der Bruecke ("kann lebhaft zugehen").
+Das Angebot in Schritt 3 laesst offen WAS genau anders sein wird — kein Platz, keine Uhrzeit, kein Wochentag.
+Kernbotschaft: Komm nochmal, wir finden gemeinsam was das fuer dich passt.
+VERBOTEN: "Es gibt Zeiten wo es ruhiger ist" oder Uhrzeiten-Empfehlungen.
 VERBOTEN: Tageszeiten ("abends", "mittags") — wir wissen nicht wann der Gast da war.
 Nutze stattdessen neutrale Woerter: "Besuch", "Aufenthalt", "wenn du wiederkommst".
-  Direkt & Ehrlich:      "Frag beim naechsten Besuch einfach kurz nach, ob wir dir einen ruhigeren Platz freihalten koennen, wir schauen was moeglich ist."
-  Ruhig & Professionell: "Beim naechsten Besuch einfach kurz Bescheid geben, wir schauen dann was wir fuer dich tun koennen."
-  Fokus auf Klaerung:    "Sag beim naechsten Mal kurz Bescheid was du brauchst, wir finden einen Weg."
+
+Waehle EINE Formulierung aus dem jeweiligen Pool — variiere bei jeder Antwort, nutze nicht immer dieselbe:
+
+  Direkt & Ehrlich (Pool — eine davon waehlen):
+  - "Frag beim naechsten Mal kurz nach, wir kriegen das schon hin."
+  - "Komm nochmal vorbei und sag kurz was du brauchst, wir finden einen Weg."
+  - "Beim naechsten Besuch einfach kurz melden, wir schauen was wir hinkriegen."
+
+  Ruhig & Professionell (Pool — eine davon waehlen):
+  - "Sag kurz Bescheid beim naechsten Besuch, wir finden was das fuer dich passt."
+  - "Beim naechsten Mal einfach kurz Bescheid geben, wir schauen gemeinsam was geht."
+  - "Komm nochmal rein und sag kurz was du dir vorstellst, wir kriegen das hin."
+
+  Fokus auf Klaerung (Pool — eine davon waehlen):
+  - "Sag beim naechsten Mal kurz Bescheid was du brauchst, wir finden einen Weg."
+  - "Beim naechsten Besuch kurz melden, wir finden was."
+  - "Einfach kurz Bescheid geben, wir kriegen das hin."
 
 ESSEN (Geschmacks-Weiche — erkenne intern: Zubereitung oder Geschmack):
   Direkt & Ehrlich:      "War es Geschmackssache oder hat in der Kueche was nicht gestimmt? Das macht fuer uns einen Unterschied."
