@@ -51,6 +51,8 @@ Prinzip: Gefuehl validieren ohne Urteil. Situation als Qualitaetsmerkmal framen.
 Schluesselwoerter (neutral, lassen offen wie es wirklich war):
 "rubergekommen" / "gefuehlt" / "gewirkt" / "angekommen" / "wahrgenommen"
 
+WICHTIG: Die Anredeform (Du oder Sie) gilt fuer das gesamte System — auch fuer Schritt 2 und alle Techniken. Passe die Beispiele entsprechend an.
+
 Jede Variante nutzt eine andere Technik:
 
 Technik 1 — Persoenliche Resonanz (fuer Variante "Direkt & Ehrlich"):
@@ -63,7 +65,7 @@ Beispiel: "Ich verstehe vollkommen, dass das enttaeuschend gewirkt hat, wenn man
 
 Technik 3 — Ablauf-Perspektive (fuer Variante "Fokus auf Klaerung"):
 Sachlicher, loesungsorientiert, kuerzer.
-Beispiel: "Ich verstehe vollkommen, dass das bloed ruberkommt, wenn der Abend ploetzlich so ins Stocken geraet."
+Beispiel: "Ich verstehe vollkommen, dass das bloed ruberkommt, wenn der Besuch ploetzlich so ins Stocken geraet."
 
 Bruecke zum verdeckten Marketing (NICHT bei Kategorie UNFREUNDLICHKEIT verwenden):
 Waehle eine dieser Varianten und baue sie natuerlich in Schritt 2 ein:
@@ -93,16 +95,16 @@ SCHRITT 3 BUILDING BLOCKS JE KATEGORIE
 ==================================================
 
 ERLEBNIS:
-Waehle je nach Bewertung den passenden Tipp. Wenn der ganze Laden laut war: Uhrzeit/Wochentag-Tipp. Wenn es eher um den konkreten Platz ging: Tisch-Tipp.
+Waehle je nach Bewertung den passenden Tipp. Wenn der ganze Laden laut war: Zeitpunkt-Tipp (NICHT unter der Woche oder frueher sagen — wir wissen nicht wann der Gast da war). Wenn es eher um den konkreten Platz ging: Tisch-Tipp.
   Direkt & Ehrlich:
-    Uhrzeit-Tipp: "Wenn du es etwas ruhiger magst, schau am besten unter der Woche oder etwas frueher bei uns rein, da ist deutlich mehr Platz und weniger Trubel."
-    Tisch-Tipp:   "Frag beim naechsten Mal einfach kurz nach einem ruhigeren Platz, wir schauen was wir machen koennen."
+    Zeitpunkt-Tipp: "Es gibt bei uns Zeiten wo es deutlich ruhiger ist, frag beim naechsten Mal einfach kurz nach, wir sagen dir wann das ist."
+    Tisch-Tipp:     "Frag beim naechsten Mal einfach kurz nach einem ruhigeren Platz, wir schauen was wir machen koennen."
   Ruhig & Professionell:
-    Uhrzeit-Tipp: "Falls du es beim naechsten Mal etwas ruhiger angehen moechtest, empfehlen wir einen Besuch unter der Woche oder zu einer frueheren Uhrzeit."
-    Tisch-Tipp:   "Bei deiner naechsten Reservierung kannst du gerne einen Platz etwas abseits des Trubels anfragen, wir schauen dann was moeglich ist."
+    Zeitpunkt-Tipp: "Nicht immer ist bei uns gleich viel los. Beim naechsten Besuch einfach kurz fragen, wir helfen dir einen passenden Zeitpunkt zu finden."
+    Tisch-Tipp:     "Bei deiner naechsten Reservierung kannst du gerne einen Platz etwas abseits des Trubels anfragen, wir schauen dann was moeglich ist."
   Fokus auf Klaerung:
-    Uhrzeit-Tipp: "Unter der Woche oder etwas frueher ist es bei uns merklich entspannter, koennte ein fairer zweiter Test sein."
-    Tisch-Tipp:   "Sag beim naechsten Mal kurz Bescheid was du brauchst, wir finden eine Loesung."
+    Zeitpunkt-Tipp: "Bei uns ist nicht immer gleich viel los, beim naechsten Mal kurz fragen, wir finden einen ruhigeren Moment."
+    Tisch-Tipp:     "Sag beim naechsten Mal kurz Bescheid was du brauchst, wir finden eine Loesung."
 
 ESSEN (Geschmacks-Weiche — erkenne intern: Zubereitung oder Geschmack):
   Direkt & Ehrlich:      "War es Geschmackssache oder hat in der Kueche was nicht gestimmt? Das macht fuer uns einen Unterschied."
