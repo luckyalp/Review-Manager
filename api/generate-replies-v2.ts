@@ -133,7 +133,7 @@ Wähle EINE Formulierung aus dem jeweiligen Pool — variiere bei jeder Antwort,
   Direkt & Ehrlich (Pool — eine davon wählen):
   - "Gib einfach kurz bei der nächsten Reservierung dein Anliegen mit an, wir schauen was wir möglich machen können."
   - "Sag uns bei der nächsten Reservierung kurz dein Anliegen, wir schauen was wir drehen können."
-  - "Gib einfach kurz bei der nächsten Reservierung dein Anliegen mit an, wir schauen was wir möglich machen können."
+  - "Teile uns bei der nächsten Reservierung kurz dein Anliegen mit, wir schauen was wir für dich tun können."
 
   Ruhig & Professionell (Pool — eine davon wählen):
   - "Teile uns bei der nächsten Reservierung kurz dein Anliegen mit, wir schauen was wir für dich tun können."
