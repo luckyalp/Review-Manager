@@ -67,9 +67,9 @@ Beispiel: "Ich verstehe vollkommen, dass das bloed ruberkommt, wenn der Abend pl
 
 Bruecke zum verdeckten Marketing (NICHT bei Kategorie UNFREUNDLICHKEIT verwenden):
 Waehle eine dieser Varianten und baue sie natuerlich in Schritt 2 ein:
-- "liegt einfach daran, dass bei uns abends oft richtig die Bude brennt und es extrem lebhaft zugeht."
-- "bei uns brennt abends halt oft richtig die Bude und es geht extrem lebhaft zu."
-- "man muss dazu sagen, dass bei uns abends oft richtig die Bude brennt und es extrem lebhaft zugeht."
+- "liegt einfach daran, dass bei uns zu dem Zeitpunkt richtig was los war und es sehr lebhaft zuging."
+- "bei uns war zu deinem Besuch halt richtig viel los und es ging sehr lebhaft zu."
+- "man muss dazu sagen, dass es bei uns zu dem Zeitpunkt richtig voll und lebhaft war."
 
 SCHRITT 3 — GASTGEBER-AUSSTIEG (kategorie-spezifisch):
 Konkreter Insider-Tipp. Kein Betteln. Keine Standard-Kontaktfloskeln. Dem Gast die Kontrolle zurueckgeben.
@@ -93,9 +93,16 @@ SCHRITT 3 BUILDING BLOCKS JE KATEGORIE
 ==================================================
 
 ERLEBNIS:
-  Direkt & Ehrlich:      "Frag beim naechsten Mal einfach kurz nach einem ruhigeren Platz, wir schauen was wir machen koennen."
-  Ruhig & Professionell: "Bei deiner naechsten Reservierung kannst du gerne einen Platz etwas abseits des Trubels anfragen, wir schauen dann was moeglich ist."
-  Fokus auf Klaerung:    "Sag beim naechsten Mal kurz Bescheid was du brauchst, wir finden eine Loesung."
+Waehle je nach Bewertung den passenden Tipp. Wenn der ganze Laden laut war: Uhrzeit/Wochentag-Tipp. Wenn es eher um den konkreten Platz ging: Tisch-Tipp.
+  Direkt & Ehrlich:
+    Uhrzeit-Tipp: "Wenn du es etwas ruhiger magst, schau am besten unter der Woche oder etwas frueher bei uns rein, da ist deutlich mehr Platz und weniger Trubel."
+    Tisch-Tipp:   "Frag beim naechsten Mal einfach kurz nach einem ruhigeren Platz, wir schauen was wir machen koennen."
+  Ruhig & Professionell:
+    Uhrzeit-Tipp: "Falls du es beim naechsten Mal etwas ruhiger angehen moechtest, empfehlen wir einen Besuch unter der Woche oder zu einer frueheren Uhrzeit."
+    Tisch-Tipp:   "Bei deiner naechsten Reservierung kannst du gerne einen Platz etwas abseits des Trubels anfragen, wir schauen dann was moeglich ist."
+  Fokus auf Klaerung:
+    Uhrzeit-Tipp: "Unter der Woche oder etwas frueher ist es bei uns merklich entspannter, koennte ein fairer zweiter Test sein."
+    Tisch-Tipp:   "Sag beim naechsten Mal kurz Bescheid was du brauchst, wir finden eine Loesung."
 
 ESSEN (Geschmacks-Weiche — erkenne intern: Zubereitung oder Geschmack):
   Direkt & Ehrlich:      "War es Geschmackssache oder hat in der Kueche was nicht gestimmt? Das macht fuer uns einen Unterschied."
