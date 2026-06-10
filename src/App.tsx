@@ -505,7 +505,8 @@ function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews,
     }
 
     try {
-      const repliesRes = await fetch('/api/generate-replies-v2', {
+      const _endpoint = localStorage.getItem('engine_test') === 'true' ? '/api/generate-replies' : '/api/generate-replies-v2'
+      const repliesRes = await fetch(_endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ review: testReview, settings }),
@@ -1101,7 +1102,8 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings }: { 
     setAiLoading(true)
     setMissingContext(null)
     try {
-      const response = await fetch('/api/generate-replies-v2', {
+      const _endpoint = localStorage.getItem('engine_test') === 'true' ? '/api/generate-replies' : '/api/generate-replies-v2'
+      const response = await fetch(_endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ review: { reviewerName: review.name, stars: review.stars, reviewText: review.text }, settings, force })
