@@ -62,6 +62,7 @@ const supabase = createClient(
 
 function App() {
   const [page, setPage] = useState('dashboard')
+  const [engineTest, setEngineTest] = useState(false)
   const [reviews, setReviews] = useState<Review[]>([])
   const [reviewsLoading, setReviewsLoading] = useState(true)
   const [selectedReview, setSelectedReview] = useState<Review | null>(null)
@@ -343,9 +344,9 @@ function App() {
             <>
               {page === 'dashboard' && <Dashboard stats={stats} reviews={reviews} openReview={openReview} onAddReview={addManualReview} userId={user?.id} onNavigateReviews={(filter?: string) => { setReviewsInitialFilter(filter || 'alle'); setPage('reviews'); setSelectedReview(null) }} />}
               {page === 'reviews' && !selectedReview && <Reviews reviews={reviews} onStatusChange={updateReviewStatus} onDelete={deleteReview} openReview={openReview} initialFilterStars={reviewsInitialFilter} />}
-              {page === 'reviews' && selectedReview && <ReviewDetail review={selectedReview} onStatusChange={updateReviewStatus} onBack={() => setSelectedReview(null)} onNavigateSettings={() => { setSelectedReview(null); setPage('settings') }} />}
+              {page === 'reviews' && selectedReview && <ReviewDetail review={selectedReview} onStatusChange={updateReviewStatus} onBack={() => setSelectedReview(null)} onNavigateSettings={() => { setSelectedReview(null); setPage('settings') }} engineTest={engineTest} />}
               {page === 'analytics' && <Analytics reviews={reviews} userId={user?.id} />}
-              {page === 'settings' && <Settings onLogout={handleLogout} userId={user?.id} />}
+              {page === 'settings' && <Settings onLogout={handleLogout} userId={user?.id} engineTest={engineTest} onEngineToggle={() => setEngineTest(v => !v)} />}
             </>
           )}
         </div>
@@ -505,7 +506,7 @@ function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews,
     }
 
     try {
-      const _endpoint = localStorage.getItem('engine_test') === 'true' ? '/api/generate-replies' : '/api/generate-replies-v2'
+      const _endpoint = engineTest ? '/api/generate-replies' : '/api/generate-replies-v2'
       const repliesRes = await fetch(_endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1031,7 +1032,7 @@ const rdStyles = `
 
 // ─── REVIEW DETAIL ───────────────────────────────────────────────────────────
 
-function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings }: { review: Review, onStatusChange: (id: number, s: ReviewStatus) => void, onBack: () => void, onNavigateSettings: () => void }) {
+function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engineTest }: { review: Review, onStatusChange: (id: number, s: ReviewStatus) => void, onBack: () => void, onNavigateSettings: () => void, engineTest: boolean }) {
   const [aiLoading, setAiLoading] = useState(false)
   const [answers, setAnswers] = useState<{label: string, text: string, isRecovery?: boolean}[]>([])
   const [selectedId, setSelectedId] = useState<number | null>(null)
@@ -1102,7 +1103,7 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings }: { 
     setAiLoading(true)
     setMissingContext(null)
     try {
-      const _endpoint = localStorage.getItem('engine_test') === 'true' ? '/api/generate-replies' : '/api/generate-replies-v2'
+      const _endpoint = engineTest ? '/api/generate-replies' : '/api/generate-replies-v2'
       const response = await fetch(_endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1781,7 +1782,7 @@ function Analytics({ reviews, userId }: { reviews: Review[], userId?: string }) 
 
 // ─── EINSTELLUNGEN ────────────────────────────────────────────────────────────
 
-function Settings({ onLogout, userId }: { onLogout: () => void, userId?: string }) {
+function Settings({ onLogout, userId, engineTest, onEngineToggle }: { onLogout: () => void, userId?: string, engineTest: boolean, onEngineToggle: () => void }) {
   const [form, setForm] = useState({
     businessName: '', description: '', restaurantType: '', cuisineType: '',
     priceRange: '', dietaryOptions: '', openingHours: '',
@@ -2095,6 +2096,23 @@ function Settings({ onLogout, userId }: { onLogout: () => void, userId?: string 
           </button>
         </div>
       </div>
+
+      {/* Engine Toggle — nur für Admin sichtbar */}
+      {(userId === '6ae1a7a5-72c9-4b75-88d5-042a703b5b54' || userId === '81df2fe7-aab5-4527-b512-fa58eb9ee55f') && (
+        <div style={{ background: '#f9fafb', borderRadius: '12px', border: '1px dashed #d1d5db', marginBottom: '40px', padding: '16px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <div style={{ fontSize: '12px', color: '#9ca3af', fontWeight: '600', letterSpacing: '0.05em' }}>🧪 ENGINE TEST</div>
+            <div style={{ fontSize: '13px', color: '#6b7280', marginTop: '2px' }}>
+              Aktiv: <strong style={{ color: engineTest ? '#0f4c5c' : '#6b7280' }}>{engineTest ? 'generate-replies (neu)' : 'generate-replies-v2 (standard)'}</strong>
+            </div>
+          </div>
+          <button
+            onClick={onEngineToggle}
+            style={{ padding: '8px 16px', background: engineTest ? '#0f4c5c' : '#e5e7eb', color: engineTest ? '#fff' : '#374151', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', fontWeight: '500' }}>
+            {engineTest ? 'Zurück zu v2' : 'Neue Engine testen'}
+          </button>
+        </div>
+      )}
     </div>
   )
 }
