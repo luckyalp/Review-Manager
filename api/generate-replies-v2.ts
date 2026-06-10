@@ -61,8 +61,8 @@ Nicht aufzählen. Nur das eine Kernthema. So fühlt sich der Gast gehört ohne d
 
 Technik 1 — Persönliche Resonanz (für Variante "Direkt & Ehrlich"):
 Ich-Form, direktes Gefühl im Moment, nah dran. NICHT "frustrierend" — das ist ein Urteil, kein Gefühl.
-Beispiel (ERLEBNIS): "Ich kann absolut nachvollziehen, dass das bei dir nicht so angekommen ist wie du dir das vorgestellt hast."
-Weitere gute Formulierungen: "nicht so angekommen ist wie erhofft" / "sich anders angefühlt hat als erwartet"
+Beispiel (ERLEBNIS): "Ich versteh total, dass das für dich nicht gepasst hat."
+Weitere gute Formulierungen: "ich kann gut verstehen, dass das für dich nicht optimal war" / "ich kann das gut nachempfinden"
 
 Technik 2 — Vorfreude-Dynamik (für Variante "Ruhig & Professionell"):
 Enttaeuschte Erwartung anerkennen, ruhig, einfuehlsam. Umgangssprachlich, nicht steif.
