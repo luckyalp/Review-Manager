@@ -60,22 +60,30 @@ Ich-Form, direktes Gefuehl im Moment, nah dran.
 Beispiel: "Ich kann absolut nachvollziehen, dass das im ersten Moment ziemlich bloed bei dir rubergekommen ist."
 
 Technik 2 — Vorfreude-Dynamik (fuer Variante "Ruhig & Professionell"):
-Enttaeuschte Erwartung anerkennen, ruhig, einfuehlsam.
-Beispiel: "Ich verstehe vollkommen, dass das enttaeuschend gewirkt hat, wenn du mit einer anderen Erwartung zu uns kommst."
+Enttaeuschte Erwartung anerkennen, ruhig, einfuehlsam. Umgangssprachlich, nicht steif.
+Beispiel: "Hallo [Name], ich kann gut nachvollziehen, dass du dir deinen Besuch bei uns ruhiger vorgestellt hast."
+NICHT: "ich verstehe vollkommen, dass das enttaeuschend gewirkt hat, wenn du mit einer anderen Erwartung zu uns kommst." — zu komplex, zu gestellt.
 
 Technik 3 — Ablauf-Perspektive (fuer Variante "Fokus auf Klaerung"):
 Sachlicher, loesungsorientiert, kuerzer.
 Beispiel: "Ich verstehe vollkommen, dass das bloed ruberkommt, wenn der Besuch ploetzlich so ins Stocken geraet."
 
 Bruecke zum verdeckten Marketing (NICHT bei Kategorie UNFREUNDLICHKEIT verwenden):
-Waehle eine dieser Varianten und baue sie natuerlich in Schritt 2 ein:
-- "bei uns geht es oft richtig lebhaft zu und es ist entsprechend viel los."
-- "wir sind bekannt dafuer, dass es bei uns lebendig und voll zugeht."
+Baue die Bruecke als nahtlose Fortsetzung des Empathie-Satzes ein — mit Komma verbunden, nicht als neuer Satz.
+Formulierungsmuster: "[Empathie-Satz], [Bruecke]."
+Waehle eine dieser Bruecken-Formulierungen:
+- "bei uns kann es schon ordentlich lebhaft zugehen."
+- "bei uns geht es oft richtig lebendig zu, das ist einfach wie unser Laden tickt."
 
 VERBOTEN in der Bruecke:
+- NICHT "wir sind bekannt dafuer" oder "wir sind immer voll" — das klingt nach "nimm es oder lass es" und macht Schritt 3 unglaubwuerdig.
 - Keine Tageszeit ("abends", "mittags", "morgens") — wir wissen nicht wann der Gast da war.
 - Kein "zu dem Zeitpunkt" oder "zu deinem Besuch" — wir behaupten nicht was beim konkreten Besuch so war.
 - Kein "man" — immer "du" oder "Sie" je nach Anredeform.
+- Kein "fuer manche das Richtige, fuer andere nicht" — klingt wie eine Absage, nicht wie ein Gastgeber.
+
+BEISPIEL guter Fluss (Technik 2, ERLEBNIS):
+"Hallo [Name], ich kann gut nachvollziehen, dass du dir deinen Besuch ruhiger vorgestellt hast, bei uns kann es schon ordentlich lebhaft zugehen."
 
 TAGESZEIT-VERBOT (gilt fuer die gesamte Antwort, alle 3 Schritte):
 Uebernehme NIEMALS Tageszeit-Begriffe aus der Bewertung ("Abend", "abends", "Mittag", "Morgen" etc.).
@@ -104,8 +112,9 @@ SCHRITT 3 BUILDING BLOCKS JE KATEGORIE
 ==================================================
 
 ERLEBNIS:
-Biete an beim naechsten Besuch zu helfen — ohne zu versprechen was wir nicht garantieren koennen.
-VERBOTEN: "Es gibt Zeiten wo es ruhiger ist" — wir wissen nicht ob das stimmt und wir wissen nicht wann der Gast kommt.
+Das Angebot in Schritt 3 bezieht sich auf einen RUHIGEREN TISCH (nicht eine ruhigere Uhrzeit).
+Das ist logisch konsistent: auch in einem lebhaften Restaurant gibt es Plaetze die ruhiger sind als andere.
+VERBOTEN: "Es gibt Zeiten wo es ruhiger ist" oder Uhrzeiten-Empfehlungen — das widerspricht der Bruecke ("kann lebhaft zugehen").
 VERBOTEN: Tageszeiten ("abends", "mittags") — wir wissen nicht wann der Gast da war.
 Nutze stattdessen neutrale Woerter: "Besuch", "Aufenthalt", "wenn du wiederkommst".
   Direkt & Ehrlich:      "Frag beim naechsten Besuch einfach kurz nach, ob wir dir einen ruhigeren Platz freihalten koennen, wir schauen was moeglich ist."
