@@ -568,7 +568,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { review, settings } = req.body
+  const { review, settings, force } = req.body
 
   if (!ANTHROPIC_API_KEY) {
     return res.status(500).json({ error: 'ANTHROPIC_API_KEY nicht konfiguriert' })
@@ -584,13 +584,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     // ── SCHRITT 0: Context Check ──────────────────────────────────────────
     const description  = settings?.description || ''
-    const contextCheck = await checkContext(reviewText, description)
-    if (!contextCheck.ok) {
-      return res.status(200).json({
-        success: false,
-        missingContext: true,
-        missingInfo: contextCheck.missing || 'Fehlende Informationen im Restaurantprofil',
-      })
+    if (!force) {
+      const contextCheck = await checkContext(reviewText, description)
+      if (!contextCheck.ok) {
+        return res.status(200).json({
+          success: false,
+          missingContext: true,
+          missingInfo: contextCheck.missing || 'Fehlende Informationen im Restaurantprofil',
+        })
+      }
     }
 
     const mode = classify(stars, reviewText)

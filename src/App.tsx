@@ -1097,14 +1097,14 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings }: { 
     setTimeout(() => { setShowToast(false); onBack() }, 1500)
   }
 
-  const generateReplies = async () => {
+  const generateReplies = async (force = false) => {
     setAiLoading(true)
     setMissingContext(null)
     try {
       const response = await fetch('/api/generate-replies-v2', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ review: { reviewerName: review.name, stars: review.stars, reviewText: review.text }, settings })
+        body: JSON.stringify({ review: { reviewerName: review.name, stars: review.stars, reviewText: review.text }, settings, force })
       })
       const data = await response.json()
       if (data.missingContext) {
@@ -1203,7 +1203,7 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings }: { 
                 → Profil ergänzen
               </button>
               <button
-                onClick={() => { setMissingContext(null); generateReplies() }}
+                onClick={() => { setMissingContext(null); generateReplies(true) }}
                 className="rd2-gen-btn"
                 style={{background: '#6b7280', marginTop: '4px'}}
               >
