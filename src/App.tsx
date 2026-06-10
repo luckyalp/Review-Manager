@@ -1177,7 +1177,7 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings }: { 
               <div className="rd2-state-icon">✨</div>
               <div className="rd2-state-title">Noch keine Antworten generiert</div>
               <div className="rd2-state-desc">Klick auf „Antworten generieren", um passende Antwortmöglichkeiten zu erstellen.</div>
-              <button onClick={generateReplies} className="rd2-gen-btn">✨ Antworten generieren</button>
+              <button onClick={() => generateReplies()} className="rd2-gen-btn">✨ Antworten generieren</button>
             </div>
           )}
           {aiLoading && (
