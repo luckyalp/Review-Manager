@@ -62,7 +62,7 @@ const supabase = createClient(
 
 function App() {
   const [page, setPage] = useState('dashboard')
-  const [engineTest, setEngineTest] = useState(false)
+  const [engine, setEngine] = useState<'v2' | 'v1' | 'v3'>('v2')
   const [reviews, setReviews] = useState<Review[]>([])
   const [reviewsLoading, setReviewsLoading] = useState(true)
   const [selectedReview, setSelectedReview] = useState<Review | null>(null)
@@ -342,11 +342,11 @@ function App() {
             </div>
           ) : (
             <>
-              {page === 'dashboard' && <Dashboard stats={stats} reviews={reviews} openReview={openReview} onAddReview={addManualReview} userId={user?.id} onNavigateReviews={(filter?: string) => { setReviewsInitialFilter(filter || 'alle'); setPage('reviews'); setSelectedReview(null) }} engineTest={engineTest} />}
+              {page === 'dashboard' && <Dashboard stats={stats} reviews={reviews} openReview={openReview} onAddReview={addManualReview} userId={user?.id} onNavigateReviews={(filter?: string) => { setReviewsInitialFilter(filter || 'alle'); setPage('reviews'); setSelectedReview(null) }} engine={engine} />}
               {page === 'reviews' && !selectedReview && <Reviews reviews={reviews} onStatusChange={updateReviewStatus} onDelete={deleteReview} openReview={openReview} initialFilterStars={reviewsInitialFilter} />}
-              {page === 'reviews' && selectedReview && <ReviewDetail review={selectedReview} onStatusChange={updateReviewStatus} onBack={() => setSelectedReview(null)} onNavigateSettings={() => { setSelectedReview(null); setPage('settings') }} engineTest={engineTest} />}
+              {page === 'reviews' && selectedReview && <ReviewDetail review={selectedReview} onStatusChange={updateReviewStatus} onBack={() => setSelectedReview(null)} onNavigateSettings={() => { setSelectedReview(null); setPage('settings') }} engine={engine} />}
               {page === 'analytics' && <Analytics reviews={reviews} userId={user?.id} />}
-              {page === 'settings' && <Settings onLogout={handleLogout} userId={user?.id} engineTest={engineTest} onEngineToggle={() => setEngineTest(v => !v)} />}
+              {page === 'settings' && <Settings onLogout={handleLogout} userId={user?.id} engine={engine} onEngineChange={setEngine} />}
             </>
           )}
         </div>
@@ -410,7 +410,7 @@ function StatusBadge({ status }: { status: ReviewStatus }) {
 
 // ─── DASHBOARD ───────────────────────────────────────────────────────────────
 
-function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews, userId, engineTest }: { stats: any, reviews: Review[], openReview: (r: Review) => void, onAddReview: (r: Review) => void, onNavigateReviews: (filter?: string) => void, userId?: string, engineTest: boolean }) {
+function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews, userId, engine }: { stats: any, reviews: Review[], openReview: (r: Review) => void, onAddReview: (r: Review) => void, onNavigateReviews: (filter?: string) => void, userId?: string, engine: 'v2' | 'v1' | 'v3' }) {
   const [testRunning, setTestRunning] = useState(false)
   const [testDone, setTestDone] = useState(false)
   const [testError, setTestError] = useState('')
@@ -506,7 +506,7 @@ function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews,
     }
 
     try {
-      const _endpoint = engineTest ? '/api/generate-replies' : '/api/generate-replies-v2'
+      const _endpoint = engine === 'v1' ? '/api/generate-replies' : engine === 'v3' ? '/api/generate-replies-v3' : '/api/generate-replies-v2'
       const repliesRes = await fetch(_endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1032,7 +1032,7 @@ const rdStyles = `
 
 // ─── REVIEW DETAIL ───────────────────────────────────────────────────────────
 
-function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engineTest }: { review: Review, onStatusChange: (id: number, s: ReviewStatus) => void, onBack: () => void, onNavigateSettings: () => void, engineTest: boolean }) {
+function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engine }: { review: Review, onStatusChange: (id: number, s: ReviewStatus) => void, onBack: () => void, onNavigateSettings: () => void, engine: 'v2' | 'v1' | 'v3' }) {
   const [aiLoading, setAiLoading] = useState(false)
   const [answers, setAnswers] = useState<{label: string, text: string, isRecovery?: boolean}[]>([])
   const [selectedId, setSelectedId] = useState<number | null>(null)
@@ -1103,7 +1103,7 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
     setAiLoading(true)
     setMissingContext(null)
     try {
-      const _endpoint = engineTest ? '/api/generate-replies' : '/api/generate-replies-v2'
+      const _endpoint = engine === 'v1' ? '/api/generate-replies' : engine === 'v3' ? '/api/generate-replies-v3' : '/api/generate-replies-v2'
       const response = await fetch(_endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1782,7 +1782,7 @@ function Analytics({ reviews, userId }: { reviews: Review[], userId?: string }) 
 
 // ─── EINSTELLUNGEN ────────────────────────────────────────────────────────────
 
-function Settings({ onLogout, userId, engineTest, onEngineToggle }: { onLogout: () => void, userId?: string, engineTest: boolean, onEngineToggle: () => void }) {
+function Settings({ onLogout, userId, engine, onEngineChange }: { onLogout: () => void, userId?: string, engine: 'v2' | 'v1' | 'v3', onEngineChange: (e: 'v2' | 'v1' | 'v3') => void }) {
   const [form, setForm] = useState({
     businessName: '', description: '', restaurantType: '', cuisineType: '',
     priceRange: '', dietaryOptions: '', openingHours: '',
@@ -2099,18 +2099,37 @@ function Settings({ onLogout, userId, engineTest, onEngineToggle }: { onLogout: 
 
       {/* Engine Toggle — nur für Admin sichtbar */}
       {(userId === '6ae1a7a5-72c9-4b75-88d5-042a703b5b54' || userId === '81df2fe7-aab5-4527-b512-fa58eb9ee55f') && (
-        <div style={{ background: '#f9fafb', borderRadius: '12px', border: '1px dashed #d1d5db', marginBottom: '40px', padding: '16px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <div style={{ fontSize: '12px', color: '#9ca3af', fontWeight: '600', letterSpacing: '0.05em' }}>🧪 ENGINE TEST</div>
-            <div style={{ fontSize: '13px', color: '#6b7280', marginTop: '2px' }}>
-              Aktiv: <strong style={{ color: engineTest ? '#0f4c5c' : '#6b7280' }}>{engineTest ? 'generate-replies (neu)' : 'generate-replies-v2 (standard)'}</strong>
-            </div>
+        <div style={{ background: '#f9fafb', borderRadius: '12px', border: '1px dashed #d1d5db', marginBottom: '40px', padding: '16px 18px' }}>
+          <div style={{ fontSize: '12px', color: '#9ca3af', fontWeight: '600', letterSpacing: '0.05em', marginBottom: '10px' }}>🧪 ENGINE TEST</div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {([
+              { key: 'v2', label: 'v2 (Standard)' },
+              { key: 'v1', label: 'v1 (alt)' },
+              { key: 'v3', label: 'v3 (Pfad 1/2/3)' },
+            ] as { key: 'v2' | 'v1' | 'v3', label: string }[]).map(opt => (
+              <button
+                key={opt.key}
+                onClick={() => onEngineChange(opt.key)}
+                style={{
+                  padding: '8px 16px',
+                  background: engine === opt.key ? '#0f4c5c' : '#e5e7eb',
+                  color: engine === opt.key ? '#fff' : '#374151',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  fontFamily: 'inherit',
+                  fontWeight: '500',
+                }}>
+                {opt.label}
+              </button>
+            ))}
           </div>
-          <button
-            onClick={onEngineToggle}
-            style={{ padding: '8px 16px', background: engineTest ? '#0f4c5c' : '#e5e7eb', color: engineTest ? '#fff' : '#374151', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', fontWeight: '500' }}>
-            {engineTest ? 'Zurück zu v2' : 'Neue Engine testen'}
-          </button>
+          <div style={{ fontSize: '13px', color: '#6b7280', marginTop: '10px' }}>
+            Aktiv: <strong style={{ color: '#0f4c5c' }}>
+              {engine === 'v1' ? 'generate-replies (alt)' : engine === 'v3' ? 'generate-replies-v3 (Pfad 1/2/3)' : 'generate-replies-v2 (Standard)'}
+            </strong>
+          </div>
         </div>
       )}
     </div>
