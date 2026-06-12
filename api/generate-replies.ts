@@ -186,7 +186,7 @@ Bei positiven Bewertungen niemals: "Das freut uns sehr/riesig", "Danke fuer die 
 Starte bei Lob direkt mit einer echten Reaktion — nie mit einem generischen Dankeschoen.
 
 STRENGES FORMATIERUNGS-VERBOT (MENSCHLICHER SCHREIBSTIL):
-ABSOLUTES VERBOT VON GEDANKENSTRICHEN: Jeder Gedankenstrich (weder "—" noch " - ") der zur Satztrennung oder als Einschub genutzt wird ist ein Fehler. Kein einziger Bindestrich darf im Text vorkommen. Nutze ausschliesslich Punkt oder Komma. Dies gilt ausnahmslos fuer alle drei Varianten.
+VERBOT VON GEDANKENSTRICHEN: Nutze NIEMALS Gedankenstriche (weder "—" noch "-") um Saetze zu trennen oder Zusaetze einzufuegen. Nutze stattdessen einen Punkt oder ein Komma.
 
 
 Wenn die KI eine logische Ursache fuer eine Situation erklaert (z.B. hohe Auslastung, volles Haus, lebhafte Atmosphaere), darf sie danach NIEMALS so klingen als haette das Restaurant ein ungeloestes Problem oder muesste Besserung geloben.
@@ -251,7 +251,6 @@ Es ist VERBOTEN, eines dieser beiden Elemente wegzulassen um den Text kuerzer zu
 
 BEI KRITIK AN PREISEN ODER PORTIONSGROESSEN:
 Kern-Aussage: Unsere Preise sind bewusst so gesetzt, weil wir konsequent auf frische Ware und hohe Qualitaet setzen und hier keine Abstriche machen. Dafuer stehen wir.
-KEIN KONTAKTANGEBOT: Bei reiner Preis- oder Portionskritik KEIN Kontaktangebot machen. Es gibt nichts zu klaeren. Die Antwort endet nach der Haltung — klar und ohne Einladung zur weiteren Diskussion.
 STRENGE FORMULIERUNGS-REGEL: Kopiere NICHT in jeder Variante denselben Wortlaut. Der Kernsatz ist nur inhaltliche Richtlinie. Das Argument muss in jeder Variante voellig neu und passend zum Ton verpackt werden:
 - Bei DIREKT & EHRLICH: Knackig und selbstbewusst. (z.B. "Hinter unseren Preisen stehen wir ganz bewusst — bei frischer Ware und Qualitaet machen wir keine Kompromisse.")
 - Bei RUHIG & PROFESSIONELL: Sachlich und erklaerend. (z.B. "Unsere Preisgestaltung spiegelt unseren Anspruch an Qualitaet und frische Zutaten wider, von dem wir nicht abweichen moechten.")
@@ -279,8 +278,8 @@ Abschluss: Waehle passend zum Ton "Viele Grüße, ${signature}" oder "Herzliche 
 Schreibe 3 Varianten. Fuer ALLE gilt strikt: ${duSieAnrede}. ${anredeHinweis}
 
 Variante 1 – Direkt & Ehrlich: Locker, direkt, ehrlich. Startet mit "Hi ${firstNameCapitalized}," oder "Hey ${firstNameCapitalized}," (kein Name bekannt: "Hi," oder "Hey,"). Mehrere Kritikpunkte NIEMALS aufzaehlen oder einzeln nennen — auch nicht abstrakt. Nur als Gesamteindruck einordnen: z.B. "ein Abend der auf ganzer Linie nicht funktioniert hat" — ohne die einzelnen Punkte zu wiederholen.
-Variante 2 – Ruhig & Professionell: Empathisch, ruhig, Mensch zuerst. Startet mit "Hallo ${firstNameCapitalized}," (kein Name bekannt: "Hallo,"). Kein juristischer oder formeller Ton. VERBOTEN: "Eine Reservierung gibt dir das Recht..." oder aehnliche Formulierungen die klingen als wuerde man Rechte einklagen. Stattdessen menschlich und direkt: z.B. "Klar kann es mal zu einer kurzen Verzoegerung kommen, aber 30 Minuten sind dann doch zu viel."
-Variante 3 – Fokus auf Klaerung: Kuerzer, max. 3 Saetze. Startet mit "Hi ${firstNameCapitalized}," oder "Hallo ${firstNameCapitalized}," (kein Name bekannt: "Hi," oder "Hallo,"). Bei Kritik an Preisen oder Portionsgroessen: KEIN E-Mail-Satz und KEIN Kontaktangebot (siehe Regel oben), die Antwort endet direkt nach dem Preis-Argument, gefolgt vom Abschlussgruss. Bei allen anderen Themen: Endet immer mit genau diesem Satz (E-Mail einsetzen falls vorhanden): "Schreib uns einfach kurz unter [E-Mail], dann kuemmern wir uns persoenlich darum." — falls keine E-Mail vorhanden: "Schreib uns einfach kurz, dann kuemmern wir uns persoenlich darum." Gefolgt vom Abschlussgruss. Kein "damit wir verstehen was passiert ist", kein "wir wollen das einordnen", kein altertueumliches Deutsch.
+Variante 2 – Ruhig & Professionell: Empathisch, ruhig, Mensch zuerst. Startet mit "Hallo ${firstNameCapitalized}," (kein Name bekannt: "Hallo,")
+Variante 3 – Fokus auf Klaerung: Kuerzer, max. 3 Saetze, direkter Kontaktkanal im Vordergrund. Startet mit "Hi ${firstNameCapitalized}," oder "Hallo ${firstNameCapitalized}," (kein Name bekannt: "Hi," oder "Hallo,")
 WICHTIG: Beziehe dich bei Hausregeln NICHT auf den spezifischen Tag aus der Bewertung (z.B. "Samstagabend") sondern auf die generelle Regel wie sie im Profil steht.
 
 AUSGABE — NUR dieses JSON, kein anderer Text:
