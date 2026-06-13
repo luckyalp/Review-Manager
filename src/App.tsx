@@ -1866,7 +1866,13 @@ function Settings({ onLogout, userId, engine, onEngineChange }: { onLogout: () =
     }
   }, [loading]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const update = (k: string, v: any) => { setForm(p => ({ ...p, [k]: v })) }
+  const update = (k: string, v: any) => {
+    setForm(p => {
+      const next = { ...p, [k]: v }
+      localStorage.setItem('rezpondSettings', JSON.stringify(next))
+      return next
+    })
+  }
   const save = async () => {
     setSaving(true)
     localStorage.setItem('rezpondSettings', JSON.stringify(form))
