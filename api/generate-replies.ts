@@ -154,7 +154,7 @@ AUSGABE — NUR dieses JSON:
 
   const slot4 = `Slot 4 – Brueckenbauer: Kein Kontaktangebot, keine E-Mail-Adresse in den drei Varianten (siehe Regel im System-Prompt). Stattdessen kurzer, passender Abschluss-Impuls je nach Sterne-Anzahl:
 ${rating <= 2 ? '- Bei 1-2 Sternen: Kein Gespraechsangebot, keine Aufforderung zur Kontaktaufnahme. Stattdessen einen dieser Saetze GENAU SO, WORTWOERTLICH (nur in den Satzbau eingepasst, keine Umformulierung), passend zum Ton der jeweiligen Variante: "Das letzte Wort gehoert dem naechsten Besuch." / "Lass uns beim naechsten Besuch eine andere Geschichte erzaehlen." / "Wir freuen uns auf die naechste Runde."'
-  : rating === 3 ? '- Bei 3 Sternen: Leichte Offenheit, freundlicher Ausblick.'
+  : rating === 3 ? '- Bei 3 Sternen: Kein Gespraechsangebot, keine Aufforderung zur Kontaktaufnahme. Formuliere einen kurzen, eigenen Abschluss-Impuls in diese Richtung (nicht wortwoertlich uebernehmen, sondern passend zum Ton der Variante variieren), z.B.: "Lass uns beim naechsten Besuch den vierten Stern in Angriff nehmen." / "Beim naechsten Mal holen wir den fehlenden Stern." / "Naechstes Mal peilen wir gemeinsam die vier Sterne an."'
   : '- Bei 4-5 Sternen: Nicht notwendig, optional kurzer warmer Abschluss.'}`
 
   const alreadyHandled = (reviewText.toLowerCase().includes('massnahmen') ||
