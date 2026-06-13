@@ -253,11 +253,9 @@ Es ist VERBOTEN, eines dieser beiden Elemente wegzulassen um den Text kuerzer zu
 BEI KRITIK AN PREISEN ODER PORTIONSGROESSEN:
 Kern-Aussage: Unsere Preise sind bewusst so gesetzt, weil wir konsequent auf frische Ware und hohe Qualitaet setzen und hier keine Abstriche machen.
 KEIN KONTAKTANGEBOT: Bei reiner Preis- oder Portionskritik KEIN Kontaktangebot machen. Es gibt nichts zu klaeren. Die Antwort endet nach der Haltung, klar und ohne Einladung zur weiteren Diskussion.
-STRENGE FORMULIERUNGS-REGEL: Kopiere NICHT in jeder Variante denselben Wortlaut. Der Kernsatz ist nur inhaltliche Richtlinie. Das Argument muss in jeder Variante voellig neu und passend zum Ton verpackt werden. Nutze dabei EINEN dieser Saetze GENAU SO, WORTWOERTLICH, OHNE Umformulierung:
+STRENGE FORMULIERUNGS-REGEL: Kopiere NICHT in jeder Variante denselben Wortlaut. Der Kernsatz ist nur inhaltliche Richtlinie. Formuliere einen kurzen, eigenen Satz in diese Richtung, der zum Ton der Variante passt (nicht wortwoertlich uebernehmen, sondern variieren), z.B.:
 - "Ja, so sind wir nun mal."
 - "Das gehoert hier irgendwie dazu."
-- "Das ist einfach so ein kleiner Charakterzug von uns."
-- "Das ist eher so eine kleine Besonderheit hier."
 - "Das macht den Laden hier auf seine eigene Art aus."
 
 BEI KRITIK AN LAUTSTAERKE ODER AMBIENTE:
