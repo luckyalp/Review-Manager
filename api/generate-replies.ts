@@ -198,9 +198,9 @@ Nutze stattdessen diese souveraenen Alternativen je nach Variante:
   Verboten: "Es tut uns leid, dass es nicht geschmeckt hat."
   Alternativ erlaubt: "Ich kann total nachempfinden, dass sich das im Moment nach [Frust/Enttaeuschung/...] angefuehlt haben muss." (passendes Gefuehl statt der Beispielwoerter einsetzen, nicht dem Gast eine Emotion unterstellen sondern aus eigener Perspektive Verstaendnis zeigen)
 - Bei RUHIG & PROFESSIONELL: Nutze "Letztendlich war's nicht in Ordnung." oder "So oder so hat's nicht gepasst."
-  Alternativ erlaubt: "Ich kann mir gut vorstellen, dass du dir den Abend bei uns ganz anders vorgestellt hast."
+  Alternativ erlaubt: "Ich kann mir gut vorstellen, dass du dir den Besuch bei uns ganz anders vorgestellt hast."
 - Bei FOKUS AUF KLAERUNG: Komplett ohne Entschuldigung einsteigen. Direkt auf die Loesung gehen.
-  Erlaubt: "Klingt, als haette der Abend bei euch nicht den Eindruck hinterlassen, den wir uns wuenschen."
+  Erlaubt: "Klingt, als haette der Besuch bei euch nicht den Eindruck hinterlassen, den wir uns wuenschen."
 
 Antwortstruktur:
 
@@ -279,7 +279,7 @@ Abschluss: Waehle passend zum Ton "Viele Grüße, ${signature}" oder "Herzliche 
 
 Schreibe 3 Varianten. Fuer ALLE gilt strikt: ${duSieAnrede}. ${anredeHinweis}
 
-Variante 1 – Direkt & Ehrlich: Locker, direkt, ehrlich. Startet mit "Hi ${firstNameCapitalized}," oder "Hey ${firstNameCapitalized}," (kein Name bekannt: "Hi," oder "Hey,"). Mehrere Kritikpunkte NIEMALS aufzaehlen oder einzeln nennen — auch nicht abstrakt. Nur als Gesamteindruck einordnen: z.B. "ein Abend der auf ganzer Linie nicht funktioniert hat" — ohne die einzelnen Punkte zu wiederholen.
+Variante 1 – Direkt & Ehrlich: Locker, direkt, ehrlich. Startet mit "Hi ${firstNameCapitalized}," oder "Hey ${firstNameCapitalized}," (kein Name bekannt: "Hi," oder "Hey,"). Mehrere Kritikpunkte NIEMALS aufzaehlen oder einzeln nennen — auch nicht abstrakt. Nur als Gesamteindruck einordnen: z.B. "ein Besuch der auf ganzer Linie nicht funktioniert hat" — ohne die einzelnen Punkte zu wiederholen.
 Variante 2 – Ruhig & Professionell: Empathisch, ruhig, Mensch zuerst. Startet mit "Hallo ${firstNameCapitalized}," (kein Name bekannt: "Hallo,")
 Variante 3 – Fokus auf Klaerung: Kuerzer, max. 3 Saetze. Startet mit "Hi ${firstNameCapitalized}," oder "Hallo ${firstNameCapitalized}," (kein Name bekannt: "Hi," oder "Hallo,"). KEIN E-Mail-Satz und KEIN Kontaktangebot (Kontaktaufnahme ist ausschliesslich Teil der separaten Recovery-Antwort bei 1-2 Sternen, nicht Teil dieser drei Varianten). Die Antwort endet stattdessen mit einem kurzen, warmen Abschlusssatz ohne Aufforderung zur Kontaktaufnahme (siehe Slot 4 fuer den vorgegebenen Satz-Pool bei 1-2 Sternen; bei 3+ Sternen ein passender kurzer, warmer Abschluss ohne Kontakt- oder Chance-Angebot), gefolgt vom Abschlussgruss.
 WICHTIG: Beziehe dich bei Hausregeln NICHT auf den spezifischen Tag aus der Bewertung (z.B. "Samstagabend") sondern auf die generelle Regel wie sie im Profil steht.
