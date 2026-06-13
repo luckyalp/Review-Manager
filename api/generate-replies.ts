@@ -153,7 +153,7 @@ AUSGABE — NUR dieses JSON:
   // ─── CONTENT MODI (POSITIVE / MIXED / NEGATIVE) ────────────────────────────
 
   const slot4 = `Slot 4 – Brueckenbauer: Kein Kontaktangebot, keine E-Mail-Adresse in den drei Varianten (siehe Regel im System-Prompt). Stattdessen kurzer, passender Abschluss-Impuls je nach Sterne-Anzahl:
-${rating <= 2 ? '- Bei 1-2 Sternen: Offenheit fuer ein Gespraech zeigen, ohne konkrete Kontaktmoeglichkeit zu nennen (das uebernimmt die separate Recovery-Antwort).'
+${rating <= 2 ? '- Bei 1-2 Sternen: Kein Gespraechsangebot, keine Aufforderung zur Kontaktaufnahme. Stattdessen ein kurzer, optimistischer Abschluss-Impuls in der Art von "Das letzte Wort gehoert dem naechsten Besuch." (woertlich oder sinngemaess, passend zum Ton der Variante).'
   : rating === 3 ? '- Bei 3 Sternen: Leichte Offenheit, freundlicher Ausblick.'
   : '- Bei 4-5 Sternen: Nicht notwendig, optional kurzer warmer Abschluss.'}`
 
