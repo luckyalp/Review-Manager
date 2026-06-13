@@ -152,11 +152,10 @@ AUSGABE — NUR dieses JSON:
 
   // ─── CONTENT MODI (POSITIVE / MIXED / NEGATIVE) ────────────────────────────
 
-  const slot4 = rating <= 2
-    ? `Slot 4 – Brueckenbauer: Biete persoenliche Kontaktaufnahme an. ${contactLine}`
-    : rating === 3
-    ? 'Slot 4 – Brueckenbauer: Leichte Offenheit, Gespraechsmoeglichkeit anbieten.'
-    : 'Slot 4 – Brueckenbauer: Nicht notwendig. Optional kurzer Dank.'
+  const slot4 = `Slot 4 – Brueckenbauer: Kein Kontaktangebot, keine E-Mail-Adresse in den drei Varianten (siehe Regel im System-Prompt). Stattdessen kurzer, passender Abschluss-Impuls je nach Sterne-Anzahl:
+${rating <= 2 ? '- Bei 1-2 Sternen: Offenheit fuer ein Gespraech zeigen, ohne konkrete Kontaktmoeglichkeit zu nennen (das uebernimmt die separate Recovery-Antwort).'
+  : rating === 3 ? '- Bei 3 Sternen: Leichte Offenheit, freundlicher Ausblick.'
+  : '- Bei 4-5 Sternen: Nicht notwendig, optional kurzer warmer Abschluss.'}`
 
   const alreadyHandled = (reviewText.toLowerCase().includes('massnahmen') ||
     reviewText.toLowerCase().includes('reagiert') ||
@@ -219,7 +218,7 @@ Neugier zeigen, zum Gespraech einladen.
 Natuerliche Formulierungen: "Was genau passiert ist, wissen wir so nicht." / "Das koennen wir so von hier aus nicht einschaetzen." / "Damit wir das einordnen koennen, brauchen wir mehr."
 NICHT: "Wir gehen der Sache intern nach" / "Wir analysieren den Vorfall" / "intern nachgeschaerft" / "Das entspricht nicht unserem Anspruch" / "Das ist nicht das Erlebnis das wir bieten wollen" / jede sinngemaesse Variante davon.
 
-Slot 4 - Brueckenbauer: wird in der Aufgabe vorgegeben.
+Slot 4 - Brueckenbauer: WICHTIG: Kontaktangebote, E-Mail-Adressen oder Saetze wie "Schreib uns kurz unter..." / "Melde dich bei uns..." / "Kontaktiere uns..." gehoeren NICHT in Variante 1, 2 oder 3. Die persoenliche Kontaktaufnahme ist ausschliesslich Teil der separaten Recovery-Antwort (bei 1-2 Sternen, eigener vierter Block). Alle drei Varianten enden ohne Kontaktangebot.
 
 Slot 5 - Abschluss: Kurz und professionell. Keine neue Information.
 
@@ -280,7 +279,7 @@ Schreibe 3 Varianten. Fuer ALLE gilt strikt: ${duSieAnrede}. ${anredeHinweis}
 
 Variante 1 – Direkt & Ehrlich: Locker, direkt, ehrlich. Startet mit "Hi ${firstNameCapitalized}," oder "Hey ${firstNameCapitalized}," (kein Name bekannt: "Hi," oder "Hey,"). Mehrere Kritikpunkte NIEMALS aufzaehlen oder einzeln nennen — auch nicht abstrakt. Nur als Gesamteindruck einordnen: z.B. "ein Abend der auf ganzer Linie nicht funktioniert hat" — ohne die einzelnen Punkte zu wiederholen.
 Variante 2 – Ruhig & Professionell: Empathisch, ruhig, Mensch zuerst. Startet mit "Hallo ${firstNameCapitalized}," (kein Name bekannt: "Hallo,")
-Variante 3 – Fokus auf Klaerung: Kuerzer, max. 3 Saetze. Startet mit "Hi ${firstNameCapitalized}," oder "Hallo ${firstNameCapitalized}," (kein Name bekannt: "Hi," oder "Hallo,"). Bei Kritik an Preisen oder Portionsgroessen: KEIN E-Mail-Satz und KEIN Kontaktangebot (siehe Regel oben), die Antwort endet direkt nach dem Preis-Argument, gefolgt vom Abschlussgruss. Bei allen anderen Themen: direkter Kontaktkanal im Vordergrund, endet immer mit genau diesem Satz (E-Mail einsetzen falls vorhanden): "Schreib uns einfach kurz unter [E-Mail], dann kuemmern wir uns persoenlich darum." — falls keine E-Mail vorhanden: "Schreib uns einfach kurz, dann kuemmern wir uns persoenlich darum." Gefolgt vom Abschlussgruss.
+Variante 3 – Fokus auf Klaerung: Kuerzer, max. 3 Saetze. Startet mit "Hi ${firstNameCapitalized}," oder "Hallo ${firstNameCapitalized}," (kein Name bekannt: "Hi," oder "Hallo,"). KEIN E-Mail-Satz und KEIN Kontaktangebot (Kontaktaufnahme ist ausschliesslich Teil der separaten Recovery-Antwort bei 1-2 Sternen, nicht Teil dieser drei Varianten). Die Antwort endet stattdessen mit einem kurzen, warmen Abschlusssatz ohne Aufforderung zur Kontaktaufnahme, gefolgt vom Abschlussgruss. Beispiele je nach Thema: "Vielleicht klappt's beim naechsten Besuch besser." / "Wir freuen uns, wenn du uns nochmal eine Chance gibst." / "Schoen waere es, dich nochmal bei uns zu sehen." Passe den Satz an Ton und Thema an, wiederhole nicht immer denselben Wortlaut.
 WICHTIG: Beziehe dich bei Hausregeln NICHT auf den spezifischen Tag aus der Bewertung (z.B. "Samstagabend") sondern auf die generelle Regel wie sie im Profil steht.
 
 AUSGABE — NUR dieses JSON, kein anderer Text:
