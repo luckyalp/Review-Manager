@@ -197,8 +197,7 @@ Nutze stattdessen diese souveraenen Alternativen je nach Variante:
   Erlaubt: "Schade, dass es dir nicht geschmeckt hat — das aergert uns natuerlich auch."
   Verboten: "Es tut uns leid, dass es nicht geschmeckt hat."
   Alternativ erlaubt: "Ich kann total nachempfinden, dass sich das im Moment nach [Frust/Enttaeuschung/...] angefuehlt haben muss." (passendes Gefuehl statt der Beispielwoerter einsetzen, nicht dem Gast eine Emotion unterstellen sondern aus eigener Perspektive Verstaendnis zeigen)
-- Bei RUHIG & PROFESSIONELL: Nutze "Wir bedauern, dass..." oder "Das war nicht gut."
-  Erlaubt: "Dass du unzufrieden nach Hause gegangen bist, bedauern wir."
+- Bei RUHIG & PROFESSIONELL: Nutze "Letztendlich war's nicht in Ordnung." oder "So oder so hat's nicht gepasst."
   Alternativ erlaubt: "Ich kann mir gut vorstellen, dass du dir den Abend bei uns ganz anders vorgestellt hast."
 - Bei FOKUS AUF KLAERUNG: Komplett ohne Entschuldigung einsteigen. Direkt auf die Loesung gehen.
   Erlaubt: "Das klingt nach einem Besuch, der deine Erwartungen nicht erfuellt hat — und das wollen wir verstehen."
