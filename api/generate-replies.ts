@@ -244,11 +244,9 @@ Zu Stosszzeiten ist immer viel Bewegung — Gaeste kommen, Gaeste gehen. Genau i
 BEI KRITIK AM ESSEN OHNE KONKRETEN MANGEL:
 Nutze exakt eine dieser beiden Fragen: "War es einfach nicht dein persoenlicher Geschmack oder hat bei der Zubereitung etwas nicht gestimmt?" ODER "Schade, dass es dir nicht geschmeckt hat. Lag es einfach am persoenlichen Geschmack oder lief bei uns im Service oder in der Kueche etwas schief?"
 
-WICHTIGE STRUKTUR-PFLICHT BEI ESSEN + PREIS-KRITIK:
-Wenn sowohl das Essen (Geschmack) als auch der Preis kritisiert werden, MUESSEN die Varianten DIREKT & EHRLICH und RUHIG & PROFESSIONELL zwingend beide folgenden Elemente enthalten:
-1. DIE GESCHMACKS-WEICHE (Pflicht): Die Frage ob es am persoenlichen Geschmack lag oder in der Kueche etwas schiefgelaufen ist.
-2. DAS PREIS-ARGUMENT (Pflicht): Das flexible Qualitaets-Argument (frische Ware, hoher Anspruch), ohne sich zu entschuldigen.
-Es ist VERBOTEN, eines dieser beiden Elemente wegzulassen um den Text kuerzer zu machen. Beide Punkte muessen fliessend nacheinander abgearbeitet werden.
+WICHTIGE STRUKTUR-PFLICHT BEI ESSEN + PREIS-KRITIK: Wenn sowohl das Essen (Geschmack/Zubereitung) als auch der Preis kritisiert werden, MUESSEN die Varianten DIREKT & EHRLICH und RUHIG & PROFESSIONELL das PREIS-ARGUMENT enthalten (flexibles Qualitaetsargument, frische Ware, hoher Anspruch, ohne sich zu entschuldigen).
+Die "Geschmacks-Weiche" (Frage: "Liegt es an Ihrem persoenlichen Geschmack oder an der Kueche?") darf NUR dann zusaetzlich gestellt werden, wenn der Grund der Essenskritik aus der Bewertung NICHT klar hervorgeht.
+Beispiel fuer klaren Grund (keine Weiche): "Portion war zu klein, geschmacklich war das Essen gut" -> Grund klar (Quantitaet, nicht Qualitaet). Beispiel fuer unklaren Grund (Weiche erlaubt): "Das Essen war nicht gut" (ohne weitere Angabe).
 
 BEI KRITIK AN PREISEN ODER PORTIONSGROESSEN:
 Kern-Aussage: Unsere Preise sind bewusst so gesetzt, weil wir konsequent auf frische Ware und hohe Qualitaet setzen und hier keine Abstriche machen.
