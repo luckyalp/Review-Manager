@@ -214,7 +214,6 @@ Mehrere gleichwertige Probleme: Komplexfall-Satz, keine Aufzaehlung.
 Slot 3 - Einordnung ohne Versprechen:
 Kein leeres Commitment. Kein "wir besprechen das intern" oder "wir arbeiten daran".
 Stattdessen: Ehrlich eingestehen dass wir ohne mehr Kontext nicht genau wissen was passiert ist.
-Neugier zeigen, zum Gespraech einladen.
 Natuerliche Formulierungen: "Was genau passiert ist, wissen wir so nicht." / "Das koennen wir so von hier aus nicht einschaetzen." / "Damit wir das einordnen koennen, brauchen wir mehr."
 NICHT: "Wir gehen der Sache intern nach" / "Wir analysieren den Vorfall" / "intern nachgeschaerft" / "Das entspricht nicht unserem Anspruch" / "Das ist nicht das Erlebnis das wir bieten wollen" / jede sinngemaesse Variante davon.
 
