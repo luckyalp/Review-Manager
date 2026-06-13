@@ -152,6 +152,11 @@ AUSGABE — NUR dieses JSON:
 
   // ─── CONTENT MODI (POSITIVE / MIXED / NEGATIVE) ────────────────────────────
 
+  const slot4 = `Slot 4 – Brueckenbauer: Kein Kontaktangebot, keine E-Mail-Adresse in den drei Varianten (siehe Regel im System-Prompt). Stattdessen kurzer, passender Abschluss-Impuls je nach Sterne-Anzahl:
+${rating <= 2 ? '- Bei 1-2 Sternen: Kein Gespraechsangebot, keine Aufforderung zur Kontaktaufnahme. Stattdessen einen dieser Saetze GENAU SO, WORTWOERTLICH (nur in den Satzbau eingepasst, keine Umformulierung), passend zum Ton der jeweiligen Variante: "Das letzte Wort gehoert dem naechsten Besuch." / "Lass uns beim naechsten Besuch eine andere Geschichte erzaehlen." / "Wir freuen uns auf die naechste Runde."'
+  : rating === 3 ? '- Bei 3 Sternen: Kein Gespraechsangebot, keine Aufforderung zur Kontaktaufnahme. Formuliere einen kurzen, eigenen Abschluss-Impuls in diese Richtung (nicht wortwoertlich uebernehmen, sondern passend zum Ton der Variante variieren), z.B.: "Lass uns beim naechsten Besuch den vierten Stern in Angriff nehmen." / "Beim naechsten Mal holen wir den fehlenden Stern." / "Naechstes Mal peilen wir gemeinsam die vier Sterne an."'
+  : '- Bei 4-5 Sternen: Nicht notwendig, optional kurzer warmer Abschluss.'}`
+
   const alreadyHandled = (reviewText.toLowerCase().includes('massnahmen') ||
     reviewText.toLowerCase().includes('reagiert') ||
     reviewText.toLowerCase().includes('versichert') ||
@@ -216,12 +221,9 @@ Stattdessen: Ehrlich eingestehen dass wir ohne mehr Kontext nicht genau wissen w
 Natuerliche Formulierungen: "Was genau passiert ist, wissen wir so nicht." / "Das koennen wir so von hier aus nicht einschaetzen." / "Damit wir das einordnen koennen, brauchen wir mehr."
 NICHT: "Wir gehen der Sache intern nach" / "Wir analysieren den Vorfall" / "intern nachgeschaerft" / "Das entspricht nicht unserem Anspruch" / "Das ist nicht das Erlebnis das wir bieten wollen" / jede sinngemaesse Variante davon.
 
-Abschluss (einheitlich fuer alle Sterne):
-${rating <= 2 ? '- Bei 1-2 Sternen: Kein Gespraechsangebot, keine Aufforderung zur Kontaktaufnahme. Stattdessen einen dieser Saetze GENAU SO, WORTWOERTLICH (nur in den Satzbau eingepasst, keine Umformulierung), passend zum Ton der jeweiligen Variante: "Das letzte Wort gehoert dem naechsten Besuch." / "Lass uns beim naechsten Besuch eine andere Geschichte erzaehlen." / "Wir freuen uns auf die naechste Runde."'
-  : rating === 3 ? '- Bei 3 Sternen: Kein Gespraechsangebot, keine Aufforderung zur Kontaktaufnahme. Formuliere einen kurzen, eigenen Abschluss-Impuls in diese Richtung (nicht wortwoertlich uebernehmen, sondern passend zum Ton der Variante variieren), z.B.: "Lass uns beim naechsten Besuch den vierten Stern in Angriff nehmen." / "Beim naechsten Mal holen wir den fehlenden Stern." / "Naechstes Mal peilen wir gemeinsam die vier Sterne an."'
-  : '- Bei 4-5 Sternen: Nicht notwendig, optional kurzer warmer Abschluss.'}
-Kein Kontaktangebot, keine E-Mail-Adresse in den drei Varianten (siehe Regel im System-Prompt).
-Direkt danach folgt NUR der Gruss (z.B. "Viele Gruesse, ..."). Kein weiterer inhaltlicher Satz zwischen Abschluss und Gruss.
+Slot 4 - Brueckenbauer: WICHTIG: Kontaktangebote, E-Mail-Adressen oder Saetze wie "Schreib uns kurz unter..." / "Melde dich bei uns..." / "Kontaktiere uns..." gehoeren NICHT in Variante 1, 2 oder 3. Die persoenliche Kontaktaufnahme ist ausschliesslich Teil der separaten Recovery-Antwort (bei 1-2 Sternen, eigener vierter Block). Alle drei Varianten enden ohne Kontaktangebot.
+
+Slot 5 - Abschluss: Kurz und professionell. Keine neue Information.
 
 Sprachstil:
 Die Antwort soll wirken als haette sie ein aufmerksamer Gastronom geschrieben.
@@ -271,13 +273,14 @@ BEWERTUNG (${rating} Sterne):
 
 ${alreadyHandled}
 
+${slot4}
 Abschluss: Waehle passend zum Ton "Viele Grüße, ${signature}" oder "Herzliche Grüße, ${signature}" oder "Beste Grüße, ${signature}"
 
 Schreibe 3 Varianten. Fuer ALLE gilt strikt: ${duSieAnrede}. ${anredeHinweis}
 
 Variante 1 – Direkt & Ehrlich: Locker, direkt, ehrlich. Startet mit "Hi ${firstNameCapitalized}," oder "Hey ${firstNameCapitalized}," (kein Name bekannt: "Hi," oder "Hey,"). Mehrere Kritikpunkte NIEMALS aufzaehlen oder einzeln nennen — auch nicht abstrakt. Nur als Gesamteindruck einordnen: z.B. "ein Besuch der auf ganzer Linie nicht funktioniert hat" — ohne die einzelnen Punkte zu wiederholen.
 Variante 2 – Ruhig & Professionell: Empathisch, ruhig, Mensch zuerst. Startet mit "Hallo ${firstNameCapitalized}," (kein Name bekannt: "Hallo,")
-Variante 3 – Fokus auf Klaerung: Kuerzer, max. 3 Saetze. Startet mit "Hi ${firstNameCapitalized}," oder "Hallo ${firstNameCapitalized}," (kein Name bekannt: "Hi," oder "Hallo,"). KEIN E-Mail-Satz und KEIN Kontaktangebot (Kontaktaufnahme ist ausschliesslich Teil der separaten Recovery-Antwort bei 1-2 Sternen, nicht Teil dieser drei Varianten). Die Antwort endet stattdessen mit dem Abschluss gemaess der "Abschluss (einheitlich fuer alle Sterne)"-Regel, gefolgt vom Abschlussgruss.
+Variante 3 – Fokus auf Klaerung: Kuerzer, max. 3 Saetze. Startet mit "Hi ${firstNameCapitalized}," oder "Hallo ${firstNameCapitalized}," (kein Name bekannt: "Hi," oder "Hallo,"). KEIN E-Mail-Satz und KEIN Kontaktangebot (Kontaktaufnahme ist ausschliesslich Teil der separaten Recovery-Antwort bei 1-2 Sternen, nicht Teil dieser drei Varianten). Die Antwort endet stattdessen mit einem kurzen, warmen Abschlusssatz ohne Aufforderung zur Kontaktaufnahme (siehe Slot 4 fuer den vorgegebenen Satz-Pool bei 1-2 Sternen; bei 3+ Sternen ein passender kurzer, warmer Abschluss ohne Kontakt- oder Chance-Angebot), gefolgt vom Abschlussgruss.
 WICHTIG: Beziehe dich bei Hausregeln NICHT auf den spezifischen Tag aus der Bewertung (z.B. "Samstag") sondern auf die generelle Regel wie sie im Profil steht.
 
 AUSGABE — NUR dieses JSON, kein anderer Text:
