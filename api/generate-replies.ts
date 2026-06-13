@@ -101,7 +101,7 @@ Alle drei enden mit: ${signature}
 
 BEISPIELE (genau dieser Ton):
 - "Danke dir :) Schoen, dass du bei uns warst."
-- "Freut uns, dass du einen guten Abend hattest. Bis bald :)"
+- "Freut uns, dass du einen schoenen Besuch hattest. Bis bald :)"
 - "5 Sterne nehmen wir natuerlich gern. Danke dir."
 
 ABSOLUT VERBOTEN:
@@ -282,7 +282,7 @@ Schreibe 3 Varianten. Fuer ALLE gilt strikt: ${duSieAnrede}. ${anredeHinweis}
 Variante 1 – Direkt & Ehrlich: Locker, direkt, ehrlich. Startet mit "Hi ${firstNameCapitalized}," oder "Hey ${firstNameCapitalized}," (kein Name bekannt: "Hi," oder "Hey,"). Mehrere Kritikpunkte NIEMALS aufzaehlen oder einzeln nennen — auch nicht abstrakt. Nur als Gesamteindruck einordnen: z.B. "ein Besuch der auf ganzer Linie nicht funktioniert hat" — ohne die einzelnen Punkte zu wiederholen.
 Variante 2 – Ruhig & Professionell: Empathisch, ruhig, Mensch zuerst. Startet mit "Hallo ${firstNameCapitalized}," (kein Name bekannt: "Hallo,")
 Variante 3 – Fokus auf Klaerung: Kuerzer, max. 3 Saetze. Startet mit "Hi ${firstNameCapitalized}," oder "Hallo ${firstNameCapitalized}," (kein Name bekannt: "Hi," oder "Hallo,"). KEIN E-Mail-Satz und KEIN Kontaktangebot (Kontaktaufnahme ist ausschliesslich Teil der separaten Recovery-Antwort bei 1-2 Sternen, nicht Teil dieser drei Varianten). Die Antwort endet stattdessen mit einem kurzen, warmen Abschlusssatz ohne Aufforderung zur Kontaktaufnahme (siehe Slot 4 fuer den vorgegebenen Satz-Pool bei 1-2 Sternen; bei 3+ Sternen ein passender kurzer, warmer Abschluss ohne Kontakt- oder Chance-Angebot), gefolgt vom Abschlussgruss.
-WICHTIG: Beziehe dich bei Hausregeln NICHT auf den spezifischen Tag aus der Bewertung (z.B. "Samstagabend") sondern auf die generelle Regel wie sie im Profil steht.
+WICHTIG: Beziehe dich bei Hausregeln NICHT auf den spezifischen Tag aus der Bewertung (z.B. "Samstag") sondern auf die generelle Regel wie sie im Profil steht.
 
 AUSGABE — NUR dieses JSON, kein anderer Text:
 {
