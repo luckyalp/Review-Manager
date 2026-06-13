@@ -62,7 +62,7 @@ const supabase = createClient(
 
 function App() {
   const [page, setPage] = useState('dashboard')
-  const [engine, setEngine] = useState<'v2' | 'v1' | 'v3'>('v2')
+  const [engine, setEngine] = useState<'v2' | 'v1' | 'v3'>('v1')
   const [reviews, setReviews] = useState<Review[]>([])
   const [reviewsLoading, setReviewsLoading] = useState(true)
   const [selectedReview, setSelectedReview] = useState<Review | null>(null)
