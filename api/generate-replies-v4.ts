@@ -158,7 +158,7 @@ Nicht so tun als waere noch nichts passiert.`
   // ─── STUFE 1: Analyse-Erweiterung ─────────────────────────────────────────
   // Drei zusätzliche Analyse-Dimensionen die den Ton der Antwort präzisieren.
   const analyseErweiterung = `ANALYSE DER BEWERTUNG (vor dem Schreiben intern durchführen, nicht ausgeben):
-1. EMPFEHLUNG TROTZ KRITIK: Empfiehlt der Gast das Restaurant trotz genannter Mängel (explizit oder implizit)? Wenn ja, muss die Antwort das anerkennen — nicht ignorieren.
+1. EMPFEHLUNG TROTZ KRITIK: Empfiehlt der Gast das Restaurant trotz genannter Mängel (explizit oder implizit)? Wenn ja, MÜSSEN ALLE DREI VARIANTEN das anerkennen — jede in ihrem eigenen Ton, aber keine darf es ignorieren.
 2. EMOTIONALER KERN: Was ist der emotionale Grundton? Enttäuschung (Erwartung nicht erfüllt), Ärger (etwas ist aktiv schiefgelaufen), oder neutrale Beobachtung (sachliche Feststellung ohne emotionalen Aufwand)? Der Ton der Antwort richtet sich danach.
 3. ERWARTUNGSHALTUNG: Schreibt der Gast für andere Gäste (Hinweis-Charakter) oder erwartet er eine direkte Reaktion des Restaurants? Bei reinem Hinweis-Charakter: keine übertriebene Persönlichkeit, sachlicher und kürzer. Bei Erwartung einer Reaktion: direkte Ansprache, mehr Wärme.`
 
@@ -264,7 +264,8 @@ STRENGE FORMULIERUNGS-REGEL: Kopiere NICHT in jeder Variante denselben Wortlaut.
 - "Das macht den Laden hier auf seine eigene Art aus."
 
 BEI KRITIK AN LAUTSTAERKE ODER AMBIENTE:
-Je nach Auslastung kann es in einem gut besuchten Restaurant laut und turbulent werden. Kurz anerkennen, nicht dramatisieren.`
+Je nach Auslastung kann es in einem gut besuchten Restaurant laut und turbulent werden. Kurz anerkennen, nicht dramatisieren.
+WICHTIG: Die Antwort endet nicht bei der Bestätigung. Nach der Anerkennung kommt immer ein konstruktiver Vorwärtssatz — z.B. dass der Gast beim nächsten Besuch oder bei der Reservierung kurz Bescheid geben soll, dann schaut man was sich machen lässt (ruhigerer Platz, ruhigere Zeit). Kein Aufzählen von Optionen — nur ein einziger natürlicher Satz. Die Antwort soll dem Gast das Gefühl geben, dass es beim nächsten Mal besser werden kann, nicht dass er einfach wegbleiben soll wenn ihm Lautstärke stört.`
 
   // User-Message: nur die Daten — Bewertung + Kontext + Aufgabe
   const userMessage = `${langInstruction}
