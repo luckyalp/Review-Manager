@@ -337,10 +337,10 @@ Schreibe 3 Varianten. Fuer ALLE gilt strikt: ${duSieAnrede}. ${anredeHinweis}
 
 Variante 1 – Direkt & Ehrlich: Locker, direkt, ehrlich. Startet mit "Hi ${firstNameCapitalized}," oder "Hey ${firstNameCapitalized}," (kein Name bekannt: "Hi," oder "Hey,").
 Falls die Bewertung Kritik enthaelt: Satz 1 (direkt nach der Begruessung) MUSS Slot 1 sein — eine kurze, lockere Gefuehls-Validierung, z.B. "Kann ich gut nachvollziehen, wenn das bei dir nicht so angekommen ist, wie's sollte." oder "Ich kann total nachempfinden, dass sich das im Moment nach [passendes Gefuehl, z.B. Frust/Enttaeuschung] angefuehlt haben muss." (passendes Gefuehl einsetzen, nicht woertlich "Frust/Enttaeuschung" schreiben).
-Satz 2 ordnet mehrere Kritikpunkte dann als Gesamteindruck ein — NIEMALS einzeln aufzaehlen, auch nicht abstrakt, z.B. "das war ein Besuch, der auf ganzer Linie nicht funktioniert hat" — ohne die einzelnen Punkte zu wiederholen.
+Satz 2 ordnet mehrere Kritikpunkte dann als Gesamteindruck ein — NIEMALS einzeln aufzaehlen, auch nicht abstrakt, z.B. "das war ein Besuch, der auf ganzer Linie nicht funktioniert hat" — ohne die einzelnen Punkte zu wiederholen. Vermeide in Satz 2 "tut mir leid" / "tut uns leid" — das ist nicht der Ton von Variante 1. Nutze stattdessen "schade" oder "aergerlich", z.B. "...und das ist einfach nicht in Ordnung" oder "...das ist aergerlich."
 Variante 2 – Ruhig & Professionell: Empathisch, ruhig, Mensch zuerst. Startet mit "Hallo ${firstNameCapitalized}," (kein Name bekannt: "Hallo,")
 Variante 3 – Fokus auf Klaerung: Kuerzer als V1/V2 — aber zusammenhaengend formuliert, KEINE Aneinanderreihung kurzer, abgehackter Saetze ("Punkt. Punkt. Punkt."). Faustregel: 2-3 Saetze (bzw. Teilsaetze, durch "und"/Komma verbunden), die sich wie ein einzelner zusammenhaengender Gedanke lesen, nicht wie eine Checkliste. Startet mit "Hi ${firstNameCapitalized}," oder "Hallo ${firstNameCapitalized}," (kein Name bekannt: "Hi," oder "Hallo,"). KEIN E-Mail-Satz und KEIN Kontaktangebot (Kontaktaufnahme ist ausschliesslich Teil der separaten Recovery-Antwort bei 1-2 Sternen, nicht Teil dieser drei Varianten). Die Antwort endet stattdessen mit dem Abschluss gemaess der "Abschluss (einheitlich fuer alle Sterne)"-Regel, gefolgt vom Abschlussgruss.
-Falls die Bewertung Kritik enthaelt: Der erste Teil (direkt nach der Begruessung) MUSS Slot 1 sein — eine kurze, natuerliche Gefuehls-Validierung aus Gast-Perspektive, z.B. "Klingt, als haette dich der Besuch ziemlich geaergert." oder "Kann mir gut vorstellen, dass sich das nicht gut angefuehlt hat." Slot 1 und die ehrliche Einordnung (Slot 3A: "das koennen wir von hier aus nicht einschaetzen") sollen, wo es natuerlich klingt, mit "und" oder einem Komma zu EINEM Satz verbunden werden, statt zwei separate kurze Saetze daraus zu machen. Keine Formulierungen aus Restaurant-Perspektive wie "den wir uns wuenschen", "der Eindruck, den wir hinterlassen wollen" o.ae. — diese sind verboten.
+Falls die Bewertung Kritik enthaelt: Der erste Satz (direkt nach der Begruessung) MUSS Slot 1 sein — eine kurze, natuerliche Gefuehls-Validierung aus Gast-Perspektive, z.B. "Klingt, als haette dich der Besuch ziemlich geaergert." oder "Kann mir gut vorstellen, dass sich das nicht gut angefuehlt hat." Der zweite Satz ist die ehrliche Einordnung (Slot 3A: "das koennen wir von hier aus nicht einschaetzen") — beginne ihn mit einem natuerlichen Uebergang wie "Ehrlich gesagt," oder "Was da genau passiert ist,". Baue daraus KEINEN grammatisch verschachtelten Bandwurmsatz mit dem ersten Satz — zwei kurze, klare Saetze mit natuerlichem Anschluss sind besser als ein verschachtelter. Keine Formulierungen aus Restaurant-Perspektive wie "den wir uns wuenschen", "der Eindruck, den wir hinterlassen wollen" o.ae. — diese sind verboten.
 WICHTIG: Beziehe dich bei Hausregeln NICHT auf den spezifischen Tag aus der Bewertung (z.B. "Samstag") sondern auf die generelle Regel wie sie im Profil steht.
 
 AUSGABE — NUR dieses JSON, kein anderer Text:
@@ -640,6 +640,13 @@ function hasCorporatePhrase(text: string): boolean {
   return CORPORATE_PHRASE_PATTERNS.some(pattern => pattern.test(text))
 }
 
+// "tut mir/uns leid" — fuer Variante 1 (Direkt & Ehrlich) nicht der richtige Ton,
+// dort gilt "schade"/"aergerlich" statt einer Entschuldigung.
+const APOLOGY_PATTERN = /tut\s+(mir|uns)\s+(wirklich\s+|aufrichtig\s+)?leid/i
+function hasApology(text: string): boolean {
+  return APOLOGY_PATTERN.test(text)
+}
+
 function sanitizeVariants(
   variants: { label: string; text: string }[],
   signature: string
@@ -647,7 +654,7 @@ function sanitizeVariants(
   const flagged: string[] = []
   const issuesByVariant: string[][] = []
 
-  const checked = variants.map((v) => {
+  const checked = variants.map((v, i) => {
     const issues: string[] = []
     if (hasForbiddenOpener(v.text)) issues.push('forbidden_opener')
     if (hasPronounMismatch(v.text, signature)) issues.push('pronoun_mismatch')
@@ -656,6 +663,7 @@ function sanitizeVariants(
     if (hasInternalReference(v.text)) issues.push('internal_reference')
     if (hasTimeReference(v.text)) issues.push('time_reference')
     if (hasCorporatePhrase(v.text)) issues.push('corporate_phrase')
+    if (i === 0 && hasApology(v.text)) issues.push('apology_in_v1')
     if (issues.length > 0) {
       flagged.push(`${v.label}: ${issues.join(', ')}`)
     }
@@ -679,6 +687,8 @@ const SANITIZE_ISSUE_TEXT: Record<string, (signature: string) => string> = {
     'Enthaelt das Wort "frustrierend". Das ist verboten — nutze stattdessen z.B. "aergerlich" oder "schade".',
   internal_reference: () =>
     'Verweist mit dem Wort "intern" (oder einer Form davon) auf interne Ablaeufe (z.B. "intern nicht gestimmt"). Das ist verboten — erklaere keine internen Ablaeufe, bleibe bei der ehrlichen "von aussen koennen wir das nicht einschaetzen"-Haltung.',
+  apology_in_v1: () =>
+    'Enthaelt "tut mir/uns leid" — das ist nicht der Ton von Variante 1 (Direkt & Ehrlich). Nutze stattdessen "schade" oder "aergerlich", z.B. "...und das ist einfach nicht in Ordnung" oder "...das ist aergerlich."',
   time_reference: () =>
     'Enthaelt einen Tageszeit-Bezug (z.B. "Abend", "Morgen", "Mittag", "Nacht"). Das ist verboten — nutze stattdessen "Besuch", "Aufenthalt" oder "Zeit bei uns".',
   corporate_phrase: () =>
