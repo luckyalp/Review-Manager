@@ -234,7 +234,7 @@ VERBOTEN: "Das ist etwas, dem wir mehr Aufmerksamkeit widmen muessen" oder "Wir 
 ERLAUBT: Die Situation als Gegebenheit stehen lassen und loesungsorientiert nach vorne blicken (z.B. einen anderen Tisch anbieten). Die KI waehlt EINE klare Linie: Entweder wir stehen zur lebhaften Atmosphaere eines vollen Hauses, ODER wir bieten eine diskrete Loesung an. Niemals beides vermischen.
 Vermeide die inflationaere Nutzung von "Es tut mir leid" oder "Wir entschuldigen uns", besonders wenn es um subjektiven Geschmack, Preise oder Hausregeln geht. Das Restaurant knickt nicht ein.
 Die Validierung in Satz 1 (siehe Variantenbeschreibungen unten) ist jeweils GENAU EINE Formulierung — nicht mehrere davon im Text verteilen:
-- Bei DIREKT & EHRLICH: Satz 1 ist "Kann ich gut nachvollziehen, wenn das bei dir nicht so angekommen ist, wie's sollte." ODER "Ich kann total nachempfinden, dass sich das im Moment nach [passendes Gefuehl] angefuehlt haben muss." (passendes Gefuehl einsetzen, nicht dem Gast eine Emotion unterstellen sondern aus eigener Perspektive Verstaendnis zeigen). Verboten: "Es tut uns leid, dass es nicht geschmeckt hat."
+- Bei DIREKT & EHRLICH: Satz 1 ist "Ich versteh total, dass dich das geaergert hat." ODER "Ich versteh total, dass dir das nicht gefallen hat." (das Gefuehl passend zur Bewertung austauschen, "geaergert"/"nicht gefallen" sind nur Platzhalter) ODER "Ich kann total nachempfinden, dass sich das im Moment nach [passendes Gefuehl] angefuehlt haben muss." (passendes Gefuehl einsetzen, nicht dem Gast eine Emotion unterstellen sondern aus eigener Perspektive Verstaendnis zeigen). Verboten: "Es tut uns leid, dass es nicht geschmeckt hat."
 - Bei RUHIG & PROFESSIONELL: Satz 1 ist "Ich kann mir gut vorstellen, dass du dir den Besuch bei uns ganz anders vorgestellt hast." ODER "Letztendlich war's nicht in Ordnung." ODER "So oder so hat's nicht gepasst." — waehle EINE davon fuer Satz 1, die anderen NICHT zusaetzlich an anderer Stelle verwenden.
 - Bei FOKUS AUF KLAERUNG: siehe Variantenbeschreibung unten (eigene Slot-1-Beispiele).
 
@@ -291,6 +291,10 @@ Natuerliche Alternativen wie "den Geist aufgegeben", "ausgefallen", "gestreikt".
 
 Allgemeine Fallback-Regeln (gelten wenn das Restaurantprofil keine spezifischere Regel enthaelt):
 
+BEI REGELN/INFOS AUS DEM RESTAURANTPROFIL (BESCHREIBUNG):
+Wenn die Beschreibung im Restaurantprofil eine konkrete Regel oder Information enthaelt, die fuer die Antwort relevant ist (z.B. Reservierungsdauer, Tischzeiten, Ablaeufe, Bestellvorgaben):
+Kopiere NICHT in mehreren Varianten denselben Wortlaut. Nimm die enthaltenen Fakten (Zahlen, Zeiten, Bedingungen) exakt und unveraendert, aber formuliere fuer jede Variante einen eigenen, unterschiedlich klingenden Satz, der zum Ton der jeweiligen Variante passt. Gleiche Fakten, andere Worte.
+
 BEI KRITIK AN WARTEZEITEN:
 Zu Stosszzeiten ist immer viel Bewegung — Gaeste kommen, Gaeste gehen. Genau in diesen Momenten kann es kurz zu Verzoegerungen kommen. Erklaere das ruhig und ohne Entschuldigung.
 
@@ -317,6 +321,8 @@ WICHTIG: Die Antwort endet nicht bei der Bestätigung. Nach der Anerkennung komm
   const userMessage = `${langInstruction}
 
 RESTAURANT: ${businessName}
+
+KONTEXT (Hintergrundwissen fuer dich — NIEMALS woertlich oder als ganze Saetze in die Antwort uebernehmen, sondern nur sinngemaess und falls relevant einfliessen lassen):
 ${context}
 
 ${nameRule}
@@ -334,7 +340,7 @@ Schreibe 3 Varianten. Fuer ALLE gilt strikt: ${duSieAnrede}. ${anredeHinweis}
 WICHTIG zur Grossschreibung: Alle Begruessungen enden mit einem Komma ("Hallo ${firstNameCapitalized},"). Das Wort direkt danach ist die Fortsetzung DESSELBEN Satzes und wird klein geschrieben (z.B. "Hallo ${firstNameCapitalized}, ich kann mir gut vorstellen..." oder "Hallo ${firstNameCapitalized}, kann mir gut vorstellen..." — NICHT "Hallo ${firstNameCapitalized}, Ich kann..." oder "Hallo ${firstNameCapitalized}, Kann...").
 
 Variante 1 – Direkt & Ehrlich: Locker, direkt, ehrlich. Startet mit "Hi ${firstNameCapitalized}," oder "Hey ${firstNameCapitalized}," (kein Name bekannt: "Hi," oder "Hey,").
-Falls die Bewertung Kritik enthaelt: Satz 1 (direkt nach der Begruessung) MUSS Slot 1 sein — eine kurze, lockere Gefuehls-Validierung, z.B. "Kann ich gut nachvollziehen, wenn das bei dir nicht so angekommen ist, wie's sollte." oder "Ich kann total nachempfinden, dass sich das im Moment nach [passendes Gefuehl, z.B. Frust/Enttaeuschung] angefuehlt haben muss." (passendes Gefuehl einsetzen, nicht woertlich "Frust/Enttaeuschung" schreiben).
+Falls die Bewertung Kritik enthaelt: Satz 1 (direkt nach der Begruessung) MUSS Slot 1 sein — eine kurze, lockere Gefuehls-Validierung, z.B. "Ich versteh total, dass dich das geaergert hat." oder "Ich versteh total, dass dir das nicht gefallen hat." (das Gefuehl passend zur Bewertung austauschen, "geaergert"/"nicht gefallen" sind nur Platzhalter) oder "Ich kann total nachempfinden, dass sich das im Moment nach [passendes Gefuehl, z.B. Frust/Enttaeuschung] angefuehlt haben muss." (passendes Gefuehl einsetzen, nicht woertlich "Frust/Enttaeuschung" schreiben).
 Satz 2 ordnet mehrere Kritikpunkte dann als Gesamteindruck ein — NIEMALS einzeln aufzaehlen, auch nicht abstrakt, z.B. "das war ein Besuch, der auf ganzer Linie nicht funktioniert hat" — ohne die einzelnen Punkte zu wiederholen. KEINE abstrakte "Wenn X nicht stimmt/funktioniert, bleibt davon Y uebrig"-Konstruktion (z.B. nicht "Wenn beides nicht stimmt, weder Kueche noch Service, bleibt davon nichts Gutes uebrig"). Vermeide in Satz 2 "tut mir leid" / "tut uns leid" — das ist nicht der Ton von Variante 1. Nutze stattdessen "schade" oder "aergerlich", z.B. "...und das ist einfach nicht in Ordnung" oder "...das ist aergerlich."
 Variante 2 – Ruhig & Professionell: Empathisch, ruhig, Mensch zuerst. Startet mit "Hallo ${firstNameCapitalized}," (kein Name bekannt: "Hallo,")
 Falls die Bewertung Kritik enthaelt: Satz 1 (direkt nach der Begruessung) ist Slot 1 — GENAU EINE der folgenden Validierungen, nicht mehrere: "Ich kann mir gut vorstellen, dass du dir den Besuch bei uns ganz anders vorgestellt hast." ODER "Letztendlich war's nicht in Ordnung." ODER "So oder so hat's nicht gepasst."
