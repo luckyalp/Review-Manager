@@ -649,8 +649,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({ error: 'ANTHROPIC_API_KEY nicht konfiguriert' })
   }
 
+  if (!review || typeof review !== 'object') {
+    return res.status(400).json({ error: 'review fehlt oder ist ungueltig' })
+  }
+
   const reviewText = review.reviewText || ''
-  const stars = review.stars || 3
+  const stars = Number(review.stars) || 3
   const reviewerName = review.reviewerName || ''
 
   const salutation = settings?.salutation || 'Sie'
@@ -684,7 +688,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       generatorRaw = await callClaude(generatorRaw_str)
     }
 
-    let generatedVariants = parseVariants(generatorRaw)
+    let generatedVariants: { label: string; text: string }[]
+    try {
+      generatedVariants = parseVariants(generatorRaw)
+    } catch (e) {
+      console.error('Generator-Parse fehlgeschlagen, retry...', e)
+      const parsed = JSON.parse(generatorRaw_str)
+      generatorRaw = parsed._system
+        ? await callClaude(parsed._user, parsed._system)
+        : await callClaude(generatorRaw_str)
+      generatedVariants = parseVariants(generatorRaw)
+    }
 
     // ── SCHRITT 1b: Post-Processing (Regex, deterministisch) ──────────────
     const { variants: sanitized, flagged } = sanitizeVariants(generatedVariants, signature)
