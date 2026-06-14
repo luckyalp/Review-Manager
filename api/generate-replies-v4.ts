@@ -34,6 +34,9 @@ function buildPrompt(reviewText: string, rating: number, reviewerName: string, s
   const signature = responseSignature || `Das Team von ${businessName}`
   const mode = classify(rating, reviewText)
   const wordCount = reviewText.trim().split(/\s+/).filter(Boolean).length
+  // "a" oder "s" sind technisch 1 Wort, aber inhaltlich praktisch nichts —
+  // ab 3 Zeichen behandeln wir den Text als "vorhanden", darunter wie "kein Text".
+  const hasMeaningfulText = reviewText.trim().length >= 3
   const firstName = reviewerName ? reviewerName.split(' ')[0] : ''
 
   const langInstruction =
@@ -80,7 +83,7 @@ Kein Name bekannt. Alle drei Varianten starten trotzdem mit einer Begruessung:
 
   // ─── EMPTY POSITIVE ────────────────────────────────────────────────────────
   if (mode === 'EMPTY_POSITIVE') {
-    const reviewContextBlock = wordCount === 0
+    const reviewContextBlock = !hasMeaningfulText
       ? `BEWERTUNG: ${rating} Sterne — kein Text.`
       : `BEWERTUNG: ${rating} Sterne. Der Gast hat folgendes geschrieben: "${reviewText.trim()}"
 
@@ -124,7 +127,7 @@ AUSGABE — NUR dieses JSON:
 
   // ─── EMPTY NEGATIVE ────────────────────────────────────────────────────────
   if (mode === 'EMPTY_NEGATIVE') {
-    const reviewContextBlock = wordCount === 0
+    const reviewContextBlock = !hasMeaningfulText
       ? `BEWERTUNG: ${rating} Sterne — kein Text.`
       : `BEWERTUNG: ${rating} Sterne. Der Gast hat folgendes geschrieben: "${reviewText.trim()}"
 
