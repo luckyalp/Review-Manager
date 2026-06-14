@@ -519,6 +519,7 @@ ZUSAETZLICHER BAUSTEIN (testweise): Pruefe, ob die Bewertung beschreibt, WIE etw
 - WENN nichts dazu in der Bewertung steht: keine Erwaehnung.
 
 ABSCHLUSS (immer, als letzter Satz vor der Signatur): ein nach vorne gerichteter Satz, eine Einladung, eine Erwartung fuers naechste Mal, oder ein konkretes Angebot. NIEMALS eine reine Gefuehlsaussage ("das nehme ich mir zu Herzen") als letzter Satz ohne Folge.
+Pruefe: Klingt der Satz wie eine generische Floskel, die in vielen verschiedenen Antworten genauso stehen koennte (z.B. "gib uns noch eine Chance" + Kontaktangabe)? Falls ja: formuliere stattdessen etwas, das konkret zu DIESER Bewertung passt — was wird der Gast beim naechsten Mal anders erleben?
 
 Korrekte Zeichensetzung — jeder Hauptsatz beginnt nach einem Punkt.`
 
