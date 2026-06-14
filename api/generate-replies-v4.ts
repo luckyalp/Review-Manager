@@ -715,11 +715,12 @@ function buildRegenFeedback(
     .filter(Boolean)
 }
 
-// ─── STUFE 2c: QUALITAETSCHECK + GGF. EINMALIGE REGENERIERUNG ──────────────
+// ─── STUFE 2c: QUALITAETSCHECK + GGF. REGENERIERUNG (max. 2 Versuche) ──────
 // Kombiniert Sanitize-Treffer (alle Modi) und Judge-Ergebnis (nur CONTENT, < 5 Sterne).
-// Regeneriert maximal einmal. Das Ergebnis wird danach erneut sanitized
-// (nur geloggt, kein zweiter Regenerierungs-Versuch — vermeidet Endlosschleifen
-// und zusaetzliche Kosten).
+// Regeneriert hoechstens 2x — der zweite Versuch nur, falls nach dem ersten
+// Versuch immer noch ein Problem gefunden wird. Im Normalfall (0 oder 1
+// Versuch reicht) entstehen keine zusaetzlichen Kosten. Der Judge laeuft nur
+// einmal (vor dem ersten Versuch) — danach zaehlt nur noch die Stichwort-Kontrolle.
 async function qualityCheckAndFix(
   variants: { label: string; text: string }[],
   issuesByVariant: string[][],
@@ -748,39 +749,55 @@ async function qualityCheckAndFix(
     }
   }
 
-  const feedbackLines = buildRegenFeedback(variants, issuesByVariant, judgeResult, signature)
+  let currentVariants = variants
+  let currentIssues = issuesByVariant
+  let currentJudge = judgeResult
+  const MAX_REGEN_ATTEMPTS = 2
 
-  if (feedbackLines.length === 0) {
-    return variants
-  }
+  for (let attempt = 1; attempt <= MAX_REGEN_ATTEMPTS; attempt++) {
+    const feedbackLines = buildRegenFeedback(currentVariants, currentIssues, currentJudge, signature)
 
-  console.warn('Qualitaetscheck: Probleme gefunden, regeneriere einmalig...', feedbackLines)
-
-  let regenParsed: { _system?: string; _user?: string } | null = null
-  try {
-    const p = JSON.parse(generatorRawStr)
-    if (p._system && p._user) regenParsed = p
-  } catch {
-    regenParsed = null
-  }
-
-  const feedbackBlock = `\n\nHINWEIS: Ein vorheriger Entwurf hatte folgende Probleme — bitte vermeide sie:\n${feedbackLines.join('\n')}`
-
-  try {
-    const regenRaw = regenParsed
-      ? await callClaude(regenParsed._user! + feedbackBlock, regenParsed._system)
-      : await callClaude(generatorRawStr + feedbackBlock)
-
-    const regenVariants = parseVariants(regenRaw)
-    const { variants: regenSanitized, flagged: regenFlagged } = sanitizeVariants(regenVariants, signature)
-    if (regenFlagged.length > 0) {
-      console.warn('Qualitaetscheck: nach Regenerierung weiterhin Probleme:', regenFlagged)
+    if (feedbackLines.length === 0) {
+      return currentVariants
     }
-    return regenSanitized
-  } catch (e) {
-    console.error('Regenerierung fehlgeschlagen, nutze ersten Entwurf:', e)
-    return variants
+
+    console.warn(`Qualitaetscheck: Probleme gefunden (Versuch ${attempt}/${MAX_REGEN_ATTEMPTS}), regeneriere...`, feedbackLines)
+
+    let regenParsed: { _system?: string; _user?: string } | null = null
+    try {
+      const p = JSON.parse(generatorRawStr)
+      if (p._system && p._user) regenParsed = p
+    } catch {
+      regenParsed = null
+    }
+
+    const feedbackBlock = `\n\nHINWEIS: Ein vorheriger Entwurf hatte folgende Probleme — bitte vermeide sie:\n${feedbackLines.join('\n')}`
+
+    try {
+      const regenRaw = regenParsed
+        ? await callClaude(regenParsed._user! + feedbackBlock, regenParsed._system)
+        : await callClaude(generatorRawStr + feedbackBlock)
+
+      const regenVariants = parseVariants(regenRaw)
+      const { variants: regenSanitized, flagged: regenFlagged, issuesByVariant: regenIssues } = sanitizeVariants(regenVariants, signature)
+
+      currentVariants = regenSanitized
+      currentIssues = regenIssues
+      currentJudge = null // Judge laeuft nur vor dem ersten Versuch (Kosten)
+
+      if (regenFlagged.length === 0) {
+        return currentVariants
+      }
+      if (attempt === MAX_REGEN_ATTEMPTS) {
+        console.warn(`Qualitaetscheck: nach ${MAX_REGEN_ATTEMPTS} Versuchen weiterhin Probleme:`, regenFlagged)
+      }
+    } catch (e) {
+      console.error('Regenerierung fehlgeschlagen, nutze vorherigen Entwurf:', e)
+      return currentVariants
+    }
   }
+
+  return currentVariants
 }
 
 // ─── RECOVERY-VARIANTE (eigenstaendig, kann parallel zum Qualitaetscheck laufen) ──
