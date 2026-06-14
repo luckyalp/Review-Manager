@@ -274,7 +274,7 @@ Beispielsätze (Ton anpassen, nicht wörtlich kopieren):
 - "Das machen wir hier so nicht."
 
 Abschluss (einheitlich fuer alle Sterne):
-${rating <= 2 ? '- Bei 1-2 Sternen: Kein Gespraechsangebot, keine Aufforderung zur Kontaktaufnahme. Jede Variante bekommt GENAU EINEN der folgenden Saetze — WORTWOERTLICH, keine Umformulierung, jeder Satz nur einmal und exklusiv fuer diese Variante:\n  - Variante 1 (Direkt & Ehrlich): "Das letzte Wort gehoert dem naechsten Besuch."\n  - Variante 2 (Ruhig & Professionell): "Lass uns beim naechsten Besuch eine andere Geschichte erzaehlen."\n  - Variante 3 (Fokus auf Klaerung): "Wir freuen uns auf die naechste Runde."'
+${rating <= 2 ? '- Bei 1-2 Sternen: Kein Gespraechsangebot, keine Aufforderung zur Kontaktaufnahme.\n  FALLS Slot 3A (echter Fehler — etwas ist objektiv schiefgelaufen, z.B. kaltes Essen, lange Wartezeit, unfreundliches Personal): Jede Variante bekommt GENAU EINEN der folgenden Saetze — WORTWOERTLICH, keine Umformulierung, jeder Satz nur einmal und exklusiv fuer diese Variante:\n    - Variante 1 (Direkt & Ehrlich): "Vielleicht kriegen wir irgendwann die Chance, das besser zu machen."\n    - Variante 2 (Ruhig & Professionell): "Vielleicht bekommen wir irgendwann die Gelegenheit, einen besseren Eindruck zu hinterlassen."\n    - Variante 3 (Fokus auf Klaerung): "Vielleicht ergibt sich irgendwann die Chance fuer einen besseren Eindruck."\n  FALLS Slot 3B oder 3C (bewusste Entscheidung des Restaurants oder Konzept-Mismatch): Jede Variante bekommt GENAU EINEN der folgenden Saetze — WORTWOERTLICH, keine Umformulierung, jeder Satz nur einmal und exklusiv fuer diese Variante:\n    - Variante 1 (Direkt & Ehrlich): "Das letzte Wort gehoert dem naechsten Besuch."\n    - Variante 2 (Ruhig & Professionell): "Lass uns beim naechsten Besuch eine andere Geschichte erzaehlen."\n    - Variante 3 (Fokus auf Klaerung): "Wir freuen uns auf die naechste Runde."'
   : rating === 3 ? '- Bei 3 Sternen: Kein Gespraechsangebot, keine Aufforderung zur Kontaktaufnahme. Formuliere einen kurzen, eigenen Abschluss-Impuls in diese Richtung (nicht wortwoertlich uebernehmen, sondern passend zum Ton der Variante variieren), z.B.: "Lass uns beim naechsten Mal den vierten Stern gemeinsam holen." / "Lass den naechsten Besuch fuer sich sprechen." / "Wir freuen uns auf die naechste Runde."'
   : '- Bei 4-5 Sternen: Nicht notwendig, optional kurzer warmer Abschluss.'}
 Kein Kontaktangebot, keine E-Mail-Adresse in den drei Varianten (siehe Regel im System-Prompt).
@@ -609,6 +609,12 @@ function hasForbiddenWord(text: string): boolean {
   return FORBIDDEN_WORD_PATTERNS.some(pattern => pattern.test(text))
 }
 
+// "intern" / "interne" / "internen" etc. — verweist auf interne Ablaeufe, laut Prompt verboten
+const INTERNAL_REFERENCE_PATTERN = /\bintern(e|er|es|en)?\b/i
+function hasInternalReference(text: string): boolean {
+  return INTERNAL_REFERENCE_PATTERN.test(text)
+}
+
 // Tageszeit-Bezuege — laut Prompt strikt verboten, wird hier zusaetzlich erzwungen
 const TIME_REFERENCE_PATTERN = /\b(abend(s|essen)?|gruppenabend|morgens?|mittags?|mittagessen|fr[üu]hst[üu]ck|nachts?)\b/i
 function hasTimeReference(text: string): boolean {
@@ -622,6 +628,9 @@ const CORPORATE_PHRASE_PATTERNS = [
   /nicht\s+das\s+erlebnis/i,
   /nicht\s+das,?\s+wof[üu]r\s+wir\s+stehen/i,
   /entspricht\s+nicht\s+(unserem|dem|ihrem)/i,
+  // "nicht den/das ... den/das/die wir (uns) wuenschen/vorstellen/bieten" — z.B.
+  // "nicht den Eindruck hinterlassen, den wir uns wuenschen"
+  /nicht\s+(den|das)\b[^.!?]{0,40}\b(den|das|die)\s+wir\s+(uns\s+)?(w[üu]nschen|vorstellen|bieten)/i,
 ]
 function hasCorporatePhrase(text: string): boolean {
   return CORPORATE_PHRASE_PATTERNS.some(pattern => pattern.test(text))
@@ -640,6 +649,7 @@ function sanitizeVariants(
     if (hasPronounMismatch(v.text, signature)) issues.push('pronoun_mismatch')
     if (hasCapitulation(v.text)) issues.push('capitulation')
     if (hasForbiddenWord(v.text)) issues.push('forbidden_word')
+    if (hasInternalReference(v.text)) issues.push('internal_reference')
     if (hasTimeReference(v.text)) issues.push('time_reference')
     if (hasCorporatePhrase(v.text)) issues.push('corporate_phrase')
     if (issues.length > 0) {
@@ -663,6 +673,8 @@ const SANITIZE_ISSUE_TEXT: Record<string, (signature: string) => string> = {
     'Enthaelt "auch wenn" als einschraenkenden Nachsatz nach einer klaren Aussage (z.B. "Das ist eine bewusste Entscheidung, auch wenn..."). Das ist verboten — die Aussage muss nach dem Punkt enden, ohne "auch wenn"-Einschraenkung.',
   forbidden_word: () =>
     'Enthaelt das Wort "frustrierend". Das ist verboten — nutze stattdessen z.B. "aergerlich" oder "schade".',
+  internal_reference: () =>
+    'Verweist mit dem Wort "intern" (oder einer Form davon) auf interne Ablaeufe (z.B. "intern nicht gestimmt"). Das ist verboten — erklaere keine internen Ablaeufe, bleibe bei der ehrlichen "von aussen koennen wir das nicht einschaetzen"-Haltung.',
   time_reference: () =>
     'Enthaelt einen Tageszeit-Bezug (z.B. "Abend", "Morgen", "Mittag", "Nacht"). Das ist verboten — nutze stattdessen "Besuch", "Aufenthalt" oder "Zeit bei uns".',
   corporate_phrase: () =>
