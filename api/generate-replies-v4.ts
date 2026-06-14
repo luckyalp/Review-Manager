@@ -33,6 +33,7 @@ function buildPrompt(reviewText: string, rating: number, reviewerName: string, s
     : 'Nutze konsequent die Sie-Form (Sie, Ihr, Ihnen). Schreibe "Sie" und "Ihr" immer groß.'
   const signature = responseSignature || `Das Team von ${businessName}`
   const mode = classify(rating, reviewText)
+  const wordCount = reviewText.trim().split(/\s+/).filter(Boolean).length
   const firstName = reviewerName ? reviewerName.split(' ')[0] : ''
 
   const langInstruction =
@@ -79,6 +80,14 @@ Kein Name bekannt. Alle drei Varianten starten trotzdem mit einer Begruessung:
 
   // ─── EMPTY POSITIVE ────────────────────────────────────────────────────────
   if (mode === 'EMPTY_POSITIVE') {
+    const reviewContextBlock = wordCount === 0
+      ? `BEWERTUNG: ${rating} Sterne — kein Text.`
+      : `BEWERTUNG: ${rating} Sterne. Der Gast hat folgendes geschrieben: "${reviewText.trim()}"
+
+Das ist sehr kurz (${wordCount} ${wordCount === 1 ? 'Wort' : 'Woerter'}), aber es ist Text vorhanden — behaupte NIEMALS, es waere "kein Text" oder "kein Wort" geschrieben worden.
+- Wenn ein konkretes Thema erkennbar ist (z.B. Essen, Service, Atmosphaere): geh kurz darauf ein.
+- Wenn KEIN konkretes Thema erkennbar ist (z.B. nur "Top" oder "Super"): erkenne die positive Stimmung kurz an.`
+
     return `Du bist eine Hospitality Response Engine fuer "${businessName}".
 ${langInstruction}
 
@@ -87,7 +96,7 @@ ${context}
 
 ${nameRule}
 
-BEWERTUNG: ${rating} Sterne — kein Text.
+${reviewContextBlock}
 
 AUFGABE: 3 kurze, herzliche Antworten. Max. 2 Saetze. Keine Floskeln. Keine Dankesformeln.
 Schreibe wie gesprochen, nicht wie formuliert. Direkt beginnen.
@@ -97,6 +106,7 @@ BEISPIELE (genau dieser Ton):
 - "Danke dir :) Schoen, dass du bei uns warst."
 - "Freut uns, dass du einen schoenen Besuch hattest. Bis bald :)"
 - "5 Sterne nehmen wir natuerlich gern. Danke dir."
+- "Ich bin sprachlos. Im positiven Sinne natuerlich. Bis bald :)"
 
 ABSOLUT VERBOTEN:
 - "Vielen Dank fuer Ihre/deine Bewertung"
@@ -114,6 +124,14 @@ AUSGABE — NUR dieses JSON:
 
   // ─── EMPTY NEGATIVE ────────────────────────────────────────────────────────
   if (mode === 'EMPTY_NEGATIVE') {
+    const reviewContextBlock = wordCount === 0
+      ? `BEWERTUNG: ${rating} Sterne — kein Text.`
+      : `BEWERTUNG: ${rating} Sterne. Der Gast hat folgendes geschrieben: "${reviewText.trim()}"
+
+Das ist sehr kurz (${wordCount} ${wordCount === 1 ? 'Wort' : 'Woerter'}), aber es ist Text vorhanden — behaupte NIEMALS, es waere "kein Text" oder "kein Wort" geschrieben worden.
+- Wenn ein konkretes Thema erkennbar ist (z.B. Essen, Service, Wartezeit, Preis, Atmosphaere, Sauberkeit): geh kurz darauf ein, ehrlich und ohne etwas zu erfinden — aber kompakter als bei einer ausfuehrlichen Bewertung.
+- Wenn KEIN konkretes Thema erkennbar ist (z.B. nur "Schlecht" oder "Nie wieder"): erkenne die Stimmung kurz an und frage freundlich, ob der Gast mehr dazu erzaehlen moechte.`
+
     return `Du bist eine Hospitality Response Engine fuer "${businessName}".
 ${langInstruction}
 
@@ -122,7 +140,7 @@ ${context}
 
 ${nameRule}
 
-BEWERTUNG: ${rating} Sterne — kein Text.
+${reviewContextBlock}
 
 AUFGABE: 3 Antworten. Anerkennen + Einladung zur direkten Kontaktaufnahme. Kein Druck.
 ${contactLine}
@@ -466,6 +484,10 @@ KEINE GEDANKENSTRICHE — ABSOLUTES VERBOT:
 Verwende NIEMALS "–", "—" oder jeden anderen langen Bindestrich zur Satzabgrenzung oder für Einschübe.
 Ersetze jeden Gedankenstrich durch einen Punkt oder ein Komma.
 
+VERBOT VON TAGESZEIT-BEZUEGEN: Verwende NIEMALS Woerter wie "Abend", "Abendessen", "Gruppenabend", "Nacht", "Morgen", "Mittag", "Mittagessen", "Fruehstueck" oder andere Tageszeit-Bezuege, auch wenn die Bewertung selbst eine Tageszeit nennt. Nutze stattdessen "Besuch", "Aufenthalt", "Zeit bei uns" oder "Erlebnis".
+
+VERBOTENE PHRASEN: Niemals "nehmen wir sehr ernst", "intern adressiert", "intern nachgeschaerft", "Massnahmen ergriffen", "Team sensibilisiert", "entspricht nicht unserem Anspruch", "nicht das wofuer wir stehen", "nicht das Erlebnis das wir bieten wollen", "kein Erlebnis das so bleiben soll" oder sinngemaesse Varianten davon verwenden. Auch das Wort "frustrierend" vermeiden — nutze stattdessen z.B. "aergerlich" oder "schade".
+
 Ziel: Vertrauen zurückgewinnen und persönliche Klärung anbieten.
 Länge: 3 bis 4 vollständige, fließende Sätze.
 Korrekte Zeichensetzung — jeder Hauptsatz beginnt nach einem Punkt.`
@@ -570,6 +592,38 @@ function hasPronounMismatch(text: string, signature: string): boolean {
   return /\b(da\s+)?(gebe|finde|sehe|sage|denke|meine)\s+ich\b/i.test(text)
 }
 
+// "auch wenn ..." als einschraenkender Nachsatz nach einer klaren Aussage — verboten
+const CAPITULATION_PATTERN = /\bauch\s+wenn\b/i
+function hasCapitulation(text: string): boolean {
+  return CAPITULATION_PATTERN.test(text)
+}
+
+// Einzelne verbotene Woerter
+const FORBIDDEN_WORD_PATTERNS = [
+  /\bfrustrierend/i,
+]
+function hasForbiddenWord(text: string): boolean {
+  return FORBIDDEN_WORD_PATTERNS.some(pattern => pattern.test(text))
+}
+
+// Tageszeit-Bezuege — laut Prompt strikt verboten, wird hier zusaetzlich erzwungen
+const TIME_REFERENCE_PATTERN = /\b(abend(s|essen)?|gruppenabend|morgens?|mittags?|mittagessen|fr[üu]hst[üu]ck|nachts?)\b/i
+function hasTimeReference(text: string): boolean {
+  return TIME_REFERENCE_PATTERN.test(text)
+}
+
+// Sinngemaesse Konzern-Floskeln, die der Wortlaut-Filter (FORBIDDEN_OPENERS) nicht erfasst
+const CORPORATE_PHRASE_PATTERNS = [
+  /nicht\s+das,?\s+(was|wie)\s+wir/i,
+  /kein(e)?\s+erlebnis(,)?\s+das/i,
+  /nicht\s+das\s+erlebnis/i,
+  /nicht\s+das,?\s+wof[üu]r\s+wir\s+stehen/i,
+  /entspricht\s+nicht\s+(unserem|dem|ihrem)/i,
+]
+function hasCorporatePhrase(text: string): boolean {
+  return CORPORATE_PHRASE_PATTERNS.some(pattern => pattern.test(text))
+}
+
 function sanitizeVariants(
   variants: { label: string; text: string }[],
   signature: string
@@ -581,6 +635,10 @@ function sanitizeVariants(
     const issues: string[] = []
     if (hasForbiddenOpener(v.text)) issues.push('forbidden_opener')
     if (hasPronounMismatch(v.text, signature)) issues.push('pronoun_mismatch')
+    if (hasCapitulation(v.text)) issues.push('capitulation')
+    if (hasForbiddenWord(v.text)) issues.push('forbidden_word')
+    if (hasTimeReference(v.text)) issues.push('time_reference')
+    if (hasCorporatePhrase(v.text)) issues.push('corporate_phrase')
     if (issues.length > 0) {
       flagged.push(`${v.label}: ${issues.join(', ')}`)
     }
@@ -598,6 +656,14 @@ const SANITIZE_ISSUE_TEXT: Record<string, (signature: string) => string> = {
     'Beginnt (nach der Begruessung) mit einer verbotenen Dankesfloskel (z.B. "Vielen Dank fuer Ihre Bewertung"). Starte direkt mit einer echten Reaktion, ohne Dankesformel.',
   pronoun_mismatch: (signature: string) =>
     `Wechselt zwischen "ich" und "wir", obwohl die Signatur ein Team ist ("${signature}"). Bleibe konsequent bei "wir".`,
+  capitulation: () =>
+    'Enthaelt "auch wenn" als einschraenkenden Nachsatz nach einer klaren Aussage (z.B. "Das ist eine bewusste Entscheidung, auch wenn..."). Das ist verboten — die Aussage muss nach dem Punkt enden, ohne "auch wenn"-Einschraenkung.',
+  forbidden_word: () =>
+    'Enthaelt das Wort "frustrierend". Das ist verboten — nutze stattdessen z.B. "aergerlich" oder "schade".',
+  time_reference: () =>
+    'Enthaelt einen Tageszeit-Bezug (z.B. "Abend", "Morgen", "Mittag", "Nacht"). Das ist verboten — nutze stattdessen "Besuch", "Aufenthalt" oder "Zeit bei uns".',
+  corporate_phrase: () =>
+    'Enthaelt eine sinngemaesse Konzern-Floskel (z.B. "kein Erlebnis das...", "nicht das was wir...", "entspricht nicht..."). Formuliere stattdessen ehrlich und persoenlich, ohne solche Floskeln.',
 }
 
 function buildRegenFeedback(
