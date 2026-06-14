@@ -106,6 +106,8 @@ ABSOLUT VERBOTEN:
 - Jede Form von standardisierter Dankesformel
 - Gedankenstriche (weder "—" noch " - ") — nutze Punkt oder Komma stattdessen.
 
+SPRACHE: Nutze echte Umlaute: ä, ö, ü, ß — niemals ae, oe, ue als Ersatz.
+
 AUSGABE — NUR dieses JSON:
 {"variant1":{"label":"Herzlich","text":"..."},"variant2":{"label":"Persoenlich","text":"..."},"variant3":{"label":"Kurz & warm","text":"..."}}`
   }
@@ -139,6 +141,8 @@ ABSOLUT VERBOTEN:
 - "Wir bitten um Verstaendnis"
 - "Wir nehmen Ihr/dein Feedback ernst"
 - Gedankenstriche (weder "—" noch " - ") — nutze Punkt oder Komma stattdessen.
+
+SPRACHE: Nutze echte Umlaute: ä, ö, ü, ß — niemals ae, oe, ue als Ersatz.
 
 AUSGABE — NUR dieses JSON:
 {"variant1":{"label":"Direkt & Ehrlich","text":"..."},"variant2":{"label":"Ruhig & Professionell","text":"..."},"variant3":{"label":"Fokus auf Klaerung","text":"..."}}`
@@ -249,7 +253,7 @@ Beispielsätze (Ton anpassen, nicht wörtlich kopieren):
 - "Das machen wir hier so nicht."
 
 Abschluss (einheitlich fuer alle Sterne):
-${rating <= 2 ? '- Bei 1-2 Sternen: Kein Gespraechsangebot, keine Aufforderung zur Kontaktaufnahme. Stattdessen einen dieser Saetze GENAU SO, WORTWOERTLICH (nur in den Satzbau eingepasst, keine Umformulierung), passend zum Ton der jeweiligen Variante: "Das letzte Wort gehoert dem naechsten Besuch." / "Lass uns beim naechsten Besuch eine andere Geschichte erzaehlen." / "Wir freuen uns auf die naechste Runde."'
+${rating <= 2 ? '- Bei 1-2 Sternen: Kein Gespraechsangebot, keine Aufforderung zur Kontaktaufnahme. Jede Variante bekommt GENAU EINEN der folgenden Saetze — WORTWOERTLICH, keine Umformulierung, jeder Satz nur einmal und exklusiv fuer diese Variante:\n  - Variante 1 (Direkt & Ehrlich): "Das letzte Wort gehoert dem naechsten Besuch."\n  - Variante 2 (Ruhig & Professionell): "Lass uns beim naechsten Besuch eine andere Geschichte erzaehlen."\n  - Variante 3 (Fokus auf Klaerung): "Wir freuen uns auf die naechste Runde."'
   : rating === 3 ? '- Bei 3 Sternen: Kein Gespraechsangebot, keine Aufforderung zur Kontaktaufnahme. Formuliere einen kurzen, eigenen Abschluss-Impuls in diese Richtung (nicht wortwoertlich uebernehmen, sondern passend zum Ton der Variante variieren), z.B.: "Lass uns beim naechsten Mal den vierten Stern gemeinsam holen." / "Lass den naechsten Besuch fuer sich sprechen." / "Wir freuen uns auf die naechste Runde."'
   : '- Bei 4-5 Sternen: Nicht notwendig, optional kurzer warmer Abschluss.'}
 Kein Kontaktangebot, keine E-Mail-Adresse in den drei Varianten (siehe Regel im System-Prompt).
@@ -373,8 +377,9 @@ Fehlende Subjekte ("Verstehen Ihren Aerger" statt "Wir verstehen") → SCHWACH.
 Klingt es wie Kundenservice-Text statt wie ein echter Gastronom? → SCHWACH.
 Variante 3 darf kurz sein (max. 3 Saetze). Kurz ist kein Fehler.
 Enthaelt die Antwort eine ueberfluessige Einschraenkung nach einer klaren Aussage?
-Beispiele: "auch wenn es nicht schoen ist" / "auch wenn das keine Entschuldigung ist" / "auch wenn es aergerlich ist" / "das ist keine Entschuldigung, aber..."
-→ SCHWACH wenn ja. Eine souveraene Aussage braucht keinen Nachsatz.
+SOFORT SCHWACH — keine Ausnahme — wenn einer dieser Saetze oder eine sinngemaeße Variante davon vorkommt:
+"auch wenn es nicht schoen ist" / "auch wenn das keine Entschuldigung ist" / "auch wenn es aergerlich ist" / "das ist keine Entschuldigung, aber..." / "Das ist keine Entschuldigung, aber..."
+→ SOFORT SCHWACH. Keine Ausnahme. Keine zweite Chance. Eine souveraene Aussage braucht keinen einschraenkenden Nachsatz.
 
 6. SINGULAR/PLURAL-KONSISTENZ
 Spricht die Antwort mal als "ich" und mal als "wir", obwohl die Signatur ein Team ist?
@@ -456,6 +461,10 @@ Keine leeren Floskeln.
 Natürliche Sprache, kurze Sätze.
 Nutze echte Umlaute: ä, ö, ü, ß — niemals ae, oe, ue als Ersatz.
 Nutze für alle Beschreibungen (Typ, Atmosphäre, Konzept) ausschließlich die Angaben aus dem Restaurantprofil.
+
+KEINE GEDANKENSTRICHE — ABSOLUTES VERBOT:
+Verwende NIEMALS "–", "—" oder jeden anderen langen Bindestrich zur Satzabgrenzung oder für Einschübe.
+Ersetze jeden Gedankenstrich durch einen Punkt oder ein Komma.
 
 Ziel: Vertrauen zurückgewinnen und persönliche Klärung anbieten.
 Länge: 3 bis 4 vollständige, fließende Sätze.
