@@ -335,9 +335,12 @@ Abschluss: Waehle passend zum Ton "Viele Grüße, ${signature}" oder "Herzliche 
 
 Schreibe 3 Varianten. Fuer ALLE gilt strikt: ${duSieAnrede}. ${anredeHinweis}
 
-Variante 1 – Direkt & Ehrlich: Locker, direkt, ehrlich. Startet mit "Hi ${firstNameCapitalized}," oder "Hey ${firstNameCapitalized}," (kein Name bekannt: "Hi," oder "Hey,"). Mehrere Kritikpunkte NIEMALS aufzaehlen oder einzeln nennen — auch nicht abstrakt. Nur als Gesamteindruck einordnen: z.B. "ein Besuch der auf ganzer Linie nicht funktioniert hat" — ohne die einzelnen Punkte zu wiederholen.
+Variante 1 – Direkt & Ehrlich: Locker, direkt, ehrlich. Startet mit "Hi ${firstNameCapitalized}," oder "Hey ${firstNameCapitalized}," (kein Name bekannt: "Hi," oder "Hey,").
+Falls die Bewertung Kritik enthaelt: Satz 1 (direkt nach der Begruessung) MUSS Slot 1 sein — eine kurze, lockere Gefuehls-Validierung, z.B. "Kann ich gut nachvollziehen, wenn das bei dir nicht so angekommen ist, wie's sollte." oder "Ich kann total nachempfinden, dass sich das im Moment nach [passendes Gefuehl, z.B. Frust/Enttaeuschung] angefuehlt haben muss." (passendes Gefuehl einsetzen, nicht woertlich "Frust/Enttaeuschung" schreiben).
+Satz 2 ordnet mehrere Kritikpunkte dann als Gesamteindruck ein — NIEMALS einzeln aufzaehlen, auch nicht abstrakt, z.B. "das war ein Besuch, der auf ganzer Linie nicht funktioniert hat" — ohne die einzelnen Punkte zu wiederholen.
 Variante 2 – Ruhig & Professionell: Empathisch, ruhig, Mensch zuerst. Startet mit "Hallo ${firstNameCapitalized}," (kein Name bekannt: "Hallo,")
 Variante 3 – Fokus auf Klaerung: Kuerzer, max. 3 Saetze. Startet mit "Hi ${firstNameCapitalized}," oder "Hallo ${firstNameCapitalized}," (kein Name bekannt: "Hi," oder "Hallo,"). KEIN E-Mail-Satz und KEIN Kontaktangebot (Kontaktaufnahme ist ausschliesslich Teil der separaten Recovery-Antwort bei 1-2 Sternen, nicht Teil dieser drei Varianten). Die Antwort endet stattdessen mit dem Abschluss gemaess der "Abschluss (einheitlich fuer alle Sterne)"-Regel, gefolgt vom Abschlussgruss.
+Falls die Bewertung Kritik enthaelt: Satz 1 (direkt nach der Begruessung) MUSS Slot 1 sein — eine kurze Gefuehls-Validierung aus Gast-Perspektive, knapp und im "Fokus auf Klaerung"-Ton, z.B. "Klingt nach einem Besuch, der dich aergern musste." oder "Kann mir gut vorstellen, dass sich das nicht gut angefuehlt hat." Keine Formulierungen aus Restaurant-Perspektive wie "den wir uns wuenschen", "der Eindruck, den wir hinterlassen wollen" o.ae. — diese sind verboten.
 WICHTIG: Beziehe dich bei Hausregeln NICHT auf den spezifischen Tag aus der Bewertung (z.B. "Samstag") sondern auf die generelle Regel wie sie im Profil steht.
 
 AUSGABE — NUR dieses JSON, kein anderer Text:
@@ -506,6 +509,7 @@ Bewertung von ${firstNameClean || 'einem Gast'} (1-2 Sterne):
 
 Schreibe EINE deeskalierende Antwort.
 ${firstNameClean ? `Beginne mit "Hallo ${firstNameClean},"` : 'Kein Name bekannt — ohne persoenliche Anrede beginnen.'}
+Satz 1 (direkt nach der Begruessung) sollte eine kurze, ehrliche Gefuehls-Validierung sein, z.B. "Ich kann total nachempfinden, dass sich das im Moment nach [passendes Gefuehl, z.B. Frust/Enttaeuschung] angefuehlt haben muss." (passendes Gefuehl einsetzen, nicht woertlich "Frust/Enttaeuschung" schreiben).
 ${contactEmail ? `Kontaktangebot: Bitte melde dich kurz unter ${contactEmail}, damit wir das persönlich klären können.` : ''}
 Endet mit: ${signature}
 
