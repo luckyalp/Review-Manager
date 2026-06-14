@@ -573,8 +573,9 @@ function hasPronounMismatch(text: string, signature: string): boolean {
 function sanitizeVariants(
   variants: { label: string; text: string }[],
   signature: string
-): { variants: { label: string; text: string }[]; flagged: string[] } {
+): { variants: { label: string; text: string }[]; flagged: string[]; issuesByVariant: string[][] } {
   const flagged: string[] = []
+  const issuesByVariant: string[][] = []
 
   const checked = variants.map((v) => {
     const issues: string[] = []
@@ -583,12 +584,147 @@ function sanitizeVariants(
     if (issues.length > 0) {
       flagged.push(`${v.label}: ${issues.join(', ')}`)
     }
-    return { ...v, _issues: issues }
+    issuesByVariant.push(issues)
+    return { label: v.label, text: v.text }
   })
 
-  return {
-    variants: checked.map(({ _issues, ...v }) => v),
-    flagged,
+  return { variants: checked, flagged, issuesByVariant }
+}
+
+// ─── STUFE 2b: KOMBINIERTES FEEDBACK FUER REGENERIERUNG ────────────────────
+// Fasst Sanitize-Treffer und (falls vorhanden) Judge-Ergebnis pro Variante zusammen.
+const SANITIZE_ISSUE_TEXT: Record<string, (signature: string) => string> = {
+  forbidden_opener: () =>
+    'Beginnt (nach der Begruessung) mit einer verbotenen Dankesfloskel (z.B. "Vielen Dank fuer Ihre Bewertung"). Starte direkt mit einer echten Reaktion, ohne Dankesformel.',
+  pronoun_mismatch: (signature: string) =>
+    `Wechselt zwischen "ich" und "wir", obwohl die Signatur ein Team ist ("${signature}"). Bleibe konsequent bei "wir".`,
+}
+
+function buildRegenFeedback(
+  variants: { label: string; text: string }[],
+  issuesByVariant: string[][],
+  judgeResult: any | null,
+  signature: string
+): string[] {
+  return variants
+    .map((v, i) => {
+      const parts: string[] = []
+      for (const code of issuesByVariant[i] || []) {
+        const describe = SANITIZE_ISSUE_TEXT[code]
+        if (describe) parts.push(describe(signature))
+      }
+      const judgeKey = `variant${i + 1}`
+      if (judgeResult && judgeResult[judgeKey]?.ok === false && judgeResult[judgeKey]?.reason) {
+        parts.push(judgeResult[judgeKey].reason)
+      }
+      return parts.length > 0 ? `${v.label}: ${parts.join(' ')}` : ''
+    })
+    .filter(Boolean)
+}
+
+// ─── STUFE 2c: QUALITAETSCHECK + GGF. EINMALIGE REGENERIERUNG ──────────────
+// Kombiniert Sanitize-Treffer (alle Modi) und Judge-Ergebnis (nur CONTENT, < 5 Sterne).
+// Regeneriert maximal einmal. Das Ergebnis wird danach erneut sanitized
+// (nur geloggt, kein zweiter Regenerierungs-Versuch — vermeidet Endlosschleifen
+// und zusaetzliche Kosten).
+async function qualityCheckAndFix(
+  variants: { label: string; text: string }[],
+  issuesByVariant: string[][],
+  mode: string,
+  stars: number,
+  reviewText: string,
+  signature: string,
+  generatorRawStr: string
+): Promise<{ label: string; text: string }[]> {
+  const runJudge = mode !== 'EMPTY_POSITIVE' && mode !== 'EMPTY_NEGATIVE' && stars < 5
+  let judgeResult: any | null = null
+
+  if (runJudge) {
+    try {
+      const judgePrompt = buildJudgePrompt(variants, reviewText, signature)
+      const judgeRaw = await callClaude(judgePrompt)
+      let judgeJson = judgeRaw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
+      const js = judgeJson.indexOf('{')
+      const je = judgeJson.lastIndexOf('}')
+      if (js !== -1 && je !== -1) {
+        judgeJson = judgeJson.substring(js, je + 1)
+        judgeResult = JSON.parse(judgeJson)
+      }
+    } catch (e) {
+      console.error('Judge fehlgeschlagen, ueberspringe:', e)
+    }
+  }
+
+  const feedbackLines = buildRegenFeedback(variants, issuesByVariant, judgeResult, signature)
+
+  if (feedbackLines.length === 0) {
+    return variants
+  }
+
+  console.warn('Qualitaetscheck: Probleme gefunden, regeneriere einmalig...', feedbackLines)
+
+  let regenParsed: { _system?: string; _user?: string } | null = null
+  try {
+    const p = JSON.parse(generatorRawStr)
+    if (p._system && p._user) regenParsed = p
+  } catch {
+    regenParsed = null
+  }
+
+  const feedbackBlock = `\n\nHINWEIS: Ein vorheriger Entwurf hatte folgende Probleme — bitte vermeide sie:\n${feedbackLines.join('\n')}`
+
+  try {
+    const regenRaw = regenParsed
+      ? await callClaude(regenParsed._user! + feedbackBlock, regenParsed._system)
+      : await callClaude(generatorRawStr + feedbackBlock)
+
+    const regenVariants = parseVariants(regenRaw)
+    const { variants: regenSanitized, flagged: regenFlagged } = sanitizeVariants(regenVariants, signature)
+    if (regenFlagged.length > 0) {
+      console.warn('Qualitaetscheck: nach Regenerierung weiterhin Probleme:', regenFlagged)
+    }
+    return regenSanitized
+  } catch (e) {
+    console.error('Regenerierung fehlgeschlagen, nutze ersten Entwurf:', e)
+    return variants
+  }
+}
+
+// ─── RECOVERY-VARIANTE (eigenstaendig, kann parallel zum Qualitaetscheck laufen) ──
+async function buildRecoveryVariant(
+  reviewText: string,
+  reviewerName: string,
+  settings: any
+): Promise<{ label: string; text: string; isRecovery: true } | null> {
+  try {
+    const recoveryPrompt_str = buildRecoveryPrompt(reviewText, reviewerName, settings)
+    let recoveryRaw: string
+    try {
+      const recoveryParsed = JSON.parse(recoveryPrompt_str)
+      if (recoveryParsed._system && recoveryParsed._user) {
+        recoveryRaw = await callClaude(recoveryParsed._user, recoveryParsed._system)
+      } else {
+        recoveryRaw = await callClaude(recoveryPrompt_str)
+      }
+    } catch {
+      recoveryRaw = await callClaude(recoveryPrompt_str)
+    }
+
+    let recoveryJson = recoveryRaw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
+    const rs = recoveryJson.indexOf('{')
+    const re = recoveryJson.lastIndexOf('}')
+    if (rs !== -1 && re !== -1) {
+      recoveryJson = recoveryJson.substring(rs, re + 1)
+      const parsed = JSON.parse(recoveryJson)
+      if (parsed.text) {
+        const cleanText = (t: string) => t.replace(/\n\n/g, ' ').replace(/\n/g, ' ').trim()
+        return { label: parsed.label || 'Deeskalierend', text: cleanText(parsed.text), isRecovery: true }
+      }
+    }
+    return null
+  } catch (e) {
+    console.error('Recovery generation failed:', e)
+    return null
   }
 }
 
@@ -701,98 +837,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // ── SCHRITT 1b: Post-Processing (Regex, deterministisch) ──────────────
-    const { variants: sanitized, flagged } = sanitizeVariants(generatedVariants, signature)
+    const { variants: sanitized, flagged, issuesByVariant } = sanitizeVariants(generatedVariants, signature)
     if (flagged.length > 0) {
       console.warn('sanitize: verbotene Muster gefunden:', flagged)
     }
     generatedVariants = sanitized
 
-    // ── SCHRITT 2: Judge ──────────────────────────────────────────────────
+    // ── SCHRITT 2 + 3: Qualitaetscheck (Judge + ggf. einmalige Regenerierung)
+    // und Recovery (nur bei 1–2 Sternen) ───────────────────────────────────
+    // Laufen parallel, da sie unabhaengig voneinander sind: Recovery braucht
+    // weder die 3 Varianten noch das Judge-Ergebnis.
     const mode = classify(stars, reviewText)
-    let finalVariants = generatedVariants
 
-    // Judge läuft nur bei CONTENT-Modi und nicht bei 5-Sternen (zu einfach, Kosten sparen)
-    if (mode !== 'EMPTY_POSITIVE' && mode !== 'EMPTY_NEGATIVE' && stars < 5) {
-      try {
-        const judgePrompt = buildJudgePrompt(generatedVariants, reviewText, signature)
-        const judgeRaw = await callClaude(judgePrompt)
+    const [checkedVariants, recoveryVariant] = await Promise.all([
+      qualityCheckAndFix(generatedVariants, issuesByVariant, mode, stars, reviewText, signature, generatorRaw_str),
+      stars <= 2 ? buildRecoveryVariant(reviewText, reviewerName, settings) : Promise.resolve(null),
+    ])
 
-        let judgeJson = judgeRaw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
-        const js = judgeJson.indexOf('{')
-        const je = judgeJson.lastIndexOf('}')
-        if (js !== -1 && je !== -1) {
-          judgeJson = judgeJson.substring(js, je + 1)
-          const judgeResult = JSON.parse(judgeJson)
-
-          // Schwache Varianten neu generieren
-          const needsRegen = ['variant1', 'variant2', 'variant3'].some(
-            k => judgeResult[k]?.ok === false
-          )
-
-          if (needsRegen) {
-            console.warn('Judge: Schwache Varianten gefunden, regeneriere...',
-              JSON.stringify(judgeResult))
-
-            // Feedback in den Prompt einbauen und neu generieren
-            const feedbackLines = ['variant1', 'variant2', 'variant3']
-              .filter(k => judgeResult[k]?.ok === false)
-              .map(k => `${judgeResult[k].reason}`)
-              .join('\n')
-
-            const regenParsed = JSON.parse(generatorRaw_str)
-            const regenUser = regenParsed._user
-              ? `${regenParsed._user}\n\nHINWEIS: Ein vorheriger Entwurf hatte folgende Probleme — bitte vermeide sie:\n${feedbackLines}`
-              : `${generatorRaw_str}\n\nHINWEIS: Ein vorheriger Entwurf hatte folgende Probleme — bitte vermeide sie:\n${feedbackLines}`
-
-            try {
-              const regenRaw = regenParsed._system
-                ? await callClaude(regenUser, regenParsed._system)
-                : await callClaude(regenUser)
-              finalVariants = parseVariants(regenRaw)
-            } catch (e) {
-              console.error('Regenerierung fehlgeschlagen, nutze ersten Entwurf:', e)
-              finalVariants = generatedVariants
-            }
-          }
-        }
-      } catch (e) {
-        console.error('Judge fehlgeschlagen, nutze ersten Entwurf:', e)
-        finalVariants = generatedVariants
-      }
-    }
-
-    // ── SCHRITT 3: Recovery (nur bei 1–2 Sternen) ─────────────────────────
-    if (stars <= 2) {
-      try {
-        const recoveryPrompt_str = buildRecoveryPrompt(reviewText, reviewerName, settings)
-        let recoveryRaw: string
-        try {
-          const recoveryParsed = JSON.parse(recoveryPrompt_str)
-          if (recoveryParsed._system && recoveryParsed._user) {
-            recoveryRaw = await callClaude(recoveryParsed._user, recoveryParsed._system)
-          } else {
-            recoveryRaw = await callClaude(recoveryPrompt_str)
-          }
-        } catch {
-          recoveryRaw = await callClaude(recoveryPrompt_str)
-        }
-        let recoveryJson = recoveryRaw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
-        const rs = recoveryJson.indexOf('{')
-        const re = recoveryJson.lastIndexOf('}')
-        if (rs !== -1 && re !== -1) {
-          recoveryJson = recoveryJson.substring(rs, re + 1)
-          const parsed = JSON.parse(recoveryJson)
-          if (parsed.text) {
-            const cleanText = (t: string) => t.replace(/\n\n/g, ' ').replace(/\n/g, ' ').trim()
-            finalVariants = [
-              ...finalVariants,
-              { label: parsed.label || 'Deeskalierend', text: cleanText(parsed.text), isRecovery: true }
-            ]
-          }
-        }
-      } catch (e) {
-        console.error('Recovery generation failed:', e)
-      }
+    let finalVariants: any[] = checkedVariants
+    if (recoveryVariant) {
+      finalVariants = [...finalVariants, recoveryVariant]
     }
 
     return res.status(200).json({ success: true, answers: finalVariants })
