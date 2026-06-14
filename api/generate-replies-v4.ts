@@ -13,7 +13,7 @@ function classify(rating: number, reviewText: string) {
   return 'CONTENT_NEGATIVE'
 }
 
-function buildPrompt(reviewText: string, rating: number, reviewerName: string, settings: any, reviewAnalysis?: string): string {
+function buildPrompt(reviewText: string, rating: number, reviewerName: string, settings: any): string {
   const {
     businessName = 'das Restaurant',
     cuisineType = '',
@@ -180,7 +180,14 @@ Bei positiven Bewertungen niemals: "Das freut uns sehr/riesig", "Danke fuer die 
 Starte bei Lob direkt mit einer echten Reaktion — nie mit einem generischen Dankeschoen.
 
 STRENGES FORMATIERUNGS-VERBOT (MENSCHLICHER SCHREIBSTIL):
-KEINE GEDANKENSTRICHE: Nutze UNTER KEINEN UMSTAENDEN das Zeichen "—" oder lange Bindestriche zur Satzabgrenzung oder fuer Einschuebe, in KEINER der drei Varianten. Nutze STATTDESSEN immer einen Punkt oder ein Komma, um Saetze zu trennen oder Zusaetze einzufuegen.
+KEINE GEDANKENSTRICHE — ABSOLUTES VERBOT:
+Verwende NIEMALS "–", "—" oder jeden anderen langen Bindestrich zur Satzabgrenzung oder fuer Einschuebe.
+Das gilt fuer ALLE drei Varianten ohne Ausnahme.
+FALSCH: "Das freut uns, – und noch mehr freut uns..."
+FALSCH: "Die Lautstaerke ist real – das gehoert dazu."
+RICHTIG: "Das freut uns. Und noch mehr freut uns..."
+RICHTIG: "Die Lautstaerke ist real. Das gehoert dazu."
+Ersetze JEDEN Gedankenstrich durch einen Punkt oder ein Komma. Immer.
 
 VERBOT VON TAGESZEIT-BEZUEGEN: STRENG VERBOTEN: Verwende NIEMALS Woerter wie "Abend", "Abendessen", "Gruppenabend", "Nacht", "Morgen", "Mittag", "Mittagessen", "Fruehstueck" oder andere Tageszeit-Bezuege, auch wenn die Bewertung selbst eine Tageszeit nennt. Nutze IMMER neutrale Begriffe wie "Besuch", "Aufenthalt", "Zeit bei uns", "Besuch bei uns", "Erlebnis" oder "Termin bei uns".
 ALLE VARIANTEN MUESSEN DIESE REGEL EINHALTEN. SCHREIBE NIEMALS "ABEND", "MORGEN" ODER "MITTAG".
@@ -200,24 +207,21 @@ Nutze stattdessen diese souveraenen Alternativen je nach Variante:
 - Bei FOKUS AUF KLAERUNG: Komplett ohne Entschuldigung einsteigen. Direkt auf die Loesung gehen.
   Erlaubt: "Klingt, als haette der Besuch bei euch nicht den Eindruck hinterlassen, den wir uns wuenschen."
 
-ANTWORTSTRUKTUR — 3 SLOTS + ABSCHLUSS:
+Antwortstruktur:
 
 Slot 1 - Emotionaler Stossdaempfer:
-Erste echte Reaktion auf das was der Gast erlebt hat. Verstaendnis zeigen ohne zu dramatisieren.
-Keine Erklaerung, keine Verteidigung. Wenn der Gast trotz Kritik empfiehlt oder lobt: das wahrnehmen und kurz wuerdigen.
+Erste emotionale Reaktion. Verstaendnis zeigen. Keine Erklaerung, keine Verteidigung.
 
-Slot 2 - Einordnung:
-Das Thema auf hoeherer Ebene benennen — ohne die Beschwerde woertlich zu wiederholen.
-Ein Satz. Kategorien: Qualitaet / Ablauf / Umgang / Atmosphaere.
-Mehrere Probleme: als Gesamteindruck zusammenfassen, niemals aufzaehlen.
-Wenn strukturelle Gegebenheiten kritisiert werden (Laerm, Groesse, Auslastung): sachlich einordnen, nicht entschuldigen.
+Slot 2 - Abstraktion / Einordnung:
+Das Problem auf hoeherer Ebene einordnen ohne die Beschwerde zu wiederholen.
+Kategorien: Qualitaet / Ablauf / Umgang / Sorgfalt
+Mehrere gleichwertige Probleme: Komplexfall-Satz, keine Aufzaehlung.
 
-Slot 3 - Haltung ohne leeres Versprechen:
-Kein "wir arbeiten daran", kein "intern besprochen", kein Commitment das nichts bedeutet.
-Stattdessen: ehrliche Einordnung. Entweder wir stehen zur Entscheidung (Hausregel, Konzept, Atmosphaere) — oder wir gestehen ein dass wir ohne mehr Kontext nicht wissen was genau passiert ist.
-NICHT: "Das entspricht nicht unserem Anspruch" / "Wir gehen der Sache nach" / "intern nachgeschaerft".
-
-Abschluss (Pflicht, nach Slot 3):
+Slot 3 - Einordnung ohne Versprechen:
+Kein leeres Commitment. Kein "wir besprechen das intern" oder "wir arbeiten daran".
+Stattdessen: Ehrlich eingestehen dass wir ohne mehr Kontext nicht genau wissen was passiert ist.
+Natuerliche Formulierungen: "Was genau passiert ist, wissen wir so nicht." / "Das koennen wir so von hier aus nicht einschaetzen." / "Damit wir das einordnen koennen, brauchen wir mehr."
+NICHT: "Wir gehen der Sache intern nach" / "Wir analysieren den Vorfall" / "intern nachgeschaerft" / "Das entspricht nicht unserem Anspruch" / "Das ist nicht das Erlebnis das wir bieten wollen" / jede sinngemaesse Variante davon.
 
 Abschluss (einheitlich fuer alle Sterne):
 ${rating <= 2 ? '- Bei 1-2 Sternen: Kein Gespraechsangebot, keine Aufforderung zur Kontaktaufnahme. Stattdessen einen dieser Saetze GENAU SO, WORTWOERTLICH (nur in den Satzbau eingepasst, keine Umformulierung), passend zum Ton der jeweiligen Variante: "Das letzte Wort gehoert dem naechsten Besuch." / "Lass uns beim naechsten Besuch eine andere Geschichte erzaehlen." / "Wir freuen uns auf die naechste Runde."'
@@ -261,13 +265,6 @@ STRENGE FORMULIERUNGS-REGEL: Kopiere NICHT in jeder Variante denselben Wortlaut.
 BEI KRITIK AN LAUTSTAERKE ODER AMBIENTE:
 Je nach Auslastung kann es in einem gut besuchten Restaurant laut und turbulent werden. Kurz anerkennen, nicht dramatisieren.`
 
-  // Analyse-Block — gibt dem Generator Kontext was wirklich wichtig ist
-  const analyseBlock = reviewAnalysis
-    ? `\nBEWERTUNGS-ANALYSE (als Leitfaden — nicht wortwörtlich verwenden):
-${reviewAnalysis}
-Wichtig: Wenn der Gast trotz Kritik eine Empfehlung ausspricht, muss die Antwort das wahrnehmen.\n`
-    : ''
-
   // User-Message: nur die Daten — Bewertung + Kontext + Aufgabe
   const userMessage = `${langInstruction}
 
@@ -278,7 +275,7 @@ ${nameRule}
 
 BEWERTUNG (${rating} Sterne):
 "${reviewText}"
-${analyseBlock}
+
 ${alreadyHandled}
 
 Abschluss: Waehle passend zum Ton "Viele Grüße, ${signature}" oder "Herzliche Grüße, ${signature}" oder "Beste Grüße, ${signature}"
@@ -333,14 +330,14 @@ Enthaelt die Antwort: "intern nachgeschaerft" / "nehmen wir sehr ernst" / "entsp
 → SCHWACH wenn ja.
 
 3. EMPFEHLUNG IGNORIERT
-Hat der Gast trotz Kritik das Restaurant empfohlen oder positiv geendet — und die Antwort ignoriert das komplett?
+Hat der Gast trotz Kritik das Restaurant empfohlen oder positiv geendet, und die Antwort ignoriert das komplett?
 → SCHWACH wenn ja.
 
-4. KLINGT ES WIE EIN MENSCH?
-Klingt die Antwort wie ein echter Gastronom oder wie generierter Kundenservice-Text?
+4. GEDANKENSTRICHE UND MENSCHLICHKEIT
+Enthaelt die Antwort einen Gedankenstrich ("–" oder "—")? → SOFORT SCHWACH. Keine Ausnahme.
 Fehlende Subjekte ("Verstehen Ihren Aerger" statt "Wir verstehen") → SCHWACH.
-Leere Worthuelsen ohne echten Inhalt → SCHWACH.
-Variante 3 darf kurz sein (max. 3 Saetze) — kurz ist kein Fehler.
+Klingt es wie Kundenservice-Text statt wie ein echter Gastronom? → SCHWACH.
+Variante 3 darf kurz sein (max. 3 Saetze). Kurz ist kein Fehler.
 
 AUSGABE — NUR dieses JSON, kein anderer Text:
 {
@@ -361,11 +358,6 @@ function buildRecoveryPrompt(reviewText: string, reviewerName: string, settings:
     contactEmail = '',
     responseSignature = '',
     responseLanguage = 'Deutsch',
-    description = '',
-    restaurantType = '',
-    cuisineType = '',
-    restaurantAtmosphere = '',
-    uniqueSellingPoints = '',
   } = settings || {}
 
   const duSie = salutation === 'Du' ? 'Du/Dein (Duzen)' : 'Sie/Ihr (Siezen)'
@@ -396,18 +388,9 @@ Ziel: Vertrauen zurückgewinnen und persönliche Klärung anbieten.
 Länge: 3 bis 4 vollständige, fließende Sätze.
 Korrekte Zeichensetzung — jeder Hauptsatz beginnt nach einem Punkt.`
 
-  const recoveryContext = [
-    description          && `Beschreibung: ${description}`,
-    restaurantType       && `Typ: ${restaurantType}`,
-    cuisineType          && `Kueche: ${cuisineType}`,
-    restaurantAtmosphere && `Atmosphaere: ${restaurantAtmosphere}`,
-    uniqueSellingPoints  && `Besonderheiten: ${uniqueSellingPoints}`,
-  ].filter(Boolean).join('\n')
-
   const userMessage = `${langInstruction} Anredeform: ${duSie}
 
 Restaurant: ${businessName}
-${recoveryContext}
 ${contactEmail ? `Kontakt-E-Mail: ${contactEmail}` : ''}
 
 Bewertung von ${firstNameClean || 'einem Gast'} (1-2 Sterne):
@@ -503,44 +486,6 @@ function parseVariants(raw: string): { label: string; text: string; isRecovery?:
   ]
 }
 
-// ─── REVIEW ANALYSE ────────────────────────────────────────────────────────
-// Liest die Bewertung durch und extrahiert was wirklich wichtig ist —
-// damit der Generator gezielt antworten kann statt blind loszuschreiben.
-async function analyzeReview(reviewText: string, rating: number): Promise<string> {
-  const wordCount = reviewText.trim().split(/\s+/).filter(Boolean).length
-  if (wordCount < 6) return ''
-
-  const systemPrompt = `Du analysierst eine einzelne Google-Bewertung fuer ein Restaurant.
-Deine Aufgabe: Herausfinden was der Gast wirklich meint — damit die Antwort gezielt und menschlich wirkt.
-Antworte NUR mit dem JSON. Kein weiterer Text, keine Erklaerung.`
-
-  const userMessage = `Bewertung (${rating} Sterne):
-"${reviewText}"
-
-Analysiere und antworte NUR mit diesem JSON:
-{
-  "emotionalerKern": "Was hat den Gast wirklich beschaeftigt — nicht die Fakten, sondern das Gefuehl dahinter. Ein Satz.",
-  "hauptthema": "Das eine wichtigste Thema der Bewertung — ein Stichwort (z.B. Wartezeit, Service, Preis-Leistung)",
-  "nebenpunkte": ["weitere erwaehnte Punkte, max. 2, nur wenn wirklich relevant"],
-  "lob": ["was der Gast ausdruecklich positiv erwaehnt hat — leer lassen wenn nichts"],
-  "empfiehltRestaurant": true,
-  "ton": "sachlich | enttaeuscht | emotional | aggressiv | ironisch | erfreut | gemischt",
-  "erwartetReaktion": true,
-  "fazit": "Ein Satz: Was braucht diese Antwort damit der Gast sich wirklich gehoert fuehlt?"
-}`
-
-  try {
-    const result = await callClaude(userMessage, systemPrompt)
-    const start = result.indexOf('{')
-    const end = result.lastIndexOf('}')
-    if (start === -1 || end === -1) return ''
-    return result.substring(start, end + 1)
-  } catch (e) {
-    console.error('Review-Analyse fehlgeschlagen, weiter ohne:', e)
-    return ''
-  }
-}
-
 // ─── CONTEXT CHECK ─────────────────────────────────────────────────────────
 // Prüft ob die Description genug Kontext liefert um die Bewertung sicher zu beantworten.
 // Läuft VOR der eigentlichen Generierung. Ändert nichts am bestehenden Code darunter.
@@ -622,13 +567,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       })
     }
 
-    // ── SCHRITT 0b: Review analysieren ───────────────────────────────────
-    const reviewAnalysis = await analyzeReview(reviewText, stars)
-
-    // ── SCHRITT 1: Generator ──────────────────────────────────────────────
-    const generatorRaw_str = buildPrompt(reviewText, stars, reviewerName, settings, reviewAnalysis)
+    // ── SCHRITT 1: Generator (Gemini) ─────────────────────────────────────
+    const generatorRaw_str = buildPrompt(reviewText, stars, reviewerName, settings)
     let generatorRaw: string
 
+    // CONTENT-Modi liefern JSON mit _system/_user — geht an Gemini
+    // EMPTY-Modi liefern direkt den Prompt-String
     try {
       const parsed = JSON.parse(generatorRaw_str)
       if (parsed._system && parsed._user) {
@@ -640,55 +584,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       generatorRaw = await callClaude(generatorRaw_str)
     }
 
-    let generatedVariants = parseVariants(generatorRaw)
+    const generatedVariants = parseVariants(generatorRaw)
 
-    // ── SCHRITT 2: Judge — prueft, gibt Feedback, Generator schreibt bei Bedarf neu ──
+    // ── SCHRITT 2: Judge deaktiviert — Gemini Output direkt verwenden ───────
     const mode = classify(stars, reviewText)
     let finalVariants = generatedVariants
-
-    // Judge nur bei CONTENT-Modi sinnvoll (nicht bei leeren Bewertungen)
-    if (mode !== 'EMPTY_POSITIVE' && mode !== 'EMPTY_NEGATIVE') {
-      try {
-        const judgePrompt = buildJudgePrompt(generatedVariants, reviewText, signature)
-        const judgeRaw = await callClaude(judgePrompt)
-        const judgeStart = judgeRaw.indexOf('{')
-        const judgeEnd = judgeRaw.lastIndexOf('}')
-
-        if (judgeStart !== -1 && judgeEnd !== -1) {
-          const judgeResult = JSON.parse(judgeRaw.substring(judgeStart, judgeEnd + 1))
-
-          // Fuer jede schwache Variante: Generator neu aufrufen mit Judge-Feedback
-          const variantKeys = ['variant1', 'variant2', 'variant3'] as const
-          const needsRewrite = variantKeys.some(k => judgeResult[k]?.ok === false)
-
-          if (needsRewrite) {
-            // Feedback zusammenbauen und an Generator schicken
-            const feedbackLines = variantKeys
-              .filter(k => judgeResult[k]?.ok === false)
-              .map((k, i) => `Variante ${i + 1}: ${judgeResult[k].reason}`)
-              .join('\n')
-
-            const rewriteParsed = JSON.parse(generatorRaw_str)
-            const rewriteUser = rewriteParsed._user
-              ? `${rewriteParsed._user}\n\nQUALITAETSFEEDBACK — bitte diese Varianten verbessern:\n${feedbackLines}`
-              : `${generatorRaw_str}\n\nQUALITAETSFEEDBACK — bitte diese Varianten verbessern:\n${feedbackLines}`
-
-            const rewriteSystem = rewriteParsed._system || undefined
-            const rewriteRaw = await callClaude(rewriteUser, rewriteSystem)
-            const rewrittenVariants = parseVariants(rewriteRaw)
-
-            // Nur schwache Varianten ersetzen, gute behalten
-            finalVariants = generatedVariants.map((v, i) => {
-              const key = variantKeys[i]
-              return judgeResult[key]?.ok === false ? rewrittenVariants[i] : v
-            })
-          }
-        }
-      } catch (e) {
-        console.error('Judge fehlgeschlagen, weiter mit Original:', e)
-        finalVariants = generatedVariants
-      }
-    }
 
     // ── SCHRITT 3: Recovery (nur bei 1–2 Sternen) ─────────────────────────
     if (stars <= 2) {
