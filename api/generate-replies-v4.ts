@@ -535,6 +535,7 @@ Bewertung von ${firstNameClean || 'einem Gast'} (${stars} Sterne):
 "${reviewText}"
 
 Schreibe EINE freie, persoenliche Antwort. Laenge passend zum Anlass (1 bis 4 Saetze).
+Beginne die Antwort, indem du den konkreten Missstand aus der Bewertung kurz und direkt ansprichst — in eigenen Worten, ohne ihn wortwoertlich zu wiederholen. Der erste Satz soll kurz UND spezifisch sein, nicht generisch. Keine langen Einleitungen, kein "Es tut uns leid zu hoeren, dass...". Der Ton soll menschlich und direkt klingen, als wuerde jemand das Thema offen ansprechen.
 ${firstNameClean ? `Beginne mit "Hallo ${firstNameClean},"` : 'Kein Name bekannt — ohne persoenliche Anrede beginnen.'}
 Endet mit: ${signature}
 
