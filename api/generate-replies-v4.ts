@@ -499,6 +499,8 @@ Ersetze jeden Gedankenstrich durch einen Punkt oder ein Komma.
 
 KEINE DOPPELPUNKT-UEBERSCHRIFTEN: Nutze niemals einen Doppelpunkt, um einen neuen Gedanken wie eine Ueberschrift oder ein Label einzuleiten (z.B. "Zur Tischzeit:", "Was ich mir zu Herzen nehme:", "Zu dem Hinweis:"). Schreib in durchgehenden Saetzen.
 
+SPRECHSTIL STATT SCHREIBSTIL: Vermeide literarische Verstaerker-Konstruktionen wie "kein einziges X", "nicht ein X", "schlichtweg", "voellig". Pruefe bei jedem Satz: Wuerde ein Gastronom das im persoenlichen Gespraech GENAUSO SAGEN, oder klingt das nach geschriebenem Text?
+
 UEBERGAENGE ZWISCHEN GEDANKEN: Wenn die Antwort mehrere unterschiedliche Gedanken enthaelt (z.B. Lob, Sachinfo zu einer Regel, Reaktion auf die Art der Kommunikation), verbinde diese mit natuerlichen Uebergangsworten oder -saetzen (z.B. "Dazu", "Was [Thema] angeht", "Davon unabhaengig", "Gleichzeitig", "Ansonsten"). Reihe sie nicht unverbunden aneinander.
 
 FALLS NICHTS POSITIVES ERWAEHNT WIRD: Erfinde KEIN Lob, das nicht in der Bewertung steht. Beginne in diesem Fall direkt mit einer ehrlichen Reaktion auf das eigentliche Anliegen, ohne erzwungenen positiven Einstieg.
