@@ -1,7 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY
 
 function classify(rating: number, reviewText: string) {
   const wordCount = reviewText.trim().split(/\s+/).filter(Boolean).length
@@ -28,7 +27,6 @@ function buildPrompt(reviewText: string, rating: number, reviewerName: string, s
     restaurantAtmosphere = '',
   } = settings || {}
 
-  // V1 duzt immer, V2 siezt immer, V3 folgt den Settings
   const duSieAnrede = salutation === 'Du' ? 'Du/Dein (Duzen)' : 'Sie/Ihr (Siezen)'
   const anredeHinweis = salutation === 'Du'
     ? 'Nutze konsequent die Du-Form (du, dein, dir). Schreibe "dir" und "dein" klein.'
@@ -50,10 +48,6 @@ function buildPrompt(reviewText: string, rating: number, reviewerName: string, s
   const firstNameCapitalized = firstName
     ? firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase()
     : ''
-
-  const begruessungV2 = salutation === 'Du'
-    ? `Hallo ${firstNameCapitalized},`
-    : `Hallo ${firstNameCapitalized},`
 
   const nameRule = firstNameCapitalized
     ? `PERSONALISIERUNG UND BEGRUESSUNGS-PFLICHT:
@@ -160,6 +154,13 @@ AUSGABE — NUR dieses JSON:
 Anerkenne diese Reaktion kurz — aber mache klar: sie hebt den Schrecken oder Vertrauensverlust nicht auf.
 Nicht so tun als waere noch nichts passiert.`
     : ''
+
+  // ─── STUFE 1: Analyse-Erweiterung ─────────────────────────────────────────
+  // Drei zusätzliche Analyse-Dimensionen die den Ton der Antwort präzisieren.
+  const analyseErweiterung = `ANALYSE DER BEWERTUNG (vor dem Schreiben intern durchführen, nicht ausgeben):
+1. EMPFEHLUNG TROTZ KRITIK: Empfiehlt der Gast das Restaurant trotz genannter Mängel (explizit oder implizit)? Wenn ja, muss die Antwort das anerkennen — nicht ignorieren.
+2. EMOTIONALER KERN: Was ist der emotionale Grundton? Enttäuschung (Erwartung nicht erfüllt), Ärger (etwas ist aktiv schiefgelaufen), oder neutrale Beobachtung (sachliche Feststellung ohne emotionalen Aufwand)? Der Ton der Antwort richtet sich danach.
+3. ERWARTUNGSHALTUNG: Schreibt der Gast für andere Gäste (Hinweis-Charakter) oder erwartet er eine direkte Reaktion des Restaurants? Bei reinem Hinweis-Charakter: keine übertriebene Persönlichkeit, sachlicher und kürzer. Bei Erwartung einer Reaktion: direkte Ansprache, mehr Wärme.`
 
   // System-Prompt: Original Google AI Studio Instructions — kurz und sauber
   const systemPrompt = `Erstelle natuerliche, menschliche und professionelle Antworten auf Google-Bewertungen.
@@ -273,6 +274,8 @@ ${context}
 
 ${nameRule}
 
+${analyseErweiterung}
+
 BEWERTUNG (${rating} Sterne):
 "${reviewText}"
 
@@ -298,8 +301,6 @@ AUSGABE — NUR dieses JSON, kein anderer Text:
 }
 
 // ─── JUDGE PROMPT ──────────────────────────────────────────────────────────
-// Der Judge PRUEFT NUR. Er schreibt nie selbst neu.
-// Wenn eine Variante schwach ist, gibt er Feedback zurueck — der Generator schreibt neu.
 function buildJudgePrompt(
   variants: { label: string; text: string }[],
   reviewText: string,
@@ -316,7 +317,7 @@ Variante 1 (${variants[0]?.label}): "${variants[0]?.text}"
 Variante 2 (${variants[1]?.label}): "${variants[1]?.text}"
 Variante 3 (${variants[2]?.label}): "${variants[2]?.text}"
 
-PRUEFE JEDE VARIANTE AUF DIESE 4 PUNKTE:
+PRUEFE JEDE VARIANTE AUF DIESE 6 PUNKTE:
 
 1. NACHERZAEHLUNG
 Wiederholt die Antwort den Fehler oder die Kritik woertlich?
@@ -324,20 +325,33 @@ Beispiel schlecht: "Dass Sie 45 Minuten warten mussten und die Toiletten zu klei
 Beispiel gut: Einordnung als Gesamteindruck ohne Details zu nennen.
 → SCHWACH wenn ja.
 
-2. VERBOTENE PHRASEN
+2. VERBOTENE PHRASEN (corporate-speak)
 Enthaelt die Antwort: "intern nachgeschaerft" / "nehmen wir sehr ernst" / "entspricht nicht unserem Anspruch" /
 "Massnahmen ergriffen" / "Team sensibilisiert" / "Konsequenzen gezogen" / "Das ist nicht das Erlebnis das wir bieten wollen"?
 → SCHWACH wenn ja.
 
-3. EMPFEHLUNG IGNORIERT
+3. VERBOTENE OPENER (Dankesfloskeln)
+Beginnt die Antwort (nach der Begruessung) mit einer dieser Formeln:
+"Vielen Dank fuer Ihre/deine Bewertung", "Vielen Dank fuer Ihr/dein Feedback",
+"Danke fuer die Einschaetzung", "Danke fuer Ihr/dein Feedback",
+"Es freut uns sehr", "Das freut uns sehr", "Wir freuen uns ueber Ihr/dein Feedback",
+"Vielen Dank fuer Ihre/deine ausfuehrliche Einschaetzung"?
+→ SOFORT SCHWACH. Keine Ausnahme. Das ist das haeufigste und storendste Problem.
+
+4. EMPFEHLUNG IGNORIERT
 Hat der Gast trotz Kritik das Restaurant empfohlen oder positiv geendet, und die Antwort ignoriert das komplett?
 → SCHWACH wenn ja.
 
-4. GEDANKENSTRICHE UND MENSCHLICHKEIT
+5. GEDANKENSTRICHE UND MENSCHLICHKEIT
 Enthaelt die Antwort einen Gedankenstrich ("–" oder "—")? → SOFORT SCHWACH. Keine Ausnahme.
 Fehlende Subjekte ("Verstehen Ihren Aerger" statt "Wir verstehen") → SCHWACH.
 Klingt es wie Kundenservice-Text statt wie ein echter Gastronom? → SCHWACH.
 Variante 3 darf kurz sein (max. 3 Saetze). Kurz ist kein Fehler.
+
+6. SINGULAR/PLURAL-KONSISTENZ
+Spricht die Antwort mal als "ich" und mal als "wir", obwohl die Signatur ein Team ist?
+Beispiel schlecht: "da gebe ich Ihnen recht" wenn die Signatur "Das Team von ..." ist.
+→ SCHWACH wenn ja.
 
 AUSGABE — NUR dieses JSON, kein anderer Text:
 {
@@ -358,6 +372,13 @@ function buildRecoveryPrompt(reviewText: string, reviewerName: string, settings:
     contactEmail = '',
     responseSignature = '',
     responseLanguage = 'Deutsch',
+    // ── STUFE 3: voller Kontext für Recovery ──
+    description = '',
+    restaurantType = '',
+    cuisineType = '',
+    restaurantAtmosphere = '',
+    uniqueSellingPoints = '',
+    priceRange = '',
   } = settings || {}
 
   const duSie = salutation === 'Du' ? 'Du/Dein (Duzen)' : 'Sie/Ihr (Siezen)'
@@ -373,6 +394,17 @@ function buildRecoveryPrompt(reviewText: string, reviewerName: string, settings:
     ? 'Respond in English only.'
     : 'Antworte auf Deutsch.'
 
+  // Kontext-Block — identisch zum Hauptprompt
+  const recoveryContext = [
+    `Restaurant: ${businessName}`,
+    description          && `Beschreibung: ${description}`,
+    restaurantType       && `Typ: ${restaurantType}`,
+    cuisineType          && `Küche: ${cuisineType}`,
+    priceRange           && `Preisklasse: ${priceRange}`,
+    restaurantAtmosphere && `Atmosphäre: ${restaurantAtmosphere}`,
+    uniqueSellingPoints  && `Besonderheiten: ${uniqueSellingPoints}`,
+  ].filter(Boolean).join('\n')
+
   const systemPrompt = `Erstelle eine deeskalierende, menschliche und verantwortungsvolle Antwort auf eine sehr negative Google-Bewertung.
 Schreibe wie ein aufmerksamer Gastronom — nicht wie Kundenservice, PR-Agentur oder KI.
 
@@ -383,6 +415,7 @@ Keine Ursachen erfinden.
 Keine leeren Floskeln.
 Natürliche Sprache, kurze Sätze.
 Nutze echte Umlaute: ä, ö, ü, ß — niemals ae, oe, ue als Ersatz.
+Nutze für alle Beschreibungen (Typ, Atmosphäre, Konzept) ausschließlich die Angaben aus dem Restaurantprofil.
 
 Ziel: Vertrauen zurückgewinnen und persönliche Klärung anbieten.
 Länge: 3 bis 4 vollständige, fließende Sätze.
@@ -390,7 +423,8 @@ Korrekte Zeichensetzung — jeder Hauptsatz beginnt nach einem Punkt.`
 
   const userMessage = `${langInstruction} Anredeform: ${duSie}
 
-Restaurant: ${businessName}
+RESTAURANTPROFIL:
+${recoveryContext}
 ${contactEmail ? `Kontakt-E-Mail: ${contactEmail}` : ''}
 
 Bewertung von ${firstNameClean || 'einem Gast'} (1-2 Sterne):
@@ -407,38 +441,12 @@ AUSGABE — NUR dieses JSON:
   return JSON.stringify({ _system: systemPrompt, _user: userMessage })
 }
 
-// ─── HELPER: GEMINI API CALL (Generator) ──────────────────────────────────
-async function callGemini(userMessage: string, systemPrompt?: string): Promise<string> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${GEMINI_API_KEY}`
-
-  const body: any = {
-    contents: [{ parts: [{ text: userMessage }] }],
-    generationConfig: { maxOutputTokens: 4000, temperature: 0.7 },
-  }
-  if (systemPrompt) {
-    body.systemInstruction = { parts: [{ text: systemPrompt }] }
-  }
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  })
-
-  if (!response.ok) {
-    const err = await response.json()
-    throw new Error(`Gemini API Fehler: ${JSON.stringify(err)}`)
-  }
-
-  const data = await response.json()
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || ''
-}
-
-// ─── HELPER: CLAUDE API CALL (Judge & Recovery) ────────────────────────────
+// ─── HELPER: CLAUDE API CALL ───────────────────────────────────────────────
 async function callClaude(userMessage: string, systemPrompt?: string): Promise<string> {
   const body: any = {
     model: 'claude-sonnet-4-6',
     max_tokens: 4000,
+    temperature: 0.4,
     messages: [{ role: 'user', content: userMessage }],
   }
   if (systemPrompt) {
@@ -486,11 +494,57 @@ function parseVariants(raw: string): { label: string; text: string; isRecovery?:
   ]
 }
 
+// ─── STUFE 2a: POST-PROCESSING — deterministischer Regex-Check ─────────────
+// Läuft nach parseVariants. Kein KI-Aufruf, kein API-Call.
+// Verbotene Muster die die KI trotz Prompt-Verbot regelmäßig produziert.
+const FORBIDDEN_OPENERS = [
+  /vielen?\s+dank\s+f[üu]r\s+(ihre?|deine?|ihr)\s+(ausf[üu]hrliche?\s+)?(bewertung|feedback|einsch[äa]tzung|rezension)/i,
+  /danke\s+f[üu]r\s+(ihre?|deine?|ihr)\s+(ausf[üu]hrliche?\s+)?(bewertung|feedback|einsch[äa]tzung|rezension)/i,
+  /danke\s+f[üu]r\s+die\s+(ausf[üu]hrliche?\s+)?(bewertung|einsch[äa]tzung|r[üu]ckmeldung)/i,
+  /(es|das)\s+freut\s+uns\s+sehr/i,
+  /wir\s+freuen\s+uns\s+[üu]ber\s+(ihre?|deine?|ihr)\s+(bewertung|feedback)/i,
+]
+
+// Prüft ob eine Variante einen verbotenen Opener enthält.
+// Sucht im Text nach dem ersten Satz NACH der Begrüßung (Hallo X, / Hi X, / Hey X,).
+function hasForbiddenOpener(text: string): boolean {
+  // Begrüßung abschneiden: alles nach dem ersten Komma
+  const afterGreeting = text.replace(/^(hallo|hi|hey)\s+\w*,?\s*/i, '').trim()
+  return FORBIDDEN_OPENERS.some(pattern => pattern.test(afterGreeting))
+}
+
+// Singular/Plural-Inkonsistenz: "ich" + Team-Signatur
+function hasPronounMismatch(text: string, signature: string): boolean {
+  const isTeamSignature = /team|wir|restaurant/i.test(signature)
+  if (!isTeamSignature) return false
+  // "da gebe ich", "finde ich", "sehe ich" etc. — Einzelperson spricht für Team
+  return /\b(da\s+)?(gebe|finde|sehe|sage|denke|meine)\s+ich\b/i.test(text)
+}
+
+function sanitizeVariants(
+  variants: { label: string; text: string }[],
+  signature: string
+): { variants: { label: string; text: string }[]; flagged: string[] } {
+  const flagged: string[] = []
+
+  const checked = variants.map((v) => {
+    const issues: string[] = []
+    if (hasForbiddenOpener(v.text)) issues.push('forbidden_opener')
+    if (hasPronounMismatch(v.text, signature)) issues.push('pronoun_mismatch')
+    if (issues.length > 0) {
+      flagged.push(`${v.label}: ${issues.join(', ')}`)
+    }
+    return { ...v, _issues: issues }
+  })
+
+  return {
+    variants: checked.map(({ _issues, ...v }) => v),
+    flagged,
+  }
+}
+
 // ─── CONTEXT CHECK ─────────────────────────────────────────────────────────
-// Prüft ob die Description genug Kontext liefert um die Bewertung sicher zu beantworten.
-// Läuft VOR der eigentlichen Generierung. Ändert nichts am bestehenden Code darunter.
 async function checkContext(reviewText: string, description: string): Promise<{ ok: boolean; missing?: string }> {
-  // Wenn kein Text in der Bewertung — kein Kontext nötig, immer OK
   const wordCount = reviewText.trim().split(/\s+/).filter(Boolean).length
   if (wordCount < 6) return { ok: true }
 
@@ -529,7 +583,6 @@ Ist das Profil ausreichend um sicher zu antworten?`
     }
     return { ok: true }
   } catch (e) {
-    // Im Fehlerfall: immer OK — lieber generieren als blockieren
     console.error('Context check failed, proceeding anyway:', e)
     return { ok: true }
   }
@@ -567,12 +620,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       })
     }
 
-    // ── SCHRITT 1: Generator (Gemini) ─────────────────────────────────────
+    // ── SCHRITT 1: Generator (Claude) ─────────────────────────────────────
     const generatorRaw_str = buildPrompt(reviewText, stars, reviewerName, settings)
     let generatorRaw: string
 
-    // CONTENT-Modi liefern JSON mit _system/_user — geht an Gemini
-    // EMPTY-Modi liefern direkt den Prompt-String
     try {
       const parsed = JSON.parse(generatorRaw_str)
       if (parsed._system && parsed._user) {
@@ -584,11 +635,68 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       generatorRaw = await callClaude(generatorRaw_str)
     }
 
-    const generatedVariants = parseVariants(generatorRaw)
+    let generatedVariants = parseVariants(generatorRaw)
 
-    // ── SCHRITT 2: Judge deaktiviert — Gemini Output direkt verwenden ───────
+    // ── SCHRITT 1b: Post-Processing (Regex, deterministisch) ──────────────
+    const { variants: sanitized, flagged } = sanitizeVariants(generatedVariants, signature)
+    if (flagged.length > 0) {
+      console.warn('sanitize: verbotene Muster gefunden:', flagged)
+    }
+    generatedVariants = sanitized
+
+    // ── SCHRITT 2: Judge ──────────────────────────────────────────────────
     const mode = classify(stars, reviewText)
     let finalVariants = generatedVariants
+
+    // Judge läuft nur bei CONTENT-Modi (bei EMPTY-Modi gibt es keinen Freitext zu prüfen)
+    if (mode !== 'EMPTY_POSITIVE' && mode !== 'EMPTY_NEGATIVE') {
+      try {
+        const judgePrompt = buildJudgePrompt(generatedVariants, reviewText, signature)
+        const judgeRaw = await callClaude(judgePrompt)
+
+        let judgeJson = judgeRaw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
+        const js = judgeJson.indexOf('{')
+        const je = judgeJson.lastIndexOf('}')
+        if (js !== -1 && je !== -1) {
+          judgeJson = judgeJson.substring(js, je + 1)
+          const judgeResult = JSON.parse(judgeJson)
+
+          // Schwache Varianten neu generieren
+          const needsRegen = ['variant1', 'variant2', 'variant3'].some(
+            k => judgeResult[k]?.ok === false
+          )
+
+          if (needsRegen) {
+            console.warn('Judge: Schwache Varianten gefunden, regeneriere...',
+              JSON.stringify(judgeResult))
+
+            // Feedback in den Prompt einbauen und neu generieren
+            const feedbackLines = ['variant1', 'variant2', 'variant3']
+              .filter(k => judgeResult[k]?.ok === false)
+              .map(k => `${judgeResult[k].reason}`)
+              .join('\n')
+
+            const regenParsed = JSON.parse(generatorRaw_str)
+            const regenUser = regenParsed._user
+              ? `${regenParsed._user}\n\nHINWEIS: Ein vorheriger Entwurf hatte folgende Probleme — bitte vermeide sie:\n${feedbackLines}`
+              : `${generatorRaw_str}\n\nHINWEIS: Ein vorheriger Entwurf hatte folgende Probleme — bitte vermeide sie:\n${feedbackLines}`
+
+            try {
+              const regenRaw = regenParsed._system
+                ? await callClaude(regenUser, regenParsed._system)
+                : await callClaude(regenUser)
+              finalVariants = parseVariants(regenRaw)
+            } catch (e) {
+              console.error('Regenerierung fehlgeschlagen, nutze ersten Entwurf:', e)
+              finalVariants = generatedVariants
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Judge fehlgeschlagen, nutze ersten Entwurf:', e)
+        finalVariants = generatedVariants
+      }
+    }
 
     // ── SCHRITT 3: Recovery (nur bei 1–2 Sternen) ─────────────────────────
     if (stars <= 2) {
