@@ -94,7 +94,7 @@ Das ist sehr kurz (${wordCount} ${wordCount === 1 ? 'Wort' : 'Woerter'}), aber e
     return `Du bist eine Hospitality Response Engine fuer "${businessName}".
 ${langInstruction}
 
-KONTEXT:
+KONTEXT (Hintergrundwissen fuer dich — NIEMALS woertlich oder als ganze Saetze in die Antwort uebernehmen, sondern nur sinngemaess und falls relevant einfliessen lassen):
 ${context}
 
 ${nameRule}
@@ -138,7 +138,7 @@ Das ist sehr kurz (${wordCount} ${wordCount === 1 ? 'Wort' : 'Woerter'}), aber e
     return `Du bist eine Hospitality Response Engine fuer "${businessName}".
 ${langInstruction}
 
-KONTEXT:
+KONTEXT (Hintergrundwissen fuer dich — NIEMALS woertlich oder als ganze Saetze in die Antwort uebernehmen, sondern nur sinngemaess und falls relevant einfliessen lassen):
 ${context}
 
 ${nameRule}
@@ -501,7 +501,7 @@ Korrekte Zeichensetzung — jeder Hauptsatz beginnt nach einem Punkt.`
 
   const userMessage = `${langInstruction} Anredeform: ${duSie}
 
-RESTAURANTPROFIL:
+RESTAURANTPROFIL (Hintergrundwissen — NIEMALS woertlich oder als ganze Saetze uebernehmen, nur sinngemaess einfliessen lassen):
 ${recoveryContext}
 ${contactEmail ? `Kontakt-E-Mail: ${contactEmail}` : ''}
 
