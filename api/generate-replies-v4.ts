@@ -520,7 +520,7 @@ ZUSAETZLICHER BAUSTEIN (testweise): Pruefe, ob die Bewertung beschreibt, WIE etw
 - WENN es ein Nebenaspekt zu einem anderen Hauptthema ist (z.B. Beschwerde ist eigentlich ueber eine Regel, aber die Art der Ansprache war zusaetzlich unpassend): ein kurzer, eigener Satz dazu, in eigenen Worten.
 - WENN nichts dazu in der Bewertung steht: keine Erwaehnung.
 
-ABSCHLUSS (immer, als letzter Satz vor der Signatur): ein nach vorne gerichteter Satz, eine Einladung, eine Erwartung fuers naechste Mal, oder ein konkretes Angebot. NIEMALS eine reine Gefuehlsaussage ("das nehme ich mir zu Herzen") als letzter Satz ohne Folge.
+ABSCHLUSS (immer, als letzter Satz vor der Signatur): ein nach vorne gerichteter Satz, formuliert als Standard oder Erwartung des RESTAURANTS, nicht als persoenliches Versprechen einer einzelnen Person. Was zeigt sich beim naechsten Besuch grundsaetzlich anders? NIEMALS eine reine Gefuehlsaussage ("das nehme ich mir zu Herzen") als letzter Satz ohne Folge.
 Pruefe: Klingt der Satz wie eine generische Floskel, die in vielen verschiedenen Antworten genauso stehen koennte (z.B. "gib uns noch eine Chance" + Kontaktangabe)? Falls ja: formuliere stattdessen etwas, das konkret zu DIESER Bewertung passt — was wird der Gast beim naechsten Mal anders erleben?
 
 Korrekte Zeichensetzung — jeder Hauptsatz beginnt nach einem Punkt.`
