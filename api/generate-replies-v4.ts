@@ -440,6 +440,92 @@ Wenn eine Variante schwach ist: "ok": false und "reason" erklaert in einem Satz 
 Wenn eine Variante gut ist: "ok": true und "reason": ""`
 }
 
+// ─── FREIE VARIANTE (Test) ──────────────────────────────────────────────────
+// Wie die Recovery-Variante strukturell (freier Prompt, keine Slot-Struktur),
+// aber ohne die "Notfall/Deeskalation"-Einschraenkung. Laeuft fuer JEDE Bewertung.
+function buildFreePrompt(reviewText: string, stars: number, reviewerName: string, settings: any): string {
+  const {
+    businessName = 'das Restaurant',
+    salutation = 'Sie',
+    contactEmail = '',
+    responseSignature = '',
+    responseLanguage = 'Deutsch',
+    description = '',
+    restaurantType = '',
+    cuisineType = '',
+    restaurantAtmosphere = '',
+    uniqueSellingPoints = '',
+    priceRange = '',
+  } = settings || {}
+
+  const duSie = salutation === 'Du' ? 'Du/Dein (Duzen)' : 'Sie/Ihr (Siezen)'
+  const signature = responseSignature || `Das Team von ${businessName}`
+  const firstName = reviewerName ? reviewerName.split(' ')[0] : ''
+  const firstNameClean = firstName
+    ? firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase()
+    : ''
+
+  const langInstruction = responseLanguage === 'Sprache des Bewerters'
+    ? 'Antworte in der Sprache der Bewertung.'
+    : responseLanguage === 'Englisch'
+    ? 'Respond in English only.'
+    : 'Antworte auf Deutsch.'
+
+  const freeContext = [
+    `Restaurant: ${businessName}`,
+    description          && `Beschreibung: ${description}`,
+    restaurantType       && `Typ: ${restaurantType}`,
+    cuisineType          && `Kueche: ${cuisineType}`,
+    priceRange           && `Preisklasse: ${priceRange}`,
+    restaurantAtmosphere && `Atmosphaere: ${restaurantAtmosphere}`,
+    uniqueSellingPoints  && `Besonderheiten: ${uniqueSellingPoints}`,
+  ].filter(Boolean).join('\n')
+
+  const systemPrompt = `Erstelle EINE ehrliche, persoenliche Antwort auf eine Google-Bewertung fuer ein Restaurant.
+Schreibe wie ein aufmerksamer Gastronom, der die Bewertung selbst gelesen hat. Nicht wie Kundenservice, PR-Agentur oder KI.
+
+Grundregeln:
+Keine feste Struktur, kein Pflichtaufbau. Schreib frei, so wie es zu DIESER Bewertung passt.
+Beschwerden oder Lob nicht einfach nacherzaehlen oder wortwoertlich wiederholen.
+Keine Ursachen erfinden, die nicht in der Bewertung oder im Profil stehen.
+Keine leeren Floskeln.
+Natuerliche Sprache, kurze bis mittlere Saetze.
+Nutze echte Umlaute: ä, ö, ü, ß — niemals ae, oe, ue als Ersatz.
+Nutze fuer alle Beschreibungen (Typ, Atmosphaere, Konzept) ausschliesslich die Angaben aus dem Restaurantprofil.
+
+KEINE GEDANKENSTRICHE — ABSOLUTES VERBOT:
+Verwende NIEMALS "–", "—" oder jeden anderen langen Bindestrich zur Satzabgrenzung oder fuer Einschuebe.
+Ersetze jeden Gedankenstrich durch einen Punkt oder ein Komma.
+
+VERBOT VON TAGESZEIT-BEZUEGEN: Verwende NIEMALS Woerter wie "Abend", "Abendessen", "Gruppenabend", "Nacht", "Morgen", "Mittag", "Mittagessen", "Fruehstueck" oder andere Tageszeit-Bezuege, auch wenn die Bewertung selbst eine Tageszeit nennt. Nutze stattdessen "Besuch", "Aufenthalt", "Zeit bei uns" oder "Erlebnis".
+
+VERBOTENE PHRASEN: Niemals "vielen dank fuer ihr/dein feedback", "wir nehmen das sehr ernst", "intern adressiert", "intern nachgeschaerft", "massnahmen ergriffen", "team sensibilisiert", "entspricht nicht unserem anspruch", "es tut uns/mir leid" als Standard-Einstieg, "frustrierend" oder sinngemaesse Varianten davon.
+
+Bei Hausregeln/Policy-Themen: Position freundlich, aber klar halten. Nicht entschuldigen fuer Dinge, die richtig waren.
+Bei echten Fehlern: Verantwortung uebernehmen, ohne Schuldzuweisung an einzelne Mitarbeitende.
+Bei Lob: Ehrlich und konkret freuen, nicht uebertrieben.
+
+Korrekte Zeichensetzung — jeder Hauptsatz beginnt nach einem Punkt.`
+
+  const userMessage = `${langInstruction} Anredeform: ${duSie}
+
+KONTEXT (Hintergrundwissen fuer dich — NIEMALS woertlich oder als ganze Saetze in die Antwort uebernehmen, sondern nur sinngemaess und falls relevant einfliessen lassen):
+${freeContext}
+${contactEmail ? `Kontakt-E-Mail (nur erwaehnen, wenn ein Kontaktangebot fuer DIESE Bewertung wirklich sinnvoll ist): ${contactEmail}` : ''}
+
+Bewertung von ${firstNameClean || 'einem Gast'} (${stars} Sterne):
+"${reviewText}"
+
+Schreibe EINE freie, persoenliche Antwort. Laenge passend zum Anlass (1 bis 4 Saetze).
+${firstNameClean ? `Beginne mit "Hallo ${firstNameClean},"` : 'Kein Name bekannt — ohne persoenliche Anrede beginnen.'}
+Endet mit: ${signature}
+
+AUSGABE — NUR dieses JSON:
+{"label":"Frei (Test)","text":"..."}`
+
+  return JSON.stringify({ _system: systemPrompt, _user: userMessage })
+}
+
 // ─── RECOVERY PROMPT ───────────────────────────────────────────────────────
 function buildRecoveryPrompt(reviewText: string, reviewerName: string, settings: any): string {
   const {
@@ -847,6 +933,45 @@ async function buildRecoveryVariant(
   }
 }
 
+// ─── FREIE VARIANTE (Test, eigenstaendig, kann parallel laufen) ────────────
+async function buildFreeVariant(
+  reviewText: string,
+  stars: number,
+  reviewerName: string,
+  settings: any
+): Promise<{ label: string; text: string; isFreeTest: true } | null> {
+  try {
+    const freePrompt_str = buildFreePrompt(reviewText, stars, reviewerName, settings)
+    let freeRaw: string
+    try {
+      const freeParsed = JSON.parse(freePrompt_str)
+      if (freeParsed._system && freeParsed._user) {
+        freeRaw = await callClaude(freeParsed._user, freeParsed._system)
+      } else {
+        freeRaw = await callClaude(freePrompt_str)
+      }
+    } catch {
+      freeRaw = await callClaude(freePrompt_str)
+    }
+
+    let freeJson = freeRaw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
+    const fs = freeJson.indexOf('{')
+    const fe = freeJson.lastIndexOf('}')
+    if (fs !== -1 && fe !== -1) {
+      freeJson = freeJson.substring(fs, fe + 1)
+      const parsed = JSON.parse(freeJson)
+      if (parsed.text) {
+        const cleanText = (t: string) => t.replace(/\n\n/g, ' ').replace(/\n/g, ' ').trim()
+        return { label: parsed.label || 'Frei (Test)', text: cleanText(parsed.text), isFreeTest: true }
+      }
+    }
+    return null
+  } catch (e) {
+    console.error('Free-variant generation failed:', e)
+    return null
+  }
+}
+
 // ─── CONTEXT CHECK ─────────────────────────────────────────────────────────
 async function checkContext(reviewText: string, description: string): Promise<{ ok: boolean; missing?: string }> {
   const wordCount = reviewText.trim().split(/\s+/).filter(Boolean).length
@@ -973,14 +1098,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // weder die 3 Varianten noch das Judge-Ergebnis.
     const mode = classify(stars, reviewText)
 
-    const [checkedVariants, recoveryVariant] = await Promise.all([
+    const [checkedVariants, recoveryVariant, freeVariant] = await Promise.all([
       qualityCheckAndFix(generatedVariants, issuesByVariant, mode, stars, reviewText, signature, generatorRaw_str),
       stars <= 2 ? buildRecoveryVariant(reviewText, reviewerName, settings) : Promise.resolve(null),
+      buildFreeVariant(reviewText, stars, reviewerName, settings),
     ])
 
     let finalVariants: any[] = checkedVariants
     if (recoveryVariant) {
       finalVariants = [...finalVariants, recoveryVariant]
+    }
+    if (freeVariant) {
+      finalVariants = [...finalVariants, freeVariant]
     }
 
     return res.status(200).json({ success: true, answers: finalVariants })
