@@ -895,11 +895,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       generatedVariants = parseVariants(generatorRaw)
     } catch (e) {
       console.error('Generator-Parse fehlgeschlagen, retry...', e)
-      const parsed = JSON.parse(generatorRaw_str)
-      generatorRaw = parsed._system
-        ? await callClaude(parsed._user, parsed._system)
-        : await callClaude(generatorRaw_str)
-      generatedVariants = parseVariants(generatorRaw)
+      let retryRaw: string
+      try {
+        const parsed = JSON.parse(generatorRaw_str)
+        retryRaw = parsed._system && parsed._user
+          ? await callClaude(parsed._user, parsed._system)
+          : await callClaude(generatorRaw_str)
+      } catch {
+        retryRaw = await callClaude(generatorRaw_str)
+      }
+      generatedVariants = parseVariants(retryRaw)
     }
 
     // ── SCHRITT 1b: Post-Processing (Regex, deterministisch) ──────────────
