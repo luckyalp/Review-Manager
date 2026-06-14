@@ -218,11 +218,25 @@ Das Problem auf hoeherer Ebene einordnen ohne die Beschwerde zu wiederholen.
 Kategorien: Qualitaet / Ablauf / Umgang / Sorgfalt
 Mehrere gleichwertige Probleme: Komplexfall-Satz, keine Aufzaehlung.
 
-Slot 3 - Einordnung ohne Versprechen:
-Kein leeres Commitment. Kein "wir besprechen das intern" oder "wir arbeiten daran".
-Stattdessen: Ehrlich eingestehen dass wir ohne mehr Kontext nicht genau wissen was passiert ist.
-Natuerliche Formulierungen: "Was genau passiert ist, wissen wir so nicht." / "Das koennen wir so von hier aus nicht einschaetzen." / "Damit wir das einordnen koennen, brauchen wir mehr."
-NICHT: "Wir gehen der Sache intern nach" / "Wir analysieren den Vorfall" / "intern nachgeschaerft" / "Das entspricht nicht unserem Anspruch" / "Das ist nicht das Erlebnis das wir bieten wollen" / jede sinngemaesse Variante davon.
+Slot 3 - Je nach Art der Kritik einen von drei Typen wählen:
+
+SLOT 3A — etwas ist schiefgelaufen (Service, Küche, Ablauf):
+Ehrlich eingestehen dass wir es von außen nicht einschätzen können. Kein leeres Commitment, keine internen Versprechen.
+Beispielsätze: "Was genau passiert ist, wissen wir so nicht." / "Das können wir so von hier aus nicht einschätzen." / "Damit wir das einordnen können, brauchen wir mehr."
+NICHT: "Wir gehen der Sache intern nach" / "Wir analysieren den Vorfall" / "intern nachgeschärft" / "Das entspricht nicht unserem Anspruch" / "Das ist nicht das Erlebnis das wir bieten wollen" / "ist das ein echtes Signal für uns" / "das können wir so stehen lassen" / jede sinngemäße Variante davon.
+
+SLOT 3B — bewusste Restaurant-Entscheidung (Preis, Lautstärke, Atmosphäre, Portionsgröße):
+Das Restaurant steht souverän zu seiner Entscheidung. Kein Eingestehen, kein "das nehmen wir mit", kein "das war kein befriedigender Besuch". Die Haltung wird klar gemacht und dann ist Schluss.
+Beispielsätze: "Ja, so sind wir nun mal." / "Das gehört hier irgendwie dazu." / "Das macht den Laden hier auf seine eigene Art aus."
+ABSOLUT VERBOTEN nach Slot 3B: kein weiterer Satz der impliziert dass das Erlebnis des Gastes insgesamt nicht gepasst hat oder dass das Restaurant das intern aufnimmt.
+
+SLOT 3C — Konzept-Mismatch (Gast hat etwas erwartet das nicht zum Konzept gehört):
+Klar und ohne Entschuldigung benennen dass das Konzept nicht zu den Erwartungen des Gastes gepasst hat. Niemand hat einen Fehler gemacht — es ist einfach kein Match.
+Beispielsätze (Ton anpassen, nicht wörtlich kopieren):
+- "Du hast offensichtlich was anderes erwartet. Das ist auch völlig legitim. Wir sind halt eine andere Gastronomie."
+- "Klar, wenn man das nicht weiß, kann das überraschen. Wir sind eben so."
+- "Offensichtlich war das nicht das, was du dir vorgestellt hast. Das passiert. Wir sind nicht für jeden das Richtige."
+- "Das machen wir hier so nicht."
 
 Abschluss (einheitlich fuer alle Sterne):
 ${rating <= 2 ? '- Bei 1-2 Sternen: Kein Gespraechsangebot, keine Aufforderung zur Kontaktaufnahme. Stattdessen einen dieser Saetze GENAU SO, WORTWOERTLICH (nur in den Satzbau eingepasst, keine Umformulierung), passend zum Ton der jeweiligen Variante: "Das letzte Wort gehoert dem naechsten Besuch." / "Lass uns beim naechsten Besuch eine andere Geschichte erzaehlen." / "Wir freuen uns auf die naechste Runde."'
@@ -353,6 +367,18 @@ Variante 3 darf kurz sein (max. 3 Saetze). Kurz ist kein Fehler.
 Spricht die Antwort mal als "ich" und mal als "wir", obwohl die Signatur ein Team ist?
 Beispiel schlecht: "da gebe ich Ihnen recht" wenn die Signatur "Das Team von ..." ist.
 → SCHWACH wenn ja.
+
+7. FALSCHER SLOT-3-TYP
+Prüfe: Welche Art von Kritik liegt vor?
+- Etwas ist schiefgelaufen (Service, Küche, Ablauf) → Slot 3A erwartet: ehrliches "wir wissen es nicht"
+- Bewusste Entscheidung des Restaurants (Preis, Lautstärke, Atmosphäre) → Slot 3B erwartet: souveräne Haltung, kein Eingestehen
+- Konzept-Mismatch (Gast erwartete etwas anderes) → Slot 3C erwartet: klare Benennung ohne Entschuldigung
+
+Typische Fehler:
+- Bei Preis/Lautstärke-Kritik endet die Antwort mit "das ist ein Signal für uns" oder "das war kein befriedigender Besuch" → SCHWACH (Slot 3B verletzt)
+- Bei echtem Service-Fehler endet die Antwort mit "Ja, so sind wir nun mal" → SCHWACH (falscher Slot)
+- Bei Konzept-Mismatch entschuldigt sich die Antwort oder verspricht Besserung → SCHWACH (Slot 3C verletzt)
+→ SCHWACH wenn falscher Typ verwendet.
 
 AUSGABE — NUR dieses JSON, kein anderer Text:
 {
@@ -649,8 +675,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const mode = classify(stars, reviewText)
     let finalVariants = generatedVariants
 
-    // Judge läuft nur bei CONTENT-Modi (bei EMPTY-Modi gibt es keinen Freitext zu prüfen)
-    if (mode !== 'EMPTY_POSITIVE' && mode !== 'EMPTY_NEGATIVE') {
+    // Judge läuft nur bei CONTENT-Modi und nicht bei 5-Sternen (zu einfach, Kosten sparen)
+    if (mode !== 'EMPTY_POSITIVE' && mode !== 'EMPTY_NEGATIVE' && stars < 5) {
       try {
         const judgePrompt = buildJudgePrompt(generatedVariants, reviewText, signature)
         const judgeRaw = await callClaude(judgePrompt)
