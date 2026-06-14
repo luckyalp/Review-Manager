@@ -3,14 +3,6 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY
 
-// ─── TYPEN ───────────────────────────────────────────────────────────────
-interface ReviewAnalysis {
-  emotionalCore: string
-  compliments: string
-  recommendsDespiteCriticism: boolean
-  expectsReply: boolean
-}
-
 function classify(rating: number, reviewText: string) {
   const wordCount = reviewText.trim().split(/\s+/).filter(Boolean).length
   const hasText = wordCount >= 6
@@ -21,7 +13,7 @@ function classify(rating: number, reviewText: string) {
   return 'CONTENT_NEGATIVE'
 }
 
-function buildPrompt(reviewText: string, rating: number, reviewerName: string, settings: any, analysis: ReviewAnalysis | null): string {
+function buildPrompt(reviewText: string, rating: number, reviewerName: string, settings: any): string {
   const {
     businessName = 'das Restaurant',
     cuisineType = '',
@@ -169,16 +161,6 @@ Anerkenne diese Reaktion kurz — aber mache klar: sie hebt den Schrecken oder V
 Nicht so tun als waere noch nichts passiert.`
     : ''
 
-  // ─── ANALYSE-BLOCK (Schritt 0b) ────────────────────────────────────────────
-  // Wird vom Generator als Leitfaden genutzt — nicht woertlich wiederholen.
-  const analysisBlock = analysis ? `
-ANALYSE DER BEWERTUNG (vorab erstellt — nutze das als Leitfaden, wiederhole es nicht woertlich):
-- Eigentliches Thema/Gefuehl hinter der Bewertung: ${analysis.emotionalCore}${analysis.compliments ? `
-- Lob des Gasts: ${analysis.compliments}` : ''}${analysis.recommendsDespiteCriticism ? `
-- WICHTIG: Der Gast empfiehlt ${businessName} trotz seiner Kritik (oder schliesst insgesamt positiv ab). Das MUSS in mindestens einer Variante erkennbar sein — z.B. das Lob/die Empfehlung kurz aufgreifen.` : ''}${analysis.expectsReply === false ? `
-- Der Gast scheint eher fuer andere Leser zu schreiben als eine direkte Reaktion vom Restaurant zu erwarten. Halte den Ton entsprechend beilaeufig, nicht wie eine direkte Entgegnung.` : ''}
-` : ''
-
   // System-Prompt: Original Google AI Studio Instructions — kurz und sauber
   const systemPrompt = `Erstelle natuerliche, menschliche und professionelle Antworten auf Google-Bewertungen.
 Die Antworten sollen nicht wie PR-Texte, Agenturtexte oder KI-Texte wirken.
@@ -295,7 +277,7 @@ BEWERTUNG (${rating} Sterne):
 "${reviewText}"
 
 ${alreadyHandled}
-${analysisBlock}
+
 Abschluss: Waehle passend zum Ton "Viele Grüße, ${signature}" oder "Herzliche Grüße, ${signature}" oder "Beste Grüße, ${signature}"
 
 Schreibe 3 Varianten. Fuer ALLE gilt strikt: ${duSieAnrede}. ${anredeHinweis}
@@ -368,80 +350,6 @@ Wenn eine Variante schwach ist: "ok": false und "reason" erklaert in einem Satz 
 Wenn eine Variante gut ist: "ok": true und "reason": ""`
 }
 
-// ─── REWRITE PROMPT (Schritt 2b) ────────────────────────────────────────────
-// Wird nur fuer EINE einzelne Variante aufgerufen, wenn der Judge sie als "schwach" markiert hat.
-function buildRewritePrompt(
-  variant: { label: string; text: string },
-  reason: string,
-  reviewText: string,
-  rating: number,
-  reviewerName: string,
-  settings: any,
-  analysis: ReviewAnalysis | null
-): string {
-  const {
-    businessName = 'das Restaurant',
-    salutation = 'Sie',
-    responseSignature = '',
-    responseLanguage = 'Deutsch',
-  } = settings || {}
-
-  const signature = responseSignature || `Das Team von ${businessName}`
-  const duSieAnrede = salutation === 'Du' ? 'Du/Dein (Duzen)' : 'Sie/Ihr (Siezen)'
-  const anredeHinweis = salutation === 'Du'
-    ? 'Nutze konsequent die Du-Form (du, dein, dir). Schreibe "dir" und "dein" klein.'
-    : 'Nutze konsequent die Sie-Form (Sie, Ihr, Ihnen). Schreibe "Sie" und "Ihr" immer groß.'
-  const firstName = reviewerName ? reviewerName.split(' ')[0] : ''
-  const firstNameCapitalized = firstName
-    ? firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase()
-    : ''
-
-  const langInstruction =
-    responseLanguage === 'Sprache des Bewerters'
-      ? 'Antworte in der Sprache der Bewertung.'
-      : responseLanguage === 'Englisch'
-      ? 'Respond in English only.'
-      : 'Antworte auf Deutsch.'
-
-  const analysisBlock = analysis ? `
-ANALYSE DER BEWERTUNG:
-- Eigentliches Thema/Gefuehl: ${analysis.emotionalCore}${analysis.compliments ? `
-- Lob des Gasts: ${analysis.compliments}` : ''}${analysis.recommendsDespiteCriticism ? `
-- Der Gast empfiehlt ${businessName} trotz Kritik. Das muss erkennbar sein.` : ''}` : ''
-
-  const systemPrompt = `Du schreibst EINE einzelne Antwort auf eine Google-Bewertung neu, weil die vorherige Version ein konkretes Problem hatte.
-Erstelle eine natuerliche, menschliche und professionelle Antwort. Nicht wie PR-Text, Agenturtext oder KI-Text.
-Keine uebertriebene Freundlichkeit, keine Standardfloskeln.
-Beschwerden nicht aufzaehlen oder woertlich wiederholen. Kritik nicht spiegeln.
-KEINE GEDANKENSTRICHE ("-", "–", "—") — nutze stattdessen Punkt oder Komma. Das ist absolut verbindlich.
-Niemals diese Phrasen: "nehmen wir sehr ernst", "intern nachgeschaerft", "Massnahmen ergriffen", "entspricht nicht unserem Anspruch", "Team sensibilisiert", "Konsequenzen gezogen".
-Nutze echte Umlaute: ä, ö, ü, ß.`
-
-  const userMessage = `${langInstruction}
-
-RESTAURANT: ${businessName}
-
-BEWERTUNG (${rating} Sterne):
-"${reviewText}"
-${analysisBlock}
-
-DIESE VARIANTE WAR SCHWACH UND MUSS NEU GESCHRIEBEN WERDEN:
-"${variant.text}"
-
-GRUND, WARUM SIE SCHWACH WAR:
-${reason}
-
-Schreibe die Variante "${variant.label}" komplett neu und behebe genau dieses Problem. Behalte den Charakter der Variante (z.B. "Direkt & Ehrlich" = locker und kurz, "Ruhig & Professionell" = empathisch, "Fokus auf Klaerung" = max. 3 Saetze, kein Kontaktangebot).
-${duSieAnrede}. ${anredeHinweis}
-${firstNameCapitalized ? `Beginne mit einer Begruessung inkl. "${firstNameCapitalized}".` : 'Kein Name bekannt — Begruessung ohne Namen.'}
-Direkt danach folgt NUR der Gruss. Endet mit: ${signature}
-
-AUSGABE — NUR dieses JSON, kein anderer Text:
-{"text":"..."}`
-
-  return JSON.stringify({ _system: systemPrompt, _user: userMessage })
-}
-
 // ─── RECOVERY PROMPT ───────────────────────────────────────────────────────
 function buildRecoveryPrompt(reviewText: string, reviewerName: string, settings: any): string {
   const {
@@ -450,12 +358,6 @@ function buildRecoveryPrompt(reviewText: string, reviewerName: string, settings:
     contactEmail = '',
     responseSignature = '',
     responseLanguage = 'Deutsch',
-    description = '',
-    restaurantType = '',
-    cuisineType = '',
-    priceRange = '',
-    restaurantAtmosphere = '',
-    uniqueSellingPoints = '',
   } = settings || {}
 
   const duSie = salutation === 'Du' ? 'Du/Dein (Duzen)' : 'Sie/Ihr (Siezen)'
@@ -471,18 +373,6 @@ function buildRecoveryPrompt(reviewText: string, reviewerName: string, settings:
     ? 'Respond in English only.'
     : 'Antworte auf Deutsch.'
 
-  // Gleicher Kontext wie im Hauptprompt — Recovery soll das Restaurant
-  // genauso gut kennen wie der Generator (Atmosphaere, Kueche, Besonderheiten).
-  const context = [
-    `Restaurant: ${businessName}`,
-    description          && `Beschreibung: ${description}`,
-    restaurantType       && `Typ: ${restaurantType}`,
-    cuisineType          && `Kueche: ${cuisineType}`,
-    priceRange           && `Preisklasse: ${priceRange}`,
-    restaurantAtmosphere && `Atmosphaere: ${restaurantAtmosphere}`,
-    uniqueSellingPoints  && `Besonderheiten: ${uniqueSellingPoints}`,
-  ].filter(Boolean).join('\n')
-
   const systemPrompt = `Erstelle eine deeskalierende, menschliche und verantwortungsvolle Antwort auf eine sehr negative Google-Bewertung.
 Schreibe wie ein aufmerksamer Gastronom — nicht wie Kundenservice, PR-Agentur oder KI.
 
@@ -493,9 +383,6 @@ Keine Ursachen erfinden.
 Keine leeren Floskeln.
 Natürliche Sprache, kurze Sätze.
 Nutze echte Umlaute: ä, ö, ü, ß — niemals ae, oe, ue als Ersatz.
-KEINE GEDANKENSTRICHE ("-", "–", "—") — nutze Punkt oder Komma.
-
-Nutze die Restaurant-Informationen aus dem Kontext, wenn sie fuer eine glaubwuerdige, persoenliche Antwort hilfreich sind. Erfinde nichts, was nicht im Kontext steht.
 
 Ziel: Vertrauen zurückgewinnen und persönliche Klärung anbieten.
 Länge: 3 bis 4 vollständige, fließende Sätze.
@@ -503,8 +390,7 @@ Korrekte Zeichensetzung — jeder Hauptsatz beginnt nach einem Punkt.`
 
   const userMessage = `${langInstruction} Anredeform: ${duSie}
 
-KONTEXT:
-${context}
+Restaurant: ${businessName}
 ${contactEmail ? `Kontakt-E-Mail: ${contactEmail}` : ''}
 
 Bewertung von ${firstNameClean || 'einem Gast'} (1-2 Sterne):
@@ -548,7 +434,7 @@ async function callGemini(userMessage: string, systemPrompt?: string): Promise<s
   return data.candidates?.[0]?.content?.parts?.[0]?.text || ''
 }
 
-// ─── HELPER: CLAUDE API CALL (Analyse, Judge, Rewrite & Recovery) ──────────
+// ─── HELPER: CLAUDE API CALL (Judge & Recovery) ────────────────────────────
 async function callClaude(userMessage: string, systemPrompt?: string): Promise<string> {
   const body: any = {
     model: 'claude-sonnet-4-6',
@@ -598,57 +484,6 @@ function parseVariants(raw: string): { label: string; text: string; isRecovery?:
     { label: parsed.variant2?.label || 'Variante 2', text: cleanText(parsed.variant2?.text || '') },
     { label: parsed.variant3?.label || 'Variante 3', text: cleanText(parsed.variant3?.text || '') },
   ]
-}
-
-// ─── HELPER: JSON-OBJEKT AUS CLAUDE-TEXT EXTRAHIEREN ───────────────────────
-function extractJson(raw: string): any | null {
-  let jsonStr = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
-  const startIdx = jsonStr.indexOf('{')
-  const endIdx = jsonStr.lastIndexOf('}')
-  if (startIdx === -1 || endIdx === -1) return null
-  jsonStr = jsonStr.substring(startIdx, endIdx + 1)
-  try {
-    return JSON.parse(jsonStr)
-  } catch {
-    return null
-  }
-}
-
-// ─── ANALYSE (Schritt 0b) ───────────────────────────────────────────────────
-// Liest die Bewertung durch, BEVOR geantwortet wird. Schreibt selbst keine Antwort.
-// Ergebnis wird in buildPrompt als Leitfaden eingebaut.
-async function analyzeReview(reviewText: string, rating: number): Promise<ReviewAnalysis | null> {
-  const systemPrompt = `Du liest eine Google-Bewertung fuer ein Restaurant und machst dir kurze Notizen, BEVOR jemand anderes eine Antwort schreibt. Du schreibst selbst keine Antwort.
-
-Beantworte NUR mit diesem JSON, kein anderer Text:
-{
-  "emotionalCore": "Ein kurzer Satz: was ist das eigentliche Thema/Gefuehl hinter der Bewertung, nicht nur die Oberflaeche?",
-  "compliments": "Was lobt der Gast konkret? Leerer String wenn nichts gelobt wird.",
-  "recommendsDespiteCriticism": true oder false,
-  "expectsReply": true oder false
-}
-
-Hinweise:
-- recommendsDespiteCriticism = true, wenn der Gast trotz Kritikpunkten das Restaurant insgesamt empfiehlt oder die Bewertung positiv abschliesst (z.B. "ist trotzdem zu empfehlen", "kommen wieder", "insgesamt top").
-- expectsReply = false, wenn die Bewertung wie eine reine Information fuer andere Gaeste wirkt und keine direkte Reaktion des Restaurants erwartet (z.B. neutrale Beschreibung ohne persoenliche Ansprache).`
-
-  const userMessage = `BEWERTUNG (${rating} Sterne):
-"${reviewText}"`
-
-  try {
-    const raw = await callClaude(userMessage, systemPrompt)
-    const parsed = extractJson(raw)
-    if (!parsed) return null
-    return {
-      emotionalCore: typeof parsed.emotionalCore === 'string' ? parsed.emotionalCore : '',
-      compliments: typeof parsed.compliments === 'string' ? parsed.compliments : '',
-      recommendsDespiteCriticism: !!parsed.recommendsDespiteCriticism,
-      expectsReply: parsed.expectsReply !== false,
-    }
-  } catch (e) {
-    console.error('analyzeReview fehlgeschlagen, ohne Analyse weiter:', e)
-    return null
-  }
 }
 
 // ─── CONTEXT CHECK ─────────────────────────────────────────────────────────
@@ -716,7 +551,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const stars = review.stars || 3
   const reviewerName = review.reviewerName || ''
 
-  const signature = settings?.responseSignature || `Das Team von ${settings?.businessName || 'das Restaurant'}`
+  const salutation = settings?.salutation || 'Sie'
+  const businessName = settings?.businessName || 'das Restaurant'
+  const signature = settings?.responseSignature || `Das Team von ${businessName}`
 
   try {
     // ── SCHRITT 0: Context Check ──────────────────────────────────────────
@@ -730,20 +567,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       })
     }
 
-    const mode = classify(stars, reviewText)
-    const isContentMode = mode === 'CONTENT_POSITIVE' || mode === 'CONTENT_MIXED' || mode === 'CONTENT_NEGATIVE'
-
-    // ── SCHRITT 0b: Analyse — liest die Bewertung VOR der Generierung ─────
-    let analysis: ReviewAnalysis | null = null
-    if (isContentMode) {
-      analysis = await analyzeReview(reviewText, stars)
-    }
-
-    // ── SCHRITT 1: Generator (Claude) ──────────────────────────────────────
-    const generatorRaw_str = buildPrompt(reviewText, stars, reviewerName, settings, analysis)
+    // ── SCHRITT 1: Generator (Gemini) ─────────────────────────────────────
+    const generatorRaw_str = buildPrompt(reviewText, stars, reviewerName, settings)
     let generatorRaw: string
 
-    // CONTENT-Modi liefern JSON mit _system/_user — geht an Claude
+    // CONTENT-Modi liefern JSON mit _system/_user — geht an Gemini
     // EMPTY-Modi liefern direkt den Prompt-String
     try {
       const parsed = JSON.parse(generatorRaw_str)
@@ -758,49 +586,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const generatedVariants = parseVariants(generatorRaw)
 
-    // ── SCHRITT 2: Judge prueft, bei Bedarf wird nachgeschaerft ───────────
+    // ── SCHRITT 2: Judge deaktiviert — Gemini Output direkt verwenden ───────
+    const mode = classify(stars, reviewText)
     let finalVariants = generatedVariants
-
-    if (isContentMode) {
-      try {
-        const judgeSystemPrompt = buildJudgePrompt(finalVariants, reviewText, signature)
-        const judgeRaw = await callClaude('Pruefe jetzt alle drei Varianten und gib das JSON-Urteil zurueck.', judgeSystemPrompt)
-        const judgement = extractJson(judgeRaw)
-
-        if (judgement) {
-          const keys = ['variant1', 'variant2', 'variant3'] as const
-          for (let i = 0; i < 3; i++) {
-            const verdict = judgement[keys[i]]
-            if (verdict && verdict.ok === false) {
-              try {
-                const rewriteStr = buildRewritePrompt(
-                  finalVariants[i],
-                  verdict.reason || 'Antwort entspricht nicht den Vorgaben.',
-                  reviewText,
-                  stars,
-                  reviewerName,
-                  settings,
-                  analysis
-                )
-                const rewriteParsed = JSON.parse(rewriteStr)
-                const rewriteRaw = await callClaude(rewriteParsed._user, rewriteParsed._system)
-                const rewriteResult = extractJson(rewriteRaw)
-                if (rewriteResult?.text) {
-                  finalVariants[i] = {
-                    ...finalVariants[i],
-                    text: String(rewriteResult.text).replace(/\n\n/g, ' ').replace(/\n/g, ' ').trim(),
-                  }
-                }
-              } catch (e) {
-                console.error(`Nachschaerfen von Variante ${i + 1} fehlgeschlagen:`, e)
-              }
-            }
-          }
-        }
-      } catch (e) {
-        console.error('Judge fehlgeschlagen, verwende ungeprueft Varianten:', e)
-      }
-    }
 
     // ── SCHRITT 3: Recovery (nur bei 1–2 Sternen) ─────────────────────────
     if (stars <= 2) {
@@ -817,13 +605,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         } catch {
           recoveryRaw = await callClaude(recoveryPrompt_str)
         }
-        const parsed = extractJson(recoveryRaw)
-        if (parsed?.text) {
-          const cleanText = (t: string) => t.replace(/\n\n/g, ' ').replace(/\n/g, ' ').trim()
-          finalVariants = [
-            ...finalVariants,
-            { label: parsed.label || 'Deeskalierend', text: cleanText(parsed.text), isRecovery: true }
-          ]
+        let recoveryJson = recoveryRaw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
+        const rs = recoveryJson.indexOf('{')
+        const re = recoveryJson.lastIndexOf('}')
+        if (rs !== -1 && re !== -1) {
+          recoveryJson = recoveryJson.substring(rs, re + 1)
+          const parsed = JSON.parse(recoveryJson)
+          if (parsed.text) {
+            const cleanText = (t: string) => t.replace(/\n\n/g, ' ').replace(/\n/g, ' ').trim()
+            finalVariants = [
+              ...finalVariants,
+              { label: parsed.label || 'Deeskalierend', text: cleanText(parsed.text), isRecovery: true }
+            ]
+          }
         }
       } catch (e) {
         console.error('Recovery generation failed:', e)
