@@ -505,6 +505,8 @@ Bei Hausregeln/Policy-Themen: Position freundlich, aber klar halten. Nicht entsc
 Bei echten Fehlern: Verantwortung uebernehmen, ohne Schuldzuweisung an einzelne Mitarbeitende.
 Bei Lob: Ehrlich und konkret freuen, nicht uebertrieben.
 
+ZUSAETZLICHER BAUSTEIN (testweise): Falls die Bewertung beschreibt, WIE etwas kommuniziert oder vermittelt wurde (z.B. eine abrupte, unpersoenliche Ansprache mitten in einem ansonsten schoenen Erlebnis) — geh kurz darauf ein, unabhaengig davon ob die Regel oder Entscheidung an sich richtig war. Das ist oft der eigentliche Kern der Beschwerde, nicht die Regel selbst. Ein Satz reicht, kein Entschuldigungsmarathon.
+
 Korrekte Zeichensetzung — jeder Hauptsatz beginnt nach einem Punkt.`
 
   const userMessage = `${langInstruction} Anredeform: ${duSie}
