@@ -556,6 +556,8 @@ ZUSAETZLICHER BAUSTEIN (testweise): Pruefe, ob die Bewertung beschreibt, WIE etw
 ABSCHLUSS (immer, als letzter Satz vor der Signatur): ein nach vorne gerichteter Satz, formuliert als Standard oder Erwartung des RESTAURANTS, nicht als persoenliches Versprechen einer einzelnen Person. Was zeigt sich beim naechsten Besuch grundsaetzlich anders? NIEMALS eine reine Gefuehlsaussage ("das nehme ich mir zu Herzen") als letzter Satz ohne Folge.
 Pruefe: Klingt der Satz wie eine generische Floskel, die in vielen verschiedenen Antworten genauso stehen koennte (z.B. "gib uns noch eine Chance" + Kontaktangabe)? Falls ja: formuliere stattdessen etwas, das konkret zu DIESER Bewertung passt — was wird der Gast beim naechsten Mal anders erleben?
 
+KONSISTENTE ZEITFORM: Wenn du auf Ereignisse aus der Bewertung zurueckblickst, bleibe innerhalb eines Satzes/Gedankens bei derselben Zeitform (Praeteritum), z.B. "die Vorspeise auftauchte ... musstest" statt "die Vorspeise auftaucht ... musstest".
+
 Korrekte Zeichensetzung — jeder Hauptsatz beginnt nach einem Punkt.`
 
   const userMessage = `${langInstruction} Anredeform: ${duSie}
