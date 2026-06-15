@@ -458,7 +458,7 @@ function buildFreePrompt(reviewText: string, stars: number, reviewerName: string
     priceRange = '',
   } = settings || {}
 
-  const duSie = salutation === 'Du' ? 'Du/Dein (Duzen)' : 'Sie/Ihr (Siezen)'
+  const duSie = salutation === 'Du' ? 'Du/Dein (Duzen). Schreibe "du", "dir", "dein", "dich" klein.' : 'Sie/Ihr (Siezen)'
   const signature = responseSignature || `Das Team von ${businessName}`
   const firstName = reviewerName ? reviewerName.split(' ')[0] : ''
   const firstNameClean = firstName
@@ -529,10 +529,11 @@ KATEGORIE A - KONZEPT ODER STRUKTURELL FIX: Wenn die Kritik etwas betrifft, das 
 - Nenne einen sachlichen, neutralen Grund, WARUM es so ist. NIEMALS "andere Gaeste moegen das" (wirkt wie eine Abwertung der Kritik). NICHT entschuldigen fuer etwas, das richtig war.
 - Pruefe zuerst: Tritt das Problem NUR bei hoher Auslastung auf (z.B. Laustaerke, Temperatur steigen mit mehr Gaesten), oder ist es eine FESTE Eigenschaft des Raums/Konzepts, die UNABHAENGIG von der Auslastung besteht (z.B. Tischabstand/Enge, Lage eines Tisches)?
   - Bei AUSLASTUNGSABHAENGIGEN Gruenden (laut, warm etc.): bleibe bei dem einfachen Adjektiv aus der Bewertung — keine Nominalisierung ("Laermpegel") oder Passiv-Konstruktion ("hat den Besuch getruebt/beeintraechtigt"). Formuliere als nicht-absolute, validierende Aussage, z.B. "Kann sein, dass das fuer den einen oder anderen [laut/warm] wirkt, wenn viel los ist."
+  - WENN die Bewertung die Auslastung/Enge bereits SELBST beschreibt (z.B. "voll", "Gedraenge", "Schlange"): "wenn viel los ist" NICHT zusaetzlich als Grund anhaengen — das waere redundant ("es ist voll, weil viel los ist"). Einfach direkt validieren, z.B. "Kann an der Bar schon mal eng werden, wenn's richtig voll ist."
   - Bei FESTEN Eigenschaften (z.B. Tischabstand): KEIN Bezug auf "viel los ist". Stattdessen als bewusste Konzept-Entscheidung benennen, z.B. "Die Tische stehen bei uns bewusst eng beieinander, das gehoert zu unserem Konzept fuer eine lebendige Atmosphaere."
 - ABSCHLUSS fuer Kategorie A, in dieser Reihenfolge pruefen:
   a) Steht im Restaurantprofil eine konkrete, bereits bestehende Loesung fuer genau dieses Problem (z.B. eine Buchungsoption fuer laengere Tische)? Dann nenne DIESE konkrete Option, wortwoertlich am Profil orientiert.
-  b) Falls nicht: biete eine offene, persoenliche Geste fuer den naechsten Besuch an, die ueber einen echten Kanal laeuft (z.B. "Sag uns bei der Reservierung Bescheid, dann schauen wir, was wir fuer dich tun koennen"). NIEMALS "einrichten" oder "kuemmern uns darum" (klingt nach Amtsdeutsch/Floskel) — nutze "schauen, was wir fuer dich tun koennen".
+  b) Falls nicht: pruefe, ob es einen ECHTEN KANAL fuer eine persoenliche Geste gibt, der zu DIESER Art Bewertung passt (z.B. "bei der Reservierung Bescheid geben" passt fuer Tisch/Sitzplatz-Themen, NICHT fuer Bar/Theke/Walk-in-Bereiche, wo niemand reserviert). Wenn ja: biete diese Geste an (z.B. "Sag uns bei der Reservierung Bescheid, dann schauen wir, was wir fuer dich tun koennen"). NIEMALS "einrichten" oder "kuemmern uns darum" (klingt nach Amtsdeutsch/Floskel) — nutze "schauen, was wir fuer dich tun koennen". Wenn NEIN (kein passender Kanal, z.B. bei Bar/Theke): keine Geste erzwingen, weiter mit c) oder Validierung + Grund ohne Abschluss-Satz.
   c) Falls auch das nicht passt (reine Information ohne Handlungsoption, z.B. Zahlungsmethoden, Oeffnungszeiten): anerkennen, dass der Hinweis fuer andere Leser nuetzlich ist (z.B. "Gut, dass du das ansprichst, andere wissen jetzt Bescheid") — aber NUR bei neutralen Fakten, NIEMALS wenn es wie ein Eingestaendnis eines Mangels wirken wuerde.
 
 ZUSAETZLICHER BAUSTEIN (testweise): Pruefe, ob die Bewertung beschreibt, WIE etwas kommuniziert oder vermittelt wurde (Tonfall, Zeitpunkt, Art der Ansprache).
