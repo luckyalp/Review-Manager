@@ -619,7 +619,7 @@ Bewertung von ${firstNameClean || 'einem Gast'} (${stars} Sterne):
 ${analysis && analysis.forceSummarize ? `ANALYSE-ERGEBNIS (Fakt aus Vorstufe, NICHT aenderbar):
 Diese Bewertung enthaelt ${analysis.count} Kritikpunkte (${analysis.points.join(', ')}).
 ZUSAMMENFASSUNGS-PFLICHT: Bei ${analysis.count} Kritikpunkten MUSST du alle Punkte in EINEM zusammenfassenden Satz behandeln, z.B. "da scheint bei uns einiges nicht rundgelaufen zu sein."
-VERBOTEN: Mehr als EINEN konkreten Punkt namentlich in der Antwort nennen. Keine Aufzaehlungen, keine Listen, keine Doppelpunkte gefolgt von mehreren Punkten.
+VERBOTEN: Mehr als EINEN konkreten Punkt namentlich in der Antwort nennen. Keine Aufzaehlungen, keine Listen, keine Doppelpunkte gefolgt von mehreren Punkten. Auch eine zweite, abgeschwaechte Aufzaehlung ist verboten. FALSCH: "der Rest, von der Wartezeit ueber den Tisch bis zum Service". Nach der einen Zusammenfassung kommt KEINE weitere Nennung einzelner Punkte.
 ${analysis.categories.includes('A') ? `Kat-A-Punkte erkannt: Erklaere auslastungsabhaengige Aspekte (z.B. Lautstaerke) als eigenen, ehrlichen Gedanken.` : ''}` : ''}
 
 Schreibe EINE freie, persoenliche Antwort. Laenge passend zum Anlass (1 bis 4 Saetze). Bei vielen Kritikpunkten NICHT alles in einen langen Satz mit Aufzaehlung packen. Fasse stattdessen zusammen ("da scheint bei uns einiges nicht rundgelaufen zu sein"). Eine Aufzaehlung mehrerer Beschwerden (auch mit Komma oder Gedankenstrich verbunden) ist immer falsch.
