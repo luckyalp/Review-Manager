@@ -511,7 +511,7 @@ FALLS NICHTS POSITIVES ERWAEHNT WIRD: Erfinde KEIN Lob, das nicht in der Bewertu
 
 VERBOT VON TAGESZEIT-BEZUEGEN: Verwende NIEMALS Woerter wie "Abend", "Abendessen", "Gruppenabend", "Nacht", "Morgen", "Mittag", "Mittagessen", "Fruehstueck" oder andere Tageszeit-Bezuege, auch wenn die Bewertung selbst eine Tageszeit nennt. Nutze stattdessen "Besuch", "Aufenthalt", "Zeit bei uns" oder "Erlebnis".
 
-VERBOTENE PHRASEN: Niemals "vielen dank fuer ihr/dein feedback", "wir nehmen das sehr ernst", "ich nehme das ernst", "das nehme ich ernst", "intern adressiert", "intern nachgeschaerft", "massnahmen ergriffen", "team sensibilisiert", "entspricht nicht unserem anspruch", "es tut uns/mir leid" als Standard-Einstieg, "frustrierend", "das nehme ich mit", "das nehmen wir mit" oder sinngemaesse Varianten davon.
+VERBOTENE PHRASEN: Niemals "vielen dank fuer ihr/dein feedback", "wir nehmen das sehr ernst", "ich nehme das ernst", "das nehme ich ernst", "intern adressiert", "intern nachgeschaerft", "massnahmen ergriffen", "team sensibilisiert", "entspricht nicht unserem anspruch", "es tut uns/mir leid" als Standard-Einstieg, "frustrierend", "das nehme ich mit", "das nehmen wir mit", "gib uns eine chance", "gib uns noch eine chance", "eine zweite chance" oder sinngemaesse Varianten davon.
 
 Bei Hausregeln/Policy-Themen: Position freundlich und offen erklaeren, ohne sich dafuer zu entschuldigen. Kein Rechtfertigungston, kein Tuersteherton.
 Bei echten Fehlern: Verantwortung uebernehmen in ruhigem Ton. Nicht einzelne Mitarbeitende beschuldigen. Distanzierung vom Fehlverhalten klingt wie "so soll das bei uns nicht laufen" oder "da scheint bei uns wohl etwas schiefgelaufen zu sein" (bei konkreten, glaubwuerdigen Vorwuerfen) oder "das klingt so, als waere da bei uns etwas nicht rundgelaufen" (bei vageren Eindruecken). Nicht wie ein Urteil ("das kann ich nicht gutheissen", "das ist nicht akzeptabel") und nicht wie Abstreiten ("das gehoert nicht zu uns", "so etwas machen wir nicht").
@@ -602,7 +602,7 @@ ZUSAETZLICHER BAUSTEIN (testweise): Pruefe, ob die Bewertung beschreibt, WIE etw
 - WENN nichts dazu in der Bewertung steht: keine Erwaehnung.
 
 ABSCHLUSS (immer, als letzter Satz vor der Signatur): ein nach vorne gerichteter Satz, formuliert als Standard oder Erwartung des RESTAURANTS, nicht als persoenliches Versprechen einer einzelnen Person. Was zeigt sich beim naechsten Besuch grundsaetzlich anders? NIEMALS eine reine Gefuehlsaussage ("das nehme ich mir zu Herzen") als letzter Satz ohne Folge.
-Pruefe: Klingt der Satz wie eine generische Floskel, die in vielen verschiedenen Antworten genauso stehen koennte (z.B. "gib uns noch eine Chance" + Kontaktangabe)? Falls ja: formuliere stattdessen etwas, das konkret zu DIESER Bewertung passt — was wird der Gast beim naechsten Mal anders erleben?
+Pruefe: Klingt der Satz wie eine generische Bettel-Floskel ohne Bezug zu DIESER Bewertung? Falls ja: formuliere stattdessen etwas, das konkret zu DIESER Bewertung passt — was wird der Gast beim naechsten Mal anders erleben?
 
 KONSISTENTE ZEITFORM: Wenn du auf Ereignisse aus der Bewertung zurueckblickst, bleibe innerhalb eines Satzes/Gedankens bei derselben Zeitform (Praeteritum), z.B. "die Vorspeise auftauchte ... musstest" statt "die Vorspeise auftaucht ... musstest".
 
@@ -626,7 +626,7 @@ ${analysis.categories.includes('A') ? `Kat-A-Punkte erkannt: Erklaere auslastung
 Schreibe EINE freie, persoenliche Antwort. Laenge passend zum Anlass (1 bis 4 Saetze). Bei vielen Kritikpunkten NICHT alles in einen langen Satz mit Aufzaehlung packen. Fasse stattdessen zusammen ("da scheint bei uns einiges nicht rundgelaufen zu sein"). Eine Aufzaehlung mehrerer Beschwerden (auch mit Komma oder Gedankenstrich verbunden) ist immer falsch.
 Erster Satz: Validierung des Gefuehls (wie im System-Prompt beschrieben — Gefuehl, nicht Ereignis, keine Schuld, keine Zustimmungsverben). Danach: sachliche Einordnung. Kein "Es tut uns leid zu hoeren, dass...". Menschlich und direkt, nicht wie PR.
 ${firstNameClean ? `Beginne mit "Hallo ${firstNameClean},"` : 'Kein Name bekannt — ohne persoenliche Anrede beginnen.'}
-Endet mit: ${signature}
+Abschluss: Waehle passend zum Ton "Viele Gruesse, ${signature}" oder "Herzliche Gruesse, ${signature}" oder "Beste Gruesse, ${signature}"
 
 AUSGABE — NUR dieses JSON:
 {"label":"Frei (Test)","text":"..."}`
