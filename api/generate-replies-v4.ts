@@ -615,7 +615,7 @@ ${contactEmail ? `Kontakt-E-Mail (nur erwaehnen, wenn ein Kontaktangebot fuer DI
 Bewertung von ${firstNameClean || 'einem Gast'} (${stars} Sterne):
 "${reviewText}"
 
-Schreibe EINE freie, persoenliche Antwort. Laenge passend zum Anlass (1 bis 4 Saetze).
+Schreibe EINE freie, persoenliche Antwort. Laenge passend zum Anlass (1 bis 4 Saetze). Bei vielen Kritikpunkten NICHT alles in einen langen Satz mit Aufzaehlung packen. Fasse stattdessen zusammen ("da scheint bei uns einiges nicht rundgelaufen zu sein"). Eine Aufzaehlung mehrerer Beschwerden (auch mit Komma oder Gedankenstrich verbunden) ist immer falsch.
 Erster Satz: Validierung des Gefuehls (wie im System-Prompt beschrieben — Gefuehl, nicht Ereignis, keine Schuld, keine Zustimmungsverben). Danach: sachliche Einordnung. Kein "Es tut uns leid zu hoeren, dass...". Menschlich und direkt, nicht wie PR.
 ${firstNameClean ? `Beginne mit "Hallo ${firstNameClean},"` : 'Kein Name bekannt — ohne persoenliche Anrede beginnen.'}
 Endet mit: ${signature}
