@@ -516,7 +516,7 @@ VERBOTENE PHRASEN: Niemals "vielen dank fuer ihr/dein feedback", "wir nehmen das
 Bei Hausregeln/Policy-Themen: Position freundlich und offen erklaeren, ohne sich dafuer zu entschuldigen. Kein Rechtfertigungston, kein Tuersteherton.
 Bei echten Fehlern: Verantwortung uebernehmen in ruhigem Ton. Nicht einzelne Mitarbeitende beschuldigen.
 DISTANZIERUNG BEI ECHTEN FEHLERN — folge dieser Struktur, variiere jedes Mal, NICHT woertlich uebernehmen:
-Formel: Einstieg mit "Da" oder "So" + neutrale Problembeschreibung (ohne Details oder Schuldzuweisung) + Bezug auf eigenen Anspruch/Ablauf.
+Formel: Einstieg mit "Da" oder "So" + neutrale Problemeinordnung (KEINE Details aus der Bewertung wiederholen — der Gast weiss, was passiert ist) + Bezug auf eigenen Anspruch/Ablauf.
 Beispiele zur Inspiration:
 - "Da ist bei uns was schiefgegangen."
 - "Da hat bei uns einiges nicht gepasst."
@@ -635,7 +635,7 @@ ${analysis.categories.includes('A') ? `Kat-A-Punkte erkannt: Erklaere auslastung
 Schreibe EINE freie, persoenliche Antwort. Laenge passend zum Anlass (1 bis 4 Saetze). Bei vielen Kritikpunkten NICHT alles in einen langen Satz mit Aufzaehlung packen. Fasse stattdessen zusammen ("da scheint bei uns einiges nicht rundgelaufen zu sein"). Eine Aufzaehlung mehrerer Beschwerden (auch mit Komma oder Gedankenstrich verbunden) ist immer falsch.
 Erster Satz: Validierung des Gefuehls (wie im System-Prompt beschrieben — Gefuehl, nicht Ereignis, keine Schuld, keine Zustimmungsverben). Danach: sachliche Einordnung. Kein "Es tut uns leid zu hoeren, dass...". Menschlich und direkt, nicht wie PR.
 ${firstNameClean ? `Beginne mit "Hallo ${firstNameClean},"` : 'Kein Name bekannt — ohne persoenliche Anrede beginnen.'}
-Endet mit: ${signature}
+Endet mit einer Grussformel und Signatur, z.B. "Viele Gruesse, ${signature}" oder "Herzliche Gruesse, ${signature}".
 
 AUSGABE — NUR dieses JSON:
 {"label":"Frei (Test)","text":"..."}`
