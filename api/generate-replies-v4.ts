@@ -443,7 +443,7 @@ Wenn eine Variante gut ist: "ok": true und "reason": ""`
 // ─── FREIE VARIANTE (Test) ──────────────────────────────────────────────────
 // Wie die Recovery-Variante strukturell (freier Prompt, keine Slot-Struktur),
 // aber ohne die "Notfall/Deeskalation"-Einschraenkung. Laeuft fuer JEDE Bewertung.
-function buildFreePrompt(reviewText: string, stars: number, reviewerName: string, settings: any): string {
+function buildFreePrompt(reviewText: string, stars: number, reviewerName: string, settings: any, analysis?: {count: number, points: string[], categories: string[], forceSummarize: boolean}): string {
   const {
     businessName = 'das Restaurant',
     salutation = 'Sie',
@@ -615,6 +615,12 @@ ${contactEmail ? `Kontakt-E-Mail (nur erwaehnen, wenn ein Kontaktangebot fuer DI
 
 Bewertung von ${firstNameClean || 'einem Gast'} (${stars} Sterne):
 "${reviewText}"
+
+${analysis && analysis.forceSummarize ? `ANALYSE-ERGEBNIS (Fakt aus Vorstufe, NICHT aenderbar):
+Diese Bewertung enthaelt ${analysis.count} Kritikpunkte (${analysis.points.join(', ')}).
+ZUSAMMENFASSUNGS-PFLICHT: Bei ${analysis.count} Kritikpunkten MUSST du alle Punkte in EINEM zusammenfassenden Satz behandeln, z.B. "da scheint bei uns einiges nicht rundgelaufen zu sein."
+VERBOTEN: Mehr als EINEN konkreten Punkt namentlich in der Antwort nennen. Keine Aufzaehlungen, keine Listen, keine Doppelpunkte gefolgt von mehreren Punkten.
+${analysis.categories.includes('A') ? `Kat-A-Punkte erkannt: Erklaere auslastungsabhaengige Aspekte (z.B. Lautstaerke) als eigenen, ehrlichen Gedanken.` : ''}` : ''}
 
 Schreibe EINE freie, persoenliche Antwort. Laenge passend zum Anlass (1 bis 4 Saetze). Bei vielen Kritikpunkten NICHT alles in einen langen Satz mit Aufzaehlung packen. Fasse stattdessen zusammen ("da scheint bei uns einiges nicht rundgelaufen zu sein"). Eine Aufzaehlung mehrerer Beschwerden (auch mit Komma oder Gedankenstrich verbunden) ist immer falsch.
 Erster Satz: Validierung des Gefuehls (wie im System-Prompt beschrieben — Gefuehl, nicht Ereignis, keine Schuld, keine Zustimmungsverben). Danach: sachliche Einordnung. Kein "Es tut uns leid zu hoeren, dass...". Menschlich und direkt, nicht wie PR.
@@ -1039,10 +1045,11 @@ async function buildFreeVariant(
   reviewText: string,
   stars: number,
   reviewerName: string,
-  settings: any
+  settings: any,
+  analysis?: {count: number, points: string[], categories: string[], forceSummarize: boolean}
 ): Promise<{ label: string; text: string; isFreeTest: true } | null> {
   try {
-    const freePrompt_str = buildFreePrompt(reviewText, stars, reviewerName, settings)
+    const freePrompt_str = buildFreePrompt(reviewText, stars, reviewerName, settings, analysis)
     let freeRaw: string
     try {
       const freeParsed = JSON.parse(freePrompt_str)
@@ -1070,6 +1077,39 @@ async function buildFreeVariant(
   } catch (e) {
     console.error('Free-variant generation failed:', e)
     return null
+  }
+}
+
+// ─── REVIEW-ANALYSE (Haiku, deterministisch) ─────────────────────────────
+async function analyzeReview(reviewText: string): Promise<{count: number, points: string[], categories: string[], forceSummarize: boolean}> {
+  const systemPrompt = `Du analysierst Restaurant-Bewertungen. Identifiziere jeden einzelnen Kritikpunkt.
+Antworte NUR mit diesem JSON-Format, nichts anderes:
+{"points":["Punkt1","Punkt2"],"categories":["B","A"]}
+
+Kategorien:
+A = Konzept/strukturell (Hausregeln, Lautstaerke bei vollem Haus, Tischvergabe, Oeffnungszeiten)
+B = Echter Fehler (Wartezeiten, falscher Tisch, unfreundlicher Service, vergessene Bestellungen)
+C = Geschmack/Wahrnehmung (zu scharf, zu wenig Portion, nicht gemuetlich)
+
+Maximal 3 Woerter pro Punkt. Nur Kritikpunkte, kein Lob. Reihenfolge wie in der Bewertung.`
+
+  const userMessage = `Bewertung:\n"${reviewText}"`
+
+  try {
+    const result = await callClaude(userMessage, systemPrompt, 'claude-haiku-4-5-20251001', 0)
+    const cleaned = result.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
+    const parsed = JSON.parse(cleaned)
+    const points = parsed.points || []
+    const categories = parsed.categories || []
+    return {
+      count: points.length,
+      points,
+      categories,
+      forceSummarize: points.length >= 3
+    }
+  } catch (e) {
+    console.error('analyzeReview failed:', e)
+    return { count: 0, points: [], categories: [], forceSummarize: false }
   }
 }
 
@@ -1160,12 +1200,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       })
     }
 
+    // ── SCHRITT 0b: Review-Analyse (Haiku, deterministisch) ─────────────────
+    const analysis = await analyzeReview(reviewText)
+
     // ════════════════════════════════════════════════════════════════════
     // TEMPORAER: Nur "Frei (Test)" generieren, um API-Kosten zu sparen
     // waehrend Kategorie C getestet wird. Die drei Hauptvarianten + Judge
     // + Recovery sind unten auskommentiert — bei Bedarf wieder aktivieren.
     // ════════════════════════════════════════════════════════════════════
-    const freeVariant = await buildFreeVariant(reviewText, stars, reviewerName, settings)
+    const freeVariant = await buildFreeVariant(reviewText, stars, reviewerName, settings, analysis)
     const finalVariants: any[] = freeVariant ? [freeVariant] : []
     return res.status(200).json({ success: true, answers: finalVariants })
 
