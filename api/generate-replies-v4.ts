@@ -694,11 +694,11 @@ AUSGABE — NUR dieses JSON:
 }
 
 // ─── HELPER: CLAUDE API CALL ───────────────────────────────────────────────
-async function callClaude(userMessage: string, systemPrompt?: string, model = 'claude-sonnet-4-6'): Promise<string> {
+async function callClaude(userMessage: string, systemPrompt?: string, model = 'claude-sonnet-4-6', temperature = 0.4): Promise<string> {
   const body: any = {
     model,
     max_tokens: 4000,
-    temperature: 0.4,
+    temperature,
     messages: [{ role: 'user', content: userMessage }],
   }
   if (systemPrompt) {
@@ -1085,7 +1085,7 @@ BEWERTUNG:
 Ist das Profil ausreichend um sicher zu antworten?`
 
   try {
-    const result = await callClaude(userMessage, systemPrompt, 'claude-haiku-4-5-20251001')
+    const result = await callClaude(userMessage, systemPrompt, 'claude-haiku-4-5-20251001', 0)
     const trimmed = result.trim()
     if (trimmed.startsWith('MISSING:')) {
       const missing = trimmed.replace('MISSING:', '').trim()
