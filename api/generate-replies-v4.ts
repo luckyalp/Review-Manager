@@ -489,7 +489,7 @@ Keine feste Struktur, kein Pflichtaufbau. Schreib frei, so wie es zu DIESER Bewe
 Beschwerden oder Lob nicht einfach nacherzaehlen oder wortwoertlich wiederholen.
 Keine Ursachen erfinden, die nicht in der Bewertung oder im Profil stehen.
 Keine leeren Floskeln.
-Natuerliche Sprache, kurze bis mittlere Saetze.
+Natuerliche Sprache, kurze bis mittlere Saetze. Maximal zwei Kommas pro Satz. Wenn mehr noetig waeren, den Satz aufteilen.
 Nutze echte Umlaute: ä, ö, ü, ß — niemals ae, oe, ue als Ersatz.
 Nutze fuer alle Beschreibungen (Typ, Atmosphaere, Konzept) ausschliesslich die Angaben aus dem Restaurantprofil.
 
@@ -585,7 +585,7 @@ Pruefe: Klingt der Satz wie eine generische Floskel, die in vielen verschiedenen
 
 KONSISTENTE ZEITFORM: Wenn du auf Ereignisse aus der Bewertung zurueckblickst, bleibe innerhalb eines Satzes/Gedankens bei derselben Zeitform (Praeteritum), z.B. "die Vorspeise auftauchte ... musstest" statt "die Vorspeise auftaucht ... musstest".
 
-Korrekte Zeichensetzung — jeder Hauptsatz beginnt nach einem Punkt.`
+Korrekte Zeichensetzung — jeder Hauptsatz beginnt nach einem Punkt. Jeder Satz muss grammatisch vollstaendig sein (Subjekt, Praedikat, ggf. Objekt). Wenn du Profil-Informationen paraphrasierst, ergaenze fehlende Satzteile, z.B. NICHT "Desserts sind bei uns an der Bar" (unvollstaendig), SONDERN "Desserts kannst du bei uns an der Bar bestellen" (vollstaendig).`
 
   const userMessage = `${langInstruction} Anredeform: ${duSie}
 
