@@ -1049,32 +1049,56 @@ async function buildFreeVariant(
   settings: any,
   analysis?: {count: number, points: string[], categories: string[], forceSummarize: boolean}
 ): Promise<{ label: string; text: string; isFreeTest: true } | null> {
+  const signature = settings?.responseSignature || `Das Team von ${settings?.businessName || 'das Restaurant'}`
+  const MAX_FREE_ATTEMPTS = 2
+
   try {
     const freePrompt_str = buildFreePrompt(reviewText, stars, reviewerName, settings, analysis)
-    let freeRaw: string
+    let freeParsed: { _system?: string; _user?: string } | null = null
     try {
-      const freeParsed = JSON.parse(freePrompt_str)
-      if (freeParsed._system && freeParsed._user) {
-        freeRaw = await callClaude(freeParsed._user, freeParsed._system)
-      } else {
-        freeRaw = await callClaude(freePrompt_str)
-      }
+      const p = JSON.parse(freePrompt_str)
+      if (p._system && p._user) freeParsed = p
     } catch {
-      freeRaw = await callClaude(freePrompt_str)
+      freeParsed = null
     }
 
-    let freeJson = freeRaw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
-    const fs = freeJson.indexOf('{')
-    const fe = freeJson.lastIndexOf('}')
-    if (fs !== -1 && fe !== -1) {
+    let userMessage = freeParsed?._user || freePrompt_str
+    let result: { label: string; text: string } | null = null
+
+    for (let attempt = 1; attempt <= MAX_FREE_ATTEMPTS; attempt++) {
+      const freeRaw = freeParsed
+        ? await callClaude(userMessage, freeParsed._system)
+        : await callClaude(userMessage)
+
+      let freeJson = freeRaw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
+      const fs = freeJson.indexOf('{')
+      const fe = freeJson.lastIndexOf('}')
+      if (fs === -1 || fe === -1) break
+
       freeJson = freeJson.substring(fs, fe + 1)
       const parsed = JSON.parse(freeJson)
-      if (parsed.text) {
-        const cleanText = (t: string) => t.replace(/\n\n/g, ' ').replace(/\n/g, ' ').trim()
-        return { label: parsed.label || 'Frei (Test)', text: cleanText(parsed.text), isFreeTest: true }
+      if (!parsed.text) break
+
+      const cleanText = (t: string) => t.replace(/\n\n/g, ' ').replace(/\n/g, ' ').trim()
+      const candidate = { label: parsed.label || 'Frei (Test)', text: cleanText(parsed.text) }
+
+      const { issuesByVariant, flagged } = sanitizeVariants([candidate], signature)
+      result = candidate // letzten Versuch als Fallback behalten
+
+      if (flagged.length === 0) {
+        break
+      }
+
+      console.warn(`Frei (Test): Probleme gefunden (Versuch ${attempt}/${MAX_FREE_ATTEMPTS}):`, flagged)
+
+      if (attempt < MAX_FREE_ATTEMPTS) {
+        const feedbackLines = buildRegenFeedback([candidate], issuesByVariant, null, signature)
+        const feedbackBlock = `\n\nHINWEIS: Ein vorheriger Entwurf hatte folgende Probleme — bitte vermeide sie:\n${feedbackLines.join('\n')}`
+        userMessage = (freeParsed?._user || freePrompt_str) + feedbackBlock
       }
     }
-    return null
+
+    return result ? { ...result, isFreeTest: true } : null
   } catch (e) {
     console.error('Free-variant generation failed:', e)
     return null
