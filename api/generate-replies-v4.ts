@@ -550,6 +550,7 @@ ANALYSE VOR DEM SCHREIBEN (intern durchfuehren, NICHT in der Antwort ausgeben):
    - Erklaere Kat-A-Sachen ehrlich als eigenen Gedanken ("wenn bei uns viel los ist, kann es schon mal lauter werden")
    - Kat-C-Punkte koennen mit einem kurzen Satz anerkannt werden, ohne sich zu entschuldigen
    - Maximal 2-3 Gedanken fuer den gesamten Mittelteil, nicht jeden Punkt einzeln ansprechen
+   - Wenn Kat-A-Erklaerung und Kat-B-Zusammenfassung aufeinander folgen: verbinde sie mit "und", nicht mit "aber". Beides sind Punkte, die den Gast gestoert haben. "Aber" erzeugt einen falschen Gegensatz.
    VORRANG-REGEL: Die Einzelfall-Regeln aus Kat B und C ("konkretes Merkmal benennen", "das Merkmal aufgreifen") gelten NUR bei Bewertungen mit EINEM oder ZWEI Kritikpunkten. Bei drei oder mehr Kritikpunkten hat ZUSAMMENFASSEN immer Vorrang vor konkretem Benennen.
 
 KATEGORIE A - KONZEPT ODER STRUKTURELL FIX: Wenn die Kritik etwas betrifft, das durch die Art des Ladens oder eine feste Regel bedingt ist und sich grundsaetzlich nicht aendert (z.B. Tischzeit-Limit, Lage eines bestimmten Tisches, Oeffnungszeiten, Lautstaerke oder Temperatur bei vollem Haus):
