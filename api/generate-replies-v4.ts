@@ -1058,7 +1058,7 @@ async function checkContext(reviewText: string, description: string): Promise<{ 
   const wordCount = reviewText.trim().split(/\s+/).filter(Boolean).length
   if (wordCount < 6) return { ok: true }
 
-  const systemPrompt = `Du bist ein strikter Qualitätsprüfer für Restaurant-Antworten.
+  const systemPrompt = `Du bist ein Qualitätsprüfer für Restaurant-Antworten.
 Deine einzige Aufgabe: Entscheide ob das Restaurantprofil genug Informationen enthält um auf diese Bewertung sicher zu antworten — ohne etwas erfinden zu müssen.
 
 Antworte NUR mit einem dieser zwei Formate:
@@ -1066,15 +1066,21 @@ OK
 MISSING: [kurze Beschreibung was fehlt, max. 1 Satz auf Deutsch]
 
 Wann ist MISSING korrekt?
-- Die Bewertung enthält einen konkreten Vorwurf über eine spezifische Situation oder Entscheidung des Restaurants (z.B. Platzvergabe, Reservierungspolitik, Hausregeln, spezifische Abläufe)
-- UND das Profil enthält dazu keine Erklärung oder Regel
+- Die Bewertung kritisiert eine KONKRETE HAUSREGEL oder POLICY (z.B. Tischvergabe, Reservierungspolitik, Oeffnungszeiten, Zahlungsmethoden, spezielle Ablaeufe)
+- UND das Profil enthaelt dazu KEINE Erklaerung oder Regel
+- NUR dann ist MISSING korrekt
 
-Wann ist OK korrekt?
-- Allgemeine Kritik (Essen, Service, Wartezeit, Atmosphäre) — hier braucht die KI keine Hausregeln
-- Das Profil enthält eine passende Erklärung zur Situation
+Wann ist OK korrekt? (im Zweifel IMMER OK)
+- Kritik an Service, Umgangston, Hoeflichkeit, Kommunikation, Verhalten von Personal — das ist IMMER OK, dafuer braucht das Profil KEINE Informationen
+- Kritik an Essen, Wartezeit, Atmosphaere, Sauberkeit — IMMER OK
+- Widersprüchliches Verhalten des Personals (z.B. erst abgelehnt, dann doch erlaubt) — IMMER OK, die KI kann das als Fehler behandeln ohne Profil-Info
+- Das Profil enthaelt eine passende Erklaerung zur Hausregel/Policy
 - Die Bewertung ist positiv oder neutral
+- Die Bewertung enthaelt MEHRERE Themen und das Profil deckt die Hausregel ab, auch wenn andere Aspekte (Service, Ton) nicht im Profil stehen
 
-Sei NICHT überstreng. Im Zweifel: OK.`
+WICHTIG: Wenn das Profil die HAUSREGEL erklaert, ist das ausreichend. Die KI braucht KEINE Profil-Informationen ueber Servicestandards, Kommunikationsrichtlinien oder Personalverhalten. Das sind keine Hausregeln.
+
+Antworte OK, es sei denn es fehlt eine echte Hausregel oder Policy.`
 
   const userMessage = `RESTAURANTPROFIL:
 ${description || '(keine Beschreibung eingetragen)'}
