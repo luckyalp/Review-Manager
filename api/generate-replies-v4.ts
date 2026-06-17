@@ -642,7 +642,7 @@ ${contactEmail ? `Kontakt-E-Mail (nur erwaehnen, wenn ein Kontaktangebot fuer DI
 Bewertung von ${firstNameClean || 'einem Gast'} (${stars} Sterne):
 "${reviewText}"
 
-${analysis && analysis.forceSummarize ? `ANALYSE-ERGEBNIS (Fakt aus Vorstufe, NICHT aenderbar):
+${analysis && analysis.lobpunkte.length > 0 ? `LOB AUS VORSTUFE ERKANNT: ${analysis.lobpunkte.join(', ')}. Falls passend, kannst du dies ehrlich aufgreifen.\n` : ''}${analysis && analysis.vorOrtErwaehnt ? `HINWEIS AUS VORSTUFE: Der Gast hat laut Analyse bereits etwas vor Ort angesprochen. Beruecksichtige das gemaess der Regeln weiter unten im Prompt zum Thema "vor Ort".\n` : ''}${analysis && analysis.forceSummarize ? `ANALYSE-ERGEBNIS (Fakt aus Vorstufe, NICHT aenderbar):
 Diese Bewertung enthaelt ${analysis.count} Kritikpunkte (${analysis.points.join(', ')}).
 ZUSAMMENFASSUNGS-PFLICHT: Bei ${analysis.count} Kritikpunkten MUSST du alle Punkte in EINEM zusammenfassenden Satz behandeln, z.B. "da scheint bei uns einiges nicht rundgelaufen zu sein."
 VERBOTEN: Mehr als EINEN konkreten Punkt namentlich in der Antwort nennen. Keine Aufzaehlungen, keine Listen, keine Doppelpunkte gefolgt von mehreren Punkten. Auch eine zweite, abgeschwaechte Aufzaehlung ist verboten. FALSCH: "der Rest, von der Wartezeit ueber den Tisch bis zum Service". Nach der einen Zusammenfassung kommt KEINE weitere Nennung einzelner Punkte.
