@@ -443,7 +443,7 @@ Wenn eine Variante gut ist: "ok": true und "reason": ""`
 // ─── FREIE VARIANTE (Test) ──────────────────────────────────────────────────
 // Wie die Recovery-Variante strukturell (freier Prompt, keine Slot-Struktur),
 // aber ohne die "Notfall/Deeskalation"-Einschraenkung. Laeuft fuer JEDE Bewertung.
-function buildFreePrompt(reviewText: string, stars: number, reviewerName: string, settings: any, analysis?: {count: number, points: string[], categories: string[], forceSummarize: boolean}): string {
+function buildFreePrompt(reviewText: string, stars: number, reviewerName: string, settings: any, analysis?: {count: number, points: string[], categories: string[], forceSummarize: boolean, lobpunkte: string[], vorOrtErwaehnt: boolean}): string {
   const {
     businessName = 'das Restaurant',
     salutation = 'Sie',
@@ -1052,7 +1052,7 @@ async function buildFreeVariant(
   stars: number,
   reviewerName: string,
   settings: any,
-  analysis?: {count: number, points: string[], categories: string[], forceSummarize: boolean}
+  analysis?: {count: number, points: string[], categories: string[], forceSummarize: boolean, lobpunkte: string[], vorOrtErwaehnt: boolean}
 ): Promise<{ label: string; text: string; isFreeTest: true } | null> {
   const signature = settings?.responseSignature || `Das Team von ${settings?.businessName || 'das Restaurant'}`
   const MAX_FREE_ATTEMPTS = 2
@@ -1110,18 +1110,28 @@ async function buildFreeVariant(
   }
 }
 
-// ─── REVIEW-ANALYSE (Haiku, deterministisch) ─────────────────────────────
-async function analyzeReview(reviewText: string): Promise<{count: number, points: string[], categories: string[], forceSummarize: boolean}> {
-  const systemPrompt = `Du analysierst Restaurant-Bewertungen. Identifiziere jeden einzelnen Kritikpunkt.
-Antworte NUR mit diesem JSON-Format, nichts anderes:
-{"points":["Punkt1","Punkt2"],"categories":["B","A"]}
+// ─── REVIEW-ANALYSE / AGENT 1 (Haiku, deterministisch) ────────────────────
+async function analyzeReview(reviewText: string): Promise<{
+  count: number
+  points: string[]
+  categories: string[]
+  forceSummarize: boolean
+  lobpunkte: string[]
+  vorOrtErwaehnt: boolean
+}> {
+  const systemPrompt = `Rolle: Du bist ein nuechterner Fakten-Extraktor fuer Restaurant-Bewertungen. Deine einzige Aufgabe ist es, den Text einer Google-Bewertung in vordefinierte Datenpunkte zu zerlegen. Du verfasst keine Antwort an den Gast und interpretierst nichts hinein.
 
-Kategorien:
-A = Konzept/strukturell (Hausregeln, Lautstaerke bei vollem Haus, Tischvergabe, Oeffnungszeiten)
-B = Echter Fehler (Wartezeiten, falscher Tisch, unfreundlicher Service, vergessene Bestellungen)
-C = Geschmack/Wahrnehmung (zu scharf, zu wenig Portion, nicht gemuetlich)
+Ausgabe-Regel: Antworte AUSSCHLIESSLICH mit einem validen JSON-Objekt. Keine Markdown-Formatierung, kein Einleitungstext, kein Schlusstext. Nur die pure JSON-Struktur:
+{"points":["Punkt1","Punkt2"],"categories":["B","A"],"lobpunkte":["Lob1"],"vor_ort_erwaehnt":false}
 
-Maximal 3 Woerter pro Punkt. Nur Kritikpunkte, kein Lob. Reihenfolge wie in der Bewertung.`
+Regeln zur Extraktion:
+1. "points": Array von Strings mit konkret benannten KRITIKPUNKTEN. Max. 3 Woerter pro Punkt. Reihenfolge wie in der Bewertung. Kein Lob hier.
+2. "categories": Fuer jeden Kritikpunkt aus "points", in gleicher Reihenfolge, ein Kategorie-Buchstabe:
+   A = Konzept/strukturell (Hausregeln, Lautstaerke bei vollem Haus, Tischvergabe, Oeffnungszeiten)
+   B = Echter Fehler (Wartezeiten, falscher Tisch, unfreundlicher Service, vergessene Bestellungen)
+   C = Geschmack/Wahrnehmung (zu scharf, zu wenig Portion, nicht gemuetlich)
+3. "lobpunkte": Array von Strings mit konkret benannten POSITIVEN Erwaehnungen (z.B. "Essen schmeckte gut"). Max. 3-4 Woerter pro Punkt. Wenn kein Lob vorhanden: leeres Array [].
+4. "vor_ort_erwaehnt": Boolean. true, wenn aus dem Text unmissverstaendlich hervorgeht, dass der Gast etwas bereits vor Ort dem Personal gegenueber angesprochen hat (z.B. "haben wir dem Kellner gesagt", "wurde nach Beschwerde umgetauscht"). Sonst false.`
 
   const userMessage = `Bewertung:\n"${reviewText}"`
 
@@ -1131,15 +1141,20 @@ Maximal 3 Woerter pro Punkt. Nur Kritikpunkte, kein Lob. Reihenfolge wie in der 
     const parsed = JSON.parse(cleaned)
     const points = parsed.points || []
     const categories = parsed.categories || []
+    const lobpunkte = parsed.lobpunkte || []
+    const vorOrtErwaehnt = parsed.vor_ort_erwaehnt === true
+
     return {
       count: points.length,
       points,
       categories,
-      forceSummarize: points.length >= 3
+      forceSummarize: points.length >= 3,
+      lobpunkte,
+      vorOrtErwaehnt
     }
   } catch (e) {
     console.error('analyzeReview failed:', e)
-    return { count: 0, points: [], categories: [], forceSummarize: false }
+    return { count: 0, points: [], categories: [], forceSummarize: false, lobpunkte: [], vorOrtErwaehnt: false }
   }
 }
 
