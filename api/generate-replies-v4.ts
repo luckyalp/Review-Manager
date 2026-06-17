@@ -642,7 +642,13 @@ ${contactEmail ? `Kontakt-E-Mail (nur erwaehnen, wenn ein Kontaktangebot fuer DI
 Bewertung von ${firstNameClean || 'einem Gast'} (${stars} Sterne):
 "${reviewText}"
 
-${analysis && analysis.lobpunkte.length > 0 ? `LOB AUS VORSTUFE ERKANNT: ${analysis.lobpunkte.join(', ')}. Falls passend, kannst du dies ehrlich aufgreifen.\n` : ''}${analysis && analysis.vorOrtErwaehnt ? `HINWEIS AUS VORSTUFE: Der Gast hat laut Analyse bereits etwas vor Ort angesprochen. Beruecksichtige das gemaess der Regeln weiter unten im Prompt zum Thema "vor Ort".\n` : ''}${analysis && analysis.forceSummarize ? `ANALYSE-ERGEBNIS (Fakt aus Vorstufe, NICHT aenderbar):
+${analysis ? `FAKTEN-ORIENTIERUNG AUS VORSTUFE (nur Stuetze, damit du beim Schreiben nichts uebersiehst):
+${analysis.lobpunkte.length > 0 ? `- Positiv erwaehnt: ${analysis.lobpunkte.join(', ')}` : ''}
+${analysis.points.length > 0 ? `- Kritisiert: ${analysis.points.join(', ')}` : ''}
+- Vor Ort bereits angesprochen: ${analysis.vorOrtErwaehnt ? 'ja' : 'nicht erkennbar'}
+
+REGEL: ORIGINAL HAT VORRANG. Die Originalbewertung oben ist deine einzige verbindliche Quelle. Die Punkte in dieser Fakten-Orientierung sind nur eine grobe Stuetze. Falls ein Widerspruch zwischen diesen Punkten und dem tatsaechlichen Bewertungstext besteht, hat der originale Bewertungstext IMMER Vorrang. Erfinde niemals Details, die nicht im Originaltext stehen.
+` : ''}${analysis && analysis.forceSummarize ? `ANALYSE-ERGEBNIS (Fakt aus Vorstufe, NICHT aenderbar):
 Diese Bewertung enthaelt ${analysis.count} Kritikpunkte (${analysis.points.join(', ')}).
 ZUSAMMENFASSUNGS-PFLICHT: Bei ${analysis.count} Kritikpunkten MUSST du alle Punkte in EINEM zusammenfassenden Satz behandeln, z.B. "da scheint bei uns einiges nicht rundgelaufen zu sein."
 VERBOTEN: Mehr als EINEN konkreten Punkt namentlich in der Antwort nennen. Keine Aufzaehlungen, keine Listen, keine Doppelpunkte gefolgt von mehreren Punkten. Auch eine zweite, abgeschwaechte Aufzaehlung ist verboten. FALSCH: "der Rest, von der Wartezeit ueber den Tisch bis zum Service". Nach der einen Zusammenfassung kommt KEINE weitere Nennung einzelner Punkte.
