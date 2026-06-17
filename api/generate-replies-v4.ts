@@ -12,6 +12,26 @@ function classify(rating: number, reviewText: string) {
   return 'CONTENT_NEGATIVE'
 }
 
+// ─── STATION 2 / ROUTER (reiner Code, kein KI-Aufruf) ─────────────────────
+// Buendelt die bestehenden Entscheidungen (classify, forceSummarize) an einem
+// Ort und ergaenzt das Recovery-Signal. Wird aktuell nur protokolliert,
+// veraendert das sichtbare Antwortverhalten noch nicht.
+function routeDecision(
+  rating: number,
+  reviewText: string,
+  analysis: { count: number; forceSummarize: boolean }
+): {
+  mode: string
+  forceSummarize: boolean
+  recoverySignal: boolean
+} {
+  return {
+    mode: classify(rating, reviewText),
+    forceSummarize: analysis.forceSummarize,
+    recoverySignal: rating <= 2
+  }
+}
+
 function buildPrompt(reviewText: string, rating: number, reviewerName: string, settings: any): string {
   const {
     businessName = 'das Restaurant',
@@ -1245,8 +1265,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       })
     }
 
-    // ── SCHRITT 0b: Review-Analyse (Haiku, deterministisch) ─────────────────
+    // ── SCHRITT 0b: Review-Analyse / Agent 1 (Haiku, deterministisch) ───────
     const analysis = await analyzeReview(reviewText)
+
+    // ── SCHRITT 0c: Station 2 / Router (reiner Code) ────────────────────────
+    const routing = routeDecision(stars, reviewText, analysis)
+    console.log('Station 2 Routing:', routing)
 
     // ════════════════════════════════════════════════════════════════════
     // TEMPORAER: Nur "Frei (Test)" generieren, um API-Kosten zu sparen
