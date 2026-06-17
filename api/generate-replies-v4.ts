@@ -1267,6 +1267,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // ── SCHRITT 0b: Review-Analyse / Agent 1 (Haiku, deterministisch) ───────
     const analysis = await analyzeReview(reviewText)
+    console.log('Agent 1 Analyse:', analysis)
 
     // ── SCHRITT 0c: Station 2 / Router (reiner Code) ────────────────────────
     const routing = routeDecision(stars, reviewText, analysis)
