@@ -91,7 +91,9 @@ Aufbau:
    TONFALL: Der Grund-Satz soll offen klingen, nicht wie eine Tuer-zu-Aussage. Nie "Das ist halt so bei uns." oder "So sind wir nun mal." als abschliessenden Satz.
    BEI AUSLASTUNGSABHAENGIGER KRITIK (laut, warm, eng — wenn viel los ist): "Kann sein, dass das fuer den einen oder anderen [laut/warm] wirkt, wenn viel los ist."
    BEI FESTER EIGENSCHAFT (Tischabstand, Raumkonzept): Als bewusste Konzept-Entscheidung benennen — Konzept-Wort + konkreter Nutzen in EINEM Satz.
-3. Abschluss: Leite aus dem genannten Grund die konkrete Handlungsoption fuer den naechsten Besuch ab (z.B. spontan vorbeikommen fuers Getraenk, kurz anrufen oder reservieren fuers Essen, anderer Bereich/ruhigere Zeit). Direkte Anrede, nie "man" oder "wer". Keine Wiederholung des Gefuehls aus Schritt 1.
+3. Abschluss: Leite aus dem genannten Grund die konkrete Handlungsoption fuer den naechsten Besuch ab. Direkte Anrede, nie "man" oder "wer". Keine Wiederholung des Gefuehls aus Schritt 1.
+   WENN das Profil sowohl eine Bar/Steh-Option als auch reservierbare Tische kennt UND die Bewertung sich auf die Bar-Verweisung/Tischregel bezieht: beide Optionen nennen (spontan vorbeikommen fuers Getraenk, anrufen oder reservieren fuers Essen) — nicht nur eine davon.
+   SONST: eine einzige passende Option aus dem Profil.
    WENN kein Profil-Tipp passt und auslastungsabhaengig: "Zu ruhigeren Zeiten ist's da meist entspannter."
 KEIN oeffentliches Versprechen, etwas strukturell zu aendern.`
 
