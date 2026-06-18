@@ -279,6 +279,7 @@ SCHRITT 2 — EINORDNUNG gemaess Kategorie-Bloecken:
 ${kategorieBloecke}
 
 BEI MEHREREN KATEGORIEN: Kat-B-Fehler in EINEM zusammenfassenden Satz ("da scheint bei uns einiges nicht rundgelaufen zu sein") — keine Aufzaehlung. Kat-A und Kat-B mit "und" verbinden, nicht mit "aber".
+ABSCHLUSS-PRIORITAET BEI MEHREREN KATEGORIEN: Die jeweiligen Kategorie-Bloecke geben fuer Punkt 3 (Abschluss) je eine eigene Anweisung — bei mehreren Kategorien gleichzeitig darf NICHT nur eine davon zufaellig gewaehlt werden und die andere komplett wegfallen. Bestimme die PRIORITAET danach, welches Thema in der Bewertung ZUERST genannt wird UND ausfuehrlicher/emotionaler beschrieben ist — dieses Thema bekommt den vollen Abschluss-Satz aus seinem Kategorie-Block. Das andere Thema wird NICHT ignoriert, sondern kurz, nebenbei in einem Halbsatz mitgenommen (z.B. angehaengt mit "und" oder als knapper Zusatz), nicht als gleichrangiger zweiter Abschluss-Absatz.
 
 ABSCHLUSS: Kein Kontaktangebot ausser die Bewertung ist ein echter Kat-B-Fehler mit offenem Gespraechsbedarf. Kein oeffentliches Strukturversprechen. Kein betteln um eine zweite Chance.
 
