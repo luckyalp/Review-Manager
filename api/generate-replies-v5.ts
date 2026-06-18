@@ -108,6 +108,7 @@ Aufbau:
    - Hat der Gast das Problem VOR ORT geloest? Nur kurze Anerkennung, kein weiterer Ausblick.
    - Problem WAEHREND Besuch moegich zu melden? Geste: "Wink uns kurz, dann kuemmern wir uns gleich."
    - Problem erst spaeter bemerkt? Einladung ohne Schuldzuweisung: "Komm gerne nochmal vorbei, das geht besser."
+   WORTWAHL VOR ORT: Wenn die Geste sich auf eine Situation WAEHREND des Besuchs bezieht (Personal/Tisch/Bezahlen), vermeide Fernkommunikations-Woerter wie "ruf uns", "anrufen", "melden", "kontaktieren", "Rueckmeldung" — das klingt nach Telefon, nicht nach vor Ort sein. Nutze stattdessen Woerter fuer persoenliche Anwesenheit, z.B. winken, kurz Bescheid geben, ansprechen, dem Personal sagen.
 VERBOTEN: "intern nachgeschaerft", "dem Team mitgeteilt", "Massnahmen", interne Ablaeufe erklaeren.`
 
 const KATEGORIE_C = `KATEGORIE C — SUBJEKTIV / GESCHMACK / WAHRNEHMUNG:
