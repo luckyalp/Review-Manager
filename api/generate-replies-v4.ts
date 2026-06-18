@@ -591,11 +591,12 @@ KATEGORIE A - KONZEPT ODER STRUKTURELL FIX: Wenn die Kritik etwas betrifft, das 
   Der Abschluss-Satz wiederholt NICHT die Erklaerung aus dem Mittelteil. Er leitet daraus die KONKRETEN ALTERNATIVEN ab, die der Gast fuer seinen naechsten Besuch hat.
   PFLICHT: Pruefe im Restaurantprofil, welche Optionen dem Gast offenstehen (z.B. verschiedene Bereiche wie Bar/Stehtische/normale Tische, Reservierung vs. spontan vorbeikommen, unterschiedliche Angebote je nach Bereich, akzeptierte Zahlungsmethoden, ruhigere Zeiten). Nenne diese Alternativen konkret und in eigenen Worten.
   KEIN ZWANG: Formuliere Empfehlungen, keine Pflichten. "Lohnt sich kurz vorher anrufen" statt "du musst reservieren".
-  NORMALFALL (Gast kommt wieder oder sagt nichts dazu): Nenne den konkreten Tipp direkt, z.B. "Fuer ein Getraenk kannst du auch spontan vorbeikommen, und wenn du richtig essen moechtest, lohnt sich kurz vorher anrufen, damit ein Tisch frei ist."
-  SONDERFALL (Gast sagt explizit, er kommt nicht wieder): Genau derselbe konkrete Tipp, nur mit "Falls es dich doch nochmal zu uns zieht:" davor. Tuer offen lassen, nicht betteln.
+  NORMALFALL (Gast kommt wieder oder sagt nichts dazu): Wenn das Profil sowohl eine Bar/Steh-Option als auch normale Tische kennt, nutze als verbindlichen Rahmen: "Fuer ein Getraenk kannst du auch spontan vorbeikommen, und wenn du richtig essen moechtest, lohnt sich kurz vorher anrufen, damit ein Tisch frei ist." (Wortlaut anpassbar an Ton/Anrede, aber beide Teile — spontan fuer Getraenk, anrufen fuer Essen — muessen vorkommen, nicht nur einer der beiden.)
+  SONDERFALL (Gast sagt explizit, er kommt nicht wieder): Genau derselbe konkrete Tipp wie im Normalfall, nur eingeleitet mit "Falls es dich doch nochmal zu uns zieht," (mit Komma, kein Doppelpunkt) statt direkt. Tuer offen lassen, nicht betteln.
   FALSCH: "Wir wuerden uns trotzdem freuen, dir eine zweite Chance zu zeigen." (betteln)
   FALSCH: "Komm gerne nochmal vorbei, dann zeigen wir dir, wer wir wirklich sind." (generische Floskel ohne Bezug)
   FALSCH: "Komm gerne nochmal vorbei." (leer, keine konkrete Handlungsoption)
+  FALSCH: "Das ist kein Urteil ueber dich/den Gast." (steife, erklaerende Meta-Aussage, kein Gastronom sagt das im Gespraech so. Die Regel einfach erklaeren reicht, sie muss nicht zusaetzlich verteidigt werden.)
   WENN das Profil KEINE konkreten Alternativen hergibt: pruefe ob das Problem auslastungsabhaengig ist. Wenn ja: unverbindlicher Tipp zu ruhigeren Zeiten, z.B. "Zu ruhigeren Zeiten ist's da meist entspannter." oder "Wenn du gezielt zu einer ruhigeren Zeit kommst, ist es meist entspannter." Der Tipp muss wie eine planbare Handlung klingen (eine bestimmte Zeit waehlen), NIEMALS wie Zufall oder Glueck (z.B. NICHT "falls du einen ruhigeren Moment erwischst" — das klingt wie Lotterie, nicht wie ein Tipp). Wenn auch das nicht passt (dauerhafte/bauliche Sache, z.B. fehlende Barrierefreiheit): KEINEN Abschluss-Satz erzwingen — Validierung + Grund ist eine vollstaendige Antwort.
   WENN die Bewertung ZUSAETZLICH echte Service-Fehler enthaelt (Kat B), die NICHT zur Hausregel gehoeren (z.B. Umgangston, widerspruechliches Verhalten): Diese werden im Mittelteil separat angesprochen. Der Abschluss nennt die konkreten Alternativen aus dem Profil.
   DIREKTE ANREDE: Sprich den Gast in der GESAMTEN Antwort IMMER direkt an (du/Sie), NIEMALS generisch in der dritten Person ("wer", "man"). Gilt fuer Mittelteil UND Abschluss.
@@ -881,6 +882,14 @@ function hasApology(text: string): boolean {
   return APOLOGY_PATTERN.test(text)
 }
 
+// Gedankenstriche — laut Prompt ABSOLUTES VERBOT (Zeile ~516), aber von der KI
+// nicht zuverlaessig befolgt. Harter Code-Check statt nur Prompt-Anweisung,
+// da ein Bindestrich-Zeichen eindeutig erkennbar ist und keine KI-Interpretation braucht.
+const DASH_PATTERN = /[\u2013\u2014]| - /
+function hasDash(text: string): boolean {
+  return DASH_PATTERN.test(text)
+}
+
 function sanitizeVariants(
   variants: { label: string; text: string }[],
   signature: string
@@ -897,6 +906,7 @@ function sanitizeVariants(
     if (hasInternalReference(v.text)) issues.push('internal_reference')
     if (hasTimeReference(v.text)) issues.push('time_reference')
     if (hasCorporatePhrase(v.text)) issues.push('corporate_phrase')
+    if (hasDash(v.text)) issues.push('dash')
     if (i === 0 && hasApology(v.text)) issues.push('apology_in_v1')
     if (issues.length > 0) {
       flagged.push(`${v.label}: ${issues.join(', ')}`)
@@ -927,6 +937,8 @@ const SANITIZE_ISSUE_TEXT: Record<string, (signature: string) => string> = {
     'Enthaelt einen Tageszeit-Bezug (z.B. "Abend", "Morgen", "Mittag", "Nacht"). Das ist verboten — nutze stattdessen "Besuch", "Aufenthalt" oder "Zeit bei uns".',
   corporate_phrase: () =>
     'Enthaelt eine sinngemaesse Konzern-Floskel (z.B. "kein Erlebnis das...", "nicht das was wir...", "entspricht nicht..."). Formuliere stattdessen ehrlich und persoenlich, ohne solche Floskeln.',
+  dash: () =>
+    'Enthaelt einen Gedankenstrich ("–" oder "—") oder einen Bindestrich als Satzabgrenzung. Das ist absolut verboten — ersetze ihn durch einen Punkt oder ein Komma.',
 }
 
 function buildRegenFeedback(
