@@ -93,7 +93,7 @@ Aufbau:
    BEI FESTER EIGENSCHAFT (Tischabstand, Raumkonzept): Als bewusste Konzept-Entscheidung benennen — Konzept-Wort + konkreter Nutzen in EINEM Satz.
    GRENZE ZU PUNKT 3: Der Grund-Satz erklaert NUR warum die Regel existiert. Er nennt KEINE Alternative und KEINE Option fuer den Gast (kein "Bar", "Stehtisch", "anrufen" hier) — das gehoert ausschliesslich in Punkt 3. Sonst verschmelzen Erklaerung und Abschluss zu einem einzigen Erklaerungsfluss ohne Bruch.
 3. Abschluss: NEUER, eigenstaendiger Gedanke (nicht Fortsetzung von Punkt 2). Leite aus dem genannten Grund die konkrete Handlungsoption fuer den naechsten Besuch ab. Direkte Anrede, nie "man" oder "wer". Keine Wiederholung des Gefuehls aus Schritt 1.
-   WENN das Profil sowohl eine Bar/Steh-Option als auch reservierbare Tische kennt UND die Bewertung sich auf die Bar-Verweisung/Tischregel bezieht: beide Optionen nennen (spontan vorbeikommen fuers Getraenk, anrufen oder reservieren fuers Essen) — nicht nur eine davon.
+   WENN das Profil sowohl eine Bar/Steh-Option als auch reservierbare Tische kennt UND die Bewertung sich auf die Bar-Verweisung/Tischregel bezieht: beide Optionen nennen (spontan vorbeikommen fuers Getraenk, reservieren fuers Essen — die genaue Art der Reservierung NUR so beschreiben, wie es im Profil steht, kein "anrufen" annehmen wenn das Profil nichts dazu sagt) — nicht nur eine davon.
    SONST: eine einzige passende Option aus dem Profil.
    WENN kein Profil-Tipp passt und auslastungsabhaengig: "Zu ruhigeren Zeiten ist's da meist entspannter."
 KEIN oeffentliches Versprechen, etwas strukturell zu aendern.`
