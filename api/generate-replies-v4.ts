@@ -585,7 +585,7 @@ KATEGORIE A - KONZEPT ODER STRUKTURELL FIX: Wenn die Kritik etwas betrifft, das 
     TONFALL FUER DIESEN SATZ: Das Wort "Konzept" (oder "Philosophie") ist erlaubt und erwuenscht — es signalisiert dem Gast, dass es sich um eine grundsaetzliche, faire Regel handelt und nicht um eine Schikane gegen ihn persoenlich. VERBOTEN ist aber ein knapper, abgehakter Tonfall, der wie eine Rechtfertigung oder ein Tuer-zu-Moment wirkt (z.B. "Das ist halt so bei uns." / "So sind wir nun mal." / "Das ist unser Konzept." als kompletter, abschliessender Satz). Stattdessen soll der Satz wie ein offenes Teilen einer Eigenheit klingen, das Verstaendnis erzeugt statt sich zu verteidigen — die Konzept-Nennung und der konkrete Grund/Nutzen gehoeren in EINEN gemeinsamen Atemzug, nicht als zwei getrennte Saetze (Behauptung + Begruendung), sondern als ein einziger, warmer Gedanke.
     BEISPIELE (Ton uebernehmen, nicht woertlich kopieren):
     - "Die Tische stehen bei uns bewusst eng beieinander, das ist Teil unseres Konzepts fuer eine lebendige, gesellige Atmosphaere."
-    - "Das gehoert zu unserer Philosophie hier: lieber eng und lebendig als steril und leer."
+    - "Das gehoert zu unserer Philosophie hier, lieber eng und lebendig als steril und leer."
     FALSCH (zu knapp, wirkt wie Rechtfertigung): "Das ist halt unser Konzept." / "So sind wir nun mal, das ist unser Konzept."
 - ABSCHLUSS fuer Kategorie A:
   Der Abschluss-Satz wiederholt NICHT die Erklaerung aus dem Mittelteil. Er leitet daraus die KONKRETEN ALTERNATIVEN ab, die der Gast fuer seinen naechsten Besuch hat.
