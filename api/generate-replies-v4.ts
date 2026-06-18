@@ -1242,6 +1242,19 @@ async function buildFreeVariant(
       }
     }
 
+    // Letzte Absicherung: Falls nach allen Regenerierungsversuchen immer noch
+    // ein Gedankenstrich im Text ist, automatisch durch Punkt ersetzen statt
+    // eine fehlerhafte Antwort auszugeben. Kostet keinen weiteren API-Call und
+    // garantiert zuverlaessig, dass das absolute Verbot eingehalten wird.
+    if (result && hasDash(result.text)) {
+      console.warn('Frei (Test): Gedankenstrich nach allen Versuchen noch vorhanden, ersetze automatisch durch Punkt.')
+      const fixed = result.text
+        .replace(/\s*[\u2013\u2014]\s*|\s+-\s+/g, '. ')
+        .replace(/\.\s*\./g, '.')
+        .replace(/\.\s+([a-zäöüß])/g, (_, c: string) => `. ${c.toUpperCase()}`)
+      result = { ...result, text: fixed }
+    }
+
     return result ? { ...result, isFreeTest: true } : null
   } catch (e) {
     console.error('Free-variant generation failed:', e)
