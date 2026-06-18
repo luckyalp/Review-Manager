@@ -297,6 +297,7 @@ ${analysis ? `FAKTEN AUS VORSTUFE (nur Stuetze — Original hat immer Vorrang):
 ${analysis.lobpunkte.length > 0 ? `- Positiv erwaehnt: ${analysis.lobpunkte.join(', ')}` : ''}
 ${analysis.points.length > 0 ? `- Kritisiert: ${analysis.points.join(', ')}` : ''}
 - Vor Ort angesprochen: ${analysis.vorOrtErwaehnt ? 'ja' : 'nicht erkennbar'}` : ''}
+${analysis && analysis.points.length > 1 ? `\nAUFGABENTEILUNG BEI MEHREREN KRITIKPUNKTEN (${analysis.points.length} erkannt): Der Validierungssatz (Schritt 1) beschreibt NUR das Gesamtgefuehl/den Gesamteindruck des Besuchs (z.B. "kein runder Abschluss", "ein unrunder Verlauf") und benennt dabei KEINEN der einzelnen konkreten Vorfaelle. Die konkreten Vorfaelle (${analysis.points.join(', ')}) werden ausschliesslich in Schritt 2 behandelt, jeder genau einmal. So wird kein Vorfall doppelt genannt (einmal in der Validierung, einmal in der Einordnung).` : ''}
 ${analysis?.forceSummarize ? `\nZUSAMMENFASSUNGS-PFLICHT: ${analysis.count} Kritikpunkte erkannt — alle in EINEM zusammenfassenden Satz behandeln. VERBOTEN: Mehr als einen konkreten Punkt namentlich nennen.` : ''}
 
 Schreibe EINE freie, persoenliche Antwort (2-4 Saetze, passend zum Anlass).
@@ -596,7 +597,7 @@ PRUEFE AUF DIESE PUNKTE:
 5. GEDANKENSTRICHE: "–" oder "—" vorhanden? → SOFORT SCHWACH
 6. PRONOMEN: Wechselt zwischen "ich" und "wir" obwohl Signatur "${signature}" ein Team ist? → SCHWACH
 7. LOB IGNORIERT: Gast erwaehnte trotz Kritik etwas Positives und Antwort ignoriert das komplett? → SCHWACH
-8. INHALTLICHE BINDUNG: Enthaelt der Validierungssatz UND der Abschluss-Satz jeweils mindestens ein konkretes, aus der Bewertung erkennbares Element (Wort oder enge Paraphrase des tatsaechlichen Kritikpunkts)? Pruefe nicht nur ob die Saetze formal/stilistisch passen, sondern ob sie eindeutig auf DIESE Bewertung zurueckfuehrbar sind und nicht generisch austauschbar waeren. Ein Abschluss-Satz der nur eine bereits vom Gast kritisierte Sache wiederholt (z.B. Gast beschwert sich ueber Bar-Verweisung, Abschluss verweist erneut nur auf die Bar ohne neue Option) gilt als NICHT ausreichend gebunden → SCHWACH.
+8. INHALTLICHE BINDUNG: Enthaelt der Abschluss-Satz mindestens ein konkretes, aus der Bewertung erkennbares Element (Wort oder enge Paraphrase des tatsaechlichen Kritikpunkts)? Der Abschluss muss eindeutig auf DIESE Bewertung zurueckfuehrbar sein und nicht generisch austauschbar. Ein Abschluss-Satz der nur eine bereits vom Gast kritisierte Sache wiederholt (z.B. Gast beschwert sich ueber Bar-Verweisung, Abschluss verweist erneut nur auf die Bar ohne neue Option) gilt als NICHT ausreichend gebunden → SCHWACH. HINWEIS: Der Validierungssatz darf bei MEHREREN Kritikpunkten bewusst nur das Gesamtgefuehl ausdruecken ohne einen einzelnen Vorfall zu benennen — das ist dann KEIN Mangel, sondern gewollt.
 
 AUSGABE — NUR dieses JSON:
 {"ok": true, "reason": ""}`
