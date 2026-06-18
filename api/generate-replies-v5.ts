@@ -793,7 +793,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // ── 2: Haupt-Variant + Recovery (parallel) ────────────────────────────────
     const [mainVariant, recoveryVariant] = await Promise.all([
       generateVariant(mode, reviewText, stars, reviewerName, settings, analysis, signature),
-      stars <= 2 ? buildRecoveryVariant(reviewText, reviewerName, settings) : Promise.resolve(null),
+      Promise.resolve(null), // Recovery deaktiviert — kein API-Call mehr, spart Kosten
     ])
 
     const answers: any[] = []
