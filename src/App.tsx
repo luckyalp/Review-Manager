@@ -62,8 +62,8 @@ const supabase = createClient(
 
 function App() {
   const [page, setPage] = useState('dashboard')
-  const [engine, setEngine] = useState<'v2' | 'v1' | 'v3' | 'v4'>(() => {
-    return (localStorage.getItem('rezpondEngine') as 'v2' | 'v1' | 'v3' | 'v4') || 'v1'
+  const [engine, setEngine] = useState<'v2' | 'v1' | 'v3' | 'v4' | 'v5'>(() => {
+    return (localStorage.getItem('rezpondEngine') as 'v2' | 'v1' | 'v3' | 'v4' | 'v5') || 'v5'
   })
   const [reviews, setReviews] = useState<Review[]>([])
   const [reviewsLoading, setReviewsLoading] = useState(true)
@@ -412,7 +412,7 @@ function StatusBadge({ status }: { status: ReviewStatus }) {
 
 // ─── DASHBOARD ───────────────────────────────────────────────────────────────
 
-function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews, userId, engine }: { stats: any, reviews: Review[], openReview: (r: Review) => void, onAddReview: (r: Review) => void, onNavigateReviews: (filter?: string) => void, userId?: string, engine: 'v2' | 'v1' | 'v3' | 'v4' }) {
+function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews, userId, engine }: { stats: any, reviews: Review[], openReview: (r: Review) => void, onAddReview: (r: Review) => void, onNavigateReviews: (filter?: string) => void, userId?: string, engine: 'v2' | 'v1' | 'v3' | 'v4' | 'v5' }) {
   const [testRunning, setTestRunning] = useState(false)
   const [testDone, setTestDone] = useState(false)
   const [testError, setTestError] = useState('')
@@ -508,7 +508,7 @@ function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews,
     }
 
     try {
-      const _endpoint = engine === 'v1' ? '/api/generate-replies' : engine === 'v3' ? '/api/generate-replies-v3' : engine === 'v4' ? '/api/generate-replies-v4' : '/api/generate-replies-v2'
+      const _endpoint = engine === 'v1' ? '/api/generate-replies' : engine === 'v3' ? '/api/generate-replies-v3' : engine === 'v4' ? '/api/generate-replies-v4' : engine === 'v5' ? '/api/generate-replies-v5' : '/api/generate-replies-v2'
       const repliesRes = await fetch(_endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1034,7 +1034,7 @@ const rdStyles = `
 
 // ─── REVIEW DETAIL ───────────────────────────────────────────────────────────
 
-function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engine }: { review: Review, onStatusChange: (id: number, s: ReviewStatus) => void, onBack: () => void, onNavigateSettings: () => void, engine: 'v2' | 'v1' | 'v3' | 'v4' }) {
+function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engine }: { review: Review, onStatusChange: (id: number, s: ReviewStatus) => void, onBack: () => void, onNavigateSettings: () => void, engine: 'v2' | 'v1' | 'v3' | 'v4' | 'v5' }) {
   const [aiLoading, setAiLoading] = useState(false)
   const [answers, setAnswers] = useState<{label: string, text: string, isRecovery?: boolean}[]>([])
   const [selectedId, setSelectedId] = useState<number | null>(null)
@@ -1105,7 +1105,7 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
     setAiLoading(true)
     setMissingContext(null)
     try {
-      const _endpoint = engine === 'v1' ? '/api/generate-replies' : engine === 'v3' ? '/api/generate-replies-v3' : engine === 'v4' ? '/api/generate-replies-v4' : '/api/generate-replies-v2'
+      const _endpoint = engine === 'v1' ? '/api/generate-replies' : engine === 'v3' ? '/api/generate-replies-v3' : engine === 'v4' ? '/api/generate-replies-v4' : engine === 'v5' ? '/api/generate-replies-v5' : '/api/generate-replies-v2'
       const response = await fetch(_endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1784,7 +1784,7 @@ function Analytics({ reviews, userId }: { reviews: Review[], userId?: string }) 
 
 // ─── EINSTELLUNGEN ────────────────────────────────────────────────────────────
 
-function Settings({ onLogout, userId, engine, onEngineChange }: { onLogout: () => void, userId?: string, engine: 'v2' | 'v1' | 'v3' | 'v4', onEngineChange: (e: 'v2' | 'v1' | 'v3' | 'v4') => void }) {
+function Settings({ onLogout, userId, engine, onEngineChange }: { onLogout: () => void, userId?: string, engine: 'v2' | 'v1' | 'v3' | 'v4' | 'v5', onEngineChange: (e: 'v2' | 'v1' | 'v3' | 'v4' | 'v5') => void }) {
   const [form, setForm] = useState({
     businessName: '', description: '', restaurantType: '', cuisineType: '',
     priceRange: '', dietaryOptions: '', openingHours: '',
@@ -2111,11 +2111,12 @@ function Settings({ onLogout, userId, engine, onEngineChange }: { onLogout: () =
           <div style={{ fontSize: '12px', color: '#9ca3af', fontWeight: '600', letterSpacing: '0.05em', marginBottom: '10px' }}>🧪 ENGINE TEST</div>
           <div style={{ display: 'flex', gap: '8px' }}>
             {([
-              { key: 'v2', label: 'v2 (Standard)' },
+              { key: 'v5', label: 'v5 (aktiv)' },
+              { key: 'v4', label: 'v4' },
+              { key: 'v2', label: 'v2' },
               { key: 'v1', label: 'v1 (alt)' },
-              { key: 'v3', label: 'v3 (Pfad 1/2/3)' },
-              { key: 'v4', label: 'v4 (neu)' },
-            ] as { key: 'v2' | 'v1' | 'v3' | 'v4', label: string }[]).map(opt => (
+              { key: 'v3', label: 'v3' },
+            ] as { key: 'v2' | 'v1' | 'v3' | 'v4' | 'v5', label: string }[]).map(opt => (
               <button
                 key={opt.key}
                 onClick={() => onEngineChange(opt.key)}
@@ -2136,7 +2137,7 @@ function Settings({ onLogout, userId, engine, onEngineChange }: { onLogout: () =
           </div>
           <div style={{ fontSize: '13px', color: '#6b7280', marginTop: '10px' }}>
             Aktiv: <strong style={{ color: '#0f4c5c' }}>
-              {engine === 'v1' ? 'generate-replies (alt)' : engine === 'v3' ? 'generate-replies-v3 (Pfad 1/2/3)' : engine === 'v4' ? 'generate-replies-v4 (neu)' : 'generate-replies-v2 (Standard)'}
+              {engine === 'v1' ? 'generate-replies (alt)' : engine === 'v3' ? 'generate-replies-v3' : engine === 'v4' ? 'generate-replies-v4' : engine === 'v5' ? 'generate-replies-v5 (aktiv)' : 'generate-replies-v2'}
             </strong>
           </div>
         </div>
