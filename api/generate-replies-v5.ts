@@ -596,6 +596,7 @@ PRUEFE AUF DIESE PUNKTE:
 5. GEDANKENSTRICHE: "–" oder "—" vorhanden? → SOFORT SCHWACH
 6. PRONOMEN: Wechselt zwischen "ich" und "wir" obwohl Signatur "${signature}" ein Team ist? → SCHWACH
 7. LOB IGNORIERT: Gast erwaehnte trotz Kritik etwas Positives und Antwort ignoriert das komplett? → SCHWACH
+8. INHALTLICHE BINDUNG: Enthaelt der Validierungssatz UND der Abschluss-Satz jeweils mindestens ein konkretes, aus der Bewertung erkennbares Element (Wort oder enge Paraphrase des tatsaechlichen Kritikpunkts)? Pruefe nicht nur ob die Saetze formal/stilistisch passen, sondern ob sie eindeutig auf DIESE Bewertung zurueckfuehrbar sind und nicht generisch austauschbar waeren. Ein Abschluss-Satz der nur eine bereits vom Gast kritisierte Sache wiederholt (z.B. Gast beschwert sich ueber Bar-Verweisung, Abschluss verweist erneut nur auf die Bar ohne neue Option) gilt als NICHT ausreichend gebunden → SCHWACH.
 
 AUSGABE — NUR dieses JSON:
 {"ok": true, "reason": ""}`
