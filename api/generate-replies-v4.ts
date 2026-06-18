@@ -1074,6 +1074,80 @@ async function buildRecoveryVariant(
   }
 }
 
+// ─── PRUEF-LAYER FUER FREIE VARIANTE (Haiku, deterministisch) ──────────────
+// Angepasste, schlanke Version des alten buildJudgePrompt: auf EINE Antwort
+// zugeschnitten statt drei Varianten, ergaenzt um Anti-Halluzination und
+// Subjekt-Grammatik-Check (beide aus echten Fehlerfaellen vom 18.06. entstanden).
+function buildFreeJudgePrompt(reviewText: string, answerText: string, signature: string): string {
+  return `Du bist ein strenger Qualitaetspruefer fuer eine Restaurant-Antwort auf eine Google-Bewertung.
+Deine einzige Aufgabe: Pruefen und urteilen. Du schreibst NICHTS neu.
+
+BEWERTUNG DES GASTES:
+"${reviewText}"
+
+ZU PRUEFENDE ANTWORT:
+"${answerText}"
+
+PRUEFE DIE ANTWORT AUF DIESE PUNKTE:
+
+1. ERFUNDENE BEGRUENDUNG (Anti-Halluzination)
+Behauptet die Antwort eine Ursache, Begruendung oder einen Umstand, der NICHT in der Bewertung steht und auch nicht als reine Moeglichkeit ("kann sein, dass...") formuliert ist?
+Typische erfundene Ursachen: "weil viel los war" / "Personalengpass" / "volles Haus" / "Kueche ueberlastet" / "stressiger Tag" als feststehende Tatsache statt Moeglichkeit.
+→ SCHWACH wenn eine Ursache als Tatsache behauptet wird, die nicht aus der Bewertung hervorgeht.
+
+2. GRAMMATIK UND SUBJEKT
+Ist jeder Satz vollstaendig (Subjekt, Praedikat, ggf. Objekt)?
+Ist das Subjekt bei Wahrnehmungs-Verben (hinterlassen, erlebt, wahrgenommen, empfunden) IMMER der Gast/der Besuch, nie die Ursache selbst (z.B. NICHT "die Lautstaerke hat deinen Besuch erlebt")?
+→ SCHWACH wenn ein Satz grammatisch unvollstaendig ist oder das falsche Subjekt hat.
+
+3. NACHERZAEHLUNG
+Wiederholt die Antwort den Fehler oder die Kritik woertlich/detailliert statt sie einzuordnen?
+→ SCHWACH wenn ja.
+
+4. VERBOTENE PHRASEN (corporate-speak)
+Enthaelt die Antwort: "intern nachgeschaerft" / "nehmen wir sehr ernst" / "entspricht nicht unserem Anspruch" / "Massnahmen ergriffen" / "Team sensibilisiert" / "Konsequenzen gezogen" / "vielen Dank fuer Ihre/deine Bewertung" / "vielen Dank fuer Ihr/dein Feedback" als Opener?
+→ SCHWACH wenn ja.
+
+5. GEDANKENSTRICHE
+Enthaelt die Antwort einen Gedankenstrich ("–" oder "—")?
+→ SOFORT SCHWACH. Keine Ausnahme.
+
+6. SINGULAR/PLURAL-KONSISTENZ
+Spricht die Antwort mal als "ich" und mal als "wir", obwohl die Signatur "${signature}" ein Team ist?
+→ SCHWACH wenn ja.
+
+7. LOB IGNORIERT
+Hat der Gast trotz Kritik etwas Positives erwaehnt, und die Antwort ignoriert das komplett?
+→ SCHWACH wenn ja.
+
+AUSGABE — NUR dieses JSON, kein anderer Text:
+{"ok": true, "reason": ""}
+
+Wenn die Antwort schwach ist: "ok": false und "reason" erklaert in einem Satz was genau falsch ist (welcher Punkt, welche Stelle).
+Wenn die Antwort gut ist: "ok": true und "reason": ""`
+}
+
+async function checkFreeVariant(
+  reviewText: string,
+  answerText: string,
+  signature: string
+): Promise<{ ok: boolean; reason: string }> {
+  try {
+    const prompt = buildFreeJudgePrompt(reviewText, answerText, signature)
+    const raw = await callClaude(prompt, undefined, 'claude-haiku-4-5-20251001', 0)
+    let cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
+    const js = cleaned.indexOf('{')
+    const je = cleaned.lastIndexOf('}')
+    if (js === -1 || je === -1) return { ok: true, reason: '' }
+    cleaned = cleaned.substring(js, je + 1)
+    const parsed = JSON.parse(cleaned)
+    return { ok: parsed.ok !== false, reason: parsed.reason || '' }
+  } catch (e) {
+    console.error('checkFreeVariant fehlgeschlagen, ueberspringe Pruefung:', e)
+    return { ok: true, reason: '' }
+  }
+}
+
 // ─── FREIE VARIANTE (Test, eigenstaendig, kann parallel laufen) ────────────
 async function buildFreeVariant(
   reviewText: string,
@@ -1118,14 +1192,30 @@ async function buildFreeVariant(
       const { issuesByVariant, flagged } = sanitizeVariants([candidate], signature)
       result = candidate // letzten Versuch als Fallback behalten
 
+      let judgeIssue: string | null = null
       if (flagged.length === 0) {
+        const judgeResult = await checkFreeVariant(reviewText, candidate.text, signature)
+        if (!judgeResult.ok) {
+          judgeIssue = judgeResult.reason
+        }
+      }
+
+      if (flagged.length === 0 && !judgeIssue) {
         break
       }
 
-      console.warn(`Frei (Test): Probleme gefunden (Versuch ${attempt}/${MAX_FREE_ATTEMPTS}):`, flagged)
+      if (judgeIssue) {
+        console.warn(`Frei (Test): Pruef-Layer fand Problem (Versuch ${attempt}/${MAX_FREE_ATTEMPTS}):`, judgeIssue)
+      }
+      if (flagged.length > 0) {
+        console.warn(`Frei (Test): Probleme gefunden (Versuch ${attempt}/${MAX_FREE_ATTEMPTS}):`, flagged)
+      }
 
       if (attempt < MAX_FREE_ATTEMPTS) {
         const feedbackLines = buildRegenFeedback([candidate], issuesByVariant, null, signature)
+        if (judgeIssue) {
+          feedbackLines.push(`- ${judgeIssue}`)
+        }
         const feedbackBlock = `\n\nHINWEIS: Ein vorheriger Entwurf hatte folgende Probleme — bitte vermeide sie:\n${feedbackLines.join('\n')}`
         userMessage = (freeParsed?._user || freePrompt_str) + feedbackBlock
       }
