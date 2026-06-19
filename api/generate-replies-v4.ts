@@ -1169,6 +1169,34 @@ async function checkFreeVariant(
   }
 }
 
+// ─── SCHLICHT-SCHRITT (zweiter Durchgang, Haiku, nur Ton-Korrektur) ────────
+async function simplifyText(text: string): Promise<string> {
+  const systemPrompt = `Du bist ein Lektor fuer kurze Restaurant-Antworten.
+Deine einzige Aufgabe: Den Text schlichter und menschlicher machen.
+Schreib ihn so um, wie ein Mensch ihn schnell und ehrlich sagen wuerde.
+Kuerzer, keine Bildsprache, keine Saetze die klug klingen wollen.
+Inhalt und Fakten bleiben gleich. Nur der Ton aendert sich.
+Gibt den ueberarbeiteten Text zurueck, sonst nichts.`
+
+  const userMessage = `Hier ist eine Antwort auf eine Restaurant-Bewertung:
+
+"${text}"
+
+Die gefaellt so nicht, sie klingt zu sehr nach geschriebenem Text.
+Schreib sie um, wie ein Mensch sie schnell und ehrlich sagen wuerde.
+Kuerzer, schlichter, keine Bildsprache. Inhalt und Fakten gleich lassen, nur den Ton aendern.
+Gib nur den fertigen Text zurueck, ohne Anfuehrungszeichen drumherum.`
+
+  try {
+    const result = await callClaude(userMessage, systemPrompt, 'claude-haiku-4-5-20251001', 0.4)
+    const cleaned = result.replace(/^["„]|[""]$/g, '').trim()
+    return cleaned.length > 10 ? cleaned : text
+  } catch (e) {
+    console.error('simplifyText fehlgeschlagen, Original beibehalten:', e)
+    return text
+  }
+}
+
 // ─── FREIE VARIANTE (Test, eigenstaendig, kann parallel laufen) ────────────
 async function buildFreeVariant(
   reviewText: string,
@@ -1253,6 +1281,11 @@ async function buildFreeVariant(
         .replace(/\.\s*\./g, '.')
         .replace(/\.\s+([a-zäöüß])/g, (_, c: string) => `. ${c.toUpperCase()}`)
       result = { ...result, text: fixed }
+    }
+
+    if (result) {
+      const simplified = await simplifyText(result.text)
+      result = { ...result, text: simplified }
     }
 
     return result ? { ...result, isFreeTest: true } : null
