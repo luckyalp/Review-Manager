@@ -1176,7 +1176,14 @@ Deine einzige Aufgabe: Den Text schlichter und menschlicher machen.
 Schreib ihn so um, wie ein Mensch ihn schnell und ehrlich sagen wuerde.
 Kuerzer, keine Bildsprache, keine Saetze die klug klingen wollen.
 Inhalt und Fakten bleiben gleich. Nur der Ton aendert sich.
-Gibt den ueberarbeiteten Text zurueck, sonst nichts.`
+Gibt den ueberarbeiteten Text zurueck, sonst nichts.
+
+ABSOLUT VERBOTEN — diese Phrasen duerfen im Ergebnis nicht vorkommen:
+- "tut mir leid" / "es tut uns leid" / "tut uns leid"
+- "vielen Dank fuer Ihr Feedback" / "vielen Dank fuer dein Feedback"
+- "wir nehmen das sehr ernst" / "ich nehme das ernst"
+- "das nehmen wir mit" / "das nehme ich mit"
+Ersetze sie durch direkte, ehrliche Formulierungen ohne Floskeln.`
 
   const userMessage = `Hier ist eine Antwort auf eine Restaurant-Bewertung:
 
