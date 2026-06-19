@@ -1141,6 +1141,11 @@ Spricht die Antwort mal als "ich" und mal als "wir", obwohl die Signatur "${sign
 Hat der Gast trotz Kritik etwas Positives erwaehnt, und die Antwort ignoriert das komplett?
 → SCHWACH wenn ja.
 
+8. VERBOTENE ZUSTIMMUNGSVERBEN
+Enthaelt die Antwort eines dieser Woerter: "verstehen" / "versteh" / "nachvollziehen" / "nachempfinden" / "verstaendlich" — in Bezug auf die Kritik des Gastes?
+Diese Verben implizieren Zustimmung oder Schuld und sind verboten.
+→ SOFORT SCHWACH. Keine Ausnahme.
+
 AUSGABE — NUR dieses JSON, kein anderer Text:
 {"ok": true, "reason": ""}
 
@@ -1184,6 +1189,7 @@ ABSOLUT VERBOTEN — diese Phrasen duerfen im Ergebnis nicht vorkommen:
 - "wir nehmen das sehr ernst" / "ich nehme das ernst"
 - "das nehmen wir mit" / "das nehme ich mit"
 - Gedankenstriche ("–", "—") — ersetze sie durch Punkt oder Komma.
+- "verstehen" / "versteh" / "nachvollziehen" / "nachempfinden" / "verstaendlich" in Bezug auf die Kritik des Gastes — diese Verben klingen wie eine Beschwerdestelle, nicht wie ein Gastronom.
 Ersetze sie durch direkte, ehrliche Formulierungen ohne Floskeln.`
 
   const userMessage = `Hier ist eine Antwort auf eine Restaurant-Bewertung:
