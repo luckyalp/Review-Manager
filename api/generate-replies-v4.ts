@@ -1183,6 +1183,7 @@ ABSOLUT VERBOTEN — diese Phrasen duerfen im Ergebnis nicht vorkommen:
 - "vielen Dank fuer Ihr Feedback" / "vielen Dank fuer dein Feedback"
 - "wir nehmen das sehr ernst" / "ich nehme das ernst"
 - "das nehmen wir mit" / "das nehme ich mit"
+- Gedankenstriche ("–", "—") — ersetze sie durch Punkt oder Komma.
 Ersetze sie durch direkte, ehrliche Formulierungen ohne Floskeln.`
 
   const userMessage = `Hier ist eine Antwort auf eine Restaurant-Bewertung:
