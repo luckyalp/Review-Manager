@@ -3,6 +3,45 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY
 
+// ─── KATEGORIE-ERKENNUNG ───────────────────────────────────────────────────
+
+type ReviewCategory =
+  | 'preis'
+  | 'service_unfreundlich'
+  | 'service_wartezeit'
+  | 'service_fehler'
+  | 'konzept_tischpolitik'
+  | 'akustik'
+  | 'hygiene'
+  | 'speisekarte'
+  | null
+
+function detectCategory(reviewText: string): ReviewCategory {
+  const t = reviewText.toLowerCase()
+  if (/krank|erbrechen|durchfall|vergiftung|hygiene|tiefk.hl|aufgew.rmt/.test(t)) return 'hygiene'
+  if (/nur trinken|nur etwas trinken|tisch.*nur.*essen|pflicht.*bestellen|gro.es gericht|tisch.*freimachen|tisch.*zahlen|rausbitte|rausgebeten|nur.*essen.*tisch/.test(t)) return 'konzept_tischpolitik'
+  if (/respektlos|pampig|unverschämt.*kellner|kellner.*unverschämt|frech.*bedien|diskriminier|muslimin|religion|beleidigung/.test(t)) return 'service_unfreundlich'
+  if (/\d+\s*stunden?\s*warten|\d+\s*minuten?\s*warten|lange.*warten|zu lange.*gewartet|wartezeit|warten.*karte/.test(t)) return 'service_wartezeit'
+  if (/falsches.*gericht|falsches.*getr.nk|falsch.*bestell|alkohol.*alkoholfrei|alkoholfrei.*alkohol|unkoordiniert.*service|vergessen.*bringen|nie.*gebracht/.test(t)) return 'service_fehler'
+  if (/laut|akustik|l.rm|mensa|schallkulisse|man versteht|zu laut|klangteppich/.test(t)) return 'akustik'
+  if (/preis|teuer|\d+\s*€|zu viel.*geld|preis.*leistung|erschwinglich|unverschämt.*preis|preis.*unverschämt/.test(t)) return 'preis'
+  if (/vegan|vegetarisch|pflanzlich|wenig.*auswahl|speisekarte.*klein/.test(t)) return 'speisekarte'
+  return null
+}
+
+const CATEGORY_QUESTIONS: Record<string, string> = {
+  preis: 'Wenn ein Gast dich fragt warum eure Preise so sind — was antwortest du ihm in einem Satz? (z.B. was steckt dahinter, worauf setzt ihr bei Zutaten oder Zubereitung)',
+  service_unfreundlich: 'Was passiert bei euch, wenn ein Mitarbeiter einen Gast unfreundlich behandelt hat? Wie geht ihr damit um?',
+  service_wartezeit: 'Ab wann wird eine Wartezeit bei euch wirklich kritisch — und was tut ihr aktiv für den Gast in dem Moment?',
+  service_fehler: 'Wenn einem Gast das falsche Gericht oder Getränk gebracht wird — was passiert bei euch in den nächsten Minuten?',
+  konzept_tischpolitik: 'Ihr vergebt Tische primär an essende Gäste. Wie erklärt ihr das einem Gast der nur trinken möchte, ohne dass er sich unerwünscht fühlt?',
+  akustik: 'Mehrere Gäste beschreiben die Atmosphäre als laut. Ist das bei euch Konzept oder arbeitet ihr dran — und was würdet ihr einem Gast sagen der es störend fand?',
+  hygiene: 'Was ist euer konkreter Ablauf wenn ein Gast meldet, nach einem Besuch bei euch krank geworden zu sein?',
+  speisekarte: 'Wie wichtig ist euch das vegane/vegetarische Angebot — bewusst klein gehalten, oder plant ihr das auszubauen?',
+}
+
+// ─── CLASSIFY ──────────────────────────────────────────────────────────────
+
 function classify(rating: number, reviewText: string) {
   const wordCount = reviewText.trim().split(/\s+/).filter(Boolean).length
   const hasText = wordCount >= 6
@@ -26,6 +65,7 @@ function buildPrompt(reviewText: string, rating: number, reviewerName: string, s
     priceRange = '',
     responseLanguage = 'Deutsch',
     restaurantAtmosphere = '',
+    categoryProfile = {} as Record<string, string>,
   } = settings || {}
 
   // V1 duzt immer, V2 siezt immer, V3 folgt den Settings
@@ -68,6 +108,12 @@ Kein Name bekannt. Alle drei Varianten starten trotzdem mit einer Begruessung:
 - RUHIG & PROFESSIONELL: "Hallo,"
 - FOKUS AUF KLAERUNG: "Hi," oder "Hallo,"`
 
+  // Erkenne Kategorie und hole restaurant-spezifisches Profil dazu
+  const detectedCat = detectCategory(reviewText)
+  const categoryInfo = detectedCat && categoryProfile[detectedCat]
+    ? `\nRESTAURANT-POSITION ZU DIESEM THEMA: ${categoryProfile[detectedCat]}`
+    : ''
+
   const context = [
     `Restaurant: ${businessName}`,
     description          && `Beschreibung: ${description}`,
@@ -76,6 +122,7 @@ Kein Name bekannt. Alle drei Varianten starten trotzdem mit einer Begruessung:
     priceRange           && `Preisklasse: ${priceRange}`,
     restaurantAtmosphere && `Atmosphaere: ${restaurantAtmosphere}`,
     uniqueSellingPoints  && `Besonderheiten: ${uniqueSellingPoints}`,
+    categoryInfo         && categoryInfo,
     contactEmail         && `Kontakt-E-Mail: ${contactEmail}`,
   ].filter(Boolean).join('\n')
 
@@ -489,10 +536,24 @@ function parseVariants(raw: string): { label: string; text: string; isRecovery?:
 // ─── CONTEXT CHECK ─────────────────────────────────────────────────────────
 // Prüft ob die Description genug Kontext liefert um die Bewertung sicher zu beantworten.
 // Läuft VOR der eigentlichen Generierung. Ändert nichts am bestehenden Code darunter.
-async function checkContext(reviewText: string, description: string): Promise<{ ok: boolean; missing?: string }> {
+async function checkContext(reviewText: string, description: string, settings?: any): Promise<{ ok: boolean; missing?: string; category?: string; isCategoryQuestion?: boolean }> {
   // Wenn kein Text in der Bewertung — kein Kontext nötig, immer OK
   const wordCount = reviewText.trim().split(/\s+/).filter(Boolean).length
   if (wordCount < 6) return { ok: true }
+
+  // Kategorie-Check: Wenn Kategorie erkannt und kein Profil dazu vorhanden → Frage stellen
+  const category = detectCategory(reviewText)
+  if (category) {
+    const categoryProfile = settings?.categoryProfile || {}
+    if (!categoryProfile[category]) {
+      return {
+        ok: false,
+        missing: CATEGORY_QUESTIONS[category],
+        category,
+        isCategoryQuestion: true,
+      }
+    }
+  }
 
   const systemPrompt = `Du bist ein strikter Qualitätsprüfer für Restaurant-Antworten.
 Deine einzige Aufgabe: Entscheide ob das Restaurantprofil genug Informationen enthält um auf diese Bewertung sicher zu antworten — ohne etwas erfinden zu müssen.
@@ -558,12 +619,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     // ── SCHRITT 0: Context Check ──────────────────────────────────────────
     const description = settings?.description || ''
-    const contextCheck = await checkContext(reviewText, description)
+    const contextCheck = await checkContext(reviewText, description, settings)
     if (!contextCheck.ok) {
       return res.status(200).json({
         success: false,
         missingContext: true,
         missingInfo: contextCheck.missing || 'Fehlende Informationen im Restaurantprofil',
+        category: contextCheck.category,
+        isCategoryQuestion: contextCheck.isCategoryQuestion || false,
       })
     }
 

@@ -1040,6 +1040,9 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [showToast, setShowToast] = useState(false)
   const [missingContext, setMissingContext] = useState<string | null>(null)
+  const [categoryQuestion, setCategoryQuestion] = useState<{ question: string; category: string } | null>(null)
+  const [categoryAnswer, setCategoryAnswer] = useState('')
+  const [categoryAnswerSaving, setCategoryAnswerSaving] = useState(false)
   const textareaRefs = useRef<Record<number, HTMLTextAreaElement | null>>({})
   const settings = JSON.parse(localStorage.getItem('rezpondSettings') || '{}')
 
@@ -1101,18 +1104,50 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
     setTimeout(() => { setShowToast(false); onBack() }, 1500)
   }
 
+  const saveCategoryAnswer = async () => {
+    if (!categoryQuestion || !categoryAnswer.trim()) return
+    setCategoryAnswerSaving(true)
+    const updated = {
+      ...settings,
+      categoryProfile: {
+        ...(settings.categoryProfile || {}),
+        [categoryQuestion.category]: categoryAnswer.trim(),
+      }
+    }
+    localStorage.setItem('rezpondSettings', JSON.stringify(updated))
+    // Auch in Supabase speichern
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        await supabase.from('settings').upsert(
+          { key: 'restaurant_profile', user_id: user.id, value: updated, updated_at: new Date().toISOString() },
+          { onConflict: 'key,user_id' }
+        )
+      }
+    } catch (e) { console.warn('Supabase save failed', e) }
+    setCategoryQuestion(null)
+    setCategoryAnswer('')
+    setCategoryAnswerSaving(false)
+    // Neu generieren mit den neuen Infos
+    generateReplies(false)
+  }
+
   const generateReplies = async (force = false) => {
     setAiLoading(true)
     setMissingContext(null)
+    setCategoryQuestion(null)
     try {
+      const currentSettings = JSON.parse(localStorage.getItem('rezpondSettings') || '{}')
       const _endpoint = engine === 'v1' ? '/api/generate-replies' : engine === 'v3' ? '/api/generate-replies-v3' : engine === 'v4' ? '/api/generate-replies-v4' : engine === 'v5' ? '/api/generate-replies-v5' : '/api/generate-replies-v2'
       const response = await fetch(_endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ review: { reviewerName: review.name, stars: review.stars, reviewText: review.text }, settings, force })
+        body: JSON.stringify({ review: { reviewerName: review.name, stars: review.stars, reviewText: review.text }, settings: currentSettings, force })
       })
       const data = await response.json()
-      if (data.missingContext) {
+      if (data.missingContext && data.isCategoryQuestion) {
+        setCategoryQuestion({ question: data.missingInfo, category: data.category })
+      } else if (data.missingContext) {
         setMissingContext(data.missingInfo || 'Fehlende Informationen im Restaurantprofil')
       } else if (data.success && data.answers) {
         setAnswers(data.answers)
@@ -1189,6 +1224,42 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
             <div className="rd2-state-box">
               <div className="rd2-state-icon">⏳</div>
               <div className="rd2-state-title">Gleich fertig — ich denke mir was aus…</div>
+            </div>
+          )}
+          {categoryQuestion && !aiLoading && (
+            <div className="rd2-state-box" style={{borderLeft: '4px solid #6366f1', background: '#f5f3ff'}}>
+              <div className="rd2-state-icon">💬</div>
+              <div className="rd2-state-title" style={{color: '#3730a3'}}>Kurze Frage, einmalig</div>
+              <div className="rd2-state-desc" style={{color: '#4338ca', marginBottom: '12px'}}>
+                {categoryQuestion.question}
+              </div>
+              <textarea
+                value={categoryAnswer}
+                onChange={e => setCategoryAnswer(e.target.value)}
+                placeholder="Deine Antwort..."
+                rows={3}
+                style={{
+                  width: '100%', boxSizing: 'border-box', padding: '10px 12px',
+                  borderRadius: '8px', border: '1px solid #a5b4fc', fontSize: '14px',
+                  fontFamily: 'inherit', resize: 'vertical', marginBottom: '8px',
+                  background: '#fff', color: '#1e1b4b',
+                }}
+              />
+              <button
+                onClick={saveCategoryAnswer}
+                disabled={!categoryAnswer.trim() || categoryAnswerSaving}
+                className="rd2-gen-btn"
+                style={{background: '#6366f1', marginTop: '4px'}}
+              >
+                {categoryAnswerSaving ? 'Speichert...' : 'Antworten & Generieren'}
+              </button>
+              <button
+                onClick={() => { setCategoryQuestion(null); generateReplies(true) }}
+                className="rd2-gen-btn"
+                style={{background: '#6b7280', marginTop: '4px'}}
+              >
+                Überspringen & trotzdem generieren
+              </button>
             </div>
           )}
           {missingContext && !aiLoading && (
