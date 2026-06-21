@@ -659,11 +659,16 @@ async function checkContext(reviewText: string, description: string): Promise<{ 
   const systemPrompt = `Qualitaetspruefer fuer Restaurant-Antworten.
 Entscheide ob das Restaurantprofil genueg Informationen enthaelt um sicher zu antworten.
 
+WICHTIG: Wenn das Profil leer ist oder nur Ja/Nein-Angaben (Lieferung, Parkplaetze, Barrierefreiheit
+etc.) ohne jede Erklaerung enthaelt, gilt das bei einer Hausregel-Kritik IMMER als MISSING.
+Ein leeres oder rein angekreuztes Profil ist NIE "ausreichend", auch wenn die Kritik allgemein klingt.
+
 Antworte NUR mit:
 OK
 MISSING: [kurze Beschreibung was fehlt, max. 1 Satz auf Deutsch]
 
-MISSING ist korrekt NUR wenn: Bewertung kritisiert eine KONKRETE HAUSREGEL und Profil enthaelt dazu keine Erklaerung.
+MISSING ist korrekt NUR wenn: Bewertung kritisiert eine KONKRETE HAUSREGEL (inkl. auslastungsabhaengiger
+Kritik wie Lautstaerke bei vollem Haus) und Profil enthaelt dazu keine Erklaerung.
 In ALLEN anderen Faellen (Service, Essen, Atmosphaere, Verhalten): OK.`
 
   try {
