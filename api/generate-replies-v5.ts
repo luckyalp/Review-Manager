@@ -98,12 +98,12 @@ Aufbau:
    WENN kein Profil-Tipp passt und auslastungsabhaengig: "Zu ruhigeren Zeiten ist's da meist entspannter."
 KEIN oeffentliches Versprechen, etwas strukturell zu aendern.`
 
-const KATEGORIE_B = `KATEGORIE B — ECHTER FEHLER, EINZELFALL:
+const KATEGORIE_B = (servicebeschwerdeSatz: string) => `KATEGORIE B — ECHTER FEHLER, EINZELFALL:
 Gilt wenn die Kritik einen objektiven Fehler beschreibt (falsches Gericht, lange Wartezeit ohne Grund, unfreundliches Personal) der NICHT durch Konzept bedingt ist.
 
 SONDERFALL SERVICEBESCHWERDE (nur unfreundliches Personal / schlechtes Verhalten):
 Wenn die Bewertung ueber unfreundliches oder schlechtes Verhalten des Personals klagt — auch wenn zusaetzlich ein C-Thema (Geschmack/Wahrnehmung) vorkommt — gilt eine eigene Struktur:
-Struktur: (1) "Natuerlich sollte kein Gast bei uns mit diesem Gefuehl nach Hause gehen." (2) "Das ist nicht, wie wir uns das vorstellen." (3) Kontakt anbieten: "Meld dich gerne bei uns" + contactEmail + "dann kuemmere ich mich persoenlich darum."
+Struktur: (1) Verwende sinngemäss diesen Satz: "${servicebeschwerdeSatz}" (2) Kontakt anbieten: "Meld dich gerne bei uns" + contactEmail + "dann kuemmern wir uns persoenlich darum."
 KEIN "komm nochmal vorbei". KEIN C-Anhang ("Was die Pommes betrifft..." etc.) — alles wird im persoenlichen Gespraech geklaert. KEIN weiterer Satz nach dem Kontaktangebot.
 
 Aufbau (fuer alle anderen B-Faelle — falsches Gericht, Wartezeit, technische Fehler):
@@ -184,11 +184,19 @@ function buildMixedPrompt(
 ): string {
   const { signature, duSie, firstNameClean, langInstruction, context } = resolveSettings(settings, reviewerName)
 
+  // Servicebeschwerde-Satz fuer Mixed-Prompt
+  const servicebeschwerdeSaetzeM = [
+    `Natuerlich sollte kein Gast bei uns mit diesem Gefuehl nach Hause gehen.`,
+    `So soll sich kein Gast bei uns fuehlen.`,
+    `Das ist nicht, wie wir uns den Besuch unserer Gaeste vorstellen.`,
+  ]
+  const servicebeschwerdeSatzM = servicebeschwerdeSaetzeM[Math.floor(Math.random() * servicebeschwerdeSaetzeM.length)]
+
   // Nur die tatsaechlich erkannten Kategorien einbinden
   const cats = analysis?.categories?.length ? Array.from(new Set(analysis.categories)) : ['A', 'B', 'C']
   const kategorieBloecke = [
     cats.includes('A') ? KATEGORIE_A : '',
-    cats.includes('B') ? KATEGORIE_B : '',
+    cats.includes('B') ? KATEGORIE_B(servicebeschwerdeSatzM) : '',
     cats.includes('C') ? KATEGORIE_C : '',
   ].filter(Boolean).join('\n\n')
 
@@ -268,10 +276,19 @@ function buildNegativePrompt(
   ]
   const validierungsSatz = validierungsSaetze[Math.floor(Math.random() * validierungsSaetze.length)]
 
+  // ── Servicebeschwerde-Satz-Rotation ──
+  const servicebeschwerdeSaetze = [
+    `Natuerlich sollte kein Gast bei uns mit diesem Gefuehl nach Hause gehen.`,
+    `So soll sich kein Gast bei uns fuehlen.`,
+    `Das ist nicht, wie wir uns den Besuch unserer Gaeste vorstellen.`,
+  ]
+  const servicebeschwerdeSatz = servicebeschwerdeSaetze[Math.floor(Math.random() * servicebeschwerdeSaetze.length)]
+
   const cats = analysis?.categories?.length ? Array.from(new Set(analysis.categories)) : ['A', 'B', 'C']
+
   const kategorieBloecke = [
     cats.includes('A') ? KATEGORIE_A : '',
-    cats.includes('B') ? KATEGORIE_B : '',
+    cats.includes('B') ? KATEGORIE_B(servicebeschwerdeSatz) : '',
     cats.includes('C') ? KATEGORIE_C : '',
   ].filter(Boolean).join('\n\n')
 
