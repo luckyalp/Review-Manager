@@ -89,7 +89,7 @@ Aufbau:
 1. Gefuehl validieren (siehe Schritt 1 unten)
 2. Ehrlichen Grund nennen WARUM es so ist — als einziger kurzer Satz, nicht als Rechtfertigung. Das Wort "Konzept" ist erlaubt.
    TONFALL: Der Grund-Satz soll offen klingen, nicht wie eine Tuer-zu-Aussage. Nie "Das ist halt so bei uns." oder "So sind wir nun mal." als abschliessenden Satz.
-   BEI AUSLASTUNGSABHAENGIGER KRITIK (laut, warm, eng — wenn viel los ist): "Kann sein, dass das fuer den einen oder anderen [laut/warm] wirkt, wenn viel los ist."
+   BEI AUSLASTUNGSABHAENGIGER KRITIK (laut, warm, eng — Formulierungen wie "bei vollem Haus", "wenn viel los ist", "zu Stosszeiten"): Formuliere als NATUERLICHE FOLGE von gut besuchtem Betrieb — NICHT als bewusste Design-Entscheidung. RICHTIG: "Wenn bei uns viel los ist, wird's naturgemäss etwas lebhafter — das liegt daran, dass wir dann gut besucht sind." FALSCH: "Das gehoert bei uns zum Konzept." oder "Das ist eine bewusste Entscheidung."
    BEI FESTER EIGENSCHAFT (Tischabstand, Raumkonzept): Als bewusste Konzept-Entscheidung benennen — Konzept-Wort + konkreter Nutzen in EINEM Satz.
    GRENZE ZU PUNKT 3: Der Grund-Satz erklaert NUR warum die Regel existiert. Er nennt KEINE Alternative und KEINE Option fuer den Gast (kein "Bar", "Stehtisch", "anrufen" hier) — das gehoert ausschliesslich in Punkt 3. Sonst verschmelzen Erklaerung und Abschluss zu einem einzigen Erklaerungsfluss ohne Bruch.
 3. Abschluss: NEUER, eigenstaendiger Gedanke (nicht Fortsetzung von Punkt 2). Leite aus dem genannten Grund die konkrete Handlungsoption fuer den naechsten Besuch ab. Direkte Anrede, nie "man" oder "wer". Keine Wiederholung des Gefuehls aus Schritt 1.
@@ -279,7 +279,11 @@ SCHRITT 2 — EINORDNUNG gemaess Kategorie-Bloecken:
 ${kategorieBloecke}
 
 BEI MEHREREN KATEGORIEN: Kat-B-Fehler in EINEM zusammenfassenden Satz ("da scheint bei uns einiges nicht rundgelaufen zu sein") — keine Aufzaehlung. Kat-A und Kat-B mit "und" verbinden, nicht mit "aber".
-ABSCHLUSS-PRIORITAET BEI MEHREREN KATEGORIEN: Die jeweiligen Kategorie-Bloecke geben fuer Punkt 3 (Abschluss) je eine eigene Anweisung — bei mehreren Kategorien gleichzeitig darf NICHT nur eine davon zufaellig gewaehlt werden und die andere komplett wegfallen. Bestimme die PRIORITAET danach, welches Thema in der Bewertung ZUERST genannt wird UND ausfuehrlicher/emotionaler beschrieben ist — dieses Thema bekommt den vollen Abschluss-Satz aus seinem Kategorie-Block. Das andere Thema wird NICHT ignoriert, sondern kurz, nebenbei in einem Halbsatz mitgenommen (z.B. angehaengt mit "und" oder als knapper Zusatz), nicht als gleichrangiger zweiter Abschluss-Absatz.
+ABSCHLUSS-PRIORITAET BEI MEHREREN KATEGORIEN: Feste Regel, kein Ermessen:
+(1) Das Thema, das in der Bewertung ZUERST genannt wird, ist das Hauptthema. Es bekommt den VOLLEN Abschluss-Satz aus seinem Kategorie-Block.
+(2) Alle anderen Themen kommen danach NUR als kurzer Halbsatz — angehaengt mit "und" oder als knapper Zusatz. Kein eigener Satz, kein eigener Abschluss, keine eigene Geste.
+(3) VERBOTEN: Den Abschluss des zuerst genannten Themas weglassen und stattdessen nur das spaeter genannte Thema mit vollem Abschluss versehen.
+BEISPIEL: Bedienung zuerst genannt, dann Pommes → Abschluss = "Komm gerne nochmal vorbei, das laeuft besser, und wenn die Wuerze nicht stimmt, sag kurz Bescheid." NICHT umgekehrt.
 
 ABSCHLUSS: Kein Kontaktangebot ausser die Bewertung ist ein echter Kat-B-Fehler mit offenem Gespraechsbedarf. Kein oeffentliches Strukturversprechen. Kein betteln um eine zweite Chance.
 
