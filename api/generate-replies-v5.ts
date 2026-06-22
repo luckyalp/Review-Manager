@@ -271,14 +271,22 @@ VERBOTEN: "nicht das was wir uns vorstellen", "kein erlebnis das so bleiben soll
 VERBOTEN: Ueberfluessige Einschraenkungen nach einer klaren Aussage: "auch wenn es nicht schoen ist", "auch wenn das keine Entschuldigung ist". Die Aussage endet. Punkt.
 
 SCHRITT 1 — GEFUEHL VALIDIEREN (erster Satz nach Begruessung):
-Formuliere EINEN freien Satz der zeigt dass der Gast gehoert wurde.
-Struktur: "Dass + [Gefuehl/Eindruck/Wahrnehmung] + [Wahrnehmungs-Verb], finden wir schade / bedauern wir."
-WENN die Kritik an eine BEDINGUNG gekoppelt ist (z.B. "wenn man nur etwas trinken will, fuehlt man sich unerwuenscht"): Bedingung und Gefuehl gehoeren in ZWEI separate Teile, nicht in einen verschachtelten Hauptsatz. Bedingung als eigener Nebensatz VOR dem Gefuehl, z.B. "Wenn du nur etwas trinken wolltest, hast du dich direkt unerwuenscht gefuehlt, das finden wir schade." NIEMALS die Bedingung als knappen Einschub in den Hauptsatz quetschen (FALSCH: "Dass du dich mit einem Getraenk nicht willkommen gefuehlt hast" — klingt nach niemandem, der so spricht).
+Waehle EINEN der folgenden Saetze — nicht frei erfinden, nur aus dieser Liste:
+- "Schade, dass [BESUCH] bei uns nicht so war, wie [GAST] es sich vorgestellt hatte."
+- "Das klingt nach einem Besuch, der nicht so laufen sollte."
+- "Ein Besuch bei uns sollte anders aussehen als das, was [GAST] beschreibt."
+- "Dass [BESUCH] so einen Eindruck hinterlassen hat, bedauern wir."
+- "So soll ein Besuch bei uns nicht laufen."
+- "Das ist nicht, wie ein Besuch bei uns sein soll."
+- "So einen Eindruck moechten wir nicht hinterlassen."
+Ersetze [BESUCH] mit "dein Besuch" (Du) oder "Ihr Besuch" (Sie) — passend zur Anredeform.
+Ersetze [GAST] mit "du" (Du) oder "Sie" (Sie) — passend zur Anredeform.
+Variiere: nie zweimal denselben Satz in aufeinanderfolgenden Antworten.
+SONDERFALL SERVICEBESCHWERDE: Wenn KATEGORIE_B Sonderfall Servicebeschwerde greift, entfaellt Schritt 1 komplett — die Struktur beginnt direkt mit "Natuerlich sollte kein Gast..."
 Drei Regeln:
 1. Validiere das GEFUEHL IM MOMENT — nicht die Schlussfolgerung. Bei "ich fuehlte mich nicht willkommen": validiere die Verwirrung, den unangenehmen Moment — nicht die Schlussfolgerung selbst.
 2. Subjekt ist der Gast / der Besuch — NICHT die Ursache. FALSCH: "Die Lautstaerke hat deinen Besuch gestoert." RICHTIG: "Schade, dass dich die Lautstaerke so gestoert hat."
 3. VERBOTEN als Validierungsverben: "verstehen", "nachvollziehen", "nachempfinden" — diese implizieren Zustimmung oder Schuld.
-Variiere den Satz jedes Mal. Nie zweimal dieselbe Formulierung.
 
 SCHRITT 2 — EINORDNUNG gemaess Kategorie-Bloecken:
 ${kategorieBloecke}
