@@ -261,7 +261,10 @@ Bewertung von ${firstNameClean || 'einem Gast'} (${stars} Sterne):
 
 ${analysis ? `FAKTEN AUS VORSTUFE (nur Stuetze — Original hat immer Vorrang):
 ${analysis.lobpunkte.length > 0 ? `- Positiv erwaehnt: ${analysis.lobpunkte.join(', ')}` : ''}
-${analysis.points.length > 0 ? `- Kritisiert: ${analysis.points.join(', ')}` : ''}
+${analysis.forceSummarize 
+  ? `- Der Gast hatte ${analysis.count} verschiedene Kritikpunkte. Behandle sie AUSSCHLIESSLICH als Gesamteindruck, nenne KEINE Einzelpunkte namentlich.`
+  : analysis.points.length > 0 ? `- Kritikpunkte: ${analysis.points.map((p, i) => `${p} (${analysis.categories[i] || '?'})`).join(', ')}` : ''
+}
 - Vor Ort angesprochen: ${analysis.vorOrtErwaehnt ? 'ja' : 'nicht erkennbar'}` : ''}
 ${analysis?.forceSummarize ? `\nZUSAMMENFASSUNGS-PFLICHT: ${analysis.count} Kritikpunkte erkannt — alle in EINEM zusammenfassenden Satz behandeln, keine Aufzaehlung.` : ''}
 
@@ -334,21 +337,23 @@ KEIN Strukturversprechen. KEIN "komm nochmal vorbei" ohne konkreten Tipp.`,
 
     'B_ONLY': `STRUKTUR (exakt einhalten):
 1. Validierungssatz (sinngemäss): "${vs}"
-2. Verantwortung uebernehmen, OHNE zu rechtfertigen. Keine Auslastungsbegruendung wenn Bewertung das Gegenteil sagt.
+2. VERANTWORTUNG — kurz und nuechtern, maximal ein Satz:
+   ERLAUBT: "Das haette nicht passieren duerfen." / "Da sind wir klar am Gast vorbei." / "Das haetten wir direkt korrigieren sollen."
+   VERBOTEN: Den Standard aggressiv verteidigen ("nicht verhandelbar", "steht fuer uns ausser Frage", "ein absolutes Muss"). Keine Rechtfertigung, kein Erklaeren von Ablaeufen.
 3. Abschluss je nach Situation:
-   - Vor Ort geloest: Kurze Anerkennung, kein weiterer Ausblick.
-   - Waehrend Besuch meldbar: "Wink uns kurz, dann kuemmern wir uns gleich."
+   - Problem waehrend Besuch meldbar (Gargrad, falsches Gericht, Wartezeit): "Sag uns beim naechsten Besuch direkt Bescheid, dann klaeren wir das sofort vor Ort."
    - Erst spaeter bemerkt: "Komm gerne nochmal vorbei, das geht besser."
-VERBOTEN: "intern nachgeschaerft", "dem Team mitgeteilt", "Massnahmen", "wir nehmen das mit".`,
+   - Vor Ort bereits geloest: Kurze Anerkennung, kein weiterer Ausblick.
+VERBOTEN: "intern nachgeschaerft", "dem Team mitgeteilt", "Massnahmen", "wir nehmen das mit", "tut uns leid".`,
 
     'C_ONLY': `STRUKTUR (exakt einhalten):
-1. "Schade, dass [konkretes Merkmal aus der Bewertung] nicht gepasst hat."
+1. Erkenne an, dass das spezifische Merkmal (Geschmack, Konsistenz, Gargrad, Portion) nicht zur Erwartung passte. Formuliere einen natuerlichen, vollstaendigen deutschen Satz. VERBOTEN: Den genauen Wortlaut der Kritik in ein starres "Schade, dass...nicht gepasst hat"-Schema pressen.
 2. Falls Lob vorhanden: Lob zuerst aufgreifen, dann Kritik.
 3. Abschluss:
-   - Anpassbares Merkmal (Schaerfe, Wuerze, Temperatur): "Sag uns beim naechsten Besuch kurz Bescheid, dann passen wir das direkt an."
+   - Anpassbares Merkmal (Schaerfe, Wuerze, Gargrad, Temperatur): "Sag uns beim naechsten Besuch kurz Bescheid, dann passen wir das direkt an."
    - Reine Stilsache: "Sag uns, was dir eher zusagt, dann empfehlen wir naechstes Mal etwas Passendes."
    - Portion: "dann koennen wir dir was passend zu deinem Hunger empfehlen."
-KEIN "Geschmaecker sind verschieden". KEIN Strukturversprechen.`,
+KEIN "Geschmaecker sind verschieden". KEIN Strukturversprechen. KEIN Kontakt-E-Mail.`,
 
     'AB': `STRUKTUR (exakt einhalten):
 1. Validierungssatz (sinngemäss): "${avs}"
@@ -731,28 +736,31 @@ async function analyzeReview(reviewText: string): Promise<Analysis> {
   const systemPrompt = `Rolle: Nuechterner Fakten-Extraktor fuer Restaurant-Bewertungen. Nur Datenpunkte extrahieren, keine Antwort verfassen.
 
 Ausgabe: AUSSCHLIESSLICH valides JSON ohne Markdown:
-{"points":["Punkt1"],"categories":["B"],"lobpunkte":["Lob1"],"vor_ort_erwaehnt":false,"is_service_complaint":false}
+{"issues":[{"text":"Steak Medium statt durch","cat":"B"}],"lobpunkte":["Lob1"],"vor_ort_erwaehnt":false,"is_service_complaint":false}
 
 Regeln:
-1. "points": Konkrete Kritikpunkte, max. 3 Woerter pro Punkt. Kein Lob.
-2. "categories": Pro Kritikpunkt in gleicher Reihenfolge ein Buchstabe:
-   A = Konzept/strukturell (Hausregeln, Lautstaerke, Tischvergabe, Oeffnungszeiten)
-   B = Echter Fehler (Wartezeiten, falsche Bestellung, unfreundlicher Service)
-   C = Geschmack/Wahrnehmung (zu scharf, zu wenig Portion, nicht gemuetlich)
-   WICHTIG fuer C: "fad", "lasch", "lieblos gewuerzt", "zu wenig Wuerze" sind IMMER C — nicht B.
-3. "lobpunkte": Positive Erwaehnung, max. 3-4 Woerter. Leer wenn kein Lob.
-4. "vor_ort_erwaehnt": true nur wenn unmissverstaendlich aus Text hervorgeht dass Gast etwas dem Personal gesagt hat.
-5. "is_service_complaint": true NUR WENN Kategorie B vorhanden UND die Kritik das VERHALTEN, die FREUNDLICHKEIT oder AUFMERKSAMKEIT des Personals betrifft (unfreundlich, unaufmerksam, desinteressiert, arrogant, ignoriert). false bei: reiner Wartezeit-Kritik, falscher Bestellung, technischen Fehlern.`
+1. "issues": Liste der Kritikpunkte als Objekte mit "text" und "cat".
+   - "text": Kritikpunkt in max. 5 Woertern. Bei Fehlern (B): IMMER Erwartung vs. Realitaet ("Steak Medium statt durch", "Pizza Salami statt Margherita"). Bei Zustand/Wahrnehmung normal ("Pommes fad", "Service unfreundlich").
+   - "cat": Kategorie des Kritikpunkts:
+     A = Konzept/strukturell (Hausregeln, Lautstaerke, Tischvergabe, Oeffnungszeiten)
+     B = Echter Fehler (falsche Bestellung, Gargrad falsch, unfreundlicher Service, Wartezeit ohne Grund)
+     C = Geschmack/Wahrnehmung (zu scharf, zu wenig Wuerze, fad, lasch, Portion zu klein)
+     WICHTIG: "fad", "lasch", "lieblos gewuerzt" sind IMMER C — nicht B.
+2. "lobpunkte": Positive Erwaehnung, max. 3-4 Woerter. Leer wenn kein Lob.
+3. "vor_ort_erwaehnt": true nur wenn unmissverstaendlich aus Text hervorgeht dass Gast etwas dem Personal gesagt hat.
+4. "is_service_complaint": true NUR WENN cat B vorhanden UND Kritik das VERHALTEN, FREUNDLICHKEIT oder AUFMERKSAMKEIT des Personals betrifft (unfreundlich, unaufmerksam, desinteressiert, arrogant, ignoriert). false bei: Wartezeit, falscher Bestellung, technischen Fehlern.`
 
   try {
     const result = await callClaude(`Bewertung:\n"${reviewText}"`, systemPrompt, 'claude-haiku-4-5-20251001', 0)
     const parsed = parseJson(result)
-    const points = parsed.points || []
+    const issues: Array<{text: string, cat: string}> = parsed.issues || []
+    const points = issues.map((i: {text: string, cat: string}) => i.text)
+    const categories = issues.map((i: {text: string, cat: string}) => i.cat)
     return {
-      count: points.length,
+      count: issues.length,
       points,
-      categories: parsed.categories || [],
-      forceSummarize: points.length >= 3,
+      categories,
+      forceSummarize: issues.length >= 3,
       lobpunkte: parsed.lobpunkte || [],
       vorOrtErwaehnt: parsed.vor_ort_erwaehnt === true,
       isServiceComplaint: parsed.is_service_complaint === true,
