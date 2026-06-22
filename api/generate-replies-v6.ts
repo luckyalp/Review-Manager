@@ -210,7 +210,7 @@ function buildMixedPrompt(
 
   // Servicebeschwerde-Satz fuer Mixed-Prompt
   const servicebeschwerdeSaetzeM = [
-    `Natuerlich sollte kein Gast bei uns mit diesem Gefuehl nach Hause gehen.`,
+    `natuerlich sollte kein Gast bei uns mit diesem Gefuehl nach Hause gehen.`,
     `So soll sich kein Gast bei uns fuehlen.`,
     `Das ist nicht, wie wir uns den Besuch unserer Gaeste vorstellen.`,
   ]
@@ -304,7 +304,7 @@ function buildComboPrompt(
 
   // Servicebeschwerde-Satz-Rotation
   const serviceSaetze = [
-    `Natuerlich sollte kein Gast bei uns mit diesem Gefuehl nach Hause gehen.`,
+    `natuerlich sollte kein Gast bei uns mit diesem Gefuehl nach Hause gehen.`,
     `So soll sich kein Gast bei uns fuehlen.`,
     `Das ist nicht, wie wir uns den Besuch unserer Gaeste vorstellen.`,
   ]
