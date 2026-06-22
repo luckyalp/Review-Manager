@@ -557,7 +557,7 @@ const CHECKS: Array<{ key: string; test: (text: string, sig: string, idx: number
       /entspricht\s+nicht\s+(unserem|dem|ihrem)/i,
     ].some(p => p.test(t)) },
   { key: 'pronoun_mismatch',    test: (t, sig) => /team|wir|restaurant/i.test(sig) && /\b(da\s+)?(gebe|finde|sehe|sage|denke|meine)\s+ich\b/i.test(t) },
-  { key: 'apology_in_v1',      test: (t, _sig, idx) => idx === 0 && /tut\s+(mir|uns)\s+(wirklich\s+|aufrichtig\s+)?leid/i.test(t) },
+  { key: 'apology_in_v1',      test: (t) => /tut\s+(mir|uns)\s+(wirklich\s+|aufrichtig\s+)?leid/i.test(t) },
 ]
 
 const ISSUE_DESCRIPTIONS: Record<string, (sig: string) => string> = {
