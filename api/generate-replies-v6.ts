@@ -28,7 +28,7 @@ type CategoryCombo =
 
 function resolveCombo(analysis: Analysis): CategoryCombo {
   const cats = [...new Set(analysis.categories)]
-  if (cats.includes('B') && analysis.isServiceComplaint) return 'B_SERVICE'
+  if (cats.includes('B') && analysis.isServiceComplaint && !cats.includes('A')) return 'B_SERVICE'
   const sorted = cats.sort().join('')
   const map: Record<string, CategoryCombo> = {
     'A': 'A_ONLY', 'B': 'B_ONLY', 'C': 'C_ONLY',
