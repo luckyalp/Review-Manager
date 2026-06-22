@@ -102,9 +102,9 @@ const KATEGORIE_B = `KATEGORIE B — ECHTER FEHLER, EINZELFALL:
 Gilt wenn die Kritik einen objektiven Fehler beschreibt (falsches Gericht, lange Wartezeit ohne Grund, unfreundliches Personal) der NICHT durch Konzept bedingt ist.
 
 SONDERFALL SERVICEBESCHWERDE (nur unfreundliches Personal / schlechtes Verhalten):
-Wenn die Bewertung AUSSCHLIESSLICH ueber unfreundliches oder schlechtes Verhalten des Personals klagt (kein anderer Kritikpunkt dabei), gilt eine eigene Struktur — KEINE normale Aufbau-Logik unten:
+Wenn die Bewertung ueber unfreundliches oder schlechtes Verhalten des Personals klagt — auch wenn zusaetzlich ein C-Thema (Geschmack/Wahrnehmung) vorkommt — gilt eine eigene Struktur:
 Struktur: (1) "Natuerlich sollte kein Gast bei uns mit diesem Gefuehl nach Hause gehen." (2) "Das ist nicht, wie wir uns das vorstellen." (3) Kontakt anbieten: "Meld dich gerne bei uns" + contactEmail + "dann kuemmere ich mich persoenlich darum."
-KEIN "komm nochmal vorbei". KEIN weiterer Satz danach.
+KEIN "komm nochmal vorbei". KEIN C-Anhang ("Was die Pommes betrifft..." etc.) — alles wird im persoenlichen Gespraech geklaert. KEIN weiterer Satz nach dem Kontaktangebot.
 
 Aufbau (fuer alle anderen B-Faelle — falsches Gericht, Wartezeit, technische Fehler):
 1. Gefuehl validieren (siehe Schritt 1 unten)
