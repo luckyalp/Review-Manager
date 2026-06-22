@@ -254,6 +254,20 @@ function buildNegativePrompt(
 ): string {
   const { signature, duSie, firstNameClean, langInstruction, context, contactEmail } = resolveSettings(settings, reviewerName)
 
+  // ── Validierungssatz-Rotation: Backend wuerfelt, Modell hat kein Mitspracherecht ──
+  const duForm = duSie === 'Sie' ? 'Sie' : 'du'
+  const besuchForm = duSie === 'Sie' ? 'Ihr Besuch' : 'dein Besuch'
+  const validierungsSaetze = [
+    `Schade, dass ${besuchForm} bei uns nicht so war, wie ${duForm} es sich vorgestellt hatte.`,
+    `Das klingt nach einem Besuch, der nicht so laufen sollte.`,
+    `Ein Besuch bei uns sollte anders aussehen als das, was ${duForm} beschreibt.`,
+    `Dass ${besuchForm} so einen Eindruck hinterlassen hat, bedauern wir.`,
+    `So soll ein Besuch bei uns nicht laufen.`,
+    `Das ist nicht, wie ein Besuch bei uns sein soll.`,
+    `So einen Eindruck moechten wir nicht hinterlassen.`,
+  ]
+  const validierungsSatz = validierungsSaetze[Math.floor(Math.random() * validierungsSaetze.length)]
+
   const cats = analysis?.categories?.length ? Array.from(new Set(analysis.categories)) : ['A', 'B', 'C']
   const kategorieBloecke = [
     cats.includes('A') ? KATEGORIE_A : '',
@@ -271,22 +285,12 @@ VERBOTEN: "nicht das was wir uns vorstellen", "kein erlebnis das so bleiben soll
 VERBOTEN: Ueberfluessige Einschraenkungen nach einer klaren Aussage: "auch wenn es nicht schoen ist", "auch wenn das keine Entschuldigung ist". Die Aussage endet. Punkt.
 
 SCHRITT 1 — GEFUEHL VALIDIEREN (erster Satz nach Begruessung):
-Waehle EINEN der folgenden Saetze — nicht frei erfinden, nur aus dieser Liste:
-- "Schade, dass [BESUCH] bei uns nicht so war, wie [GAST] es sich vorgestellt hatte."
-- "Das klingt nach einem Besuch, der nicht so laufen sollte."
-- "Ein Besuch bei uns sollte anders aussehen als das, was [GAST] beschreibt."
-- "Dass [BESUCH] so einen Eindruck hinterlassen hat, bedauern wir."
-- "So soll ein Besuch bei uns nicht laufen."
-- "Das ist nicht, wie ein Besuch bei uns sein soll."
-- "So einen Eindruck moechten wir nicht hinterlassen."
-Ersetze [BESUCH] mit "dein Besuch" (Du) oder "Ihr Besuch" (Sie) — passend zur Anredeform.
-Ersetze [GAST] mit "du" (Du) oder "Sie" (Sie) — passend zur Anredeform.
-Variiere: nie zweimal denselben Satz in aufeinanderfolgenden Antworten.
+Der Validierungssatz wird vom System vorgegeben und im userMessage mitgeliefert — exakt so verwenden, kein Wort aendern.
 SONDERFALL SERVICEBESCHWERDE: Wenn KATEGORIE_B Sonderfall Servicebeschwerde greift, entfaellt Schritt 1 komplett — die Struktur beginnt direkt mit "Natuerlich sollte kein Gast..."
 Drei Regeln:
-1. Validiere das GEFUEHL IM MOMENT — nicht die Schlussfolgerung. Bei "ich fuehlte mich nicht willkommen": validiere die Verwirrung, den unangenehmen Moment — nicht die Schlussfolgerung selbst.
-2. Subjekt ist der Gast / der Besuch — NICHT die Ursache. FALSCH: "Die Lautstaerke hat deinen Besuch gestoert." RICHTIG: "Schade, dass dich die Lautstaerke so gestoert hat."
-3. VERBOTEN als Validierungsverben: "verstehen", "nachvollziehen", "nachempfinden" — diese implizieren Zustimmung oder Schuld.
+1. Validiere das GEFUEHL IM MOMENT — nicht die Schlussfolgerung.
+2. Subjekt ist der Gast / der Besuch — NICHT die Ursache.
+3. VERBOTEN als Validierungsverben: "verstehen", "nachvollziehen", "nachempfinden".
 
 SCHRITT 2 — EINORDNUNG gemaess Kategorie-Bloecken:
 ${kategorieBloecke}
@@ -323,6 +327,7 @@ Struktur: (1) Begruessung. (2) Ein einziger zusammenfassender Satz ("da ist bei 
 
 Schreibe EINE freie, persoenliche Antwort (2-4 Saetze, passend zum Anlass).
 ${firstNameClean ? `Beginne mit "Hallo ${firstNameClean},"` : 'Kein Name bekannt — ohne persoenliche Anrede beginnen.'}
+VALIDIERUNGSSATZ (Schritt 1): Verwende exakt diesen Satz Wort fuer Wort — keine Aenderung: "${validierungsSatz}"
 Abschluss: Waehle passend "Viele Gruesse, ${signature}" oder "Herzliche Gruesse, ${signature}" oder "Beste Gruesse, ${signature}"
 
 AUSGABE — NUR dieses JSON:
