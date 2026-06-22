@@ -298,7 +298,6 @@ function buildComboPrompt(
     `Dass ${besuchForm} so einen Eindruck hinterlassen hat, bedauern wir.`,
     `So soll ein Besuch bei uns nicht laufen.`,
     `So einen Eindruck moechten wir nicht hinterlassen.`,
-    `Bei uns soll jeder Besuch anders laufen als das.`,
   ]
   const vs = validierungsSaetze[Math.floor(Math.random() * validierungsSaetze.length)]
 
