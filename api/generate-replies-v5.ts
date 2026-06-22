@@ -263,8 +263,8 @@ function buildNegativePrompt(
     `Ein Besuch bei uns sollte anders aussehen als das, was ${duForm} beschreibt.`,
     `Dass ${besuchForm} so einen Eindruck hinterlassen hat, bedauern wir.`,
     `So soll ein Besuch bei uns nicht laufen.`,
-    `Das ist nicht, wie ein Besuch bei uns sein soll.`,
     `So einen Eindruck moechten wir nicht hinterlassen.`,
+    `Bei uns soll jeder Besuch anders laufen als das.`,
   ]
   const validierungsSatz = validierungsSaetze[Math.floor(Math.random() * validierungsSaetze.length)]
 
@@ -327,7 +327,7 @@ Struktur: (1) Begruessung. (2) Ein einziger zusammenfassender Satz ("da ist bei 
 
 Schreibe EINE freie, persoenliche Antwort (2-4 Saetze, passend zum Anlass).
 ${firstNameClean ? `Beginne mit "Hallo ${firstNameClean},"` : 'Kein Name bekannt — ohne persoenliche Anrede beginnen.'}
-VALIDIERUNGSSATZ (Schritt 1): Verwende exakt diesen Satz Wort fuer Wort — keine Aenderung: "${validierungsSatz}"
+VALIDIERUNGSSATZ (Schritt 1): Verwende diese Aussage sinngemäß — grammatikalisch passend nach der Begrüßung einbauen, nicht wörtlich kopieren: "${validierungsSatz}"
 Abschluss: Waehle passend "Viele Gruesse, ${signature}" oder "Herzliche Gruesse, ${signature}" oder "Beste Gruesse, ${signature}"
 
 AUSGABE — NUR dieses JSON:
