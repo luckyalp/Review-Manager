@@ -101,15 +101,20 @@ KEIN oeffentliches Versprechen, etwas strukturell zu aendern.`
 const KATEGORIE_B = `KATEGORIE B — ECHTER FEHLER, EINZELFALL:
 Gilt wenn die Kritik einen objektiven Fehler beschreibt (falsches Gericht, lange Wartezeit ohne Grund, unfreundliches Personal) der NICHT durch Konzept bedingt ist.
 
-Aufbau:
+SONDERFALL SERVICEBESCHWERDE (nur unfreundliches Personal / schlechtes Verhalten):
+Wenn die Bewertung AUSSCHLIESSLICH ueber unfreundliches oder schlechtes Verhalten des Personals klagt (kein anderer Kritikpunkt dabei), gilt eine eigene Struktur — KEINE normale Aufbau-Logik unten:
+Struktur: (1) "Natuerlich sollte kein Gast bei uns mit diesem Gefuehl nach Hause gehen." (2) "Das ist nicht, wie wir uns das vorstellen." (3) Kontakt anbieten: "Meld dich gerne bei uns" + contactEmail + "dann kuemmere ich mich persoenlich darum."
+KEIN "komm nochmal vorbei". KEIN weiterer Satz danach.
+
+Aufbau (fuer alle anderen B-Faelle — falsches Gericht, Wartezeit, technische Fehler):
 1. Gefuehl validieren (siehe Schritt 1 unten)
 2. Verantwortung uebernehmen, OHNE zu rechtfertigen. Keine Auslastungs-Begruendung wenn die Bewertung das Gegenteil beschreibt.
 3. Abschluss:
    - Hat der Gast das Problem VOR ORT geloest? Nur kurze Anerkennung, kein weiterer Ausblick.
-   - Problem WAEHREND Besuch moegich zu melden? Geste: "Wink uns kurz, dann kuemmern wir uns gleich."
+   - Problem WAEHREND Besuch moeglich zu melden? Geste: "Wink uns kurz, dann kuemmern wir uns gleich."
    - Problem erst spaeter bemerkt? Einladung ohne Schuldzuweisung: "Komm gerne nochmal vorbei, das geht besser."
    WORTWAHL VOR ORT: Wenn die Geste sich auf eine Situation WAEHREND des Besuchs bezieht (Personal/Tisch/Bezahlen), vermeide Fernkommunikations-Woerter wie "ruf uns", "anrufen", "melden", "kontaktieren", "Rueckmeldung" — das klingt nach Telefon, nicht nach vor Ort sein. Nutze stattdessen Woerter fuer persoenliche Anwesenheit, z.B. winken, kurz Bescheid geben, ansprechen, dem Personal sagen.
-VERBOTEN: "intern nachgeschaerft", "dem Team mitgeteilt", "Massnahmen", interne Ablaeufe erklaeren.`
+VERBOTEN: "intern nachgeschaerft", "dem Team mitgeteilt", "Massnahmen", interne Ablaeufe erklaeren, "wir nehmen das mit".`
 
 const KATEGORIE_C = `KATEGORIE C — SUBJEKTIV / GESCHMACK / WAHRNEHMUNG:
 Gilt wenn die Kritik eine persoenliche Geschmacks- oder Wahrnehmungssache ist (zu scharf, zu wenig Portion, nicht gemuetlich) bei der NICHTS objektiv falsch gelaufen ist.
