@@ -413,7 +413,10 @@ Bewertung von ${firstNameClean || 'einem Gast'} (${stars} Sterne):
 "${reviewText}"
 
 ${analysis.lobpunkte.length > 0 ? `- Positiv erwaehnt: ${analysis.lobpunkte.join(', ')}` : ''}
-${analysis.points.length > 0 ? `- Kritisiert: ${analysis.points.join(', ')}` : ''}
+${analysis.forceSummarize 
+  ? `- Der Gast hatte ${analysis.count} verschiedene Kritikpunkte. Behandle sie AUSSCHLIESSLICH als Gesamteindruck, nenne KEINE Einzelpunkte namentlich.`
+  : analysis.points.length > 0 ? `- Kritikpunkte: ${analysis.points.map((p: string, i: number) => `${p} (${analysis.categories[i] || '?'})`).join(', ')}` : ''
+}
 - Vor Ort angesprochen: ${analysis.vorOrtErwaehnt ? 'ja' : 'nicht erkennbar'}
 
 Schreibe EINE freie, persoenliche Antwort (2-4 Saetze).
