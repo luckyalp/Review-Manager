@@ -301,6 +301,15 @@ function buildComboPrompt(
   ]
   const vs = validierungsSaetze[Math.floor(Math.random() * validierungsSaetze.length)]
 
+  // A-spezifischer Validierungssatz (neutral, keine Schuld, keine Entschuldigung)
+  const aValidierungsSaetze = [
+    `Dass das fuer euch so gelaufen ist, finden wir schade.`,
+    `Dass dieser Eindruck entstanden ist, bedauern wir.`,
+    `Dass du deinen Besuch so in Erinnerung behaeltst, finden wir schade.`,
+    `Dass dein Besuch diesen Eindruck hinterlassen hat, bedauern wir.`,
+  ]
+  const avs = aValidierungsSaetze[Math.floor(Math.random() * aValidierungsSaetze.length)]
+
   // Servicebeschwerde-Satz-Rotation
   const serviceSaetze = [
     `natuerlich sollte kein Gast bei uns mit diesem Gefuehl nach Hause gehen.`,
@@ -318,7 +327,7 @@ function buildComboPrompt(
   const comboInstructions: Record<CategoryCombo, string> = {
 
     'A_ONLY': `STRUKTUR (exakt einhalten):
-1. Validierungssatz (sinngemäss): "${vs}"
+1. Validierungssatz (sinngemäss): "${avs}"
 2. Erklaere kurz WARUM die Regel existiert — NUR mit Informationen aus dem Restaurantprofil. Kein Erfinden. Bei Lautstaerke/vollem Haus: als natuerliche Folge formulieren, nie als bewusste Designentscheidung.
 3. NEUER Gedanke: Konkrete Handlungsoption fuer naechsten Besuch (aus Profil). Wenn nichts passt: "Zu ruhigeren Zeiten ist's da meist entspannter."
 KEIN Strukturversprechen. KEIN "komm nochmal vorbei" ohne konkreten Tipp.`,
@@ -342,7 +351,7 @@ VERBOTEN: "intern nachgeschaerft", "dem Team mitgeteilt", "Massnahmen", "wir neh
 KEIN "Geschmaecker sind verschieden". KEIN Strukturversprechen.`,
 
     'AB': `STRUKTUR (exakt einhalten):
-1. Validierungssatz (sinngemäss): "${vs}"
+1. Validierungssatz (sinngemäss): "${avs}"
 2. A-Thema: Erklaere kurz warum — NUR aus Profil, nie erfinden.
 3. B-Thema: Verantwortung uebernehmen fuer den echten Fehler.
 4. ABSCHLUSS-PRIORITAET — FEST: Das in der Bewertung ZUERST genannte Thema bekommt den VOLLEN Abschluss. Das zweite Thema NUR als kurzer Halbsatz mit "und" angehaengt — kein eigener Satz danach.
@@ -355,12 +364,13 @@ Nach dem Abschluss-Satz direkt Grussformel. NICHTS mehr.`,
 Nach dem Abschluss-Satz direkt Grussformel. NICHTS mehr.`,
 
     'AC': `STRUKTUR (exakt einhalten):
-1. "Schade, dass [C-Merkmal] nicht gepasst hat."
-2. A-Thema erklaeren — NUR aus Profil.
-3. Abschluss: Option aus Profil. A-Thema hat Prioritaet im Abschluss. C als kurzer Halbsatz mit "und".`,
+1. Validierungssatz (sinngemäss): "${avs}"
+2. A-Thema erklaeren — NUR aus Profil. Ein Satz.
+3. C-Abschluss: "Und wenn [C-Merkmal] wieder nicht stimmt, sag beim naechsten Besuch kurz Bescheid, dann [Anpassung]."
+Nach dem Abschluss direkt Grussformel. NICHTS mehr.`,
 
     'ABC': `STRUKTUR (exakt einhalten) — A WIRD GETRENNT BEHANDELT:
-1. Validierungssatz (sinngemäss): "${vs}"
+1. Validierungssatz (sinngemäss): "${avs}"
 2. A-Thema erklaeren: "Was [A-Thema] betrifft: [Grund aus Profil]" — NUR ein Satz, kein Mehr.
 3. B+C in EINEM einzigen Satz zusammenfassen — VERBOTEN: einzelne Punkte namentlich nennen oder aufzaehlen. Kein "X und Y sind Dinge die...". Nur: "Dass dabei noch einiges nicht gestimmt hat, bedauern wir."
 4. Abschluss: "${kontakt}"
