@@ -362,16 +362,17 @@ Nach dem Abschluss-Satz direkt Grussformel. NICHTS mehr.`,
 
     'ABC': `STRUKTUR (exakt einhalten) — A WIRD GETRENNT BEHANDELT:
 1. Validierungssatz (sinngemäss): "${vs}"
-2. A-Thema separat erklaeren: "Was [A-Thema] betrifft: [Grund aus Profil]"
-3. B+C zusammenfassen in EINEM Satz — kein Aufzaehlen.
-4. Abschluss: Kontakt anbieten — NICHT "komm nochmal vorbei".
-   "${kontakt}"`,
+2. A-Thema erklaeren: "Was [A-Thema] betrifft: [Grund aus Profil]" — NUR ein Satz, kein Mehr.
+3. B+C in EINEM einzigen Satz zusammenfassen — VERBOTEN: einzelne Punkte namentlich nennen oder aufzaehlen. Kein "X und Y sind Dinge die...". Nur: "Dass dabei noch einiges nicht gestimmt hat, bedauern wir."
+4. Abschluss: "${kontakt}"
+NACH DEM KONTAKT-SATZ: Direkt Grussformel. KEIN weiterer Satz.`,
 
     'B_SERVICE': `STRUKTUR (exakt einhalten) — SONDERFALL, KEIN NORMALER ABLAUF:
 KEIN Validierungssatz. Direkt starten nach der Begruessung:
 1. "${ss}"
 2. "${kontakt}"
-VERBOTEN: "Komm nochmal vorbei". KEIN C-Anhang. KEIN weiterer Satz nach dem Kontaktangebot.`,
+ZWISCHEN SATZ 1 UND KONTAKT: KEIN weiterer Satz. KEIN Aufzaehlen von Punkten. KEIN "X und Y sind Dinge die...". KEIN Zusammenfassen. Direkt von Satz 1 zu Kontakt.
+NACH DEM KONTAKT-SATZ: Direkt Grussformel. NICHTS mehr.`,
   }
 
   const systemPrompt = `Erstelle eine ehrliche, persoenliche Antwort auf eine negative Google-Bewertung (1-2 Sterne) fuer ein Restaurant.
