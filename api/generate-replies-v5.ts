@@ -279,11 +279,12 @@ SCHRITT 2 — EINORDNUNG gemaess Kategorie-Bloecken:
 ${kategorieBloecke}
 
 BEI MEHREREN KATEGORIEN: Kat-B-Fehler in EINEM zusammenfassenden Satz ("da scheint bei uns einiges nicht rundgelaufen zu sein") — keine Aufzaehlung. Kat-A und Kat-B mit "und" verbinden, nicht mit "aber".
-ABSCHLUSS-PRIORITAET BEI MEHREREN KATEGORIEN: Feste Regel, kein Ermessen:
+ABSCHLUSS-PRIORITAET BEI GENAU 2 KATEGORIEN: Feste Regel, kein Ermessen:
 (1) Das Thema, das in der Bewertung ZUERST genannt wird, ist das Hauptthema. Es bekommt den VOLLEN Abschluss-Satz aus seinem Kategorie-Block.
-(2) Alle anderen Themen kommen danach NUR als kurzer Halbsatz — angehaengt mit "und" oder als knapper Zusatz. Kein eigener Satz, kein eigener Abschluss, keine eigene Geste.
-(3) VERBOTEN: Den Abschluss des zuerst genannten Themas weglassen und stattdessen nur das spaeter genannte Thema mit vollem Abschluss versehen.
-BEISPIEL: Bedienung zuerst genannt, dann Pommes → Abschluss = "Komm gerne nochmal vorbei, das laeuft besser, und wenn die Wuerze nicht stimmt, sag kurz Bescheid." NICHT umgekehrt.
+(2) Das zweite Thema kommt NUR als kurzer Nebensatz INNERHALB desselben Abschluss-Satzes — mit "und" angehaengt, kein eigener Satz, kein eigener Gedanke, keine eigene Geste danach.
+(3) Nach dem Abschluss-Satz kommt direkt die Grussformel. NICHTS mehr.
+VERBOTEN: Eigener Satz fuer das zweite Thema. "Was X betrifft:". Weiterer Gedanke nach dem Abschluss-Satz.
+BEISPIEL (Bedienung zuerst, dann Pommes): "Komm gerne nochmal vorbei, das laeuft besser, und wenn die Wuerze nicht stimmt, sag kurz Bescheid. Viele Gruesse, Henrys" — danach NICHTS.
 
 ABSCHLUSS: Kein Kontaktangebot ausser die Bewertung ist ein echter Kat-B-Fehler mit offenem Gespraechsbedarf. Kein oeffentliches Strukturversprechen. Kein betteln um eine zweite Chance.
 
@@ -304,7 +305,8 @@ ${analysis.lobpunkte.length > 0 ? `- Positiv erwaehnt: ${analysis.lobpunkte.join
 ${analysis.points.length > 0 ? `- Kritisiert: ${analysis.points.join(', ')}` : ''}
 - Vor Ort angesprochen: ${analysis.vorOrtErwaehnt ? 'ja' : 'nicht erkennbar'}` : ''}
 ${analysis && analysis.points.length > 1 ? `\nAUFGABENTEILUNG BEI MEHREREN KRITIKPUNKTEN (${analysis.points.length} erkannt): Der Validierungssatz (Schritt 1) beschreibt NUR das Gesamtgefuehl/den Gesamteindruck des Besuchs (z.B. "kein runder Abschluss", "ein unrunder Verlauf") und benennt dabei KEINEN der einzelnen konkreten Vorfaelle. Die konkreten Vorfaelle (${analysis.points.join(', ')}) werden ausschliesslich in Schritt 2 behandelt, jeder genau einmal. So wird kein Vorfall doppelt genannt (einmal in der Validierung, einmal in der Einordnung).` : ''}
-${analysis?.forceSummarize ? `\nZUSAMMENFASSUNGS-PFLICHT: ${analysis.count} Kritikpunkte erkannt — alle in EINEM zusammenfassenden Satz behandeln. VERBOTEN: Mehr als einen konkreten Punkt namentlich nennen.` : ''}
+${analysis?.forceSummarize ? `\nZUSAMMENFASSUNGS-PFLICHT (${analysis.count} Kritikpunkte — zu viele zum Einzeln-Ansprechen):
+Struktur: (1) Begruessung. (2) Ein einziger zusammenfassender Satz ("da ist bei deinem Besuch einiges nicht so gelaufen wie es sollte"). (3) Kein Aufzaehlen, kein einzelner Punkt namentlich. (4) Abschluss: Kontakt anbieten — NICHT "komm nochmal vorbei". ${contactEmail ? `Formulierung: "Melde dich gerne direkt bei uns unter ${contactEmail}, dann klaeren wir das persoenlich."` : 'Kontakt-E-Mail fehlt im Profil — ohne direkte E-Mail-Angabe formulieren: "Melde dich gerne direkt bei uns, dann klaeren wir das persoenlich."'}` : ''}
 
 Schreibe EINE freie, persoenliche Antwort (2-4 Saetze, passend zum Anlass).
 ${firstNameClean ? `Beginne mit "Hallo ${firstNameClean},"` : 'Kein Name bekannt — ohne persoenliche Anrede beginnen.'}
