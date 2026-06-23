@@ -12,6 +12,7 @@ interface Analysis {
   lobpunkte: string[]
   vorOrtErwaehnt: boolean
   isServiceComplaint: boolean
+  ambiguousB: boolean
 }
 
 // ─── KATEGORIE-KOMBINATIONEN ──────────────────────────────────────────────────
@@ -297,15 +298,25 @@ function buildComboPrompt(
   const besuchForm = duSie === 'Sie' ? 'Ihr Besuch' : 'dein Besuch'
 
   // Validierungssatz-Rotation
-  const validierungsSaetze = [
-    `Schade, dass ${besuchForm} bei uns nicht so war, wie ${duForm} es sich vorgestellt hatte.`,
-    `Das klingt nach einem Besuch, der nicht so laufen sollte.`,
-    `Ein Besuch bei uns sollte anders aussehen als das, was ${duForm} beschreibt.`,
-    `Dass ${besuchForm} so einen Eindruck hinterlassen hat, bedauern wir.`,
-    `So soll ein Besuch bei uns nicht laufen.`,
-    `So einen Eindruck moechten wir nicht hinterlassen.`,
+  // Sack 1: Klare Fehler (Steak durch, Haar im Essen, falsches Gericht)
+  const bClearFault = [
+    `Da sind wir klar an ${duForm} vorbeigegangen.`,
+    `Da ist uns ein Fehler unterlaufen.`,
+    `Das darf bei uns einfach nicht passieren.`,
+    `Das haetten wir sofort korrigieren muessen.`,
   ]
-  const vs = validierungsSaetze[Math.floor(Math.random() * validierungsSaetze.length)]
+
+  // Sack 2: Unklare Fehler / moegliche Missverstaendnisse
+  const bAmbiguousFault = [
+    `Dass da etwas nicht gestimmt haben soll, aergert uns.`,
+    `Da scheint etwas schiefgelaufen zu sein.`,
+    `Das haetten wir gerne gleich vor Ort geklaert.`,
+    `Da schauen wir gerne genauer hin.`,
+  ]
+
+  const vs = analysis?.ambiguousB
+    ? bAmbiguousFault[Math.floor(Math.random() * bAmbiguousFault.length)]
+    : bClearFault[Math.floor(Math.random() * bClearFault.length)]
 
   // A-spezifischer Validierungssatz (neutral, keine Schuld, keine Entschuldigung)
   const aValidierungsSaetze = [
@@ -773,9 +784,10 @@ Regeln:
       lobpunkte: parsed.lobpunkte || [],
       vorOrtErwaehnt: parsed.vor_ort_erwaehnt === true,
       isServiceComplaint: parsed.is_service_complaint === true,
+      ambiguousB: parsed.ambiguous_b === true,
     }
   } catch {
-    return { count: 0, points: [], categories: [], forceSummarize: false, lobpunkte: [], vorOrtErwaehnt: false, isServiceComplaint: false }
+    return { count: 0, points: [], categories: [], forceSummarize: false, lobpunkte: [], vorOrtErwaehnt: false, isServiceComplaint: false, ambiguousB: false }
   }
 }
 
