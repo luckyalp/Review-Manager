@@ -119,7 +119,10 @@ Aufbau:
 3. Abschluss: NEUER, eigenstaendiger Gedanke (nicht Fortsetzung von Punkt 2). Leite aus dem genannten Grund die konkrete Handlungsoption fuer den naechsten Besuch ab. Direkte Anrede, nie "man" oder "wer". Keine Wiederholung des Gefuehls aus Schritt 1.
    WENN das Profil sowohl eine Bar/Steh-Option als auch reservierbare Tische kennt UND die Bewertung sich auf die Bar-Verweisung/Tischregel bezieht: beide Optionen nennen (spontan vorbeikommen fuers Getraenk, reservieren fuers Essen — die genaue Art der Reservierung NUR so beschreiben, wie es im Profil steht, kein "anrufen" annehmen wenn das Profil nichts dazu sagt) — nicht nur eine davon.
    SONST: eine einzige passende Option aus dem Profil.
-   WENN kein Profil-Tipp passt und auslastungsabhaengig: "Zu ruhigeren Zeiten ist's da meist entspannter."
+   WENN das Profil bei der Hausregel KEINEN konkreten Tipp nennt:
+   - Bei TISCHZEIT- / Zeitfenster-Kritik: Schlage vor, den Abend nach dem Zeitfenster an der Bar oder an Stehtischen ausklingen zu lassen. Beispiel: "Falls ihr danach noch bleiben wollt, wechselt einfach an die Bar oder an einen Stehtisch."
+   - Bei LAUTSTAERKE- / AUSLASTUNGS-Kritik: "Zu ruhigeren Zeiten ist's da meist entspannter."
+   WICHTIG: Diese Fallbacks NUR bei Kategorie A (Hausregeln). NIEMALS bei Essen oder Geschmack.
 KEIN oeffentliches Versprechen, etwas strukturell zu aendern.`
 
 const KATEGORIE_B = (servicebeschwerdeSatz: string) => `KATEGORIE B — ECHTER FEHLER, EINZELFALL:
