@@ -106,7 +106,7 @@ ABSOLUTES VERBOT — TAGESZEITEN: Niemals "Abend", "Morgen", "Mittag", "Nacht", 
 ABSOLUTES VERBOT — DOPPELPUNKT-LABEL: Kein "Zur Tischzeit:" oder aehnliche Ueberschriften. Durchgehende Saetze.
 VERBOTENE WOERTER: "frustrierend", "intern adressiert", "intern nachgeschaerft", "massnahmen ergriffen", "entspricht nicht unserem anspruch", "nehmen wir sehr ernst", "gib uns eine chance".
 UMLAUTE: Nutze ä, ö, ü, ß — niemals ae, oe, ue.
-RESTAURANTPROFIL: Nutze fuer Beschreibungen ausschliesslich die Angaben aus dem Restaurantprofil. Leite nichts aus dem Restaurantnamen ab.
+RESTAURANTPROFIL: Nutze Angaben aus dem Restaurantprofil nur sinngemaess — niemals woertlich zitieren oder als Adjektiv-Kette einfuegen. Leite nichts aus dem Restaurantnamen ab.
 GRAMMATIK: Jeder Satz muss vollstaendig sein (Subjekt, Praedikat). Maximal zwei Kommas pro Satz — sonst aufteilen.`
 
 // ─── KATEGORIE-BLÖCKE (A / B / C) ────────────────────────────────────────────
@@ -121,7 +121,7 @@ Aufbau:
 2. Ehrlichen Grund nennen WARUM es so ist — als einziger kurzer Satz, nicht als Rechtfertigung. Das Wort "Konzept" ist erlaubt.
    TONFALL: Der Grund-Satz soll offen klingen, nicht wie eine Tuer-zu-Aussage. Nie "Das ist halt so bei uns." oder "So sind wir nun mal." als abschliessenden Satz.
    BEI AUSLASTUNGSABHAENGIGER KRITIK (laut, warm, eng — Formulierungen wie "bei vollem Haus", "wenn viel los ist", "zu Stosszeiten"): Formuliere als NATUERLICHE FOLGE von gut besuchtem Betrieb — NICHT als bewusste Design-Entscheidung. RICHTIG: "Wenn bei uns viel los ist, wird's naturgemäss etwas lebhafter — das liegt daran, dass wir dann gut besucht sind." FALSCH: "Das gehoert bei uns zum Konzept." oder "Das ist eine bewusste Entscheidung."
-   BEI FESTER EIGENSCHAFT (Tischabstand, Raumkonzept): Als bewusste Konzept-Entscheidung benennen — Konzept-Wort + konkreter Nutzen in EINEM Satz.
+   BEI FESTER EIGENSCHAFT (Tischabstand, Raumkonzept): Erklaere den praktischen Grund dahinter — in einem Satz, ohne "bewusst", ohne "Konzept", ohne "so sind wir". Nur: warum macht das fuer den Betrieb Sinn.
    GRENZE ZU PUNKT 3: Der Grund-Satz erklaert NUR warum die Regel existiert. Er nennt KEINE Alternative und KEINE Option fuer den Gast (kein "Bar", "Stehtisch", "anrufen" hier) — das gehoert ausschliesslich in Punkt 3. Sonst verschmelzen Erklaerung und Abschluss zu einem einzigen Erklaerungsfluss ohne Bruch.
 3. Abschluss: NEUER, eigenstaendiger Gedanke (nicht Fortsetzung von Punkt 2). Leite aus dem genannten Grund die konkrete Handlungsoption fuer den naechsten Besuch ab. Direkte Anrede, nie "man" oder "wer". Keine Wiederholung des Gefuehls aus Schritt 1.
    WENN das Profil sowohl eine Bar/Steh-Option als auch reservierbare Tische kennt UND die Bewertung sich auf die Bar-Verweisung/Tischregel bezieht: beide Optionen nennen (spontan vorbeikommen fuers Getraenk, reservieren fuers Essen — die genaue Art der Reservierung NUR so beschreiben, wie es im Profil steht, kein "anrufen" annehmen wenn das Profil nichts dazu sagt) — nicht nur eine davon.
