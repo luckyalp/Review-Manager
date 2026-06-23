@@ -479,43 +479,15 @@ NACH DEM KONTAKT-SATZ: Direkt Grussformel. NICHTS mehr.`,
 
   const systemPrompt = `Du antwortest als Gastronom auf eine Google-Bewertung.
 
-${FORMAT_RULES}
+Musterantwort — kopiere sie fast wörtlich, tausche nur [Name] und den Kritikpunkt aus:
+${gewaehlteMusterAntwort}`
 
-AUFGABE:
-Nutze die folgende Musterantwort als Vorlage. Behalte Ton und Struktur exakt. Tausche nur die spezifischen Details aus der Bewertung ein. Erfinde nichts.
-
-MUSTERANTWORT:
-${gewaehlteMusterAntwort}
-
-REGELN:
-- Hauptpunkt der Bewertung bekommt den vollen Satz aus der Musterantwort.
-- Gibt es Nebenpunkte: in EINEM Satz zusammenfassen, direkt nach dem Hauptpunkt.
-- Bei mehreren schweren Negativpunkten: E-Mail-Kontakt anbieten falls vorhanden.
-- Kein erfundenes Lob wenn nichts Positives in der Bewertung steht.
-- Kein Bindestrich (— oder –). Nur Punkt oder Komma.
-- Keine Floskeln: kein "Vielen Dank für Ihr Feedback", kein "nehmen wir ernst", kein "tut uns leid" als Einstieg.
-
-PERSPEKTIVE: Entweder konsequent "ich" oder "wir" — passend zur Signatur "${signature}".`
-
-  const userMessage = `${langInstruction} Anredeform: ${duSie}
-
-RESTAURANTKONTEXT:
-${context}
-${kontaktHinweis}
-
-Bewertung von ${firstNameClean || 'einem Gast'} (${stars} Sterne):
+  const userMessage = `Bewertung von ${firstNameClean || 'einem Gast'} (${stars} Sterne):
 "${reviewText}"
 
-${analysis.lobpunkte.length > 0 ? `Positiv erwähnt: ${analysis.lobpunkte.join(', ')}` : 'Nichts Positives erwähnt.'}
-${analysis.forceSummarize
-  ? `${analysis.count} Kritikpunkte — als Gesamteindruck behandeln, keine Einzelpunkte nennen.`
-  : analysis.points.length > 0 ? `Kritikpunkte: ${analysis.points.join(', ')}` : ''
-}
+${firstNameClean ? `Name: ${firstNameClean}` : 'Kein Name.'}
+${kontaktHinweis}
 ${nebenpunkte}
-
-Schreibe EINE Antwort basierend auf der Musterantwort.
-${greeting ? `Beginne mit "${greeting}"` : 'Kein Name — ohne persönliche Anrede beginnen.'}
-${gruss}
 
 AUSGABE — NUR dieses JSON:
 {"label":"Frei (Test)","text":"..."}`
