@@ -374,7 +374,9 @@ KEIN "Geschmaecker sind verschieden". KEIN Strukturversprechen. KEIN Kontakt-E-M
     'AB': `STRUKTUR (exakt einhalten):
 1. Validierungssatz (sinngemäss): "${avs}"
 2. A-Thema: Erklaere kurz warum — NUR aus Profil, nie erfinden.
-3. B-Thema: Verantwortung uebernehmen fuer den echten Fehler.
+3. B-Thema: ${analysis?.ambiguousB
+    ? 'VERWENDE FUER DEN B-TEIL GENAU DIESEN SATZ UND KEINEN ANDEREN: "Dass da etwas mit der Rechnung nicht gestimmt hat, schauen wir uns gerne direkt an." KEIN Entschuldigungs-Wort, KEIN Schuld-Eingestaendnis, KEIN "Fehler".'
+    : 'Uebernimm kurz Verantwortung fuer den echten Fehler, ohne zu rechtfertigen.'}
 4. ABSCHLUSS-PRIORITAET — FEST: Das in der Bewertung ZUERST genannte Thema bekommt den VOLLEN Abschluss. Das zweite Thema NUR als kurzer Halbsatz mit "und" angehaengt — kein eigener Satz danach.
 Nach dem Abschluss-Satz direkt Grussformel. NICHTS mehr.`,
 
