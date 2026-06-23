@@ -391,7 +391,7 @@ KEIN "Geschmaecker sind verschieden". KEIN Strukturversprechen. KEIN Kontakt-E-M
 1. Validierungssatz (sinngemäss): "${avs}"
 2. A-Teil: Erklaere kurz und natuerlich WARUM diese Regel existiert. Kontext: ${analysis?.topicA?.situation || 'siehe Restaurantprofil'}. NUR aus Profil — nie erfinden. ${analysis?.topicA?.barOption ? 'Schliesse diesen Satz mit dem Angebot ab, nach der Tischzeit an der Bar oder Stehtischen weiterzumachen. Neutrale Formulierung ohne Anrede-Pronomen: "Wer danach noch bleiben moechte, kann gerne an die Bar wechseln."' : ''}
 3. B-Teil (kurz, ein Halbsatz): ${analysis?.ambiguousB
-    ? 'VERWENDE GENAU: "Dass da etwas mit der Rechnung nicht gestimmt hat, klaeren wir gerne per Mail." KEIN Entschuldigungs-Wort, KEIN "Fehler", KEIN Anrede-Pronomen.'
+    ? `VERWENDE GENAU: "Dass da etwas mit der Rechnung nicht gestimmt hat, klaeren wir gerne per Mail${contactEmail ? ' unter ' + contactEmail : ''}." KEIN Entschuldigungs-Wort, KEIN "Fehler", KEIN Anrede-Pronomen.`
     : 'Uebernimm kurz Verantwortung fuer den echten Fehler, ein Halbsatz genuegt.'}
 4. ABSCHLUSS: Das A-Thema hat den vollen Abschluss (Bar-Option falls relevant). Der B-Teil ist bereits Schritt 3 — KEIN weiterer Satz danach.
 Direkt Grussformel. NICHTS mehr.`,
