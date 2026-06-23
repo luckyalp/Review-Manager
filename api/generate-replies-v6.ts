@@ -4,6 +4,11 @@ const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
+interface TopicA {
+  type: 'table_time' | 'noise' | 'concept'
+  barFallbackRequired: boolean
+}
+
 interface Analysis {
   count: number
   points: string[]
@@ -13,6 +18,7 @@ interface Analysis {
   vorOrtErwaehnt: boolean
   isServiceComplaint: boolean
   ambiguousB: boolean
+  topicA?: TopicA
 }
 
 // ─── KATEGORIE-KOMBINATIONEN ──────────────────────────────────────────────────
@@ -318,14 +324,21 @@ function buildComboPrompt(
     ? bAmbiguousFault[Math.floor(Math.random() * bAmbiguousFault.length)]
     : bClearFault[Math.floor(Math.random() * bClearFault.length)]
 
-  // A-spezifischer Validierungssatz (neutral, keine Schuld, keine Entschuldigung)
-  const aValidierungsSaetze = [
-    `Dass das fuer euch so gelaufen ist, finden wir schade.`,
+  // A-spezifischer Validierungssatz — pronomen-aware
+  const aValidierungsSaetzeDu = [
+    `Dass das bei euch so gelaufen ist, finden wir schade.`,
     `Dass dieser Eindruck entstanden ist, bedauern wir.`,
     `Dass du deinen Besuch so in Erinnerung behaeltst, finden wir schade.`,
     `Dass dein Besuch diesen Eindruck hinterlassen hat, bedauern wir.`,
   ]
-  const avs = aValidierungsSaetze[Math.floor(Math.random() * aValidierungsSaetze.length)]
+  const aValidierungsSaetzeSie = [
+    `Dass das bei Ihrem Besuch so gelaufen ist, finden wir schade.`,
+    `Dass dieser Eindruck entstanden ist, bedauern wir.`,
+    `Dass Sie Ihren Besuch so in Erinnerung behalten, finden wir schade.`,
+    `Dass Ihr Besuch diesen Eindruck hinterlassen hat, bedauern wir.`,
+  ]
+  const avsPool = duSie === 'Sie' ? aValidierungsSaetzeSie : aValidierungsSaetzeDu
+  const avs = avsPool[Math.floor(Math.random() * avsPool.length)]
 
   // Servicebeschwerde-Satz-Rotation
   const serviceSaetze = [
@@ -343,11 +356,17 @@ function buildComboPrompt(
 
   const comboInstructions: Record<CategoryCombo, string> = {
 
-    'A_ONLY': `STRUKTUR (exakt einhalten):
-1. Validierungssatz (sinngemäss): "${avs}"
-2. Erklaere kurz WARUM die Regel existiert — NUR mit Informationen aus dem Restaurantprofil. Kein Erfinden. Bei Lautstaerke/vollem Haus: als natuerliche Folge formulieren, nie als bewusste Designentscheidung.
-3. NEUER Gedanke: Konkrete Handlungsoption fuer naechsten Besuch (aus Profil). Wenn nichts passt: "Zu ruhigeren Zeiten ist's da meist entspannter."
-KEIN Strukturversprechen. KEIN "komm nochmal vorbei" ohne konkreten Tipp.`,
+    'A_ONLY': `STRUKTUR (exakt einhalten — 3 Saetze, nicht mehr):
+SATZ 1 — VALIDIERUNG: Verwende sinngemäss: "${avs}"
+SATZ 2 — ERKLAERUNG: ${analysis?.topicA?.type === 'noise'
+  ? 'Formuliere als natuerliche Folge von gut besuchtem Betrieb. RICHTIG: "Wenn bei uns viel los ist, wird es naturgemäss lebhafter." FALSCH: "Das gehoert zu unserem Konzept."'
+  : 'Erklaere kurz und natuerlich WARUM diese Regel existiert. NUR mit Infos aus dem Restaurantprofil. Kein Erfinden.'
+}
+SATZ 3 — OPTION: ${analysis?.topicA?.barFallbackRequired
+  ? 'Biete konkret an, nach der Tischzeit an der Bar oder Stehtischen weiterzumachen. Direkte Anrede. Kein Anrede-Pronomen das zu "Sie"/"du" passt wenn unklar — nutze neutrale Formulierung wie "Wer danach noch bleiben moechte..."'
+  : 'Nenne eine konkrete Handlungsoption aus dem Profil. Wenn keine passt: "Zu ruhigeren Zeiten ist es da meist entspannter."'
+}
+NACH SATZ 3: Direkt Grussformel. KEIN weiterer Satz. KEIN Strukturversprechen.`,
 
     'B_ONLY': `STRUKTUR (exakt einhalten):
 1. Validierungssatz (sinngemäss): "${vs}"
@@ -758,7 +777,7 @@ async function analyzeReview(reviewText: string): Promise<Analysis> {
   const systemPrompt = `Rolle: Nuechterner Fakten-Extraktor fuer Restaurant-Bewertungen. Nur Datenpunkte extrahieren, keine Antwort verfassen.
 
 Ausgabe: AUSSCHLIESSLICH valides JSON ohne Markdown:
-{"issues":[{"text":"Steak Medium statt durch","cat":"B"}],"lobpunkte":["Lob1"],"vor_ort_erwaehnt":false,"is_service_complaint":false,"ambiguous_b":false}
+{"issues":[{"text":"Steak Medium statt durch","cat":"B"}],"lobpunkte":["Lob1"],"vor_ort_erwaehnt":false,"is_service_complaint":false,"ambiguous_b":false,"topic_a":null}
 
 Regeln:
 1. "issues": Liste der Kritikpunkte als Objekte mit "text" und "cat".
@@ -771,7 +790,10 @@ Regeln:
 2. "lobpunkte": Positive Erwaehnung, max. 3-4 Woerter. Leer wenn kein Lob.
 3. "vor_ort_erwaehnt": true nur wenn unmissverstaendlich aus Text hervorgeht dass Gast etwas dem Personal gesagt hat.
 4. "is_service_complaint": true NUR WENN cat B vorhanden UND Kritik das VERHALTEN, FREUNDLICHKEIT oder AUFMERKSAMKEIT des Personals betrifft (unfreundlich, unaufmerksam, desinteressiert, arrogant, ignoriert). false bei: Wartezeit, falscher Bestellung, technischen Fehlern.
-5. "ambiguous_b": true NUR WENN der B-Punkt NICHT sofort vom Personal bestaetigt werden kann ohne nachzuschauen (z.B. Rechnung falsch, Preis stimmt nicht, zu lange gewartet, Service unfreundlich). false BEI eindeutigen physischen Fehlern die auf dem Tisch sofort sichtbar sind (z.B. Haar im Essen, Steak durch statt medium, falsches Gericht geliefert, Essen kalt, falsche Portion).`
+5. "ambiguous_b": true NUR WENN der B-Punkt NICHT sofort vom Personal bestaetigt werden kann ohne nachzuschauen (z.B. Rechnung falsch, Preis stimmt nicht, zu lange gewartet, Service unfreundlich). false BEI eindeutigen physischen Fehlern die auf dem Tisch sofort sichtbar sind (z.B. Haar im Essen, Steak durch statt medium, falsches Gericht geliefert, Essen kalt, falsche Portion).
+6. "topic_a": NUR ausfullen wenn mindestens ein A-Issue vorhanden. Sonst null.
+   - "type": "table_time" wenn Tischzeit/Zeitfenster/Rauswurf-nach-X-Minuten. "noise" wenn Lautstaerke/voll/eng. "concept" fuer alle anderen Konzept-Regeln.
+   - "bar_fallback_required": true bei "table_time" oder "noise" — immer. false bei "concept".`
 
   try {
     const result = await callClaude(`Bewertung:\n"${reviewText}"`, systemPrompt, 'claude-haiku-4-5-20251001', 0)
@@ -779,6 +801,12 @@ Regeln:
     const issues: Array<{text: string, cat: string}> = parsed.issues || []
     const points = issues.map((i: {text: string, cat: string}) => i.text)
     const categories = issues.map((i: {text: string, cat: string}) => i.cat)
+    const rawTopicA = parsed.topic_a
+    const topicA: TopicA | undefined = rawTopicA ? {
+      type: rawTopicA.type || 'concept',
+      barFallbackRequired: rawTopicA.bar_fallback_required === true,
+    } : undefined
+
     return {
       count: issues.length,
       points,
@@ -788,6 +816,7 @@ Regeln:
       vorOrtErwaehnt: parsed.vor_ort_erwaehnt === true,
       isServiceComplaint: parsed.is_service_complaint === true,
       ambiguousB: parsed.ambiguous_b === true,
+      topicA,
     }
   } catch {
     return { count: 0, points: [], categories: [], forceSummarize: false, lobpunkte: [], vorOrtErwaehnt: false, isServiceComplaint: false, ambiguousB: false }
@@ -914,6 +943,27 @@ async function generateVariant(
       .replace(/\.\s*\./g, '.')
       .replace(/\.\s+([a-zäöüß])/g, (_, c: string) => `. ${c.toUpperCase()}`)
     lastResult = { ...lastResult, text: fixed }
+  }
+
+  // ── Post-Processing: Bar-Fallback deterministisch ────────────────────────────
+  // Wenn A_ONLY und barFallbackRequired — prüfen ob Bar/Stehtisch erwähnt wurde.
+  // Wenn nicht: Satz vor der Grussformel einfügen. Keine KI beteiligt.
+  if (lastResult && mode === 'CONTENT_NEGATIVE' && analysis?.topicA?.barFallbackRequired) {
+    const hasBar = /bar|stehtisch|stehen/i.test(lastResult.text)
+    if (!hasBar) {
+      // Grussformel-Patterns erkennen und Satz davor einfügen
+      const grussPattern = /(Viele Grüße|Herzliche Grüße|Beste Grüße|Viele Gruesse|Herzliche Gruesse|Beste Gruesse)/i
+      const barSatz = 'Wer danach noch bleiben möchte, ist an der Bar oder an den Stehtischen herzlich willkommen.'
+      if (grussPattern.test(lastResult.text)) {
+        lastResult = {
+          ...lastResult,
+          text: lastResult.text.replace(grussPattern, `${barSatz} $1`)
+        }
+      } else {
+        // Kein Gruss-Pattern gefunden — ans Ende hängen
+        lastResult = { ...lastResult, text: lastResult.text.trim() + ' ' + barSatz }
+      }
+    }
   }
 
   return lastResult ? { ...lastResult, isFreeTest: true } : null
