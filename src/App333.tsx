@@ -62,8 +62,8 @@ const supabase = createClient(
 
 function App() {
   const [page, setPage] = useState('dashboard')
-  const [engine, setEngine] = useState<'v2' | 'v1' | 'v3' | 'v4'>(() => {
-    return (localStorage.getItem('rezpondEngine') as 'v2' | 'v1' | 'v3' | 'v4') || 'v1'
+  const [engine, setEngine] = useState<'v2' | 'v1' | 'v3' | 'v4' | 'v5' | 'v6'>(() => {
+    return (localStorage.getItem('rezpondEngine') as 'v2' | 'v1' | 'v3' | 'v4' | 'v5' | 'v6') || 'v6'
   })
   const [reviews, setReviews] = useState<Review[]>([])
   const [reviewsLoading, setReviewsLoading] = useState(true)
@@ -99,7 +99,11 @@ function App() {
       try {
         const { data } = await supabase
           .from('settings').select('value').eq('key', 'restaurant_profile').eq('user_id', user.id).single()
-        if (data?.value?.businessName) { setOnboardingStep(0); return }
+        if (data?.value?.businessName) {
+          // Profil aus Supabase in localStorage schreiben, damit es beim ersten Generieren verfuegbar ist
+          localStorage.setItem('rezpondSettings', JSON.stringify(data.value))
+          setOnboardingStep(0); return
+        }
       } catch { /* ignore */ }
       try {
         const local = localStorage.getItem('rezpondSettings')
@@ -348,7 +352,7 @@ function App() {
               {page === 'reviews' && !selectedReview && <Reviews reviews={reviews} onStatusChange={updateReviewStatus} onDelete={deleteReview} openReview={openReview} initialFilterStars={reviewsInitialFilter} />}
               {page === 'reviews' && selectedReview && <ReviewDetail review={selectedReview} onStatusChange={updateReviewStatus} onBack={() => setSelectedReview(null)} onNavigateSettings={() => { setSelectedReview(null); setPage('settings') }} engine={engine} />}
               {page === 'analytics' && <Analytics reviews={reviews} userId={user?.id} />}
-              {page === 'settings' && <Settings onLogout={handleLogout} userId={user?.id} engine={engine} onEngineChange={(e) => { setEngine(e); localStorage.setItem('rezpondEngine', e) }} />}
+              {page === 'settings' && <Settings onLogout={handleLogout} userId={user?.id} engine={engine} onEngineChange={(e) => { setEngine(e as any); localStorage.setItem('rezpondEngine', e) }} />}
             </>
           )}
         </div>
@@ -412,7 +416,7 @@ function StatusBadge({ status }: { status: ReviewStatus }) {
 
 // ─── DASHBOARD ───────────────────────────────────────────────────────────────
 
-function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews, userId, engine }: { stats: any, reviews: Review[], openReview: (r: Review) => void, onAddReview: (r: Review) => void, onNavigateReviews: (filter?: string) => void, userId?: string, engine: 'v2' | 'v1' | 'v3' | 'v4' }) {
+function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews, userId, engine }: { stats: any, reviews: Review[], openReview: (r: Review) => void, onAddReview: (r: Review) => void, onNavigateReviews: (filter?: string) => void, userId?: string, engine: 'v2' | 'v1' | 'v3' | 'v4' | 'v5' | 'v6' }) {
   const [testRunning, setTestRunning] = useState(false)
   const [testDone, setTestDone] = useState(false)
   const [testError, setTestError] = useState('')
@@ -508,7 +512,7 @@ function Dashboard({ stats, reviews, openReview, onAddReview, onNavigateReviews,
     }
 
     try {
-      const _endpoint = engine === 'v1' ? '/api/generate-replies' : engine === 'v3' ? '/api/generate-replies-v3' : engine === 'v4' ? '/api/generate-replies-v4' : '/api/generate-replies-v2'
+      const _endpoint = engine === 'v1' ? '/api/generate-replies' : engine === 'v3' ? '/api/generate-replies-v3' : engine === 'v4' ? '/api/generate-replies-v4' : engine === 'v5' ? '/api/generate-replies-v5' : engine === 'v6' ? '/api/generate-replies-v6' : '/api/generate-replies-v2'
       const repliesRes = await fetch(_endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1034,12 +1038,15 @@ const rdStyles = `
 
 // ─── REVIEW DETAIL ───────────────────────────────────────────────────────────
 
-function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engine }: { review: Review, onStatusChange: (id: number, s: ReviewStatus) => void, onBack: () => void, onNavigateSettings: () => void, engine: 'v2' | 'v1' | 'v3' | 'v4' }) {
+function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engine }: { review: Review, onStatusChange: (id: number, s: ReviewStatus) => void, onBack: () => void, onNavigateSettings: () => void, engine: 'v2' | 'v1' | 'v3' | 'v4' | 'v5' | 'v6' }) {
   const [aiLoading, setAiLoading] = useState(false)
   const [answers, setAnswers] = useState<{label: string, text: string, isRecovery?: boolean}[]>([])
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [showToast, setShowToast] = useState(false)
   const [missingContext, setMissingContext] = useState<string | null>(null)
+  const [categoryQuestion, setCategoryQuestion] = useState<{ question: string; category: string } | null>(null)
+  const [categoryAnswer, setCategoryAnswer] = useState('')
+  const [categoryAnswerSaving, setCategoryAnswerSaving] = useState(false)
   const textareaRefs = useRef<Record<number, HTMLTextAreaElement | null>>({})
   const settings = JSON.parse(localStorage.getItem('rezpondSettings') || '{}')
 
@@ -1101,18 +1108,50 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
     setTimeout(() => { setShowToast(false); onBack() }, 1500)
   }
 
+  const saveCategoryAnswer = async () => {
+    if (!categoryQuestion || !categoryAnswer.trim()) return
+    setCategoryAnswerSaving(true)
+    const updated = {
+      ...settings,
+      categoryProfile: {
+        ...(settings.categoryProfile || {}),
+        [categoryQuestion.category]: categoryAnswer.trim(),
+      }
+    }
+    localStorage.setItem('rezpondSettings', JSON.stringify(updated))
+    // Auch in Supabase speichern
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        await supabase.from('settings').upsert(
+          { key: 'restaurant_profile', user_id: user.id, value: updated, updated_at: new Date().toISOString() },
+          { onConflict: 'key,user_id' }
+        )
+      }
+    } catch (e) { console.warn('Supabase save failed', e) }
+    setCategoryQuestion(null)
+    setCategoryAnswer('')
+    setCategoryAnswerSaving(false)
+    // Neu generieren mit den neuen Infos
+    generateReplies(false)
+  }
+
   const generateReplies = async (force = false) => {
     setAiLoading(true)
     setMissingContext(null)
+    setCategoryQuestion(null)
     try {
-      const _endpoint = engine === 'v1' ? '/api/generate-replies' : engine === 'v3' ? '/api/generate-replies-v3' : engine === 'v4' ? '/api/generate-replies-v4' : '/api/generate-replies-v2'
+      const currentSettings = JSON.parse(localStorage.getItem('rezpondSettings') || '{}')
+      const _endpoint = engine === 'v1' ? '/api/generate-replies' : engine === 'v3' ? '/api/generate-replies-v3' : engine === 'v4' ? '/api/generate-replies-v4' : engine === 'v5' ? '/api/generate-replies-v5' : engine === 'v6' ? '/api/generate-replies-v6' : '/api/generate-replies-v2'
       const response = await fetch(_endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ review: { reviewerName: review.name, stars: review.stars, reviewText: review.text }, settings, force })
+        body: JSON.stringify({ review: { reviewerName: review.name, stars: review.stars, reviewText: review.text }, settings: currentSettings, force })
       })
       const data = await response.json()
-      if (data.missingContext) {
+      if (data.missingContext && data.isCategoryQuestion) {
+        setCategoryQuestion({ question: data.missingInfo, category: data.category })
+      } else if (data.missingContext) {
         setMissingContext(data.missingInfo || 'Fehlende Informationen im Restaurantprofil')
       } else if (data.success && data.answers) {
         setAnswers(data.answers)
@@ -1189,6 +1228,42 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
             <div className="rd2-state-box">
               <div className="rd2-state-icon">⏳</div>
               <div className="rd2-state-title">Gleich fertig — ich denke mir was aus…</div>
+            </div>
+          )}
+          {categoryQuestion && !aiLoading && (
+            <div className="rd2-state-box" style={{borderLeft: '4px solid #6366f1', background: '#f5f3ff'}}>
+              <div className="rd2-state-icon">💬</div>
+              <div className="rd2-state-title" style={{color: '#3730a3'}}>Kurze Frage, einmalig</div>
+              <div className="rd2-state-desc" style={{color: '#4338ca', marginBottom: '12px'}}>
+                {categoryQuestion.question}
+              </div>
+              <textarea
+                value={categoryAnswer}
+                onChange={e => setCategoryAnswer(e.target.value)}
+                placeholder="Deine Antwort..."
+                rows={3}
+                style={{
+                  width: '100%', boxSizing: 'border-box', padding: '10px 12px',
+                  borderRadius: '8px', border: '1px solid #a5b4fc', fontSize: '14px',
+                  fontFamily: 'inherit', resize: 'vertical', marginBottom: '8px',
+                  background: '#fff', color: '#1e1b4b',
+                }}
+              />
+              <button
+                onClick={saveCategoryAnswer}
+                disabled={!categoryAnswer.trim() || categoryAnswerSaving}
+                className="rd2-gen-btn"
+                style={{background: '#6366f1', marginTop: '4px'}}
+              >
+                {categoryAnswerSaving ? 'Speichert...' : 'Antworten & Generieren'}
+              </button>
+              <button
+                onClick={() => { setCategoryQuestion(null); generateReplies(true) }}
+                className="rd2-gen-btn"
+                style={{background: '#6b7280', marginTop: '4px'}}
+              >
+                Überspringen & trotzdem generieren
+              </button>
             </div>
           )}
           {missingContext && !aiLoading && (
@@ -1784,7 +1859,7 @@ function Analytics({ reviews, userId }: { reviews: Review[], userId?: string }) 
 
 // ─── EINSTELLUNGEN ────────────────────────────────────────────────────────────
 
-function Settings({ onLogout, userId, engine, onEngineChange }: { onLogout: () => void, userId?: string, engine: 'v2' | 'v1' | 'v3' | 'v4', onEngineChange: (e: 'v2' | 'v1' | 'v3' | 'v4') => void }) {
+function Settings({ onLogout, userId, engine, onEngineChange }: { onLogout: () => void, userId?: string, engine: 'v2' | 'v1' | 'v3' | 'v4' | 'v5' | 'v6', onEngineChange: (e: 'v2' | 'v1' | 'v3' | 'v4' | 'v5' | 'v6') => void }) {
   const [form, setForm] = useState({
     businessName: '', description: '', restaurantType: '', cuisineType: '',
     priceRange: '', dietaryOptions: '', openingHours: '',
@@ -2111,11 +2186,13 @@ function Settings({ onLogout, userId, engine, onEngineChange }: { onLogout: () =
           <div style={{ fontSize: '12px', color: '#9ca3af', fontWeight: '600', letterSpacing: '0.05em', marginBottom: '10px' }}>🧪 ENGINE TEST</div>
           <div style={{ display: 'flex', gap: '8px' }}>
             {([
-              { key: 'v2', label: 'v2 (Standard)' },
+              { key: 'v6', label: 'v6 (aktiv)' },
+              { key: 'v5', label: 'v5' },
+              { key: 'v4', label: 'v4' },
+              { key: 'v2', label: 'v2' },
               { key: 'v1', label: 'v1 (alt)' },
-              { key: 'v3', label: 'v3 (Pfad 1/2/3)' },
-              { key: 'v4', label: 'v4 (neu)' },
-            ] as { key: 'v2' | 'v1' | 'v3' | 'v4', label: string }[]).map(opt => (
+              { key: 'v3', label: 'v3' },
+            ] as { key: 'v2' | 'v1' | 'v3' | 'v4' | 'v5', label: string }[]).map(opt => (
               <button
                 key={opt.key}
                 onClick={() => onEngineChange(opt.key)}
@@ -2136,7 +2213,7 @@ function Settings({ onLogout, userId, engine, onEngineChange }: { onLogout: () =
           </div>
           <div style={{ fontSize: '13px', color: '#6b7280', marginTop: '10px' }}>
             Aktiv: <strong style={{ color: '#0f4c5c' }}>
-              {engine === 'v1' ? 'generate-replies (alt)' : engine === 'v3' ? 'generate-replies-v3 (Pfad 1/2/3)' : engine === 'v4' ? 'generate-replies-v4 (neu)' : 'generate-replies-v2 (Standard)'}
+              {engine === 'v1' ? 'generate-replies (alt)' : engine === 'v3' ? 'generate-replies-v3' : engine === 'v4' ? 'generate-replies-v4' : engine === 'v5' ? 'generate-replies-v5' : engine === 'v6' ? 'generate-replies-v6 (aktiv)' : 'generate-replies-v2'}
             </strong>
           </div>
         </div>
