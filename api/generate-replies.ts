@@ -1,697 +1,95 @@
+
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY
 
-// ─── KATEGORIE-ERKENNUNG ───────────────────────────────────────────────────
-
-type ReviewCategory =
-  | 'preis'
-  | 'service_unfreundlich'
-  | 'service_wartezeit'
-  | 'service_fehler'
-  | 'konzept_tischpolitik'
-  | 'akustik'
-  | 'hygiene'
-  | 'speisekarte'
-  | null
-
-function detectCategory(reviewText: string): ReviewCategory {
-  const t = reviewText.toLowerCase()
-  if (/krank|erbrechen|durchfall|vergiftung|hygiene|tiefk.hl|aufgew.rmt/.test(t)) return 'hygiene'
-  if (/nur trinken|nur etwas trinken|tisch.*nur.*essen|pflicht.*bestellen|gro.es gericht|tisch.*freimachen|tisch.*zahlen|rausbitte|rausgebeten|nur.*essen.*tisch/.test(t)) return 'konzept_tischpolitik'
-  if (/respektlos|pampig|unverschämt.*kellner|kellner.*unverschämt|frech.*bedien|diskriminier|muslimin|religion|beleidigung/.test(t)) return 'service_unfreundlich'
-  if (/\d+\s*stunden?\s*warten|\d+\s*minuten?\s*warten|lange.*warten|zu lange.*gewartet|wartezeit|warten.*karte/.test(t)) return 'service_wartezeit'
-  if (/falsches.*gericht|falsches.*getr.nk|falsch.*bestell|alkohol.*alkoholfrei|alkoholfrei.*alkohol|unkoordiniert.*service|vergessen.*bringen|nie.*gebracht/.test(t)) return 'service_fehler'
-  if (/laut|akustik|l.rm|mensa|schallkulisse|man versteht|zu laut|klangteppich/.test(t)) return 'akustik'
-  if (/preis|teuer|\d+\s*€|zu viel.*geld|preis.*leistung|erschwinglich|unverschämt.*preis|preis.*unverschämt/.test(t)) return 'preis'
-  if (/vegan|vegetarisch|pflanzlich|wenig.*auswahl|speisekarte.*klein/.test(t)) return 'speisekarte'
-  return null
-}
-
-const CATEGORY_QUESTIONS: Record<string, string> = {
-  preis: 'Wenn ein Gast dich fragt warum eure Preise so sind — was antwortest du ihm in einem Satz? (z.B. was steckt dahinter, worauf setzt ihr bei Zutaten oder Zubereitung)',
-  service_unfreundlich: 'Was passiert bei euch, wenn ein Mitarbeiter einen Gast unfreundlich behandelt hat? Wie geht ihr damit um?',
-  service_wartezeit: 'Ab wann wird eine Wartezeit bei euch wirklich kritisch — und was tut ihr aktiv für den Gast in dem Moment?',
-  service_fehler: 'Wenn einem Gast das falsche Gericht oder Getränk gebracht wird — was passiert bei euch in den nächsten Minuten?',
-  konzept_tischpolitik: 'Ihr vergebt Tische primär an essende Gäste. Wie erklärt ihr das einem Gast der nur trinken möchte, ohne dass er sich unerwünscht fühlt?',
-  akustik: 'Mehrere Gäste beschreiben die Atmosphäre als laut. Ist das bei euch Konzept oder arbeitet ihr dran — und was würdet ihr einem Gast sagen der es störend fand?',
-  hygiene: 'Was ist euer konkreter Ablauf wenn ein Gast meldet, nach einem Besuch bei euch krank geworden zu sein?',
-  speisekarte: 'Wie wichtig ist euch das vegane/vegetarische Angebot — bewusst klein gehalten, oder plant ihr das auszubauen?',
-}
-
-// ─── CLASSIFY ──────────────────────────────────────────────────────────────
-
-function classify(rating: number, reviewText: string) {
-  const wordCount = reviewText.trim().split(/\s+/).filter(Boolean).length
-  const hasText = wordCount >= 6
-  if (!hasText && rating >= 4) return 'EMPTY_POSITIVE'
-  if (!hasText && rating <= 2) return 'EMPTY_NEGATIVE'
-  if (rating >= 4) return 'CONTENT_POSITIVE'
-  if (rating === 3) return 'CONTENT_MIXED'
-  return 'CONTENT_NEGATIVE'
-}
-
-function buildPrompt(reviewText: string, rating: number, reviewerName: string, settings: any): string {
-  const {
-    businessName = 'das Restaurant',
-    cuisineType = '',
-    uniqueSellingPoints = '',
-    responseSignature = '',
-    salutation = 'Sie',
-    contactEmail = '',
-    description = '',
-    restaurantType = '',
-    priceRange = '',
-    responseLanguage = 'Deutsch',
-    restaurantAtmosphere = '',
-    categoryProfile = {} as Record<string, string>,
-  } = settings || {}
-
-  // V1 duzt immer, V2 siezt immer, V3 folgt den Settings
-  const duSieAnrede = salutation === 'Du' ? 'Du/Dein (Duzen)' : 'Sie/Ihr (Siezen)'
-  const anredeHinweis = salutation === 'Du'
-    ? 'Nutze konsequent die Du-Form (du, dein, dir). Schreibe "dir" und "dein" klein.'
-    : 'Nutze konsequent die Sie-Form (Sie, Ihr, Ihnen). Schreibe "Sie" und "Ihr" immer groß.'
-  const signature = responseSignature || `Das Team von ${businessName}`
-  const mode = classify(rating, reviewText)
-  const firstName = reviewerName ? reviewerName.split(' ')[0] : ''
-
-  const langInstruction =
-    responseLanguage === 'Sprache des Bewerters'
-      ? 'Antworte in der Sprache der Bewertung. Erkenne sie automatisch.'
-      : responseLanguage === 'Englisch'
-      ? 'Respond in English only.'
-      : responseLanguage === 'Deutsch und Englisch'
-      ? 'Antworte auf Deutsch und fuege direkt danach eine englische Uebersetzung in Klammern hinzu.'
-      : 'Antworte auf Deutsch.'
-
-  // Ersten Buchstaben gross, Rest klein — verhindert HEIKE-in-Caps-Bug
-  const firstNameCapitalized = firstName
-    ? firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase()
-    : ''
-
-  const begruessungV2 = salutation === 'Du'
-    ? `Hallo ${firstNameCapitalized},`
-    : `Hallo ${firstNameCapitalized},`
-
-  const nameRule = firstNameCapitalized
-    ? `PERSONALISIERUNG UND BEGRUESSUNGS-PFLICHT:
-Alle drei Varianten MUESSEN mit einer Begruessung inkl. Name starten.
-- DIREKT & EHRLICH: beginnt mit "Hi ${firstNameCapitalized}," oder "Hey ${firstNameCapitalized},"
-- RUHIG & PROFESSIONELL: beginnt mit "Hallo ${firstNameCapitalized},"
-- FOKUS AUF KLAERUNG: beginnt mit "Hi ${firstNameCapitalized}," oder "Hallo ${firstNameCapitalized},"
-Schreibe den Namen IMMER genau so: ${firstNameCapitalized} — nie in Grossbuchstaben.`
-    : `PERSONALISIERUNG UND BEGRUESSUNGS-PFLICHT:
-Kein Name bekannt. Alle drei Varianten starten trotzdem mit einer Begruessung:
-- DIREKT & EHRLICH: "Hi," oder "Hey,"
-- RUHIG & PROFESSIONELL: "Hallo,"
-- FOKUS AUF KLAERUNG: "Hi," oder "Hallo,"`
-
-  // Erkenne Kategorie und hole restaurant-spezifisches Profil dazu
-  const detectedCat = detectCategory(reviewText)
-  const categoryInfo = detectedCat && categoryProfile[detectedCat]
-    ? `\nRESTAURANT-POSITION ZU DIESEM THEMA: ${categoryProfile[detectedCat]}`
-    : ''
-
-  const context = [
-    `Restaurant: ${businessName}`,
-    description          && `Beschreibung: ${description}`,
-    restaurantType       && `Typ: ${restaurantType}`,
-    cuisineType          && `Kueche: ${cuisineType}`,
-    priceRange           && `Preisklasse: ${priceRange}`,
-    restaurantAtmosphere && `Atmosphaere: ${restaurantAtmosphere}`,
-    uniqueSellingPoints  && `Besonderheiten: ${uniqueSellingPoints}`,
-    categoryInfo         && categoryInfo,
-    contactEmail         && `Kontakt-E-Mail: ${contactEmail}`,
-  ].filter(Boolean).join('\n')
-
-  const contactLine = contactEmail
-    ? `Kontaktkanal fuer Variante 3: ${contactEmail}`
-    : 'Kein Kontaktkanal hinterlegt — Variante 3 ohne E-Mail-Hinweis'
-
-  // ─── EMPTY POSITIVE ────────────────────────────────────────────────────────
-  if (mode === 'EMPTY_POSITIVE') {
-    return `Du bist eine Hospitality Response Engine fuer "${businessName}".
-${langInstruction}
-
-KONTEXT:
-${context}
-
-${nameRule}
-
-BEWERTUNG: ${rating} Sterne — kein Text.
-
-AUFGABE: 3 kurze, herzliche Antworten. Max. 2 Saetze. Keine Floskeln. Keine Dankesformeln.
-Schreibe wie gesprochen, nicht wie formuliert. Direkt beginnen.
-Alle drei enden mit: ${signature}
-
-BEISPIELE (genau dieser Ton):
-- "Danke dir :) Schoen, dass du bei uns warst."
-- "Freut uns, dass du einen schoenen Besuch hattest. Bis bald :)"
-- "5 Sterne nehmen wir natuerlich gern. Danke dir."
-
-ABSOLUT VERBOTEN:
-- "Vielen Dank fuer Ihre/deine Bewertung"
-- "Wir freuen uns ueber Ihr/dein Feedback"
-- "Das freut uns sehr"
-- "Wir heissen Sie jederzeit wieder herzlich willkommen"
-- Jede Form von standardisierter Dankesformel
-- Gedankenstriche (weder "—" noch " - ") — nutze Punkt oder Komma stattdessen.
-
-AUSGABE — NUR dieses JSON:
-{"variant1":{"label":"Herzlich","text":"..."},"variant2":{"label":"Persoenlich","text":"..."},"variant3":{"label":"Kurz & warm","text":"..."}}`
-  }
-
-  // ─── EMPTY NEGATIVE ────────────────────────────────────────────────────────
-  if (mode === 'EMPTY_NEGATIVE') {
-    return `Du bist eine Hospitality Response Engine fuer "${businessName}".
-${langInstruction}
-
-KONTEXT:
-${context}
-
-${nameRule}
-
-BEWERTUNG: ${rating} Sterne — kein Text.
-
-AUFGABE: 3 Antworten. Anerkennen + Einladung zur direkten Kontaktaufnahme. Kein Druck.
-${contactLine}
-Max. 3 Saetze. Schreibe wie gesprochen, nicht wie formuliert.
-Nie mit Dankesformel beginnen. Keine leeren Entschuldigungen.
-Alle drei enden mit: ${signature}
-
-BEISPIELE (genau dieser Ton — beilaeufig, nicht komponiert):
-- "Da scheint ja einiges schiefgelaufen zu sein. Ohne mehr zu wissen, koennen wir's schwer einordnen."
-- "So ganz ohne Kontext ist das schwer. Wenn du magst, schreib uns kurz."
-- "Schade, dass du uns so erlebt hast. Meld dich gern direkt, wenn du magst."
-
-ABSOLUT VERBOTEN:
-- "Vielen Dank fuer Ihre/deine Bewertung"
-- "Das tut uns sehr leid"
-- "Wir bitten um Verstaendnis"
-- "Wir nehmen Ihr/dein Feedback ernst"
-- Gedankenstriche (weder "—" noch " - ") — nutze Punkt oder Komma stattdessen.
-
-AUSGABE — NUR dieses JSON:
-{"variant1":{"label":"Direkt & Ehrlich","text":"..."},"variant2":{"label":"Ruhig & Professionell","text":"..."},"variant3":{"label":"Fokus auf Klaerung","text":"..."}}`
-  }
-
-  // ─── CONTENT MODI (POSITIVE / MIXED / NEGATIVE) ────────────────────────────
-
-  const alreadyHandled = (reviewText.toLowerCase().includes('massnahmen') ||
-    reviewText.toLowerCase().includes('reagiert') ||
-    reviewText.toLowerCase().includes('versichert') ||
-    reviewText.toLowerCase().includes('aufgenommen'))
-    ? `WICHTIG: Der Gast erwaehnt, dass das Team bereits vor Ort reagiert hat.
-Anerkenne diese Reaktion kurz — aber mache klar: sie hebt den Schrecken oder Vertrauensverlust nicht auf.
-Nicht so tun als waere noch nichts passiert.`
-    : ''
-
-  // System-Prompt: Original Google AI Studio Instructions — kurz und sauber
-  const systemPrompt = `Erstelle natuerliche, menschliche und professionelle Antworten auf Google-Bewertungen.
-Die Antworten sollen nicht wie PR-Texte, Agenturtexte oder KI-Texte wirken.
-Keine uebertriebene Freundlichkeit, keine Rechtfertigungen, keine Standardfloskeln.
-
-Grundregeln:
-Beschwerden nicht aufzaehlen oder wiederholen.
-Kritik nicht spiegeln.
-Keine Ursachen erfinden.
-Keine internen Ablaeufe erklaeren.
-Keine leeren Floskeln verwenden.
-Kurz und natuerlich schreiben.
-Eher wie ein Gastronom als wie eine Pressestelle.
-Nutze fuer alle Beschreibungen (Typ, Atmosphaere, Konzept) ausschliesslich die Angaben aus dem Restaurantprofil. Leite niemals Informationen aus dem Restaurantnamen ab.
-Niemals diese Phrasen verwenden: "nehmen wir sehr ernst", "intern adressiert", "intern nachgeschaerft", "Massnahmen ergriffen", "entspricht nicht unserem Anspruch", "nicht das wofuer wir stehen wollen", "nicht das was wir uns vorstellen".
-Bei positiven Bewertungen niemals: "Das freut uns sehr/riesig", "Danke fuer die tollen Worte", "zeigt uns dass wir auf dem richtigen Weg sind", "Wir hoffen dich bald wieder begruessen zu duerfen", "Vielen Dank fuer deine Bewertung/dein Feedback".
-Starte bei Lob direkt mit einer echten Reaktion — nie mit einem generischen Dankeschoen.
-
-STRENGES FORMATIERUNGS-VERBOT (MENSCHLICHER SCHREIBSTIL):
-KEINE GEDANKENSTRICHE: Nutze UNTER KEINEN UMSTAENDEN das Zeichen "—" oder lange Bindestriche zur Satzabgrenzung oder fuer Einschuebe, in KEINER der drei Varianten. Nutze STATTDESSEN immer einen Punkt oder ein Komma, um Saetze zu trennen oder Zusaetze einzufuegen.
-
-VERBOT VON TAGESZEIT-BEZUEGEN: STRENG VERBOTEN: Verwende NIEMALS Woerter wie "Abend", "Abendessen", "Gruppenabend", "Nacht", "Morgen", "Mittag", "Mittagessen", "Fruehstueck" oder andere Tageszeit-Bezuege, auch wenn die Bewertung selbst eine Tageszeit nennt. Nutze IMMER neutrale Begriffe wie "Besuch", "Aufenthalt", "Zeit bei uns", "Besuch bei uns", "Erlebnis" oder "Termin bei uns".
-ALLE VARIANTEN MUESSEN DIESE REGEL EINHALTEN. SCHREIBE NIEMALS "ABEND", "MORGEN" ODER "MITTAG".
-
-
-Wenn die KI eine logische Ursache fuer eine Situation erklaert (z.B. hohe Auslastung, volles Haus, lebhafte Atmosphaere), darf sie danach NIEMALS so klingen als haette das Restaurant ein ungeloestes Problem oder muesste Besserung geloben.
-VERBOTEN: "Das ist etwas, dem wir mehr Aufmerksamkeit widmen muessen" oder "Wir haben das auf dem Schirm" (wenn es sich um eine normale Gegebenheit handelt).
-ERLAUBT: Die Situation als Gegebenheit stehen lassen und loesungsorientiert nach vorne blicken (z.B. einen anderen Tisch anbieten). Die KI waehlt EINE klare Linie: Entweder wir stehen zur lebhaften Atmosphaere eines vollen Hauses, ODER wir bieten eine diskrete Loesung an. Niemals beides vermischen.
-Vermeide die inflationaere Nutzung von "Es tut mir leid" oder "Wir entschuldigen uns", besonders wenn es um subjektiven Geschmack, Preise oder Hausregeln geht. Das Restaurant knickt nicht ein.
-Nutze stattdessen diese souveraenen Alternativen je nach Variante:
-- Bei DIREKT & EHRLICH: Nutze "Schade, dass..." oder "Es ist aergerlich, wenn..."
-  Erlaubt: "Ich versteh total, dass dich das geaergert hat." oder "Ich versteh total, dass dir das nicht gefallen hat." (das Gefuehl passend zur Bewertung austauschen, "geaergert"/"nicht gefallen" sind nur Platzhalter)
-  Verboten: "Es tut uns leid, dass es nicht geschmeckt hat."
-  Alternativ erlaubt: "Ich kann total nachempfinden, dass sich das im Moment nach [Frust/Enttaeuschung/...] angefuehlt haben muss." (passendes Gefuehl statt der Beispielwoerter einsetzen, nicht dem Gast eine Emotion unterstellen sondern aus eigener Perspektive Verstaendnis zeigen)
-- Bei RUHIG & PROFESSIONELL: Nutze "Letztendlich war's nicht in Ordnung." oder "So oder so hat's nicht gepasst."
-  Alternativ erlaubt: "Ich kann mir gut vorstellen, dass du dir den Besuch bei uns ganz anders vorgestellt hast."
-- Bei FOKUS AUF KLAERUNG: Komplett ohne Entschuldigung einsteigen. Direkt auf die Loesung gehen.
-  Erlaubt: "Klingt, als haette der Besuch bei euch nicht den Eindruck hinterlassen, den wir uns wuenschen."
-
-Antwortstruktur:
-
-Slot 1 - Emotionaler Stossdaempfer:
-Erste emotionale Reaktion. Verstaendnis zeigen. Keine Erklaerung, keine Verteidigung.
-
-Slot 2 - Abstraktion / Einordnung:
-Das Problem auf hoeherer Ebene einordnen ohne die Beschwerde zu wiederholen.
-Kategorien: Qualitaet / Ablauf / Umgang / Sorgfalt
-Mehrere gleichwertige Probleme: Komplexfall-Satz, keine Aufzaehlung.
-
-Slot 3 - Einordnung ohne Versprechen:
-Kein leeres Commitment. Kein "wir besprechen das intern" oder "wir arbeiten daran".
-Stattdessen: Ehrlich eingestehen dass wir ohne mehr Kontext nicht genau wissen was passiert ist.
-Natuerliche Formulierungen: "Was genau passiert ist, wissen wir so nicht." / "Das koennen wir so von hier aus nicht einschaetzen." / "Damit wir das einordnen koennen, brauchen wir mehr."
-NICHT: "Wir gehen der Sache intern nach" / "Wir analysieren den Vorfall" / "intern nachgeschaerft" / "Das entspricht nicht unserem Anspruch" / "Das ist nicht das Erlebnis das wir bieten wollen" / jede sinngemaesse Variante davon.
-
-Abschluss (einheitlich fuer alle Sterne):
-${rating <= 2 ? '- Bei 1-2 Sternen: Kein Gespraechsangebot, keine Aufforderung zur Kontaktaufnahme. Stattdessen einen dieser Saetze GENAU SO, WORTWOERTLICH (nur in den Satzbau eingepasst, keine Umformulierung), passend zum Ton der jeweiligen Variante: "Das letzte Wort gehoert dem naechsten Besuch." / "Lass uns beim naechsten Besuch eine andere Geschichte erzaehlen." / "Wir freuen uns auf die naechste Runde."'
-  : rating === 3 ? '- Bei 3 Sternen: Kein Gespraechsangebot, keine Aufforderung zur Kontaktaufnahme. Formuliere einen kurzen, eigenen Abschluss-Impuls in diese Richtung (nicht wortwoertlich uebernehmen, sondern passend zum Ton der Variante variieren), z.B.: "Lass uns beim naechsten Mal den vierten Stern gemeinsam holen." / "Lass den naechsten Besuch fuer sich sprechen." / "Wir freuen uns auf die naechste Runde."'
-  : '- Bei 4-5 Sternen: Nicht notwendig, optional kurzer warmer Abschluss.'}
-Kein Kontaktangebot, keine E-Mail-Adresse in den drei Varianten (siehe Regel im System-Prompt).
-Direkt danach folgt NUR der Gruss (z.B. "Viele Gruesse, ..."). Kein weiterer inhaltlicher Satz zwischen Abschluss und Gruss.
-
-Sprachstil:
-Die Antwort soll wirken als haette sie ein aufmerksamer Gastronom geschrieben.
-Nicht wie Kundenservice, Konzernkommunikation, Rechtsabteilung, Marketingagentur oder KI.
-Natuerliche Sprache, kurze Saetze, glaubwuerdige Formulierungen, ruhige Professionalitaet.
-
-Oberstes Prinzip:
-Der Gast soll das Gefuehl haben dass seine Kritik gelesen, verstanden und ernst genommen wurde
-ohne dass die Antwort die Bewertung nacherzaehlt oder sich rechtfertigt.
-
-Wortwahl: Locker und ehrlich, aber keine vulgaeren Formulierungen.
-Natuerliche Alternativen wie "den Geist aufgegeben", "ausgefallen", "gestreikt".
-
-Allgemeine Fallback-Regeln (gelten wenn das Restaurantprofil keine spezifischere Regel enthaelt):
-
-BEI REGELN/INFOS AUS DEM RESTAURANTPROFIL (BESCHREIBUNG):
-Wenn die Beschreibung im Restaurantprofil eine konkrete Regel oder Information enthaelt, die fuer die Antwort relevant ist (z.B. Reservierungsdauer, Tischzeiten, Ablaeufe, Bestellvorgaben):
-Kopiere NICHT in mehreren Varianten denselben Wortlaut. Nimm die enthaltenen Fakten (Zahlen, Zeiten, Bedingungen) exakt und unveraendert, aber formuliere fuer jede Variante einen eigenen, unterschiedlich klingenden Satz, der zum Ton der jeweiligen Variante passt. Gleiche Fakten, andere Worte.
-
-BEI KRITIK AN WARTEZEITEN:
-Zu Stosszzeiten ist immer viel Bewegung — Gaeste kommen, Gaeste gehen. Genau in diesen Momenten kann es kurz zu Verzoegerungen kommen. Erklaere das ruhig und ohne Entschuldigung.
-
-BEI KRITIK AM ESSEN OHNE KONKRETEN MANGEL:
-Nutze exakt eine dieser beiden Fragen: "War es einfach nicht dein persoenlicher Geschmack oder hat bei der Zubereitung etwas nicht gestimmt?" ODER "Schade, dass es dir nicht geschmeckt hat. Lag es einfach am persoenlichen Geschmack oder lief bei uns im Service oder in der Kueche etwas schief?"
-
-WICHTIGE STRUKTUR-PFLICHT BEI ESSEN + PREIS-KRITIK: Wenn sowohl das Essen (Geschmack/Zubereitung) als auch der Preis kritisiert werden, MUESSEN die Varianten DIREKT & EHRLICH und RUHIG & PROFESSIONELL das PREIS-ARGUMENT enthalten (flexibles Qualitaetsargument, frische Ware, hoher Anspruch, ohne sich zu entschuldigen).
-Die "Geschmacks-Weiche" (Frage: "Liegt es an Ihrem persoenlichen Geschmack oder an der Kueche?") darf NUR dann zusaetzlich gestellt werden, wenn der Grund der Essenskritik aus der Bewertung NICHT klar hervorgeht.
-Beispiel fuer klaren Grund (keine Weiche): "Portion war zu klein, geschmacklich war das Essen gut" -> Grund klar (Quantitaet, nicht Qualitaet). Beispiel fuer unklaren Grund (Weiche erlaubt): "Das Essen war nicht gut" (ohne weitere Angabe).
-
-BEI KRITIK AN PREISEN ODER PORTIONSGROESSEN:
-Kern-Aussage: Unsere Preise sind bewusst so gesetzt, weil wir konsequent auf frische Ware und hohe Qualitaet setzen und hier keine Abstriche machen.
-KEIN KONTAKTANGEBOT: Bei reiner Preis- oder Portionskritik KEIN Kontaktangebot machen. Es gibt nichts zu klaeren. Die Antwort endet nach der Haltung, klar und ohne Einladung zur weiteren Diskussion.
-STRENGE FORMULIERUNGS-REGEL: Kopiere NICHT in jeder Variante denselben Wortlaut. Der Kernsatz ist nur inhaltliche Richtlinie. Formuliere einen kurzen, eigenen Satz in diese Richtung, der zum Ton der Variante passt (nicht wortwoertlich uebernehmen, sondern variieren), z.B.:
-- "Ja, so sind wir nun mal."
-- "Das gehoert hier irgendwie dazu."
-- "Das macht den Laden hier auf seine eigene Art aus."
-
-BEI KRITIK AN LAUTSTAERKE ODER AMBIENTE:
-Je nach Auslastung kann es in einem gut besuchten Restaurant laut und turbulent werden. Kurz anerkennen, nicht dramatisieren.`
-
-  // User-Message: nur die Daten — Bewertung + Kontext + Aufgabe
-  const userMessage = `${langInstruction}
-
-RESTAURANT: ${businessName}
-${context}
-
-${nameRule}
-
-BEWERTUNG (${rating} Sterne):
-"${reviewText}"
-
-${alreadyHandled}
-
-Abschluss: Waehle passend zum Ton "Viele Grüße, ${signature}" oder "Herzliche Grüße, ${signature}" oder "Beste Grüße, ${signature}"
-
-Schreibe 3 Varianten. Fuer ALLE gilt strikt: ${duSieAnrede}. ${anredeHinweis}
-
-Variante 1 – Direkt & Ehrlich: Locker, direkt, ehrlich. Startet mit "Hi ${firstNameCapitalized}," oder "Hey ${firstNameCapitalized}," (kein Name bekannt: "Hi," oder "Hey,"). Mehrere Kritikpunkte NIEMALS aufzaehlen oder einzeln nennen — auch nicht abstrakt. Nur als Gesamteindruck einordnen: z.B. "ein Besuch der auf ganzer Linie nicht funktioniert hat" — ohne die einzelnen Punkte zu wiederholen.
-Variante 2 – Ruhig & Professionell: Empathisch, ruhig, Mensch zuerst. Startet mit "Hallo ${firstNameCapitalized}," (kein Name bekannt: "Hallo,")
-Variante 3 – Fokus auf Klaerung: Kuerzer, max. 3 Saetze. Startet mit "Hi ${firstNameCapitalized}," oder "Hallo ${firstNameCapitalized}," (kein Name bekannt: "Hi," oder "Hallo,"). KEIN E-Mail-Satz und KEIN Kontaktangebot (Kontaktaufnahme ist ausschliesslich Teil der separaten Recovery-Antwort bei 1-2 Sternen, nicht Teil dieser drei Varianten). Die Antwort endet stattdessen mit dem Abschluss gemaess der "Abschluss (einheitlich fuer alle Sterne)"-Regel, gefolgt vom Abschlussgruss.
-WICHTIG: Beziehe dich bei Hausregeln NICHT auf den spezifischen Tag aus der Bewertung (z.B. "Samstag") sondern auf die generelle Regel wie sie im Profil steht.
-
-AUSGABE — NUR dieses JSON, kein anderer Text:
-{
-  "variant1": {"label": "Direkt & Ehrlich", "text": "..."},
-  "variant2": {"label": "Ruhig & Professionell", "text": "..."},
-  "variant3": {"label": "Fokus auf Klaerung", "text": "..."}
-}`
-
-  return JSON.stringify({ _system: systemPrompt, _user: userMessage })
-}
-
-// ─── JUDGE PROMPT ──────────────────────────────────────────────────────────
-function buildJudgePrompt(
-  variants: { label: string; text: string }[],
-  reviewText: string,
-  salutation: string,
-  signature: string
-): string {
-  return `Du bist ein Qualitaetspruefer fuer Restaurant-Antworten. Du optimierst menschliche Tiefe und filterst KI-Floskeln heraus.
-
-BEWERTUNG DES GASTES:
-"${reviewText}"
-
-ZUR PRUEFUNG:
-Variante 1 (${variants[0]?.label}): "${variants[0]?.text}"
-Variante 2 (${variants[1]?.label}): "${variants[1]?.text}"
-Variante 3 (${variants[2]?.label}): "${variants[2]?.text}"
-
-==================================================
-PRUEKLISTE:
-==================================================
-
-1. SLOT-STRUKTUR:
-   Folgen Variante 1 & 2 der 5-Slot-Logik?
-   WICHTIG ZU VARIANTE 3: Variante 3 darf kuerzer sein (max. 3 Saetze) und muss NICHT alle 5 Slots ausformulieren.
-   Sie ist gut wenn sie schnell auf Slot 1 (Stossdaempfer) und Slot 4 (Kontaktangebot) fokussiert.
-   Variante 3 NIEMALS als schwach einstufen nur weil sie kurz ist!
-
-2. NACHERZAEHLUNG:
-   Wiederholt eine Variante den konkreten Fehler woertlich? (z.B. "Dass Ihnen ein falscher Cocktail serviert wurde")
-   Das ist stumpfes KI-Plappern → SCHWACH. Ersetze durch abstrakte Einordnung (Sorgfalt / Ablauf / Umgang / Qualitaet).
-
-3. VERBOTENE PHRASEN — ABSOLUT SPERREN:
-   Enthaelt eine Variante: "intern nachgeschaerft" / "Team sensibilisiert" / "Konsequenzen gezogen" /
-   "entspricht nicht unserem Anspruch" / "nehmen wir sehr ernst" / "intern klar gemacht" / "Massnahmen ergriffen"?
-   Wenn JA → SCHWACH. Durch echtes, lebendiges Deutsch eines Gastronoms ersetzen.
-
-4. GRAMMATIK: Fehlen Subjekte ("Verstehen Ihren Aerger" statt "Wir verstehen Ihren Aerger")? → SCHWACH
-
-5. ABSCHLUSS: Enden alle mit: ${signature}?
-
-==================================================
-ENTSCHEIDUNG:
-==================================================
-- Alle 3 gut → "changed": null, alle drei WORTGENAU zurueck
-- Genau eine schwach → NUR diese neu schreiben, "changed": 1, 2 oder 3
-- Die anderen beiden EXAKT unveraendert kopieren
-
-AUSGABE — NUR dieses JSON:
-{
-  "changed": null,
-  "variant1": {"label": "Direkt & Ehrlich", "text": "..."},
-  "variant2": {"label": "Ruhig & Professionell", "text": "..."},
-  "variant3": {"label": "Fokus auf Klaerung", "text": "..."}
-}`
-}
-
-// ─── RECOVERY PROMPT ───────────────────────────────────────────────────────
-function buildRecoveryPrompt(reviewText: string, reviewerName: string, settings: any): string {
-  const {
-    businessName = 'das Restaurant',
-    salutation = 'Sie',
-    contactEmail = '',
-    responseSignature = '',
-    responseLanguage = 'Deutsch',
-  } = settings || {}
-
-  const duSie = salutation === 'Du' ? 'Du/Dein (Duzen)' : 'Sie/Ihr (Siezen)'
-  const signature = responseSignature || `Das Team von ${businessName}`
-  const firstName = reviewerName ? reviewerName.split(' ')[0] : ''
-  const firstNameClean = firstName
-    ? firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase()
-    : ''
-
-  const langInstruction = responseLanguage === 'Sprache des Bewerters'
-    ? 'Antworte in der Sprache der Bewertung.'
-    : responseLanguage === 'Englisch'
-    ? 'Respond in English only.'
-    : 'Antworte auf Deutsch.'
-
-  const systemPrompt = `Erstelle eine deeskalierende, menschliche und verantwortungsvolle Antwort auf eine sehr negative Google-Bewertung.
-Schreibe wie ein aufmerksamer Gastronom — nicht wie Kundenservice, PR-Agentur oder KI.
-
-Grundregeln:
-Beschwerden nicht nacherzählen oder wörtlich wiederholen.
-Kritik nicht spiegeln.
-Keine Ursachen erfinden.
-Keine leeren Floskeln.
-Natürliche Sprache, kurze Sätze.
-Nutze echte Umlaute: ä, ö, ü, ß — niemals ae, oe, ue als Ersatz.
-
-Ziel: Vertrauen zurückgewinnen und persönliche Klärung anbieten.
-Länge: 3 bis 4 vollständige, fließende Sätze.
-Korrekte Zeichensetzung — jeder Hauptsatz beginnt nach einem Punkt.`
-
-  const userMessage = `${langInstruction} Anredeform: ${duSie}
-
-Restaurant: ${businessName}
-${contactEmail ? `Kontakt-E-Mail: ${contactEmail}` : ''}
-
-Bewertung von ${firstNameClean || 'einem Gast'} (1-2 Sterne):
-"${reviewText}"
-
-Schreibe EINE deeskalierende Antwort.
-${firstNameClean ? `Beginne mit "Hallo ${firstNameClean},"` : 'Kein Name bekannt — ohne persoenliche Anrede beginnen.'}
-${contactEmail ? `Kontaktangebot: Bitte melde dich kurz unter ${contactEmail}, damit wir das persönlich klären können.` : ''}
-Endet mit: ${signature}
-
-AUSGABE — NUR dieses JSON:
-{"label":"Deeskalierend","text":"..."}`
-
-  return JSON.stringify({ _system: systemPrompt, _user: userMessage })
-}
-
-// ─── HELPER: GEMINI API CALL (Generator) ──────────────────────────────────
-async function callGemini(userMessage: string, systemPrompt?: string): Promise<string> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${GEMINI_API_KEY}`
-
-  const body: any = {
-    contents: [{ parts: [{ text: userMessage }] }],
-    generationConfig: { maxOutputTokens: 4000, temperature: 0.7 },
-  }
-  if (systemPrompt) {
-    body.systemInstruction = { parts: [{ text: systemPrompt }] }
-  }
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  })
-
-  if (!response.ok) {
-    const err = await response.json()
-    throw new Error(`Gemini API Fehler: ${JSON.stringify(err)}`)
-  }
-
-  const data = await response.json()
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || ''
-}
-
-// ─── HELPER: CLAUDE API CALL (Judge & Recovery) ────────────────────────────
-async function callClaude(userMessage: string, systemPrompt?: string): Promise<string> {
-  const body: any = {
-    model: 'claude-sonnet-4-6',
-    max_tokens: 4000,
-    messages: [{ role: 'user', content: userMessage }],
-  }
-  if (systemPrompt) {
-    body.system = systemPrompt
-  }
-
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': ANTHROPIC_API_KEY!,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify(body),
-  })
-
-  if (!response.ok) {
-    const err = await response.json()
-    throw new Error(`Claude API Fehler: ${JSON.stringify(err)}`)
-  }
-
-  const data = await response.json()
-  return data.content?.[0]?.text || ''
-}
-
-// ─── HELPER: JSON PARSE ────────────────────────────────────────────────────
-function parseVariants(raw: string): { label: string; text: string; isRecovery?: boolean }[] {
-  let jsonStr = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
-  const startIdx = jsonStr.indexOf('{')
-  const endIdx = jsonStr.lastIndexOf('}')
-
-  if (startIdx === -1 || endIdx === -1) {
-    throw new Error('Kein JSON gefunden: ' + raw)
-  }
-
-  jsonStr = jsonStr.substring(startIdx, endIdx + 1)
-  const parsed = JSON.parse(jsonStr)
-
-  const cleanText = (t: string) => t.replace(/\n\n/g, ' ').replace(/\n/g, ' ').trim()
-
-  return [
-    { label: parsed.variant1?.label || 'Variante 1', text: cleanText(parsed.variant1?.text || '') },
-    { label: parsed.variant2?.label || 'Variante 2', text: cleanText(parsed.variant2?.text || '') },
-    { label: parsed.variant3?.label || 'Variante 3', text: cleanText(parsed.variant3?.text || '') },
-  ]
-}
-
-// ─── CONTEXT CHECK ─────────────────────────────────────────────────────────
-// Prüft ob die Description genug Kontext liefert um die Bewertung sicher zu beantworten.
-// Läuft VOR der eigentlichen Generierung. Ändert nichts am bestehenden Code darunter.
-async function checkContext(reviewText: string, description: string, settings?: any): Promise<{ ok: boolean; missing?: string; category?: string; isCategoryQuestion?: boolean }> {
-  // Wenn kein Text in der Bewertung — kein Kontext nötig, immer OK
-  const wordCount = reviewText.trim().split(/\s+/).filter(Boolean).length
-  if (wordCount < 6) return { ok: true }
-
-  // Kategorie-Check: Wenn Kategorie erkannt und kein Profil dazu vorhanden → Frage stellen
-  const category = detectCategory(reviewText)
-  if (category) {
-    const categoryProfile = settings?.categoryProfile || {}
-    if (!categoryProfile[category]) {
-      return {
-        ok: false,
-        missing: CATEGORY_QUESTIONS[category],
-        category,
-        isCategoryQuestion: true,
-      }
-    }
-  }
-
-  const systemPrompt = `Du bist ein strikter Qualitätsprüfer für Restaurant-Antworten.
-Deine einzige Aufgabe: Entscheide ob das Restaurantprofil genug Informationen enthält um auf diese Bewertung sicher zu antworten — ohne etwas erfinden zu müssen.
-
-Antworte NUR mit einem dieser zwei Formate:
-OK
-MISSING: [kurze Beschreibung was fehlt, max. 1 Satz auf Deutsch]
-
-Wann ist MISSING korrekt?
-- Die Bewertung enthält einen konkreten Vorwurf über eine spezifische Situation oder Entscheidung des Restaurants (z.B. Platzvergabe, Reservierungspolitik, Hausregeln, spezifische Abläufe)
-- UND das Profil enthält dazu keine Erklärung oder Regel
-
-Wann ist OK korrekt?
-- Allgemeine Kritik (Essen, Service, Wartezeit, Atmosphäre) — hier braucht die KI keine Hausregeln
-- Das Profil enthält eine passende Erklärung zur Situation
-- Die Bewertung ist positiv oder neutral
-
-Sei NICHT überstreng. Im Zweifel: OK.`
-
-  const userMessage = `RESTAURANTPROFIL:
-${description || '(keine Beschreibung eingetragen)'}
+function buildSimpleEnginePrompt(reviewText: string, stars: number, name: string) {
+  return `
+Du schreibst Antworten auf Google-Bewertungen für ein Restaurant.
+
+Ziel:
+Klar, souverän, nicht entschuldigend, nicht floskelhaft.
+
+REGELN:
+- Kein "tut uns leid"
+- Kein "wir nehmen das ernst"
+- Kein "intern"
+- Kein Marketington
+- Keine langen Erklärungen
+- Maximal 4 Sätze
+
+LOGIK:
+1. IDENTIFIZIERE:
+- KONZEPT (systembedingt)
+- FEHLER (organisatorisch schiefgelaufen)
+- WAHRNEHMUNG (subjektiv)
+
+2. REAGIERE:
+- Konzept → sachlich einordnen, ohne Schuld
+- Fehler → klar benennen ohne Drama
+- Wahrnehmung → respektieren, nicht diskutieren
+
+3. ABSCHLUSS:
+Ein konkreter Satz, wie künftig damit umgegangen wird (ohne Versprechen)
 
 BEWERTUNG:
 "${reviewText}"
+Sterne: ${stars}
+Name: ${name}
 
-Ist das Profil ausreichend um sicher zu antworten?`
-
-  try {
-    const result = await callClaude(userMessage, systemPrompt)
-    const trimmed = result.trim()
-    if (trimmed.startsWith('MISSING:')) {
-      const missing = trimmed.replace('MISSING:', '').trim()
-      return { ok: false, missing }
-    }
-    return { ok: true }
-  } catch (e) {
-    // Im Fehlerfall: immer OK — lieber generieren als blockieren
-    console.error('Context check failed, proceeding anyway:', e)
-    return { ok: true }
-  }
+AUSGABE:
+Nur der Text, keine JSON.
+`
 }
 
-// ─── HANDLER ───────────────────────────────────────────────────────────────
+async function callClaude(prompt: string) {
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": ANTHROPIC_API_KEY!,
+      "anthropic-version": "2023-06-01"
+    },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 800,
+      temperature: 0.4,
+      messages: [{ role: "user", content: prompt }]
+    })
+  })
+
+  const data = await response.json()
+  return data.content?.[0]?.text || ""
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' })
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" })
   }
-
-  const { review, settings } = req.body
-
-  if (!ANTHROPIC_API_KEY) {
-    return res.status(500).json({ error: 'ANTHROPIC_API_KEY nicht konfiguriert' })
-  }
-
-  const reviewText = review.reviewText || ''
-  const stars = review.stars || 3
-  const reviewerName = review.reviewerName || ''
-
-  const salutation = settings?.salutation || 'Sie'
-  const businessName = settings?.businessName || 'das Restaurant'
-  const signature = settings?.responseSignature || `Das Team von ${businessName}`
 
   try {
-    // ── SCHRITT 0: Context Check ──────────────────────────────────────────
-    const description = settings?.description || ''
-    const contextCheck = await checkContext(reviewText, description, settings)
-    if (!contextCheck.ok) {
-      return res.status(200).json({
-        success: false,
-        missingContext: true,
-        missingInfo: contextCheck.missing || 'Fehlende Informationen im Restaurantprofil',
-        category: contextCheck.category,
-        isCategoryQuestion: contextCheck.isCategoryQuestion || false,
-      })
-    }
+    const { review, settings } = req.body
 
-    // ── SCHRITT 1: Generator (Gemini) ─────────────────────────────────────
-    const generatorRaw_str = buildPrompt(reviewText, stars, reviewerName, settings)
-    let generatorRaw: string
+    const reviewText = review?.reviewText || ""
+    const stars = Number(review?.stars || 0)
+    const name = review?.reviewerName || ""
 
-    // CONTENT-Modi liefern JSON mit _system/_user — geht an Gemini
-    // EMPTY-Modi liefern direkt den Prompt-String
-    try {
-      const parsed = JSON.parse(generatorRaw_str)
-      if (parsed._system && parsed._user) {
-        generatorRaw = await callClaude(parsed._user, parsed._system)
-      } else {
-        generatorRaw = await callClaude(generatorRaw_str)
-      }
-    } catch {
-      generatorRaw = await callClaude(generatorRaw_str)
-    }
+    const prompt = buildSimpleEnginePrompt(reviewText, stars, name)
+    const text = await callClaude(prompt)
 
-    const generatedVariants = parseVariants(generatorRaw)
-
-    // ── SCHRITT 2: Judge deaktiviert — Gemini Output direkt verwenden ───────
-    const mode = classify(stars, reviewText)
-    let finalVariants = generatedVariants
-
-    // ── SCHRITT 3: Recovery (nur bei 1–2 Sternen) ─────────────────────────
-    if (stars <= 2) {
-      try {
-        const recoveryPrompt_str = buildRecoveryPrompt(reviewText, reviewerName, settings)
-        let recoveryRaw: string
-        try {
-          const recoveryParsed = JSON.parse(recoveryPrompt_str)
-          if (recoveryParsed._system && recoveryParsed._user) {
-            recoveryRaw = await callClaude(recoveryParsed._user, recoveryParsed._system)
-          } else {
-            recoveryRaw = await callClaude(recoveryPrompt_str)
-          }
-        } catch {
-          recoveryRaw = await callClaude(recoveryPrompt_str)
+    return res.status(200).json({
+      success: true,
+      answers: [
+        {
+          label: "Simple Engine",
+          text: text.trim()
         }
-        let recoveryJson = recoveryRaw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
-        const rs = recoveryJson.indexOf('{')
-        const re = recoveryJson.lastIndexOf('}')
-        if (rs !== -1 && re !== -1) {
-          recoveryJson = recoveryJson.substring(rs, re + 1)
-          const parsed = JSON.parse(recoveryJson)
-          if (parsed.text) {
-            const cleanText = (t: string) => t.replace(/\n\n/g, ' ').replace(/\n/g, ' ').trim()
-            finalVariants = [
-              ...finalVariants,
-              { label: parsed.label || 'Deeskalierend', text: cleanText(parsed.text), isRecovery: true }
-            ]
-          }
-        }
-      } catch (e) {
-        console.error('Recovery generation failed:', e)
-      }
-    }
-
-    return res.status(200).json({ success: true, answers: finalVariants })
-
-  } catch (error) {
-    const errMsg = error instanceof Error ? error.message : String(error)
-    console.error('generate-replies FEHLER:', errMsg)
-    return res.status(500).json({ error: 'Serverfehler', details: errMsg })
+      ]
+    })
+  } catch (e: any) {
+    return res.status(500).json({
+      error: "Serverfehler",
+      details: e?.message || String(e)
+    })
   }
 }
