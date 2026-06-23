@@ -347,6 +347,8 @@ KEIN Strukturversprechen. KEIN "komm nochmal vorbei" ohne konkreten Tipp.`,
 VERBOTEN: "intern nachgeschaerft", "dem Team mitgeteilt", "Massnahmen", "wir nehmen das mit", "tut uns leid".`,
 
     'C_ONLY': `STRUKTUR (exakt einhalten):
+VERBOTEN: Das eigene Rezept oder Konzept verteidigen ("ist fuer uns das Wesentliche", "legen wir grossen Wert darauf", "gehoert zu unserem Konzept", "Saftigkeit ist fuer uns keine Kleinigkeit"). Der Gast hat sein Recht auf seinen Geschmack.
+VERBOTEN: "nehmen wir ernst", "nehmen wir das Feedback auf", "werden wir anpassen" als generelles Versprechen.
 1. Erkenne an, dass das spezifische Merkmal (Geschmack, Konsistenz, Gargrad, Portion) nicht zur Erwartung passte. Formuliere einen natuerlichen, vollstaendigen deutschen Satz. VERBOTEN: Den genauen Wortlaut der Kritik in ein starres "Schade, dass...nicht gepasst hat"-Schema pressen.
 2. Falls Lob vorhanden: Lob zuerst aufgreifen, dann Kritik.
 3. Abschluss:
@@ -397,6 +399,7 @@ ${FORMAT_RULES}
 VERBOTENE OPENER: "Vielen Dank fuer Ihre/deine Bewertung", "Danke fuer das Feedback", "Das tut uns sehr leid" als Standard-Einstieg.
 VERBOTEN: "nicht das was wir uns vorstellen", "kein erlebnis das so bleiben soll", "entspricht nicht unserem anspruch", "nicht das wofuer wir stehen".
 VERBOTEN: "auch wenn es nicht schoen ist", "auch wenn das keine Entschuldigung ist".
+VERBOTEN (Bettler-Ton): "wir freuen uns dir zu zeigen", "moechten wir das wiedergutmachen", "moechte ich mich entschuldigen", "lassen wir den naechsten Besuch fuer uns sprechen", "gib uns die Chance", "wir wuerden uns freuen". Ein Gastwirt loest das Problem — er entschuldigt sich nicht auf Knien.
 
 ${comboInstructions[combo]}
 

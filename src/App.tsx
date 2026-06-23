@@ -99,7 +99,11 @@ function App() {
       try {
         const { data } = await supabase
           .from('settings').select('value').eq('key', 'restaurant_profile').eq('user_id', user.id).single()
-        if (data?.value?.businessName) { setOnboardingStep(0); return }
+        if (data?.value?.businessName) {
+          // Profil aus Supabase in localStorage schreiben, damit es beim ersten Generieren verfuegbar ist
+          localStorage.setItem('rezpondSettings', JSON.stringify(data.value))
+          setOnboardingStep(0); return
+        }
       } catch { /* ignore */ }
       try {
         const local = localStorage.getItem('rezpondSettings')
