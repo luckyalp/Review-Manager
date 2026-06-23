@@ -5,8 +5,8 @@ const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
 interface TopicA {
-  type: 'table_time' | 'noise' | 'concept'
-  barFallbackRequired: boolean
+  situation: string  // Freie Beschreibung der A-Situation (1-2 Saetze von Haiku)
+  barOption: boolean // true wenn Bar/Stehtisch als naechster Schritt sinnvoll ist
 }
 
 interface Analysis {
@@ -358,12 +358,9 @@ function buildComboPrompt(
 
     'A_ONLY': `STRUKTUR (exakt einhalten — 3 Saetze, nicht mehr):
 SATZ 1 — VALIDIERUNG: Verwende sinngemäss: "${avs}"
-SATZ 2 — ERKLAERUNG: ${analysis?.topicA?.type === 'noise'
-  ? 'Formuliere als natuerliche Folge von gut besuchtem Betrieb. RICHTIG: "Wenn bei uns viel los ist, wird es naturgemäss lebhafter." FALSCH: "Das gehoert zu unserem Konzept."'
-  : 'Erklaere kurz und natuerlich WARUM diese Regel existiert. NUR mit Infos aus dem Restaurantprofil. Kein Erfinden.'
-}
-SATZ 3 — OPTION: ${analysis?.topicA?.barFallbackRequired
-  ? 'Biete konkret an, nach der Tischzeit an der Bar oder Stehtischen weiterzumachen. Direkte Anrede. Kein Anrede-Pronomen das zu "Sie"/"du" passt wenn unklar — nutze neutrale Formulierung wie "Wer danach noch bleiben moechte..."'
+SATZ 2 — ERKLAERUNG: Erklaere kurz und natuerlich WARUM diese Regel existiert. Kontext: ${analysis?.topicA?.situation || 'siehe Restaurantprofil'}. NUR mit Infos aus dem Restaurantprofil — kein Erfinden.
+SATZ 3 — OPTION: ${analysis?.topicA?.barOption
+  ? 'Biete konkret an, nach der Tischzeit an Bar oder Stehtischen weiterzumachen. Neutrale Formulierung ohne Anrede-Pronomen: "Wer danach noch bleiben moechte, kann an die Bar wechseln."'
   : 'Nenne eine konkrete Handlungsoption aus dem Profil. Wenn keine passt: "Zu ruhigeren Zeiten ist es da meist entspannter."'
 }
 NACH SATZ 3: Direkt Grussformel. KEIN weiterer Satz. KEIN Strukturversprechen.`,
@@ -390,14 +387,14 @@ VERBOTEN: "nehmen wir ernst", "nehmen wir das Feedback auf", "werden wir anpasse
    - Portion: "dann koennen wir dir was passend zu deinem Hunger empfehlen."
 KEIN "Geschmaecker sind verschieden". KEIN Strukturversprechen. KEIN Kontakt-E-Mail.`,
 
-    'AB': `STRUKTUR (exakt einhalten):
+    'AB': `STRUKTUR (exakt einhalten — 4 Schritte):
 1. Validierungssatz (sinngemäss): "${avs}"
-2. A-Thema: Erklaere kurz warum — NUR aus Profil, nie erfinden.
-3. B-Thema: ${analysis?.ambiguousB
-    ? 'VERWENDE FUER DEN B-TEIL GENAU DIESEN SATZ UND KEINEN ANDEREN: "Dass da etwas mit der Rechnung nicht gestimmt hat, schauen wir uns gerne direkt an." KEIN Entschuldigungs-Wort, KEIN Schuld-Eingestaendnis, KEIN "Fehler".'
-    : 'Uebernimm kurz Verantwortung fuer den echten Fehler, ohne zu rechtfertigen.'}
-4. ABSCHLUSS-PRIORITAET — FEST: Das in der Bewertung ZUERST genannte Thema bekommt den VOLLEN Abschluss. Das zweite Thema NUR als kurzer Halbsatz mit "und" angehaengt — kein eigener Satz danach.
-Nach dem Abschluss-Satz direkt Grussformel. NICHTS mehr.`,
+2. A-Teil: Erklaere kurz und natuerlich WARUM diese Regel existiert. Kontext: ${analysis?.topicA?.situation || 'siehe Restaurantprofil'}. NUR aus Profil — nie erfinden. ${analysis?.topicA?.barOption ? 'Schliesse diesen Satz mit dem Angebot ab, nach der Tischzeit an der Bar oder Stehtischen weiterzumachen. Neutrale Formulierung ohne Anrede-Pronomen: "Wer danach noch bleiben moechte, kann gerne an die Bar wechseln."' : ''}
+3. B-Teil (kurz, ein Halbsatz): ${analysis?.ambiguousB
+    ? 'VERWENDE GENAU: "Dass da etwas mit der Rechnung nicht gestimmt hat, klaeren wir gerne per Mail." KEIN Entschuldigungs-Wort, KEIN "Fehler", KEIN Anrede-Pronomen.'
+    : 'Uebernimm kurz Verantwortung fuer den echten Fehler, ein Halbsatz genuegt.'}
+4. ABSCHLUSS: Das A-Thema hat den vollen Abschluss (Bar-Option falls relevant). Der B-Teil ist bereits Schritt 3 — KEIN weiterer Satz danach.
+Direkt Grussformel. NICHTS mehr.`,
 
     'BC': `STRUKTUR (exakt einhalten):
 1. Validierungssatz (sinngemäss): "${vs}"
@@ -792,8 +789,8 @@ Regeln:
 4. "is_service_complaint": true NUR WENN cat B vorhanden UND Kritik das VERHALTEN, FREUNDLICHKEIT oder AUFMERKSAMKEIT des Personals betrifft (unfreundlich, unaufmerksam, desinteressiert, arrogant, ignoriert). false bei: Wartezeit, falscher Bestellung, technischen Fehlern.
 5. "ambiguous_b": true NUR WENN der B-Punkt NICHT sofort vom Personal bestaetigt werden kann ohne nachzuschauen (z.B. Rechnung falsch, Preis stimmt nicht, zu lange gewartet, Service unfreundlich). false BEI eindeutigen physischen Fehlern die auf dem Tisch sofort sichtbar sind (z.B. Haar im Essen, Steak durch statt medium, falsches Gericht geliefert, Essen kalt, falsche Portion).
 6. "topic_a": NUR ausfullen wenn mindestens ein A-Issue vorhanden. Sonst null.
-   - "type": "table_time" wenn Tischzeit/Zeitfenster/Rauswurf-nach-X-Minuten. "noise" wenn Lautstaerke/voll/eng. "concept" fuer alle anderen Konzept-Regeln.
-   - "bar_fallback_required": true bei "table_time" oder "noise" — immer. false bei "concept".`
+   - "situation": Beschreibe in 1-2 Saetzen was die Situation des Gastes war und was die Hausregel ist. Beispiel: "Der Gast wurde nach 90 Minuten gebeten zu gehen, obwohl er noch bestellen wollte. Das Restaurant hat ein 90-Minuten-Zeitfenster pro Tisch." Neutral, keine Wertung.
+   - "bar_option": true NUR wenn der Gast nach Ablauf der Tischzeit oder wegen Platzmangel weggeschickt wurde UND ein Weiterbleiben an Bar/Stehtischen eine sinnvolle Alternative waere. false bei Lautstaerke-Kritik oder anderen Konzeptregeln wo Bar keinen Sinn ergibt.`
 
   try {
     const result = await callClaude(`Bewertung:\n"${reviewText}"`, systemPrompt, 'claude-haiku-4-5-20251001', 0)
@@ -803,8 +800,8 @@ Regeln:
     const categories = issues.map((i: {text: string, cat: string}) => i.cat)
     const rawTopicA = parsed.topic_a
     const topicA: TopicA | undefined = rawTopicA ? {
-      type: rawTopicA.type || 'concept',
-      barFallbackRequired: rawTopicA.bar_fallback_required === true,
+      situation: rawTopicA.situation || '',
+      barOption: rawTopicA.bar_option === true,
     } : undefined
 
     return {
@@ -948,7 +945,7 @@ async function generateVariant(
   // ── Post-Processing: Bar-Fallback deterministisch ────────────────────────────
   // Wenn A_ONLY und barFallbackRequired — prüfen ob Bar/Stehtisch erwähnt wurde.
   // Wenn nicht: Satz vor der Grussformel einfügen. Keine KI beteiligt.
-  if (lastResult && mode === 'CONTENT_NEGATIVE' && analysis?.topicA?.barFallbackRequired) {
+  if (lastResult && mode === 'CONTENT_NEGATIVE' && analysis?.topicA?.barOption) {
     const hasBar = /bar|stehtisch|stehen/i.test(lastResult.text)
     if (!hasBar) {
       // Grussformel-Patterns erkennen und Satz davor einfügen
