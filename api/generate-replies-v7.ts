@@ -128,7 +128,7 @@ const KERN_C: string[] = [
 
 const KERN_A: string[] = [
   "Wir haben uns bewusst für diesen Weg entschieden, und [KERN] ist fester Bestandteil unseres Betriebsmodells.",
-  "Unser Restaurant baut auf einer klaren Struktur auf – [KERN] ist hierbei bewusst so gewählt und wird nicht spontan geändert.",
+  "Unser Restaurant baut auf einer klaren Struktur auf, und [KERN] ist hierbei bewusst so gewählt und wird nicht spontan geändert.",
   "Hinter unserem Service-Ablauf steht ein klares System; [KERN] gehört zu den Grundregeln unseres Hauses.",
 ]
 
@@ -485,9 +485,11 @@ NACH DEM KONTAKT-SATZ: Direkt Grussformel. NICHTS mehr.`,
       ? 'Schön, dass du das direkt angesprochen hast.'
       : 'Sag uns beim nächsten Besuch direkt Bescheid, dann klären wir das sofort vor Ort.',
     'C_ONLY': 'Sag uns beim nächsten Besuch kurz Bescheid, dann empfehlen wir dir etwas Passendes.',
-    'AB': contactEmail
-      ? `Meld dich gerne direkt bei uns unter ${contactEmail}, dann klären wir das persönlich.`
-      : 'Meld dich gerne direkt bei uns, dann klären wir das persönlich.',
+    'AB': analysis?.topicA?.barOption
+      ? 'Wer danach noch bleiben möchte, ist an der Bar oder an den Stehtischen herzlich willkommen.'
+      : contactEmail
+        ? `Meld dich gerne direkt bei uns unter ${contactEmail}, dann klären wir das persönlich.`
+        : 'Meld dich gerne direkt bei uns, dann klären wir das persönlich.',
     'BC': contactEmail
       ? `Meld dich gerne direkt bei uns unter ${contactEmail}, dann klären wir das persönlich.`
       : 'Meld dich gerne direkt bei uns, dann klären wir das persönlich.',
@@ -826,8 +828,8 @@ Regeln:
    - "text": Kritikpunkt in max. 5 Woertern. Bei Fehlern (B): IMMER Erwartung vs. Realitaet ("Steak Medium statt durch", "Pizza Salami statt Margherita"). Bei Zustand/Wahrnehmung normal ("Pommes fad", "Service unfreundlich").
    - "nominativ": Das Hauptproblem als kurzes Substantiv (1-3 Woerter) im Nominativ OHNE Artikel. Grammatikalisch korrekt als Nomen-Phrase. Beispiele: "rohes Haehnnchen", "lange Wartezeit", "fehlender Service", "fades Gericht", "kleine Portion", "laute Atmosphaere", "bargeldlose Zahlung". KEIN Verb, KEIN Satz, NUR die Nomen-Phrase.
    - "cat": Kategorie des Kritikpunkts:
-     A = Konzept/strukturell (Hausregeln, Lautstaerke, Tischvergabe, Oeffnungszeiten, Tischzeitlimit). WICHTIG: Wenn ein Gast nach X Minuten den Tisch raeumen muss oder weggeschickt wird — das ist IMMER A, nie B.
-     B = Echter Fehler (falsche Bestellung, Gargrad falsch, unfreundlicher Service, Wartezeit ohne Grund). WICHTIG: Tischzeit-Regeln sind KEIN B-Fehler.
+     A = Konzept/strukturell (Hausregeln, Lautstaerke, Tischvergabe, Oeffnungszeiten)
+     B = Echter Fehler (falsche Bestellung, Gargrad falsch, unfreundlicher Service, Wartezeit ohne Grund)
      C = Geschmack/Wahrnehmung (zu scharf, zu wenig Wuerze, fad, lasch, Portion zu klein)
      WICHTIG: "fad", "lasch", "lieblos gewuerzt" sind IMMER C — nicht B.
 2. "lobpunkte": Positive Erwaehnung, max. 3-4 Woerter. Leer wenn kein Lob.
