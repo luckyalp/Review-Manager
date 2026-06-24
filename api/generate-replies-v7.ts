@@ -505,17 +505,8 @@ NACH DEM KONTAKT-SATZ: Direkt Grussformel. NICHTS mehr.`,
   const teile = [begruessung, kernSatz, abschluss, gruss].filter(Boolean)
   const fertigerText = teile.join(' ')
 
-  const systemPrompt = `Du antwortest als Gastronom auf eine Google-Bewertung. Gib NUR das JSON zurück.`
-
-  const userMessage = `Bewertung: "${reviewText}"
-
-Verwende exakt diesen Text — ändere nichts, korrigiere nichts, füge nichts hinzu:
-"${fertigerText}"
-
-AUSGABE — NUR dieses JSON:
-{"label":"Frei (Test)","text":"${fertigerText.replace(/"/g, '\\"')}"}`
-
-  return JSON.stringify({ _system: systemPrompt, _user: userMessage })
+  // Kein KI-Call nötig — Text ist fertig. _direct signalisiert generateVariant den direkten Pfad.
+  return JSON.stringify({ _direct: fertigerText })
 }
 
 // ─── PROMPT: EMPTY POSITIVE (4-5 Sterne, kein oder kaum Text) ─────────────────
@@ -934,7 +925,9 @@ async function buildRecoveryVariant(
   }
 }
 
-// ─── HAUPT-VARIANT GENERIEREN (mit Qualitaetscheck + max. 2 Regenerierungen) ──
+// ─── HAUPT-VARIANT GENERIEREN ─────────────────────────────────────────────────
+// Für CONTENT_NEGATIVE: Text wird deterministisch vom Code gebaut — kein Judge, kein Retry.
+// Für alle anderen Modi: normaler Claude-Call mit Sanitizer.
 
 async function generateVariant(
   mode: string,
@@ -945,21 +938,28 @@ async function generateVariant(
   analysis: Analysis,
   signature: string
 ): Promise<{ label: string; text: string; isFreeTest: true } | null> {
-  const MAX_ATTEMPTS = 2
 
   const promptStr = buildPrompt(mode, reviewText, stars, reviewerName, settings, analysis)
-  let promptParsed: { _system?: string; _user?: string } | null = null
+  let promptParsed: { _system?: string; _user?: string; _direct?: string } | null = null
   try {
     const p = JSON.parse(promptStr)
-    if (p._system && p._user) promptParsed = p
+    promptParsed = p
   } catch { /* ignore */ }
 
+  // ── Deterministischer Pfad (CONTENT_NEGATIVE) ────────────────────────────────
+  // Text wurde bereits im buildComboPrompt zusammengebaut und in _direct abgelegt.
+  if (promptParsed?._direct) {
+    return { label: 'Frei (Test)', text: cleanText(promptParsed._direct), isFreeTest: true }
+  }
+
+  // ── Normaler KI-Pfad (Positiv, Mixed, Empty) ─────────────────────────────────
+  const MAX_ATTEMPTS = 2
   let userMsg = promptParsed?._user || promptStr
   let lastResult: { label: string; text: string } | null = null
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
-      const raw = promptParsed
+      const raw = promptParsed?._system
         ? await callClaude(userMsg, promptParsed._system)
         : await callClaude(userMsg)
 
