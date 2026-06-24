@@ -127,7 +127,7 @@ const KERN_B_SERVICE: string[] = [
 ]
 
 const KERN_C: string[] = [
-  "Rezepte und Rezepturen sind auf unsere Linie abgestimmt, aber [KERN] trifft logischerweise nicht den Geschmack jedes Gastes.",
+  "Rezepte und Rezepturen sind auf unsere Linie abgestimmt, aber bei [KERN] gehen die Erwartungen der Gäste nun mal auseinander.",
   "Beim Thema [KERN] gehen die Erwartungen in der Gastronomie oft auseinander, da jeder Gast andere Vorlieben mitbringt.",
   "Unsere Küche zieht hier eine klare Linie, auch wenn uns bewusst ist, dass [KERN] polarisieren kann.",
 ]
