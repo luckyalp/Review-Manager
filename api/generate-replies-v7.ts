@@ -284,7 +284,8 @@ const LOB_EINSTIEG: string[] = [
   "Dass dir [LOB] so gut geschmeckt hat, freut uns wirklich.",
 ]
 
-const ABER_BRUECKE = "Schade, dass nicht alles so gelaufen ist."
+const ABER_BRUECKE_B = "Schade, dass es bei deinem Besuch nicht alles so rund gelaufen ist."
+const ABER_BRUECKE_C = "Schade, dass wir dich diesmal nicht ganz überzeugen konnten."
 
 // Abschluss-Bausteine nach Weg
 const ABSCHLUSS_WEG1 = "Beim nächsten Mal einfach kurz ansprechen, wir finden dann gemeinsam was Passendes für dich."
@@ -326,7 +327,9 @@ function buildMixedPrompt(
 
   const gruss = pickGruss(signature)
 
-  const teile = [begruessung, lobEinstieg, ABER_BRUECKE, kernSatz, abschluss, gruss].filter(Boolean)
+  const aberBruecke = hauptkat === 'C' ? ABER_BRUECKE_C : ABER_BRUECKE_B
+
+  const teile = [begruessung, lobEinstieg, aberBruecke, kernSatz, abschluss, gruss].filter(Boolean)
   const fertigerText = teile.join(' ')
 
   return JSON.stringify({ _direct: fertigerText })
@@ -506,7 +509,15 @@ NACH DEM KONTAKT-SATZ: Direkt Grussformel. NICHTS mehr.`,
   const abschluss = abschlussMap[combo] || abschlussMap['B_ONLY']
   const gruss = pickGruss(signature)
 
-  const teile = [begruessung, kernSatz, abschluss, gruss].filter(Boolean)
+  // Lob-Einstieg wenn Lob vorhanden
+  const lobEinstieg = analysis.lobpunkte?.length
+    ? pickRandom(LOB_EINSTIEG).replace('[LOB]', analysis.lobpunkte[0])
+    : ''
+  const aberBruecke = lobEinstieg
+    ? (hauptkat === 'C' ? ABER_BRUECKE_C : ABER_BRUECKE_B)
+    : ''
+
+  const teile = [begruessung, lobEinstieg, aberBruecke, kernSatz, abschluss, gruss].filter(Boolean)
   const fertigerText = teile.join(' ')
 
   // Kein KI-Call nötig — Text ist fertig. _direct signalisiert generateVariant den direkten Pfad.
