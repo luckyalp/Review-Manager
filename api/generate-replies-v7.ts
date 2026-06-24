@@ -493,7 +493,11 @@ NACH DEM KONTAKT-SATZ: Direkt Grussformel. NICHTS mehr.`,
       : 'Zu ruhigeren Zeiten ist es da meist entspannter.',
     'B_ONLY': analysis.vorOrtErwaehnt
       ? 'Schön, dass du das direkt angesprochen hast.'
-      : 'Sag uns beim nächsten Besuch direkt Bescheid, dann klären wir das sofort vor Ort.',
+      : analysis.ambiguousB
+        ? contactEmail
+          ? `Meld dich gerne direkt bei uns unter ${contactEmail}, dann klären wir das persönlich.`
+          : 'Meld dich gerne direkt bei uns, dann klären wir das persönlich.'
+        : 'Sollte bei einem zukünftigen Besuch etwas nicht perfekt laufen, bitten wir dich, unser Team vor Ort direkt anzusprechen, damit wir den Fehler sofort in der Sekunde korrigieren können.',
     'C_ONLY': 'Sag uns beim nächsten Besuch kurz Bescheid, dann empfehlen wir dir etwas Passendes.',
     'AB': analysis?.topicA?.barOption
       ? 'Wer danach noch bleiben möchte, ist an der Bar oder an den Stehtischen herzlich willkommen.'
