@@ -394,8 +394,6 @@ function buildComboPrompt(
   ]
   const ss = serviceSaetze[Math.floor(Math.random() * serviceSaetze.length)]
 
-  const greeting = firstNameClean ? `Hallo ${firstNameClean},` : ''
-  const gruss = `Waehle passend "Viele Gruesse, ${signature}" oder "Herzliche Gruesse, ${signature}" oder "Beste Gruesse, ${signature}"`
   const kontakt = contactEmail
     ? `Melde dich gerne direkt bei uns unter ${contactEmail}, dann klaeren wir das persoenlich.`
     : `Melde dich gerne direkt bei uns, dann klaeren wir das persoenlich.`
