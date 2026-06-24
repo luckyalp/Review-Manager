@@ -265,6 +265,16 @@ AUSGABE — NUR dieses JSON:
 
 // ─── PROMPT: MIXED (3 Sterne) ─────────────────────────────────────────────────
 
+// ─── LOB-EINSTIEG & ABER-BRÜCKE (für Mixed-Pfad) ────────────────────────────
+
+const LOB_EINSTIEG: string[] = [
+  "Schön, dass dir [LOB] gefallen hat.",
+  "Dass dir [LOB] gepasst hat, hören wir gern.",
+  "[LOB] — das freut uns zu hören.",
+]
+
+const ABER_BRUECKE = "Schade, dass nicht alles so gelaufen ist."
+
 function buildMixedPrompt(
   reviewText: string,
   stars: number,
@@ -272,76 +282,31 @@ function buildMixedPrompt(
   settings: any,
   analysis?: Analysis
 ): string {
-  const { signature, duSie, firstNameClean, langInstruction, context } = resolveSettings(settings, reviewerName)
+  const { signature, firstNameClean, contactEmail } = resolveSettings(settings, reviewerName)
 
-  // Servicebeschwerde-Satz fuer Mixed-Prompt
-  const servicebeschwerdeSaetzeM = [
-    `natuerlich sollte kein Gast bei uns mit diesem Gefuehl nach Hause gehen.`,
-    `So soll sich kein Gast bei uns fuehlen.`,
-    `Das ist nicht, wie wir uns den Besuch unserer Gaeste vorstellen.`,
-  ]
-  const servicebeschwerdeSatzM = servicebeschwerdeSaetzeM[Math.floor(Math.random() * servicebeschwerdeSaetzeM.length)]
+  const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : ''
 
-  // Nur die tatsaechlich erkannten Kategorien einbinden
-  const cats = analysis?.categories?.length ? Array.from(new Set(analysis.categories)) : ['A', 'B', 'C']
-  const kategorieBloecke = [
-    cats.includes('A') ? KATEGORIE_A : '',
-    cats.includes('B') ? KATEGORIE_B(servicebeschwerdeSatzM) : '',
-    cats.includes('C') ? KATEGORIE_C : '',
-  ].filter(Boolean).join('\n\n')
+  // Lob-Einstieg wenn Lob vorhanden
+  const lobEinstieg = analysis?.lobpunkte?.length
+    ? pickRandom(LOB_EINSTIEG).replace('[LOB]', analysis.lobpunkte[0])
+    : ''
 
-  const systemPrompt = `Erstelle eine ehrliche, persoenliche Antwort auf eine gemischte Google-Bewertung (3 Sterne) fuer ein Restaurant.
-Schreibe wie ein aufmerksamer Gastronom — nicht wie Kundenservice oder KI.
+  // Kern-Satz aus den 12 Bausteinen
+  const hauptkat = analysis?.categories?.[0] || 'B'
+  const nominativ = analysis?.nominative?.[0] || analysis?.points?.[0] || 'dieser Punkt'
+  const kernSatz = buildKernSatz(hauptkat, nominativ, analysis?.isServiceComplaint || false)
 
-${FORMAT_RULES}
+  // Abschluss
+  const abschluss = contactEmail
+    ? `Meld dich gerne direkt bei uns unter ${contactEmail}, dann klären wir das persönlich.`
+    : 'Sollte bei einem zukünftigen Besuch etwas nicht perfekt laufen, bitten wir dich, unser Team vor Ort direkt anzusprechen, damit wir den Fehler sofort in der Sekunde korrigieren können.'
 
-VERBOTENE OPENER (nach der Begruessung): "Vielen Dank fuer Ihre/deine Bewertung", "Danke fuer das Feedback", "Das freut uns sehr".
+  const gruss = pickGruss(signature)
 
-SCHRITT 1 — GEFUEHL VALIDIEREN (erster Satz):
-Formuliere einen einzigen freien Satz der zeigt dass der Gast gehoert wurde.
-Struktur: "Dass + [Gefuehl/Eindruck] + [Wahrnehmungs-Verb], finden wir schade / bedauern wir."
-Beispiele (Ton uebernehmen, nicht woertlich kopieren):
-- "Dass dein Besuch diesen Eindruck hinterlassen hat, finden wir schade."
-- "Schade, dass es nicht ganz gestimmt hat."
-VERBOTEN als Validierungsverben: "verstehen", "nachvollziehen", "nachempfinden" — diese implizieren Schuld.
-LOB ZUERST: Hat der Gast trotz Kritik etwas Positives erwaehnt? Das Lob ZUERST aufgreifen, dann Kritik.
+  const teile = [begruessung, lobEinstieg, ABER_BRUECKE, kernSatz, abschluss, gruss].filter(Boolean)
+  const fertigerText = teile.join(' ')
 
-SCHRITT 2 — EINORDNUNG:
-Geh auf die Kritik ein gemaess den Kategorie-Bloecken unten. Bei mehreren Kritikpunkten: EINEN zusammenfassenden Satz ("da scheint bei uns einiges nicht rundgelaufen zu sein"), keine Aufzaehlung.
-
-${kategorieBloecke}
-
-ABSCHLUSS (letzter Satz vor Signatur): Vorwaertsgerichteter Satz — was wird der Gast beim naechsten Mal anders erleben? Nicht generisch ("komm gerne wieder"), sondern konkret zu DIESER Bewertung passend. Beispiele: "Lass den naechsten Besuch fuer sich sprechen." / "Lass uns beim naechsten Mal den vierten Stern gemeinsam holen."
-
-KEIN KONTAKTANGEBOT, KEINE E-MAIL in dieser Antwort.
-KEIN oeffentliches Strukturversprechen.
-SPRECHSTIL: Vermeide literarische Konstruktionen ("schlichtweg", "voellig", "kein einziges X"). Wuerde ein Gastronom das im Gespraech so sagen?`
-
-  const userMessage = `${langInstruction} Anredeform: ${duSie}
-
-KONTEXT (nur sinngemaess einfliessen lassen, nicht woertlich uebernehmen):
-${context}
-
-Bewertung von ${firstNameClean || 'einem Gast'} (${stars} Sterne):
-"${reviewText}"
-
-${analysis ? `FAKTEN AUS VORSTUFE (nur Stuetze — Original hat immer Vorrang):
-${analysis.lobpunkte.length > 0 ? `- Positiv erwaehnt: ${analysis.lobpunkte.join(', ')}` : ''}
-${analysis.forceSummarize 
-  ? `- Der Gast hatte ${analysis.count} verschiedene Kritikpunkte. Behandle sie AUSSCHLIESSLICH als Gesamteindruck, nenne KEINE Einzelpunkte namentlich.`
-  : analysis.points.length > 0 ? `- Kritikpunkte: ${analysis.points.map((p, i) => `${p} (${analysis.categories[i] || '?'})`).join(', ')}` : ''
-}
-- Vor Ort angesprochen: ${analysis.vorOrtErwaehnt ? 'ja' : 'nicht erkennbar'}` : ''}
-${analysis?.forceSummarize ? `\nZUSAMMENFASSUNGS-PFLICHT: ${analysis.count} Kritikpunkte erkannt — alle in EINEM zusammenfassenden Satz behandeln, keine Aufzaehlung.` : ''}
-
-Schreibe EINE freie, persoenliche Antwort (2-3 Saetze).
-${firstNameClean ? `Beginne mit "Hallo ${firstNameClean},"` : 'Kein Name bekannt — ohne persoenliche Anrede beginnen.'}
-Abschluss: Waehle passend "Viele Gruesse, ${signature}" oder "Herzliche Gruesse, ${signature}" oder "Beste Gruesse, ${signature}"
-
-AUSGABE — NUR dieses JSON:
-{"label":"Frei (Test)","text":"..."}`
-
-  return JSON.stringify({ _system: systemPrompt, _user: userMessage })
+  return JSON.stringify({ _direct: fertigerText })
 }
 
 // ─── PROMPT: NEGATIV (1–2 Sterne) — SLIM v7 ──────────────────────────────────
