@@ -279,9 +279,9 @@ AUSGABE — NUR dieses JSON:
 // ─── LOB-EINSTIEG & ABER-BRÜCKE (für Mixed-Pfad) ────────────────────────────
 
 const LOB_EINSTIEG: string[] = [
-  "Schön, dass dir [LOB] gefallen hat.",
-  "Dass dir [LOB] gepasst hat, hören wir gern.",
-  "Dass dir [LOB] so gut geschmeckt hat, freut uns wirklich.",
+  "Schön, dass [LOB].",
+  "Gut zu hören, dass [LOB].",
+  "Freut uns, dass [LOB].",
 ]
 
 const ABER_BRUECKE_B = "Schade, dass es bei deinem Besuch nicht alles so rund gelaufen ist."
@@ -820,7 +820,7 @@ AUSGABE — NUR dieses JSON:
 async function checkVariant(reviewText: string, answerText: string, signature: string): Promise<{ ok: boolean; reason: string }> {
   try {
     const prompt = buildFreeJudgePrompt(reviewText, answerText, signature)
-    const raw = await callClaude(prompt, undefined, 'claude-haiku-4-5-20251001', 0)
+    const raw = await callClaude(prompt, undefined, 'claude-sonnet-4-6', 0)
     const parsed = parseJson(raw)
     return { ok: parsed.ok !== false, reason: parsed.reason || '' }
   } catch {
@@ -845,7 +845,7 @@ Regeln:
      B = Echter Fehler (falsche Bestellung, Gargrad falsch, unfreundlicher Service, Wartezeit ohne Grund)
      C = Geschmack/Wahrnehmung (zu scharf, zu wenig Wuerze, fad, lasch, Portion zu klein)
      WICHTIG: "fad", "lasch", "lieblos gewuerzt" sind IMMER C — nicht B.
-2. "lobpunkte": Positive Erwaehnung, max. 3-4 Woerter. Leer wenn kein Lob.
+2. "lobpunkte": Extrahiere das Lob als flüssigen deutschen Satzteil der perfekt hinter das Wort "dass" passt. Beispiele: "dir die Pommes so gut geschmeckt haben", "die Trüffelmayonnaise ein Highlight war", "du dich bei uns wohlgefühlt hast". Leer wenn kein Lob.
 3. "vor_ort_erwaehnt": true nur wenn unmissverstaendlich aus Text hervorgeht dass Gast etwas dem Personal gesagt hat.
 4. "is_service_complaint": true NUR WENN cat B vorhanden UND Kritik das VERHALTEN, FREUNDLICHKEIT oder AUFMERKSAMKEIT des Personals betrifft (unfreundlich, unaufmerksam, desinteressiert, arrogant, ignoriert). false bei: Wartezeit, falscher Bestellung, technischen Fehlern.
 5. "ambiguous_b": true NUR WENN der B-Punkt NICHT sofort vom Personal bestaetigt werden kann ohne nachzuschauen (z.B. Rechnung falsch, Preis stimmt nicht, zu lange gewartet, Service unfreundlich). false BEI eindeutigen physischen Fehlern die auf dem Tisch sofort sichtbar sind (z.B. Haar im Essen, Steak durch statt medium, falsches Gericht geliefert, Essen kalt, falsche Portion).
@@ -854,7 +854,7 @@ Regeln:
    - "bar_option": true NUR wenn der Gast nach Ablauf der Tischzeit oder wegen Platzmangel weggeschickt wurde UND ein Weiterbleiben an Bar/Stehtischen eine sinnvolle Alternative waere. false bei Lautstaerke-Kritik oder anderen Konzeptregeln wo Bar keinen Sinn ergibt.`
 
   try {
-    const result = await callClaude(`Bewertung:\n"${reviewText}"`, systemPrompt, 'claude-haiku-4-5-20251001', 0)
+    const result = await callClaude(`Bewertung:\n"${reviewText}"`, systemPrompt, 'claude-sonnet-4-6', 0)
     const parsed = parseJson(result)
     const issues: Array<{text: string, cat: string, nominativ?: string}> = parsed.issues || []
     const points = issues.map((i) => i.text)
@@ -907,7 +907,7 @@ In ALLEN anderen Faellen (Service, Essen, Atmosphaere, Verhalten): OK.`
   try {
     const result = await callClaude(
       `RESTAURANTPROFIL:\n${description || '(keine Beschreibung)'}\n\nBEWERTUNG:\n"${reviewText}"\n\nAusreichend?`,
-      systemPrompt, 'claude-haiku-4-5-20251001', 0
+      systemPrompt, 'claude-sonnet-4-6', 0
     )
     const trimmed = result.trim()
     if (trimmed.startsWith('MISSING:')) {
