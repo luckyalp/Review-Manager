@@ -103,6 +103,11 @@
 | Deeskalierend | Spannung rausnehmen |
 
 
+### C-Kategorie vollständig aufteilen (Abschluss-Sätze)
+**Warum:** Kern-Sätze sind bereits nach C_GESCHMACK, C_MENGE, C_PREIS, C_PREIS_LEISTUNG, C_AUSWAHL aufgeteilt. Der Abschluss-Satz ist noch generisch für alle C-Fälle ("Sag uns beim nächsten Besuch kurz Bescheid, dann empfehlen wir dir etwas Passendes.") — passt nicht für Preis-Kritik.
+**Lösung:** Pro C-Unterkategorie einen eigenen Abschluss-Satz. Sätze müssen von Alp formuliert werden. Routing läuft bereits über resolveKernC().
+**Aufwand:** ~1-2 Stunden.
+
 ### Profil-basierter Abschluss-Satz für Hausregel-Antworten (A-Kategorie)
 **Warum:** Der aktuelle Bar/Stehtisch-Satz ist fest im Code für Henry's Sandbar einprogrammiert. Für Kunde Nr. 2 stimmt das nicht.
 **Lösung:** Neues Profilfeld "Was können Gäste tun wenn die Hausregel greift?" — der Gastronom trägt selbst ein was als Alternative gilt. Dieser Text ersetzt den festen Code-Satz.
