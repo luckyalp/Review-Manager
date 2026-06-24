@@ -113,32 +113,96 @@ GRAMMATIK: Jeder Satz muss vollstaendig sein (Subjekt, Praedikat). Maximal zwei 
 // Pro Kategorie 3 Vorlagen: gemischt / nur schlecht / nur positiv
 // Das Modell tauscht nur die spezifischen Details aus — Ton und Struktur bleiben fest.
 
-const VORLAGEN: Record<string, { gemischt: string; nurSchlecht: string; nurPositiv: string }> = {
+const VORLAGEN: Record<string, { gemischt: string[]; nurSchlecht: string[]; nurPositiv: string[] }> = {
   wartezeit: {
-    gemischt: `"Hallo [Name], schön, dass dir unser Essen geschmeckt hat. Dass du so lange warten musstest, ist natürlich nicht in Ordnung. Wenn du wieder einmal das Gefühl haben solltest, dass es zu lang dauert, meld dich einfach, wir reagieren gleich vor Ort. Beste Grüße."`,
-    nurSchlecht: `"Hi [Name], bei dir lief es ja nicht allzu gut. Schick uns gerne einfach eine E-Mail, wir kümmern uns dann persönlich darum. Beste Grüße."`,
-    nurPositiv: `"Hallo [Name], ich freu mich dass dir dein Besuch bei uns so gut gefallen hat. Wir freuen uns auf deinen nächsten Besuch. Beste Grüße."`,
+    gemischt: [
+      "Hallo [Name], schön, dass dir unser Essen geschmeckt hat. Dass du so lange warten musstest, ist natürlich nicht in Ordnung. Wenn du wieder einmal das Gefühl haben solltest, dass es zu lang dauert, meld dich einfach, wir reagieren gleich vor Ort. Beste Grüße.",
+      "Dass dir's geschmeckt hat, hören wir gern, [Name]. Aber so lange warten solltest du bei uns eigentlich nicht müssen. Sag beim nächsten Besuch einfach Bescheid, wir schauen sofort, dass wir das in Ordnung bringen. Beste Grüße.",
+      "[Name], freut uns, dass das Essen gepasst hat. Die Wartezeit war zu lang, das hätte nicht sein sollen. Beim nächsten Mal einfach kurz ansprechen, dann kümmern wir uns sofort. Viele Grüße.",
+    ],
+    nurSchlecht: [
+      "Hi [Name], bei dir lief es ja nicht allzu gut. Schick uns gerne einfach eine E-Mail, wir kümmern uns dann persönlich darum. Beste Grüße.",
+      "Hallo [Name], so einen Besuch wünscht man sich nicht, weder als Gast noch als Gastgeber. Meld dich gerne direkt per Mail bei uns, dann reden wir drüber. Viele Grüße.",
+      "Hi [Name], schien wohl nicht so gut gelaufen zu sein bei dir. Schick uns gern einfach eine E-Mail, wir regeln das dann persönlich mit dir. Beste Grüße.",
+    ],
+    nurPositiv: [
+      "Hallo [Name], ich freu mich dass dir dein Besuch bei uns so gut gefallen hat. Wir freuen uns auf deinen nächsten Besuch. Beste Grüße.",
+      "[Name], das hören wir gern! Komm bald wieder vorbei. Beste Grüße.",
+      "Freut uns wirklich, [Name]. Bis zum nächsten Mal! Viele Grüße.",
+    ],
   },
   essen: {
-    gemischt: `"Hallo [Name], schön, dass dir die Atmosphäre bei uns gefallen hat. Aber wenn das Essen dich nicht überzeugt hat, ist das nicht so schön. Sollte das wieder passieren, lass es uns kurz wissen, damit wir den Fehler beheben können. Bis zum nächsten Mal. Herzliche Grüße."`,
-    nurSchlecht: `"Hi [Name], bei dir lief es ja nicht allzu gut. Schick uns gerne einfach eine E-Mail, wir kümmern uns dann persönlich darum. Beste Grüße."`,
-    nurPositiv: `"Hallo [Name], ich freu mich dass dir das Essen bei uns so gut geschmeckt hat. Wir freuen uns auf deinen nächsten Besuch. Beste Grüße."`,
+    gemischt: [
+      "Hallo [Name], schön, dass dir die Atmosphäre bei uns gefallen hat. Aber wenn das Essen dich nicht überzeugt hat, ist das nicht so schön. Sollte das wieder passieren, lass es uns kurz wissen, damit wir den Fehler beheben können. Bis zum nächsten Mal. Herzliche Grüße.",
+      "[Name], dass die Atmosphäre gepasst hat, freut uns. Beim Essen war's diesmal anscheinend nicht ganz rund. Sag beim nächsten Besuch einfach kurz Bescheid, dann schauen wir sofort drauf. Bis bald. Viele Grüße.",
+      "Dass du dich bei uns wohlgefühlt hast, hören wir gern, [Name]. Schade, dass das Essen nicht gestimmt hat. Beim nächsten Mal einfach ansprechen, wir kümmern uns dann direkt darum. Herzliche Grüße.",
+    ],
+    nurSchlecht: [
+      "Hi [Name], bei dir lief es ja nicht allzu gut. Schick uns gerne einfach eine E-Mail, wir kümmern uns dann persönlich darum. Beste Grüße.",
+      "[Name], das klingt nicht gut. Schreib uns kurz eine Mail, dann schauen wir gemeinsam, was wir machen können. Viele Grüße.",
+      "[Name], so sollte das nicht laufen. Meld dich gerne per Mail bei uns, wir kümmern uns dann persönlich darum. Beste Grüße.",
+    ],
+    nurPositiv: [
+      "Hallo [Name], ich freu mich dass dir das Essen bei uns so gut geschmeckt hat. Wir freuen uns auf deinen nächsten Besuch. Beste Grüße.",
+      "[Name], das hören wir gern! Komm bald wieder vorbei. Viele Grüße.",
+      "Freut uns wirklich, [Name], dass das Essen gepasst hat. Bis zum nächsten Mal! Herzliche Grüße.",
+    ],
   },
   service: {
-    gemischt: `"Hallo [Name], schön, dass dir bei uns insgesamt etwas gefallen hat. Aber wenn der Service dich nicht überzeugt hat, ist das nicht so schön. Sollte das wieder passieren, lass es uns kurz wissen, damit wir den Fehler zeitnah beheben können. Bis zum nächsten Mal. Herzliche Grüße."`,
-    nurSchlecht: `"Hi [Name], bei dir lief es ja nicht allzu gut. Schick uns gerne einfach eine E-Mail, wir kümmern uns dann persönlich darum. Beste Grüße."`,
-    nurPositiv: `"Hallo [Name], ich freu mich, dass du dich bei uns so gut aufgehoben gefühlt hast. Wir freuen uns auf deinen nächsten Besuch. Beste Grüße."`,
+    gemischt: [
+      "Hallo [Name], schön, dass dir bei uns insgesamt etwas gefallen hat. Aber wenn der Service dich nicht überzeugt hat, ist das nicht so schön. Sollte das wieder passieren, lass es uns kurz wissen, damit wir den Fehler zeitnah beheben können. Bis zum nächsten Mal. Herzliche Grüße.",
+      "[Name], dass insgesamt etwas gepasst hat, freut uns. Beim Service war diesmal anscheinend nicht alles rund. Sag beim nächsten Mal einfach kurz Bescheid, wir schauen sofort drauf. Bis bald. Viele Grüße.",
+      "[Name], dass irgendwas gepasst hat, freut uns. Beim Service war's diesmal anscheinend nicht rund. Sag beim nächsten Besuch einfach kurz Bescheid, wir reagieren sofort. Bis bald. Viele Grüße.",
+    ],
+    nurSchlecht: [
+      "Hi [Name], bei dir lief es ja nicht allzu gut. Schick uns gerne einfach eine E-Mail, wir kümmern uns dann persönlich darum. Beste Grüße.",
+      "[Name], das klingt nicht gut. Meld dich einfach per Mail bei uns, wir schauen dann persönlich drauf. Viele Grüße.",
+      "[Name], so sollte ein Besuch bei uns nicht laufen. Schreib uns kurz eine Mail, wir kümmern uns darum. Herzliche Grüße.",
+    ],
+    nurPositiv: [
+      "Hallo [Name], ich freu mich, dass du dich bei uns so gut aufgehoben gefühlt hast. Wir freuen uns auf deinen nächsten Besuch. Beste Grüße.",
+      "[Name], das hören wir wirklich gern! Komm bald wieder. Viele Grüße.",
+      "Freut uns, [Name], dass du dich bei uns wohlgefühlt hast. Bis zum nächsten Mal! Herzliche Grüße.",
+    ],
   },
   preis: {
-    gemischt: `"Hallo [Name], schön, dass dir bei uns insgesamt etwas gefallen hat. Ja, wir sind nicht die Günstigsten, das stimmt. Wir haben uns bewusst entschieden, auf Qualität und guten Service zu setzen statt auf den niedrigsten Preis. Das passt nicht für jeden, und das ist okay. Herzliche Grüße."`,
-    nurSchlecht: `"Hi [Name], wir kalkulieren unsere Preise so, dass sie zu unserem Anspruch an Zutaten und Service passen. Dass das nicht jeden Geschmack trifft, respektieren wir. Beste Grüße."`,
-    nurPositiv: `"Hallo [Name], vielen Dank, das freut uns wirklich! Gutes Preis-Leistungs-Verhältnis bedeutet für uns, dass man für sein Geld echten Gegenwert bekommt. Genau das versuchen wir jeden Tag umzusetzen. Bis bald! Beste Grüße."`,
+    gemischt: [
+      "Hallo [Name], schön, dass dir bei uns insgesamt etwas gefallen hat. Ja, wir sind nicht die Günstigsten, das stimmt. Wir haben uns bewusst entschieden, auf Qualität und guten Service zu setzen statt auf den niedrigsten Preis. Das passt nicht für jeden, und das ist okay. Herzliche Grüße.",
+      "[Name], dass etwas gepasst hat, freut uns. Günstig sind wir nicht, das stimmt. Frische Zutaten, kein Convenience, ordentlicher Service haben ihren Preis. Wer das einmal schmeckt, fragt meistens nicht mehr danach. Herzliche Grüße.",
+      "[Name], dass etwas gepasst hat, freut uns. Unser Preis hat seinen Grund, gleichbleibend gute Qualität kostet eben was. Das merkt man spätestens beim zweiten Besuch. Herzliche Grüße.",
+    ],
+    nurSchlecht: [
+      "Hi [Name], wir kalkulieren unsere Preise so, dass sie zu unserem Anspruch an Zutaten und Service passen. Dass das nicht jeden Geschmack trifft, respektieren wir. Beste Grüße.",
+      "[Name], frische Zutaten, kein Convenience, ordentlicher Service, das ist unser Konzept und das spiegeln unsere Preise wider. Wer einmal den Unterschied schmeckt, fragt meistens nicht mehr nach dem Preis. Beste Grüße.",
+      "[Name], wir setzen auf frische Zutaten, echten Service und keine Fertigware, das hat seinen Preis. Wer das einmal erlebt hat, versteht warum. Herzliche Grüße.",
+    ],
+    nurPositiv: [
+      "Hallo [Name], vielen Dank, das freut uns wirklich! Gutes Preis-Leistungs-Verhältnis bedeutet für uns, dass man für sein Geld echten Gegenwert bekommt. Genau das versuchen wir jeden Tag umzusetzen. Bis bald! Beste Grüße.",
+      "[Name], das hören wir gern! Für uns heißt gutes Preis-Leistungs-Verhältnis, dass man für sein Geld wirklich was bekommt. Daran arbeiten wir jeden Tag. Bis bald. Viele Grüße.",
+      "Freut uns wirklich, [Name]! Echten Gegenwert fürs Geld zu liefern ist uns wichtig, das ist kein Zufall. Komm bald wieder. Herzliche Grüße.",
+    ],
   },
   ambiente: {
-    gemischt: `"Hallo [Name], schön, dass dir bei uns etwas gefallen hat. Dass die Atmosphäre nicht ganz dein Ding war, ist schade. Am Ende ist Ambiente halt Geschmackssache, dem einen gefällt's, dem anderen nicht. Herzliche Grüße."`,
-    nurSchlecht: `"Hi [Name], bei der Einrichtung und Atmosphäre verfolgen wir einen ganz eigenen, gezielten Stil. Wir wissen, dass Design und Raumgefühl absolute Geschmackssache sind. Beste Grüße."`,
-    nurPositiv: `"Hallo [Name], ich freu mich, dass du dich bei uns so wohlgefühlt hast. Wir freuen uns auf deinen nächsten Besuch. Beste Grüße."`,
+    gemischt: [
+      "Hallo [Name], schön, dass dir bei uns etwas gefallen hat. Dass die Atmosphäre nicht ganz dein Ding war, ist schade. Am Ende ist Ambiente halt Geschmackssache, dem einen gefällt's, dem anderen nicht. Herzliche Grüße.",
+      "[Name], dass etwas gepasst hat, freut uns. Unser Ambiente ist eine bewusste Entscheidung, und ja, Geschmack ist verschieden. Viele Grüße.",
+      "Schön, dass du da warst, [Name]. Dass die Atmosphäre nicht für dich war, ist okay. Was dem einen gefällt, ist dem anderen zu viel, das ist beim Ambiente nun mal so. Herzliche Grüße.",
+    ],
+    nurSchlecht: [
+      "Hi [Name], bei der Einrichtung und Atmosphäre verfolgen wir einen ganz eigenen, gezielten Stil. Wir wissen, dass Design und Raumgefühl absolute Geschmackssache sind. Beste Grüße.",
+      "[Name], unsere Einrichtung ist eine bewusste Entscheidung, kein Zufall. Dass Geschmack verschieden ist, wissen wir. Viele Grüße.",
+      "Stil und Atmosphäre sind bei uns kein Kompromiss, sondern Absicht, [Name]. Dass das nicht jedem gefällt, ist völlig menschlich. Herzliche Grüße.",
+    ],
+    nurPositiv: [
+      "Hallo [Name], ich freu mich, dass du dich bei uns so wohlgefühlt hast. Wir freuen uns auf deinen nächsten Besuch. Beste Grüße.",
+      "[Name], das hören wir gern! Komm bald wieder. Viele Grüße.",
+      "Freut uns wirklich, [Name], dass du dich wohlgefühlt hast. Bis zum nächsten Mal! Herzliche Grüße.",
+    ],
   },
+}
+
+function pickRandom<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)]
 }
 
 // ─── KATEGORIE-BLÖCKE (A / B / C) ────────────────────────────────────────────
@@ -468,7 +532,7 @@ NACH DEM KONTAKT-SATZ: Direkt Grussformel. NICHTS mehr.`,
     : 'service'
 
   const vorlage = VORLAGEN[katKey]
-  const gewaehlteMusterAntwort = hatPositives ? vorlage.gemischt : vorlage.nurSchlecht
+  const gewaehlteMusterAntwort = hatPositives ? pickRandom(vorlage.gemischt) : pickRandom(vorlage.nurSchlecht)
 
   // Nebenpunkte zusammenfassen wenn mehrere Kritikpunkte
   const nebenpunkte = analysis.points.length > 1
