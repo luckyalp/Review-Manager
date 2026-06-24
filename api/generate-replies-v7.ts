@@ -120,6 +120,12 @@ const KERN_B: string[] = [
   "Ein reibungsloser Ablauf sieht anders aus, und [KERN] zeigt deutlich, wo die Übergabe bei diesem Besuch versagt hat.",
 ]
 
+const KERN_B_SERVICE: string[] = [
+  "So soll sich kein Gast bei uns fühlen, und [KERN] ist kein Standard den wir akzeptieren.",
+  "Dass [KERN] so in Erinnerung bleibt, ist nicht das, was wir uns für einen Besuch vorstellen.",
+  "Bei [KERN] sind wir klar hinter dem zurückgeblieben, was ein Gast von uns erwarten darf.",
+]
+
 const KERN_C: string[] = [
   "Rezepte und Rezepturen sind auf unsere Linie abgestimmt, aber [KERN] trifft logischerweise nicht den Geschmack jedes Gastes.",
   "Beim Thema [KERN] gehen die Erwartungen in der Gastronomie oft auseinander, da jeder Gast andere Vorlieben mitbringt.",
@@ -139,8 +145,12 @@ const KERN_POSITIV: string[] = [
 ]
 
 // Baut den Kern-Satz zusammen: wählt aus dem richtigen Pool und setzt nominativ ein
-function buildKernSatz(cat: string, nominativ: string): string {
-  const pool = cat === 'B' ? KERN_B : cat === 'C' ? KERN_C : cat === 'A' ? KERN_A : KERN_POSITIV
+function buildKernSatz(cat: string, nominativ: string, isServiceComplaint = false): string {
+  const pool = cat === 'B'
+    ? (isServiceComplaint ? KERN_B_SERVICE : KERN_B)
+    : cat === 'C' ? KERN_C
+    : cat === 'A' ? KERN_A
+    : KERN_POSITIV
   const satz = pickRandom(pool)
   return satz.replace('[KERN]', nominativ)
 }
@@ -471,7 +481,7 @@ NACH DEM KONTAKT-SATZ: Direkt Grussformel. NICHTS mehr.`,
   // Hauptkategorie bestimmen (erste erkannte Kategorie)
   const hauptkat = analysis.categories[0] || 'B'
   const nominativ = analysis.nominative[0] || analysis.points[0] || 'dieser Punkt'
-  const kernSatz = buildKernSatz(hauptkat, nominativ)
+  const kernSatz = buildKernSatz(hauptkat, nominativ, analysis.isServiceComplaint)
 
   // Begrüßung
   const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : ''
