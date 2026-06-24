@@ -126,11 +126,22 @@ const KERN_B_SERVICE: string[] = [
   "Bei [KERN] sind wir klar hinter dem zurückgeblieben, was ein Gast von uns erwarten darf.",
 ]
 
-const KERN_C: string[] = [
-  "Rezepte und Rezepturen sind auf unsere Linie abgestimmt, aber bei [KERN] gehen die Erwartungen der Gäste nun mal auseinander.",
-  "Beim Thema [KERN] gehen die Erwartungen in der Gastronomie oft auseinander, da jeder Gast andere Vorlieben mitbringt.",
-  "Unsere Küche zieht hier eine klare Linie, auch wenn uns bewusst ist, dass [KERN] polarisieren kann.",
-]
+// ─── KERN_C: 5 feste Sätze ohne Platzhalter ──────────────────────────────────
+const KERN_C_GESCHMACK = "Wir kochen nach unseren eigenen, festen Rezepturen, treffen damit aber naturgemäß nicht immer jeden Nerv."
+const KERN_C_MENGE     = "Unsere Gerichte sind so kalkuliert, dass sie für den durchschnittlichen Hunger eine runde Mahlzeit bieten."
+const KERN_C_PREIS     = "Wir stecken viel Liebe und nur die besten Zutaten in unsere Gerichte, und das hat am Ende eben auch seinen fairen Preis."
+const KERN_C_PREIS_LEISTUNG = "Wir achten bei all unseren Gerichten auf die Qualität und Frische der Zutaten, um ein faires Verhältnis zwischen Preis und Leistung zu bieten."
+const KERN_C_AUSWAHL   = "Wir kalkulieren unsere frischen Zutaten täglich genau, um Verschwendung zu vermeiden, wodurch beliebte Gerichte im Laufe des Tages auch mal vergriffen sein können."
+
+// Erkennt C-Unterkategorie anhand des Nominativs
+function resolveKernC(nominativ: string): string {
+  const n = nominativ.toLowerCase()
+  if (n.includes('portion') || n.includes('menge') || n.includes('klein') || n.includes('wenig')) return KERN_C_MENGE
+  if (n.includes('preis') && (n.includes('leistung') || n.includes('verhältnis'))) return KERN_C_PREIS_LEISTUNG
+  if (n.includes('preis') || n.includes('teuer') || n.includes('kosten')) return KERN_C_PREIS
+  if (n.includes('auswahl') || n.includes('vergriffen') || n.includes('ausverkauft') || n.includes('karte')) return KERN_C_AUSWAHL
+  return KERN_C_GESCHMACK // Default: Geschmack/Würze/Zubereitung
+}
 
 const KERN_A: string[] = [
   "Wir haben uns bewusst für diesen Weg entschieden, und [KERN] ist fester Bestandteil unseres Betriebsmodells.",
@@ -146,9 +157,9 @@ const KERN_POSITIV: string[] = [
 
 // Baut den Kern-Satz zusammen: wählt aus dem richtigen Pool und setzt nominativ ein
 function buildKernSatz(cat: string, nominativ: string, isServiceComplaint = false): string {
+  if (cat === 'C') return resolveKernC(nominativ)
   const pool = cat === 'B'
     ? (isServiceComplaint ? KERN_B_SERVICE : KERN_B)
-    : cat === 'C' ? KERN_C
     : cat === 'A' ? KERN_A
     : KERN_POSITIV
   const satz = pickRandom(pool)
