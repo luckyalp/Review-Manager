@@ -102,6 +102,11 @@
 | Fokus auf Klärung | kurz, Kontaktkanal im Vordergrund |
 | Deeskalierend | Spannung rausnehmen |
 
+
+### Profil-basierter Abschluss-Satz für Hausregel-Antworten (A-Kategorie)
+**Warum:** Der aktuelle Bar/Stehtisch-Satz ist fest im Code für Henry's Sandbar einprogrammiert. Für Kunde Nr. 2 stimmt das nicht.
+**Lösung:** Neues Profilfeld "Was können Gäste tun wenn die Hausregel greift?" — der Gastronom trägt selbst ein was als Alternative gilt. Dieser Text ersetzt den festen Code-Satz.
+**Aufwand:** ~1 Tag. Erst relevant wenn zweiter Kunde onboarded wird.
 ### Dashboard "Google verbunden" Status
 - Anzeige ob Google Account verbunden ist
 - Letzter Sync-Zeitpunkt sichtbar
