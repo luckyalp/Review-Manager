@@ -12,6 +12,7 @@ interface TopicA {
 interface Analysis {
   count: number
   points: string[]
+  nominative: string[]  // Hauptproblem pro Issue im Nominativ ohne Artikel (z.B. "rohes Hähnchen")
   categories: string[]
   forceSummarize: boolean
   lobpunkte: string[]
@@ -869,11 +870,12 @@ async function analyzeReview(reviewText: string): Promise<Analysis> {
   const systemPrompt = `Rolle: Nuechterner Fakten-Extraktor fuer Restaurant-Bewertungen. Nur Datenpunkte extrahieren, keine Antwort verfassen.
 
 Ausgabe: AUSSCHLIESSLICH valides JSON ohne Markdown:
-{"issues":[{"text":"Steak Medium statt durch","cat":"B"}],"lobpunkte":["Lob1"],"vor_ort_erwaehnt":false,"is_service_complaint":false,"ambiguous_b":false,"topic_a":null}
+{"issues":[{"text":"Steak Medium statt durch","cat":"B","nominativ":"falsches Steak"}],"lobpunkte":["Lob1"],"vor_ort_erwaehnt":false,"is_service_complaint":false,"ambiguous_b":false,"topic_a":null}
 
 Regeln:
-1. "issues": Liste der Kritikpunkte als Objekte mit "text" und "cat".
+1. "issues": Liste der Kritikpunkte als Objekte mit "text", "cat" und "nominativ".
    - "text": Kritikpunkt in max. 5 Woertern. Bei Fehlern (B): IMMER Erwartung vs. Realitaet ("Steak Medium statt durch", "Pizza Salami statt Margherita"). Bei Zustand/Wahrnehmung normal ("Pommes fad", "Service unfreundlich").
+   - "nominativ": Das Hauptproblem als kurzes Substantiv (1-3 Woerter) im Nominativ OHNE Artikel. Grammatikalisch korrekt als Nomen-Phrase. Beispiele: "rohes Haehnnchen", "lange Wartezeit", "fehlender Service", "fades Gericht", "kleine Portion", "laute Atmosphaere", "bargeldlose Zahlung". KEIN Verb, KEIN Satz, NUR die Nomen-Phrase.
    - "cat": Kategorie des Kritikpunkts:
      A = Konzept/strukturell (Hausregeln, Lautstaerke, Tischvergabe, Oeffnungszeiten)
      B = Echter Fehler (falsche Bestellung, Gargrad falsch, unfreundlicher Service, Wartezeit ohne Grund)
@@ -890,9 +892,10 @@ Regeln:
   try {
     const result = await callClaude(`Bewertung:\n"${reviewText}"`, systemPrompt, 'claude-haiku-4-5-20251001', 0)
     const parsed = parseJson(result)
-    const issues: Array<{text: string, cat: string}> = parsed.issues || []
-    const points = issues.map((i: {text: string, cat: string}) => i.text)
-    const categories = issues.map((i: {text: string, cat: string}) => i.cat)
+    const issues: Array<{text: string, cat: string, nominativ?: string}> = parsed.issues || []
+    const points = issues.map((i) => i.text)
+    const nominative = issues.map((i) => i.nominativ || i.text)
+    const categories = issues.map((i) => i.cat)
     const rawTopicA = parsed.topic_a
     const topicA: TopicA | undefined = rawTopicA ? {
       situation: rawTopicA.situation || '',
@@ -902,6 +905,7 @@ Regeln:
     return {
       count: issues.length,
       points,
+      nominative,
       categories,
       forceSummarize: issues.length >= 3,
       lobpunkte: parsed.lobpunkte || [],
@@ -911,7 +915,7 @@ Regeln:
       topicA,
     }
   } catch {
-    return { count: 0, points: [], categories: [], forceSummarize: false, lobpunkte: [], vorOrtErwaehnt: false, isServiceComplaint: false, ambiguousB: false }
+    return { count: 0, points: [], nominative: [], categories: [], forceSummarize: false, lobpunkte: [], vorOrtErwaehnt: false, isServiceComplaint: false, ambiguousB: false }
   }
 }
 
