@@ -270,10 +270,14 @@ AUSGABE — NUR dieses JSON:
 const LOB_EINSTIEG: string[] = [
   "Schön, dass dir [LOB] gefallen hat.",
   "Dass dir [LOB] gepasst hat, hören wir gern.",
-  "[LOB] — das freut uns zu hören.",
+  "Dass dir [LOB] so gut geschmeckt hat, freut uns wirklich.",
 ]
 
 const ABER_BRUECKE = "Schade, dass nicht alles so gelaufen ist."
+
+// Abschluss-Bausteine nach Weg
+const ABSCHLUSS_WEG1 = "Beim nächsten Mal einfach kurz ansprechen, wir finden dann gemeinsam was Passendes für dich."
+const ABSCHLUSS_WEG2 = "Sollte bei einem zukünftigen Besuch etwas nicht perfekt laufen, bitten wir dich, unser Team vor Ort direkt anzusprechen, damit wir den Fehler zeitnah korrigieren können."
 
 function buildMixedPrompt(
   reviewText: string,
@@ -296,10 +300,18 @@ function buildMixedPrompt(
   const nominativ = analysis?.nominative?.[0] || analysis?.points?.[0] || 'dieser Punkt'
   const kernSatz = buildKernSatz(hauptkat, nominativ, analysis?.isServiceComplaint || false)
 
-  // Abschluss
-  const abschluss = contactEmail
-    ? `Meld dich gerne direkt bei uns unter ${contactEmail}, dann klären wir das persönlich.`
-    : 'Sollte bei einem zukünftigen Besuch etwas nicht perfekt laufen, bitten wir dich, unser Team vor Ort direkt anzusprechen, damit wir den Fehler sofort in der Sekunde korrigieren können.'
+  // Abschluss: 3 Wege je nach Situation
+  let abschluss: string
+  if (analysis?.ambiguousB && contactEmail) {
+    // Weg 3: Schwerer Vorfall → E-Mail
+    abschluss = `Meld dich gerne direkt bei uns unter ${contactEmail}, dann klären wir das persönlich.`
+  } else if (analysis?.isServiceComplaint) {
+    // Weg 2: Service/Ablauf → Vor-Ort-Satz
+    abschluss = ABSCHLUSS_WEG2
+  } else {
+    // Weg 1: Geschmack/Portion/Preis → Empfehlungs-Satz
+    abschluss = ABSCHLUSS_WEG1
+  }
 
   const gruss = pickGruss(signature)
 
