@@ -506,51 +506,33 @@ NACH DEM KONTAKT-SATZ: Direkt Grussformel. NICHTS mehr.`,
 
 // ─── PROMPT: EMPTY POSITIVE (4-5 Sterne, kein oder kaum Text) ─────────────────
 
+// ─── EMPTY POSITIV: 3 feste Sätze ────────────────────────────────────────────
+const KERN_EMPTY_POSITIV: string[] = [
+  "5 Sterne sagen mehr als tausend Worte. Bis zum nächsten Besuch.",
+  "Danke für die 5 Sterne. Wir freuen uns auf dein nächstes Mal.",
+  "Perfekt, mehr geht nicht. Bis bald.",
+]
+
 function buildEmptyPositivePrompt(
   reviewText: string,
   stars: number,
   reviewerName: string,
   settings: any
 ): string {
-  const { signature, duSie, firstNameClean, langInstruction, context } = resolveSettings(settings, reviewerName)
-  const wordCount = reviewText.trim().split(/\s+/).filter(Boolean).length
-  const hasMeaningfulText = reviewText.trim().length >= 3
-
-  const reviewBlock = !hasMeaningfulText
-    ? `BEWERTUNG: ${stars} Sterne — kein Text.`
-    : `BEWERTUNG: ${stars} Sterne. Der Gast hat geschrieben: "${reviewText.trim()}"
-Das ist sehr kurz (${wordCount} ${wordCount === 1 ? 'Wort' : 'Woerter'}) — behaupte NIEMALS "kein Text".
-Wenn ein Thema erkennbar ist: kurz darauf eingehen. Wenn nicht: positive Stimmung kurz anerkennen.`
-
-  const systemPrompt = `Erstelle eine kurze, herzliche Antwort auf eine positive Bewertung ohne langen Text.
-
-${FORMAT_RULES}
-
-VERBOTEN: "Vielen Dank fuer Ihre Bewertung", "Das freut uns sehr", "Wir heissen Sie willkommen".
-Schreibe wie gesprochen, nicht wie formuliert. Max. 2 Saetze. Keine Floskeln.
-Beispiele (Ton uebernehmen, nicht woertlich kopieren):
-- "Danke dir :) Schoen, dass du bei uns warst."
-- "5 Sterne nehmen wir natuerlich gern. Danke dir."
-- "Freut uns, dass du einen schoenen Besuch hattest. Bis bald :)"`
-
-  const userMessage = `${langInstruction} Anredeform: ${duSie}
-
-KONTEXT:
-${context}
-
-${reviewBlock}
-
-Schreibe EINE kurze, herzliche Antwort.
-${firstNameClean ? `Beginne mit einer Begruessung inkl. Name: "Hallo ${firstNameClean}," oder "Hi ${firstNameClean},"` : 'Kein Name — ohne persoenliche Anrede.'}
-Endet mit: ${signature}
-
-AUSGABE — NUR dieses JSON:
-{"label":"Frei (Test)","text":"..."}`
-
-  return JSON.stringify({ _system: systemPrompt, _user: userMessage })
+  const { signature, firstNameClean } = resolveSettings(settings, reviewerName)
+  const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : ''
+  const kernSatz = pickRandom(KERN_EMPTY_POSITIV)
+  const gruss = pickGruss(signature)
+  const teile = [begruessung, kernSatz, gruss].filter(Boolean)
+  return JSON.stringify({ _direct: teile.join(' ') })
 }
 
-// ─── PROMPT: EMPTY NEGATIVE (1-2 Sterne, kein oder kaum Text) ─────────────────
+// ─── EMPTY NEGATIV: 3 feste Sätze + E-Mail immer drin ───────────────────────
+const KERN_EMPTY_NEGATIV: string[] = [
+  "Ein Stern ohne Text macht es schwer zu verstehen, was bei deinem Besuch nicht gestimmt hat.",
+  "Schade, dass es nicht gepasst hat. Schreib uns kurz was los war, dann können wir helfen.",
+  "Ein Stern ist deutlich. Wir würden gerne wissen was passiert ist.",
+]
 
 function buildEmptyNegativePrompt(
   reviewText: string,
@@ -558,43 +540,15 @@ function buildEmptyNegativePrompt(
   reviewerName: string,
   settings: any
 ): string {
-  const { signature, duSie, firstNameClean, langInstruction, context, contactEmail } = resolveSettings(settings, reviewerName)
-  const wordCount = reviewText.trim().split(/\s+/).filter(Boolean).length
-  const hasMeaningfulText = reviewText.trim().length >= 3
-
-  const reviewBlock = !hasMeaningfulText
-    ? `BEWERTUNG: ${stars} Sterne — kein Text.`
-    : `BEWERTUNG: ${stars} Sterne. Der Gast hat geschrieben: "${reviewText.trim()}"
-Das ist sehr kurz (${wordCount} ${wordCount === 1 ? 'Wort' : 'Woerter'}) — behaupte NIEMALS "kein Text".
-Wenn ein Thema erkennbar ist: kurz darauf eingehen. Wenn nicht: Stimmung anerkennen, freundlich nach mehr fragen.`
-
-  const systemPrompt = `Erstelle eine kurze, ehrliche Antwort auf eine negative Bewertung ohne langen Text.
-
-${FORMAT_RULES}
-
-VERBOTEN: "Vielen Dank fuer Ihre Bewertung", "Das tut uns leid" als Standard-Einstieg, leere Entschuldigungen.
-Anerkennen + Einladung zur direkten Kontaktaufnahme. Kein Druck.
-Max. 3 Saetze. Schreibe wie gesprochen.
-Beispiele (Ton uebernehmen, nicht woertlich kopieren):
-- "Da scheint ja einiges schiefgelaufen zu sein. Ohne mehr zu wissen, koennen wir's schwer einordnen."
-- "Schade, dass du uns so erlebt hast. Meld dich gern direkt, wenn du magst."`
-
-  const userMessage = `${langInstruction} Anredeform: ${duSie}
-
-KONTEXT:
-${context}
-${contactEmail ? `Kontakt-E-Mail: ${contactEmail}` : ''}
-
-${reviewBlock}
-
-Schreibe EINE ehrliche Antwort.
-${firstNameClean ? `Beginne mit "Hallo ${firstNameClean},"` : 'Kein Name — ohne persoenliche Anrede.'}
-Endet mit: ${signature}
-
-AUSGABE — NUR dieses JSON:
-{"label":"Frei (Test)","text":"..."}`
-
-  return JSON.stringify({ _system: systemPrompt, _user: userMessage })
+  const { signature, firstNameClean, contactEmail } = resolveSettings(settings, reviewerName)
+  const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : ''
+  const kernSatz = pickRandom(KERN_EMPTY_NEGATIV)
+  const kontakt = contactEmail
+    ? `Meld dich gerne direkt bei uns unter ${contactEmail}, dann klären wir das persönlich.`
+    : 'Meld dich gerne direkt bei uns, dann klären wir das persönlich.'
+  const gruss = pickGruss(signature)
+  const teile = [begruessung, kernSatz, kontakt, gruss].filter(Boolean)
+  return JSON.stringify({ _direct: teile.join(' ') })
 }
 
 // ─── DISPATCHER: Wählt den richtigen Prompt nach Klassifizierung ──────────────
