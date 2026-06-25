@@ -1102,8 +1102,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // ── 1: Klassifizieren + Analyse (parallel) ────────────────────────────────
-    const mode = classify(stars, reviewText)
+    const modeRaw = classify(stars, reviewText)
     const analysis = await analyzeReview(reviewText)
+
+    // Korrektur: wenn Kritikpunkte erkannt wurden aber Rating >= 4 → Mixed statt Positiv
+    const mode = (modeRaw === 'CONTENT_POSITIVE' && analysis.count > 0)
+      ? 'CONTENT_MIXED'
+      : modeRaw
+
     const combo = mode === 'CONTENT_NEGATIVE' ? resolveCombo(analysis) : null
     console.log('v6 mode:', mode, '| combo:', combo, '| analysis:', analysis)
 
