@@ -135,7 +135,7 @@ function conjugate(verb: string, isPlural: boolean): string {
 
 // Ersetzt alle [V:verb] Platzhalter im Satz
 function applyVerbs(satz: string, isPlural: boolean): string {
-  return satz.replace(/\[V:(\w+)\]/g, (_, verb) => conjugate(verb, isPlural))
+  return satz.replace(/\[V:([^\]]+)\]/g, (_, verb) => conjugate(verb, isPlural))
 }
 
 
