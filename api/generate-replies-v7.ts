@@ -152,10 +152,28 @@ const KERN_A: string[] = [
 ]
 
 const KERN_POSITIV: string[] = [
-  "Das Feedback zeigt, dass die Küche und das Team vor Ort genau die Leistung abgeliefert haben, die unser Standard ist.",
-  "Es ist gut zu hören, dass der Aufenthalt exakt so gelaufen ist, wie wir uns das für jeden Gast im Haus vorstellen.",
-  "Die Rückmeldung bestätigt, dass die Qualität und der Service bei eurem Besuch auf den Punkt gepasst haben.",
+  "Das hören wir gern, genau so soll's laufen. Bis zum nächsten Mal.",
+  "Danke, das freut uns wirklich. Komm gerne wieder vorbei.",
+  "Schön, dass alles gepasst hat. Wir sehen uns.",
 ]
+
+function buildPositivePrompt(
+  reviewText: string,
+  stars: number,
+  reviewerName: string,
+  settings: any
+): string {
+  const { signature, firstNameClean } = resolveSettings(settings, reviewerName)
+
+  const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : ''
+  const kernSatz = pickRandom(KERN_POSITIV)
+  const gruss = pickGruss(signature)
+
+  const teile = [begruessung, kernSatz, gruss].filter(Boolean)
+  const fertigerText = teile.join(' ')
+
+  return JSON.stringify({ _direct: fertigerText })
+}
 
 // Baut den Kern-Satz zusammen: wählt aus dem richtigen Pool und setzt nominativ ein
 function buildKernSatz(cat: string, nominativ: string, isServiceComplaint = false): string {
@@ -235,46 +253,6 @@ Aufbau:
 KEIN Strukturversprechen (nicht versprechen, ein Gericht oder Konzept allgemein zu aendern).`
 
 // ─── PROMPT: POSITIV (4–5 Sterne) ────────────────────────────────────────────
-
-function buildPositivePrompt(
-  reviewText: string,
-  stars: number,
-  reviewerName: string,
-  settings: any
-): string {
-  const { signature, duSie, firstNameClean, langInstruction, context } = resolveSettings(settings, reviewerName)
-
-  const systemPrompt = `Erstelle eine ehrliche, persoenliche Antwort auf eine positive Google-Bewertung fuer ein Restaurant.
-Schreibe wie ein aufmerksamer Gastronom — nicht wie Kundenservice, PR-Agentur oder KI.
-
-${FORMAT_RULES}
-
-VERBOTENE POSITIVE OPENER (direkt nach der Begruessung):
-"Das freut uns sehr", "Freut uns sehr", "Danke fuer die tollen Worte", "Wir hoffen dich bald wieder begruessen zu duerfen", "Vielen Dank fuer Ihre/deine Bewertung", "Vielen Dank fuer Ihr/dein Feedback", "Das zeigt uns, dass wir auf dem richtigen Weg sind".
-
-REGEL — DIREKTE REAKTION: Starte direkt mit einer echten Reaktion auf das was der Gast konkret gelobt hat. Kein generisches Dankeschoen. Wenn ein bestimmtes Gericht, ein Mitarbeiter oder eine Atmosphaere gelobt wird: Geh spezifisch darauf ein.
-
-LAENGE: 1-2 Saetze bei kurzem Lob, maximal 3 Saetze bei ausfuehrlichem Lob. Nicht uebertreiben.
-
-KEIN OEFFENTLICHES STRUKTURVERSPRECHEN: Versprich nie etwas Strukturelles zu aendern.`
-
-  const userMessage = `${langInstruction} Anredeform: ${duSie}
-
-KONTEXT (nur sinngemaess einfliessen lassen, nicht woertlich uebernehmen):
-${context}
-
-Bewertung von ${firstNameClean || 'einem Gast'} (${stars} Sterne):
-"${reviewText}"
-
-Schreibe EINE freie, persoenliche Antwort.
-${firstNameClean ? `Beginne mit "Hallo ${firstNameClean},"` : 'Kein Name bekannt — ohne persoenliche Anrede beginnen.'}
-Abschluss: Waehle passend "Viele Gruesse, ${signature}" oder "Herzliche Gruesse, ${signature}" oder "Beste Gruesse, ${signature}"
-
-AUSGABE — NUR dieses JSON:
-{"label":"Frei (Test)","text":"..."}`
-
-  return JSON.stringify({ _system: systemPrompt, _user: userMessage })
-}
 
 // ─── PROMPT: MIXED (3 Sterne) ─────────────────────────────────────────────────
 
