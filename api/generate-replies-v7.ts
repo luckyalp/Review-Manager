@@ -401,9 +401,9 @@ function buildComboPrompt(
   ]
   const ss = serviceSaetze[Math.floor(Math.random() * serviceSaetze.length)]
 
-  const kontakt = contactEmail
-    ? `Melde dich gerne direkt bei uns unter ${contactEmail}, dann klaeren wir das persoenlich.`
-    : `Melde dich gerne direkt bei uns, dann klaeren wir das persoenlich.`
+  const kontakt = isDu
+    ? (contactEmail ? `Meld dich gerne direkt bei uns unter ${contactEmail}, dann klären wir das persönlich.` : `Meld dich gerne direkt bei uns, dann klären wir das persönlich.`)
+    : (contactEmail ? `Melden Sie sich gerne direkt bei uns unter ${contactEmail}, dann klären wir das persönlich.` : `Melden Sie sich gerne direkt bei uns, dann klären wir das persönlich.`)
 
   const comboInstructions: Record<CategoryCombo, string> = {
 
