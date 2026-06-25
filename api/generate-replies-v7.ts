@@ -121,7 +121,7 @@ function d(isDu: boolean, duText: string, sieText: string): string {
 // Platzhalter [KERN] wird per .replace() mit dem nominativ-Wert aus analyzeReview() gefüllt.
 
 const KERN_B: string[] = [
-  "Es gibt Standards, die am Gast ausnahmslos sitzen müssen – [KERN] darf in unserem Betrieb nicht vorkommen.",
+  "Es gibt Standards, die am Gast ausnahmslos sitzen müssen, und [KERN] darf in unserem Betrieb nicht vorkommen.",
   "Unser Anspruch an die Küche und den Ablauf ist hoch, aber [KERN] bricht diese Vorgabe komplett.",
   "Ein reibungsloser Ablauf sieht anders aus, und [KERN] zeigt deutlich, wo die Übergabe bei diesem Besuch versagt hat.",
 ]
