@@ -96,7 +96,7 @@ function resolveSettings(settings: any, reviewerName: string) {
     uniqueSellingPoints  && `Besonderheiten: ${uniqueSellingPoints}`,
   ].filter(Boolean).join('\n')
 
-  return { businessName, salutation, contactEmail, signature, duSie, firstNameClean, langInstruction, context }
+  return { businessName, salutation, contactEmail, signature, duSie, isDu: salutation === 'Du', firstNameClean, langInstruction, context }
 }
 
 // ─── SHARED: FORMAT-REGELN (gelten immer) ────────────────────────────────────
@@ -111,7 +111,13 @@ RESTAURANTPROFIL: Nutze Angaben aus dem Restaurantprofil nur sinngemaess — nie
 GRAMMATIK: Jeder Satz muss vollstaendig sein (Subjekt, Praedikat). Maximal zwei Kommas pro Satz — sonst aufteilen.`
 
 
-// ─── KERN-SÄTZE (12 Bausteine, ersetzen die alten VORLAGEN) ──────────────────
+// ─── DU/SIE HELPER ────────────────────────────────────────────────────────────
+// Wählt den richtigen Text je nach Anredeform
+function d(isDu: boolean, duText: string, sieText: string): string {
+  return isDu ? duText : sieText
+}
+
+
 // Platzhalter [KERN] wird per .replace() mit dem nominativ-Wert aus analyzeReview() gefüllt.
 
 const KERN_B: string[] = [
@@ -156,6 +162,11 @@ const KERN_POSITIV: string[] = [
   "Danke, das freut uns wirklich. Komm gerne wieder vorbei.",
   "Schön, dass alles gepasst hat. Wir sehen uns.",
 ]
+const KERN_POSITIV_SIE: string[] = [
+  "Das hören wir gern, genau so soll's laufen. Bis zum nächsten Mal.",
+  "Danke, das freut uns wirklich. Kommen Sie gerne wieder vorbei.",
+  "Schön, dass alles gepasst hat. Wir sehen uns.",
+]
 
 function buildPositivePrompt(
   reviewText: string,
@@ -163,15 +174,12 @@ function buildPositivePrompt(
   reviewerName: string,
   settings: any
 ): string {
-  const { signature, firstNameClean } = resolveSettings(settings, reviewerName)
-
+  const { signature, isDu, firstNameClean } = resolveSettings(settings, reviewerName)
   const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : ''
-  const kernSatz = pickRandom(KERN_POSITIV)
+  const kernSatz = pickRandom(isDu ? KERN_POSITIV : KERN_POSITIV_SIE)
   const gruss = pickGruss(signature)
-
   const teile = [begruessung, kernSatz, gruss].filter(Boolean)
   const fertigerText = teile.join(' ')
-
   return JSON.stringify({ _direct: fertigerText })
 }
 
@@ -265,11 +273,21 @@ const LOB_EINSTIEG: string[] = [
 ]
 
 const ABER_BRUECKE_B = "Schade, dass es bei deinem Besuch nicht alles so rund gelaufen ist."
+const ABER_BRUECKE_B_SIE = "Schade, dass es bei Ihrem Besuch nicht alles so rund gelaufen ist."
 const ABER_BRUECKE_C = "Schade, dass wir dich diesmal nicht ganz überzeugen konnten."
+const ABER_BRUECKE_C_SIE = "Schade, dass wir Sie diesmal nicht ganz überzeugen konnten."
 
-// Abschluss-Bausteine nach Weg
-const ABSCHLUSS_WEG1 = "Beim nächsten Mal einfach kurz ansprechen, wir finden dann gemeinsam was Passendes für dich."
-const ABSCHLUSS_WEG2 = "Sollte bei einem zukünftigen Besuch etwas nicht perfekt laufen, bitten wir dich, unser Team vor Ort direkt anzusprechen, damit wir den Fehler zeitnah korrigieren können."
+// Abschluss-Bausteine nach Weg — als Funktion wegen Du/Sie
+function getAbschlussWeg1(isDu: boolean): string {
+  return isDu
+    ? "Beim nächsten Mal einfach kurz ansprechen, wir finden dann gemeinsam was Passendes für dich."
+    : "Beim nächsten Mal einfach kurz ansprechen, wir finden dann gemeinsam was Passendes für Sie."
+}
+function getAbschlussWeg2(isDu: boolean): string {
+  return isDu
+    ? "Sollte bei einem zukünftigen Besuch etwas nicht perfekt laufen, bitten wir dich, unser Team vor Ort direkt anzusprechen, damit wir den Fehler zeitnah korrigieren können."
+    : "Sollte bei einem zukünftigen Besuch etwas nicht perfekt laufen, bitten wir Sie, unser Team vor Ort direkt anzusprechen, damit wir den Fehler zeitnah korrigieren können."
+}
 
 function buildMixedPrompt(
   reviewText: string,
@@ -278,7 +296,7 @@ function buildMixedPrompt(
   settings: any,
   analysis?: Analysis
 ): string {
-  const { signature, firstNameClean, contactEmail } = resolveSettings(settings, reviewerName)
+  const { signature, isDu, firstNameClean, contactEmail } = resolveSettings(settings, reviewerName)
 
   const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : ''
 
@@ -293,21 +311,29 @@ function buildMixedPrompt(
   const kernSatz = buildKernSatz(hauptkat, nominativ, analysis?.isServiceComplaint || false)
 
   // Abschluss: 3 Wege je nach Situation
+  const emailAbschlussOptionen = isDu ? [
+    contactEmail ? `Meld dich gerne direkt bei uns unter ${contactEmail}, dann klären wir das gerne persönlich.` : 'Meld dich gerne direkt bei uns, dann klären wir das gerne persönlich.',
+    contactEmail ? `Meld dich gerne direkt bei uns unter ${contactEmail}, damit wir uns deiner Sache direkt annehmen können.` : 'Meld dich gerne direkt bei uns, damit wir uns deiner Sache direkt annehmen können.',
+    contactEmail ? `Meld dich gerne direkt bei uns unter ${contactEmail}, dann schauen wir gemeinsam drauf.` : 'Meld dich gerne direkt bei uns, dann schauen wir gemeinsam drauf.',
+  ] : [
+    contactEmail ? `Melden Sie sich gerne direkt bei uns unter ${contactEmail}, dann klären wir das gerne persönlich.` : 'Melden Sie sich gerne direkt bei uns, dann klären wir das gerne persönlich.',
+    contactEmail ? `Melden Sie sich gerne direkt bei uns unter ${contactEmail}, damit wir uns Ihrer Sache direkt annehmen können.` : 'Melden Sie sich gerne direkt bei uns, damit wir uns Ihrer Sache direkt annehmen können.',
+    contactEmail ? `Melden Sie sich gerne direkt bei uns unter ${contactEmail}, dann schauen wir gemeinsam drauf.` : 'Melden Sie sich gerne direkt bei uns, dann schauen wir gemeinsam drauf.',
+  ]
+
   let abschluss: string
-  if (analysis?.ambiguousB && contactEmail) {
-    // Weg 3: Schwerer Vorfall → E-Mail
-    abschluss = `Meld dich gerne direkt bei uns unter ${contactEmail}, dann klären wir das persönlich.`
+  if (analysis?.ambiguousB) {
+    abschluss = pickRandom(emailAbschlussOptionen)
   } else if (analysis?.isServiceComplaint) {
-    // Weg 2: Service/Ablauf → Vor-Ort-Satz
-    abschluss = ABSCHLUSS_WEG2
+    abschluss = getAbschlussWeg2(isDu)
   } else {
-    // Weg 1: Geschmack/Portion/Preis → Empfehlungs-Satz
-    abschluss = ABSCHLUSS_WEG1
+    abschluss = getAbschlussWeg1(isDu)
   }
 
   const gruss = pickGruss(signature)
-
-  const aberBruecke = hauptkat === 'C' ? ABER_BRUECKE_C : ABER_BRUECKE_B
+  const aberBruecke = hauptkat === 'C'
+    ? d(isDu, ABER_BRUECKE_C, ABER_BRUECKE_C_SIE)
+    : d(isDu, ABER_BRUECKE_B, ABER_BRUECKE_B_SIE)
 
   const teile = [begruessung, lobEinstieg, aberBruecke, kernSatz, abschluss, gruss].filter(Boolean)
   const fertigerText = teile.join(' ')
@@ -325,10 +351,10 @@ function buildComboPrompt(
   settings: any,
   analysis: Analysis
 ): string {
-  const { signature, duSie, firstNameClean, langInstruction, context, contactEmail } = resolveSettings(settings, reviewerName)
+  const { signature, duSie, isDu, firstNameClean, langInstruction, context, contactEmail } = resolveSettings(settings, reviewerName)
 
   const duForm = duSie === 'Sie' ? 'Sie' : 'du'
-  const besuchForm = duSie === 'Sie' ? 'Ihr Besuch' : 'dein Besuch'
+  const besuchForm = isDu ? 'dein Besuch' : 'Ihr Besuch'
 
   // Validierungssatz-Rotation
   // Sack 1: Klare Fehler (Steak durch, Haar im Essen, falsches Gericht)
@@ -457,34 +483,36 @@ NACH DEM KONTAKT-SATZ: Direkt Grussformel. NICHTS mehr.`,
   // Begrüßung
   const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : ''
 
+  // E-Mail Abschluss-Varianten (rotierend)
+  const emailAbschlussOptionen = isDu ? [
+    contactEmail ? `Meld dich gerne direkt bei uns unter ${contactEmail}, dann klären wir das gerne persönlich.` : 'Meld dich gerne direkt bei uns, dann klären wir das gerne persönlich.',
+    contactEmail ? `Meld dich gerne direkt bei uns unter ${contactEmail}, damit wir uns deiner Sache direkt annehmen können.` : 'Meld dich gerne direkt bei uns, damit wir uns deiner Sache direkt annehmen können.',
+    contactEmail ? `Meld dich gerne direkt bei uns unter ${contactEmail}, dann schauen wir gemeinsam drauf.` : 'Meld dich gerne direkt bei uns, dann schauen wir gemeinsam drauf.',
+  ] : [
+    contactEmail ? `Melden Sie sich gerne direkt bei uns unter ${contactEmail}, dann klären wir das gerne persönlich.` : 'Melden Sie sich gerne direkt bei uns, dann klären wir das gerne persönlich.',
+    contactEmail ? `Melden Sie sich gerne direkt bei uns unter ${contactEmail}, damit wir uns Ihrer Sache direkt annehmen können.` : 'Melden Sie sich gerne direkt bei uns, damit wir uns Ihrer Sache direkt annehmen können.',
+    contactEmail ? `Melden Sie sich gerne direkt bei uns unter ${contactEmail}, dann schauen wir gemeinsam drauf.` : 'Melden Sie sich gerne direkt bei uns, dann schauen wir gemeinsam drauf.',
+  ]
+  const emailAbschluss = pickRandom(emailAbschlussOptionen)
+
   // Abschluss-Satz je nach Combo
   const abschlussMap: Record<CategoryCombo, string> = {
     'A_ONLY': analysis?.topicA?.barOption
-      ? 'Wer danach noch bleiben möchte, ist an der Bar oder an den Stehtischen herzlich willkommen.'
-      : 'Zu ruhigeren Zeiten ist es da meist entspannter.',
+      ? d(isDu, 'Wer danach noch bleiben möchte, ist an der Bar oder an den Stehtischen herzlich willkommen.', 'Wer danach noch bleiben möchte, ist an der Bar oder an den Stehtischen herzlich willkommen.')
+      : d(isDu, 'Zu ruhigeren Zeiten ist es da meist entspannter.', 'Zu ruhigeren Zeiten ist es da meist entspannter.'),
     'B_ONLY': analysis.vorOrtErwaehnt
-      ? 'Schön, dass du das direkt angesprochen hast.'
+      ? d(isDu, 'Schön, dass du das direkt angesprochen hast.', 'Schön, dass Sie das direkt angesprochen haben.')
       : analysis.ambiguousB
-        ? contactEmail
-          ? `Meld dich gerne direkt bei uns unter ${contactEmail}, dann klären wir das persönlich.`
-          : 'Meld dich gerne direkt bei uns, dann klären wir das persönlich.'
-        : 'Sollte bei einem zukünftigen Besuch etwas nicht perfekt laufen, bitten wir dich, unser Team vor Ort direkt anzusprechen, damit wir den Fehler sofort in der Sekunde korrigieren können.',
-    'C_ONLY': 'Sag uns beim nächsten Besuch kurz Bescheid, dann empfehlen wir dir etwas Passendes.',
+        ? emailAbschluss
+        : d(isDu, 'Sollte bei einem zukünftigen Besuch etwas nicht perfekt laufen, bitten wir dich, unser Team vor Ort direkt anzusprechen, damit wir den Fehler zeitnah korrigieren können.', 'Sollte bei einem zukünftigen Besuch etwas nicht perfekt laufen, bitten wir Sie, unser Team vor Ort direkt anzusprechen, damit wir den Fehler zeitnah korrigieren können.'),
+    'C_ONLY': d(isDu, 'Sag uns beim nächsten Besuch kurz Bescheid, dann empfehlen wir dir etwas Passendes.', 'Sagen Sie uns beim nächsten Besuch kurz Bescheid, dann empfehlen wir Ihnen etwas Passendes.'),
     'AB': analysis?.topicA?.barOption
       ? 'Wer danach noch bleiben möchte, ist an der Bar oder an den Stehtischen herzlich willkommen.'
-      : contactEmail
-        ? `Meld dich gerne direkt bei uns unter ${contactEmail}, dann klären wir das persönlich.`
-        : 'Meld dich gerne direkt bei uns, dann klären wir das persönlich.',
-    'BC': contactEmail
-      ? `Meld dich gerne direkt bei uns unter ${contactEmail}, dann klären wir das persönlich.`
-      : 'Meld dich gerne direkt bei uns, dann klären wir das persönlich.',
-    'AC': 'Sag uns beim nächsten Besuch kurz Bescheid, dann empfehlen wir dir etwas Passendes.',
-    'ABC': contactEmail
-      ? `Meld dich gerne direkt bei uns unter ${contactEmail}, dann klären wir das persönlich.`
-      : 'Meld dich gerne direkt bei uns, dann klären wir das persönlich.',
-    'B_SERVICE': contactEmail
-      ? `Meld dich gerne direkt bei uns unter ${contactEmail}, dann klären wir das persönlich.`
-      : 'Meld dich gerne direkt bei uns, dann klären wir das persönlich.',
+      : emailAbschluss,
+    'BC': emailAbschluss,
+    'AC': d(isDu, 'Sag uns beim nächsten Besuch kurz Bescheid, dann empfehlen wir dir etwas Passendes.', 'Sagen Sie uns beim nächsten Besuch kurz Bescheid, dann empfehlen wir Ihnen etwas Passendes.'),
+    'ABC': emailAbschluss,
+    'B_SERVICE': emailAbschluss,
   }
   const abschluss = abschlussMap[combo] || abschlussMap['B_ONLY']
   const gruss = pickGruss(signature)
@@ -494,7 +522,9 @@ NACH DEM KONTAKT-SATZ: Direkt Grussformel. NICHTS mehr.`,
     ? pickRandom(LOB_EINSTIEG).replace('[LOB]', analysis.lobpunkte[0])
     : ''
   const aberBruecke = lobEinstieg
-    ? (hauptkat === 'C' ? ABER_BRUECKE_C : ABER_BRUECKE_B)
+    ? (hauptkat === 'C'
+        ? d(isDu, ABER_BRUECKE_C, ABER_BRUECKE_C_SIE)
+        : d(isDu, ABER_BRUECKE_B, ABER_BRUECKE_B_SIE))
     : ''
 
   const teile = [begruessung, lobEinstieg, aberBruecke, kernSatz, abschluss, gruss].filter(Boolean)
@@ -512,6 +542,11 @@ const KERN_EMPTY_POSITIV: string[] = [
   "Danke für die 5 Sterne. Wir freuen uns auf dein nächstes Mal.",
   "Perfekt, mehr geht nicht. Bis bald.",
 ]
+const KERN_EMPTY_POSITIV_SIE: string[] = [
+  "5 Sterne sagen mehr als tausend Worte. Bis zum nächsten Besuch.",
+  "Danke für die 5 Sterne. Wir freuen uns auf Ihren nächsten Besuch.",
+  "Perfekt, mehr geht nicht. Bis bald.",
+]
 
 function buildEmptyPositivePrompt(
   reviewText: string,
@@ -519,9 +554,9 @@ function buildEmptyPositivePrompt(
   reviewerName: string,
   settings: any
 ): string {
-  const { signature, firstNameClean } = resolveSettings(settings, reviewerName)
+  const { signature, isDu, firstNameClean } = resolveSettings(settings, reviewerName)
   const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : ''
-  const kernSatz = pickRandom(KERN_EMPTY_POSITIV)
+  const kernSatz = pickRandom(isDu ? KERN_EMPTY_POSITIV : KERN_EMPTY_POSITIV_SIE)
   const gruss = pickGruss(signature)
   const teile = [begruessung, kernSatz, gruss].filter(Boolean)
   return JSON.stringify({ _direct: teile.join(' ') })
@@ -533,6 +568,11 @@ const KERN_EMPTY_NEGATIV: string[] = [
   "Schade, dass es nicht gepasst hat. Schreib uns kurz was los war, dann können wir helfen.",
   "Ein Stern ist deutlich. Wir würden gerne wissen was passiert ist.",
 ]
+const KERN_EMPTY_NEGATIV_SIE: string[] = [
+  "Ein Stern ohne Text macht es schwer zu verstehen, was bei Ihrem Besuch nicht gestimmt hat.",
+  "Schade, dass es nicht gepasst hat. Schreiben Sie uns kurz was los war, dann können wir helfen.",
+  "Ein Stern ist deutlich. Wir würden gerne wissen was passiert ist.",
+]
 
 function buildEmptyNegativePrompt(
   reviewText: string,
@@ -540,12 +580,19 @@ function buildEmptyNegativePrompt(
   reviewerName: string,
   settings: any
 ): string {
-  const { signature, firstNameClean, contactEmail } = resolveSettings(settings, reviewerName)
+  const { signature, isDu, firstNameClean, contactEmail } = resolveSettings(settings, reviewerName)
   const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : ''
-  const kernSatz = pickRandom(KERN_EMPTY_NEGATIV)
-  const kontakt = contactEmail
-    ? `Meld dich gerne direkt bei uns unter ${contactEmail}, dann klären wir das persönlich.`
-    : 'Meld dich gerne direkt bei uns, dann klären wir das persönlich.'
+  const kernSatz = pickRandom(isDu ? KERN_EMPTY_NEGATIV : KERN_EMPTY_NEGATIV_SIE)
+  const emailOptionen = isDu ? [
+    contactEmail ? `Meld dich gerne direkt bei uns unter ${contactEmail}, dann klären wir das gerne persönlich.` : 'Meld dich gerne direkt bei uns, dann klären wir das gerne persönlich.',
+    contactEmail ? `Meld dich gerne direkt bei uns unter ${contactEmail}, damit wir uns deiner Sache direkt annehmen können.` : 'Meld dich gerne direkt bei uns, damit wir uns deiner Sache direkt annehmen können.',
+    contactEmail ? `Meld dich gerne direkt bei uns unter ${contactEmail}, dann schauen wir gemeinsam drauf.` : 'Meld dich gerne direkt bei uns, dann schauen wir gemeinsam drauf.',
+  ] : [
+    contactEmail ? `Melden Sie sich gerne direkt bei uns unter ${contactEmail}, dann klären wir das gerne persönlich.` : 'Melden Sie sich gerne direkt bei uns, dann klären wir das gerne persönlich.',
+    contactEmail ? `Melden Sie sich gerne direkt bei uns unter ${contactEmail}, damit wir uns Ihrer Sache direkt annehmen können.` : 'Melden Sie sich gerne direkt bei uns, damit wir uns Ihrer Sache direkt annehmen können.',
+    contactEmail ? `Melden Sie sich gerne direkt bei uns unter ${contactEmail}, dann schauen wir gemeinsam drauf.` : 'Melden Sie sich gerne direkt bei uns, dann schauen wir gemeinsam drauf.',
+  ]
+  const kontakt = pickRandom(emailOptionen)
   const gruss = pickGruss(signature)
   const teile = [begruessung, kernSatz, kontakt, gruss].filter(Boolean)
   return JSON.stringify({ _direct: teile.join(' ') })
