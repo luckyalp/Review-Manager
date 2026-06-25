@@ -14,6 +14,7 @@ interface Analysis {
   points: string[]
   nominative: string[]  // Hauptproblem pro Issue im Nominativ ohne Artikel (z.B. "rohes Hähnchen")
   nominativeArtikel: string[]  // Mit unbestimmtem Artikel im Singular (z.B. "ein rohes Hähnchen"), Plural ohne Artikel (z.B. "kalte Pommes")
+  pluralFlags: boolean[]  // true wenn nominativ Plural ist (z.B. "kalte Pommes")
   categories: string[]
   forceSummarize: boolean
   lobpunkte: string[]
@@ -113,24 +114,43 @@ GRAMMATIK: Jeder Satz muss vollstaendig sein (Subjekt, Praedikat). Maximal zwei 
 
 
 // ─── DU/SIE HELPER ────────────────────────────────────────────────────────────
-// Wählt den richtigen Text je nach Anredeform
 function d(isDu: boolean, duText: string, sieText: string): string {
   return isDu ? duText : sieText
+}
+
+// ─── VERB-KONJUGATION ─────────────────────────────────────────────────────────
+// [S] = Singular, [P] = Plural
+const VERB_FORMS: Record<string, [string, string]> = {
+  'dürfen':     ['darf',        'dürfen'],
+  'brechen':    ['bricht',      'brechen'],
+  'zeigen':     ['zeigt',       'zeigen'],
+  'entsprechen':['entspricht',  'entsprechen'],
+  'akzeptieren':['akzeptieren', 'akzeptieren'], // gleich in beiden
+}
+
+function conjugate(verb: string, isPlural: boolean): string {
+  const forms = VERB_FORMS[verb]
+  return forms ? forms[isPlural ? 1 : 0] : verb
+}
+
+// Ersetzt alle [V:verb] Platzhalter im Satz
+function applyVerbs(satz: string, isPlural: boolean): string {
+  return satz.replace(/\[V:(\w+)\]/g, (_, verb) => conjugate(verb, isPlural))
 }
 
 
 // Platzhalter [KERN] wird per .replace() mit dem nominativ-Wert aus analyzeReview() gefüllt.
 
 const KERN_B: string[] = [
-  "Es gibt Standards, die am Gast ausnahmslos sitzen müssen, und [KERN_ART] darf in unserem Betrieb nicht vorkommen.",
-  "Unser Anspruch an die Küche und den Ablauf ist hoch, aber [KERN_ART] bricht diese Vorgabe komplett.",
-  "Ein reibungsloser Ablauf sieht anders aus, und [KERN_ART] zeigt deutlich, wo die Übergabe bei diesem Besuch versagt hat.",
+  "Es gibt Standards, die am Gast ausnahmslos sitzen müssen, und [KERN_ART] [V:dürfen] in unserem Betrieb nicht vorkommen.",
+  "Unser Anspruch an die Küche und den Ablauf ist hoch, aber [KERN_ART] [V:brechen] diese Vorgabe komplett.",
+  "Ein reibungsloser Ablauf sieht anders aus, und [KERN_ART] [V:zeigen] deutlich, wo die Übergabe bei diesem Besuch versagt hat.",
 ]
 
 const KERN_B_SERVICE: string[] = [
   "So soll sich kein Gast bei uns fühlen, und [KERN] ist kein Standard den wir akzeptieren.",
   "Dass [KERN_ART] so in Erinnerung bleibt, ist nicht das, was wir uns für einen Besuch vorstellen.",
-  "[KERN_ART] entspricht nicht dem, was ein Gast von uns erwarten darf.",
+  "[KERN_ART] [V:entsprechen] nicht dem, was ein Gast von uns erwarten darf.",
 ]
 
 // ─── KERN_C: feste Sätze ohne Platzhalter ────────────────────────────────────
@@ -185,16 +205,19 @@ function buildPositivePrompt(
 }
 
 // Baut den Kern-Satz zusammen: wählt aus dem richtigen Pool und setzt nominativ ein
-function buildKernSatz(cat: string, nominativ: string, isServiceComplaint = false, nominativArtikel?: string): string {
+function buildKernSatz(cat: string, nominativ: string, isServiceComplaint = false, nominativArtikel?: string, isPlural = false): string {
   if (cat === 'C') return resolveKernC(nominativ)
   const pool = cat === 'B'
     ? (isServiceComplaint ? KERN_B_SERVICE : KERN_B)
     : cat === 'A' ? KERN_A
     : KERN_POSITIV
   const satz = pickRandom(pool)
-  return satz
-    .replace('[KERN_ART]', nominativArtikel || nominativ)
-    .replace('[KERN]', nominativ)
+  return applyVerbs(
+    satz
+      .replace('[KERN_ART]', nominativArtikel || nominativ)
+      .replace('[KERN]', nominativ),
+    isPlural
+  )
 }
 
 // Wählt den richtigen Gruss-Abschluss
@@ -312,7 +335,8 @@ function buildMixedPrompt(
   const hauptkat = analysis?.categories?.[0] || 'B'
   const nominativ = analysis?.nominative?.[0] || analysis?.points?.[0] || 'dieser Punkt'
   const nominativArtikel = analysis?.nominativeArtikel?.[0] || nominativ
-  const kernSatz = buildKernSatz(hauptkat, nominativ, analysis?.isServiceComplaint || false, nominativArtikel)
+  const isPlural = analysis?.pluralFlags?.[0] || false
+  const kernSatz = buildKernSatz(hauptkat, nominativ, analysis?.isServiceComplaint || false, nominativArtikel, isPlural)
 
   // Abschluss: 3 Wege je nach Situation
   const emailAbschlussOptionen = isDu ? [
@@ -479,11 +503,11 @@ NACH DEM KONTAKT-SATZ: Direkt Grussformel. NICHTS mehr.`,
   }
 
   // ── Kern-Satz aus den 12 Bausteinen zusammenbauen ───────────────────────────
-  // Hauptkategorie bestimmen (erste erkannte Kategorie)
   const hauptkat = analysis.categories[0] || 'B'
   const nominativ = analysis.nominative[0] || analysis.points[0] || 'dieser Punkt'
   const nominativArtikel = analysis.nominativeArtikel?.[0] || nominativ
-  const kernSatz = buildKernSatz(hauptkat, nominativ, analysis.isServiceComplaint, nominativArtikel)
+  const isPlural = analysis.pluralFlags?.[0] || false
+  const kernSatz = buildKernSatz(hauptkat, nominativ, analysis.isServiceComplaint, nominativArtikel, isPlural)
 
   // Begrüßung
   const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : ''
@@ -820,13 +844,14 @@ async function analyzeReview(reviewText: string): Promise<Analysis> {
   const systemPrompt = `Rolle: Nuechterner Fakten-Extraktor fuer Restaurant-Bewertungen. Nur Datenpunkte extrahieren, keine Antwort verfassen.
 
 Ausgabe: AUSSCHLIESSLICH valides JSON ohne Markdown:
-{"issues":[{"text":"Steak Medium statt durch","cat":"B","nominativ":"falsches Steak","nominativArtikel":"ein falsches Steak"}],"lobpunkte":["Lob1"],"vor_ort_erwaehnt":false,"is_service_complaint":false,"ambiguous_b":false,"topic_a":null}
+{"issues":[{"text":"Steak Medium statt durch","cat":"B","nominativ":"falsches Steak","nominativArtikel":"ein falsches Steak","isPlural":false}],"lobpunkte":["Lob1"],"vor_ort_erwaehnt":false,"is_service_complaint":false,"ambiguous_b":false,"topic_a":null}
 
 Regeln:
-1. "issues": Liste der Kritikpunkte als Objekte mit "text", "cat", "nominativ" und "nominativArtikel".
-   - "text": Kritikpunkt in max. 5 Woertern. Bei Fehlern (B): IMMER Erwartung vs. Realitaet ("Steak Medium statt durch", "Pizza Salami statt Margherita"). Bei Zustand/Wahrnehmung normal ("Pommes fad", "Service unfreundlich").
-   - "nominativ": Das Hauptproblem im Nominativ OHNE Artikel. Beispiele: "falsches Steak", "lange Wartezeit", "unfreundlicher Service", "kalte Pommes". KEIN Verb, KEIN Satz.
-   - "nominativArtikel": Derselbe Begriff MIT passendem unbestimmtem Artikel im Nominativ Einzahl. Beispiele: "ein falsches Steak", "eine lange Wartezeit", "ein unfreundlicher Service". AUSNAHME Plural: Bei Pluralwoertern (Pommes, Nudeln, Getraenke) KEIN Artikel, einfach Plural lassen: "kalte Pommes", "fade Nudeln".
+1. "issues": Liste der Kritikpunkte als Objekte mit "text", "cat", "nominativ", "nominativArtikel" und "isPlural".
+   - "text": Kritikpunkt in max. 5 Woertern.
+   - "nominativ": Das Hauptproblem im Nominativ OHNE Artikel. Beispiele: "falsches Steak", "lange Wartezeit", "unfreundlicher Service", "kalte Pommes".
+   - "nominativArtikel": Mit passendem unbestimmtem Artikel im Nominativ Einzahl. Bei Pluralwoertern KEIN Artikel. Beispiele: "ein falsches Steak", "eine lange Wartezeit", "kalte Pommes".
+   - "isPlural": true wenn der Kritikpunkt ein Pluralwort ist (Pommes, Nudeln, Getraenke, Portionen, Wartezeiten). false bei Singularwoertern.
    - "cat": Kategorie des Kritikpunkts:
      A = Konzept/strukturell (Hausregeln, Lautstaerke, Tischvergabe, Oeffnungszeiten)
      B = Echter Fehler (falsche Bestellung, Gargrad falsch, unfreundlicher Service, Wartezeit ohne Grund)
@@ -844,10 +869,11 @@ Regeln:
   try {
     const result = await callClaude(`Bewertung:\n"${reviewText}"`, systemPrompt, 'claude-sonnet-4-6', 0)
     const parsed = parseJson(result)
-    const issues: Array<{text: string, cat: string, nominativ?: string, nominativArtikel?: string}> = parsed.issues || []
+    const issues: Array<{text: string, cat: string, nominativ?: string, nominativArtikel?: string, isPlural?: boolean}> = parsed.issues || []
     const points = issues.map((i) => i.text)
     const nominative = issues.map((i) => i.nominativ || i.text)
     const nominativeArtikel = issues.map((i) => i.nominativArtikel || i.nominativ || i.text)
+    const pluralFlags = issues.map((i) => i.isPlural === true)
     const categories = issues.map((i) => i.cat)
     const rawTopicA = parsed.topic_a
     const topicA: TopicA | undefined = rawTopicA ? {
@@ -860,6 +886,7 @@ Regeln:
       points,
       nominative,
       nominativeArtikel,
+      pluralFlags,
       categories,
       forceSummarize: issues.length >= 3,
       lobpunkte: parsed.lobpunkte || [],
@@ -869,7 +896,7 @@ Regeln:
       topicA,
     }
   } catch {
-    return { count: 0, points: [], nominative: [], nominativeArtikel: [], categories: [], forceSummarize: false, lobpunkte: [], vorOrtErwaehnt: false, isServiceComplaint: false, ambiguousB: false }
+    return { count: 0, points: [], nominative: [], nominativeArtikel: [], pluralFlags: [], categories: [], forceSummarize: false, lobpunkte: [], vorOrtErwaehnt: false, isServiceComplaint: false, ambiguousB: false }
   }
 }
 
