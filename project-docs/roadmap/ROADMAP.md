@@ -17,6 +17,16 @@
 - post-reply.ts: readMask-Fix — locations API 400-Fehler behoben (08.06.2026)
 - generate-replies.ts: besseres Error-Logging — 500er liefern jetzt konkrete Fehlermeldung (08.06.2026)
 - KI-Analyse in Insights: echte Gemini-Auswertung mit Zeitraum-Auswahl
+- Lego-Baukastensystem vollständig implementiert (25.06.2026):
+  - 12 Kern-Sätze (B, B_SERVICE, C, A, POSITIV) als feste Arrays
+  - C-Kategorie in 5 Unterkategorien aufgeteilt (GESCHMACK, MENGE, PREIS, PREIS_LEISTUNG, AUSWAHL)
+  - Alle 5 Pfade deterministisch: Negativ, Mixed, Positiv, Empty Positiv, Empty Negativ
+  - Du/Sie-Unterstützung für alle festen Sätze
+  - nominativ + nominativArtikel + isPlural + Verb-Konjugation für grammatisch korrekte Ausgabe
+  - API-Calls reduziert: Negativ/Mixed/Positiv = 2 Calls, Empty = 1 Call
+  - Haiku → Sonnet für Analyse-Call (bessere Grammatik)
+  - Lob-Einstieg + Aber-Brücke im negativen und gemischten Pfad
+  - E-Mail-Abschluss rotiert zwischen 3 Varianten (Du + Sie Form)
 
 ### Varianten-Labels (fest)
 - 1 → "Direkt & Ehrlich"
@@ -60,12 +70,12 @@
 
 ## Nächste Schritte 🔴
 
-### Bruder onboarden + Google Reply testen
-- Henry's Sandbar Google Account verbinden
-- Erste echte Bewertungen einlesen
-- E-Mail-Benachrichtigung testen
-- "Sofort senden" aus E-Mail → prüfen ob Antwort auf Google erscheint
-- "Antwort senden" aus Dashboard → prüfen ob Antwort auf Google erscheint
+### Bruder onboarden + Google Reply testen ✅ (teilweise)
+- Henry's Sandbar Google Account verbunden ✅
+- Erste echte Bewertungen eingelesen ✅
+- E-Mail-Benachrichtigung testen — ausstehend
+- "Sofort senden" aus E-Mail → prüfen ob Antwort auf Google erscheint — ausstehend
+- "Antwort senden" aus Dashboard → prüfen ob Antwort auf Google erscheint — ausstehend
 
 ### DSGVO Basics
 - Datenschutzerklärung in der App (Link im Footer/Login)

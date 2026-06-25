@@ -290,7 +290,22 @@ KEIN Strukturversprechen (nicht versprechen, ein Gericht oder Konzept allgemein 
 
 // ─── PROMPT: MIXED (3 Sterne) ─────────────────────────────────────────────────
 
-// ─── LOB-EINSTIEG & ABER-BRÜCKE (für Mixed-Pfad) ────────────────────────────
+// ─── KERN_SUMMARIZE: bei 3+ Kritikpunkten ────────────────────────────────────
+// Kein spezifischer Kritikpunkt — Gesamteindruck, dann E-Mail
+const KERN_SUMMARIZE: string[] = [
+  "Das war nicht der Abend, den wir uns für unsere Gäste vorstellen.",
+  "So einen Abend kennen wir nicht von uns, und das soll auch so bleiben.",
+  "Das war nicht unser Abend. Und nicht deiner.",
+  "Das war weit unter dem, was bei uns möglich ist.",
+  "An dem Abend haben wir uns selbst nicht gerecht.",
+]
+const KERN_SUMMARIZE_SIE: string[] = [
+  "Das war nicht der Abend, den wir uns für unsere Gäste vorstellen.",
+  "So einen Abend kennen wir nicht von uns, und das soll auch so bleiben.",
+  "Das war nicht unser Abend. Und nicht Ihrer.",
+  "Das war weit unter dem, was bei uns möglich ist.",
+  "An dem Abend haben wir uns selbst nicht gerecht.",
+]
 
 const LOB_EINSTIEG: string[] = [
   "Schön, dass [LOB].",
@@ -503,11 +518,17 @@ NACH DEM KONTAKT-SATZ: Direkt Grussformel. NICHTS mehr.`,
   }
 
   // ── Kern-Satz aus den 12 Bausteinen zusammenbauen ───────────────────────────
-  const hauptkat = analysis.categories[0] || 'B'
-  const nominativ = analysis.nominative[0] || analysis.points[0] || 'dieser Punkt'
-  const nominativArtikel = analysis.nominativeArtikel?.[0] || nominativ
-  const isPlural = analysis.pluralFlags?.[0] || false
-  const kernSatz = buildKernSatz(hauptkat, nominativ, analysis.isServiceComplaint, nominativArtikel, isPlural)
+  let kernSatz: string
+  if (analysis.forceSummarize) {
+    // 3+ Kritikpunkte: allgemeiner Zusammenfassungs-Satz statt spezifischem Problem
+    kernSatz = pickRandom(isDu ? KERN_SUMMARIZE : KERN_SUMMARIZE_SIE)
+  } else {
+    const hauptkat = analysis.categories[0] || 'B'
+    const nominativ = analysis.nominative[0] || analysis.points[0] || 'dieser Punkt'
+    const nominativArtikel = analysis.nominativeArtikel?.[0] || nominativ
+    const isPlural = analysis.pluralFlags?.[0] || false
+    kernSatz = buildKernSatz(hauptkat, nominativ, analysis.isServiceComplaint, nominativArtikel, isPlural)
+  }
 
   // Begrüßung
   const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : ''
@@ -543,7 +564,9 @@ NACH DEM KONTAKT-SATZ: Direkt Grussformel. NICHTS mehr.`,
     'ABC': emailAbschluss,
     'B_SERVICE': emailAbschluss,
   }
-  const abschluss = abschlussMap[combo] || abschlussMap['B_ONLY']
+  const abschluss = analysis.forceSummarize
+    ? emailAbschluss
+    : abschlussMap[combo] || abschlussMap['B_ONLY']
   const gruss = pickGruss(signature)
 
   // Lob-Einstieg wenn Lob vorhanden
@@ -551,7 +574,7 @@ NACH DEM KONTAKT-SATZ: Direkt Grussformel. NICHTS mehr.`,
     ? pickRandom(LOB_EINSTIEG).replace('[LOB]', analysis.lobpunkte[0])
     : ''
   const aberBruecke = lobEinstieg
-    ? (hauptkat === 'C'
+    ? (analysis.forceSummarize || analysis.categories[0] === 'C'
         ? d(isDu, ABER_BRUECKE_C, ABER_BRUECKE_C_SIE)
         : d(isDu, ABER_BRUECKE_B, ABER_BRUECKE_B_SIE))
     : ''
