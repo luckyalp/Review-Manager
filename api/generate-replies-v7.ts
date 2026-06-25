@@ -122,14 +122,14 @@ function d(isDu: boolean, duText: string, sieText: string): string {
 // Platzhalter [KERN] wird per .replace() mit dem nominativ-Wert aus analyzeReview() gefüllt.
 
 const KERN_B: string[] = [
-  "Es gibt Standards, die am Gast ausnahmslos sitzen müssen, und [KERN] darf in unserem Betrieb nicht vorkommen.",
-  "Unser Anspruch an die Küche und den Ablauf ist hoch, aber [KERN] bricht diese Vorgabe komplett.",
-  "Ein reibungsloser Ablauf sieht anders aus, und [KERN] zeigt deutlich, wo die Übergabe bei diesem Besuch versagt hat.",
+  "Es gibt Standards, die am Gast ausnahmslos sitzen müssen, und [KERN_ART] darf in unserem Betrieb nicht vorkommen.",
+  "Unser Anspruch an die Küche und den Ablauf ist hoch, aber [KERN_ART] bricht diese Vorgabe komplett.",
+  "Ein reibungsloser Ablauf sieht anders aus, und [KERN_ART] zeigt deutlich, wo die Übergabe bei diesem Besuch versagt hat.",
 ]
 
 const KERN_B_SERVICE: string[] = [
   "So soll sich kein Gast bei uns fühlen, und [KERN] ist kein Standard den wir akzeptieren.",
-  "Dass [KERN] so in Erinnerung bleibt, ist nicht das, was wir uns für einen Besuch vorstellen.",
+  "Dass [KERN_ART] so in Erinnerung bleibt, ist nicht das, was wir uns für einen Besuch vorstellen.",
   "[KERN_ART] entspricht nicht dem, was ein Gast von uns erwarten darf.",
 ]
 
