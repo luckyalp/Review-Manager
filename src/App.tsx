@@ -182,26 +182,6 @@ function App() {
     }
   }, [user, reviewsLoading, reviews])
 
-  // URL-Parameter: direkt zur Bewertung springen wenn ?edit=true
-  useEffect(() => {
-    if (!user || reviewsLoading || reviews.length === 0) return
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('edit') === 'true') {
-      const reviewId = params.get('reviewId')
-      if (reviewId) {
-        const match = reviews.find(r =>
-          encodeURIComponent(r.name + '_' + r.stars) === reviewId ||
-          (r.name + '_' + r.stars) === reviewId
-        )
-        if (match) {
-          setSelectedReview(match)
-          setPage('reviews')
-          window.history.replaceState({}, '', window.location.pathname)
-        }
-      }
-    }
-  }, [user, reviewsLoading, reviews])
-
   const updateReviewStatus = async (id: number, status: ReviewStatus) => {
     setReviews(prev => prev.map(r => r.id === id ? { ...r, status } : r))
     try {
