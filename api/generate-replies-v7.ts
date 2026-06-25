@@ -126,16 +126,18 @@ const KERN_B_SERVICE: string[] = [
   "Bei [KERN] sind wir klar hinter dem zurückgeblieben, was ein Gast von uns erwarten darf.",
 ]
 
-// ─── KERN_C: 5 feste Sätze ohne Platzhalter ──────────────────────────────────
+// ─── KERN_C: feste Sätze ohne Platzhalter ────────────────────────────────────
 const KERN_C_GESCHMACK = "Wir kochen nach unseren eigenen, festen Rezepturen, treffen damit aber naturgemäß nicht immer jeden Nerv."
 const KERN_C_MENGE     = "Unsere Gerichte sind so kalkuliert, dass sie für den durchschnittlichen Hunger eine runde Mahlzeit bieten."
 const KERN_C_PREIS     = "Wir stecken viel Liebe und nur die besten Zutaten in unsere Gerichte, und das hat am Ende eben auch seinen fairen Preis."
 const KERN_C_PREIS_LEISTUNG = "Wir achten bei all unseren Gerichten auf die Qualität und Frische der Zutaten, um ein faires Verhältnis zwischen Preis und Leistung zu bieten."
 const KERN_C_AUSWAHL   = "Wir kalkulieren unsere frischen Zutaten täglich genau, um Verschwendung zu vermeiden, wodurch beliebte Gerichte im Laufe des Tages auch mal vergriffen sein können."
+const KERN_C_VAGE      = "War's die Zubereitung, beim nächsten Mal bitte direkt ansprechen, dann regeln wir das sofort. War's einfach nicht dein Geschmack, kein Problem, wir empfehlen dir gerne was Passenderes."
 
 // Erkennt C-Unterkategorie anhand des Nominativs
 function resolveKernC(nominativ: string): string {
   const n = nominativ.toLowerCase()
+  if (n.includes('vage') || n.includes('geschmack allgemein') || n.includes('kein grund')) return KERN_C_VAGE
   if (n.includes('portion') || n.includes('menge') || n.includes('klein') || n.includes('wenig')) return KERN_C_MENGE
   if (n.includes('preis') && (n.includes('leistung') || n.includes('verhältnis'))) return KERN_C_PREIS_LEISTUNG
   if (n.includes('preis') || n.includes('teuer') || n.includes('kosten')) return KERN_C_PREIS
@@ -845,6 +847,7 @@ Regeln:
      B = Echter Fehler (falsche Bestellung, Gargrad falsch, unfreundlicher Service, Wartezeit ohne Grund)
      C = Geschmack/Wahrnehmung (zu scharf, zu wenig Wuerze, fad, lasch, Portion zu klein)
      WICHTIG: "fad", "lasch", "lieblos gewuerzt" sind IMMER C — nicht B.
+     SONDERFALL C-VAGE: Wenn der Gast nur sagt "hat nicht geschmeckt", "war nicht meins", "hat mir nicht gefallen" OHNE konkreten Grund (kein "zu scharf", kein "zu salzig", kein "zu wenig") — dann "nominativ" = "vage Geschmacksbeschwerde" setzen.
 2. "lobpunkte": Extrahiere das Lob als flüssigen deutschen Satzteil der perfekt hinter das Wort "dass" passt. Beispiele: "dir die Pommes so gut geschmeckt haben", "die Trüffelmayonnaise ein Highlight war", "du dich bei uns wohlgefühlt hast". Leer wenn kein Lob.
 3. "vor_ort_erwaehnt": true nur wenn unmissverstaendlich aus Text hervorgeht dass Gast etwas dem Personal gesagt hat.
 4. "is_service_complaint": true NUR WENN cat B vorhanden UND Kritik das VERHALTEN, FREUNDLICHKEIT oder AUFMERKSAMKEIT des Personals betrifft (unfreundlich, unaufmerksam, desinteressiert, arrogant, ignoriert). false bei: Wartezeit, falscher Bestellung, technischen Fehlern.
