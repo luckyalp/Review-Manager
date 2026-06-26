@@ -70,6 +70,12 @@
 
 ## Nächste Schritte 🔴
 
+### Validierungssatz als fester Baustein einbauen
+**Warum:** Die vollständige Antwort-Struktur lautet: Begrüßung → Validierung → (Lob) → (Brücke) → Kern → Abschluss → Gruß. Der Validierungssatz fehlt komplett als eigenes Array.
+**Was er tut:** Gast abholen, zeigen dass wir gehört haben — ohne verbotene Verben ("verstehen", "nachvollziehen"). Gilt für alle Pfade: negativ, mixed, und auch wenn Lob vorhanden.
+**Beispiele (müssen von Alp formuliert werden):** "Das ist nicht der Eindruck, den wir hinterlassen wollen." / "So soll kein Besuch bei uns enden."
+**Aufwand:** ~1 Stunde. Sätze von Alp, dann einbauen.
+
 ### Bruder onboarden + Google Reply testen ✅ (teilweise)
 - Henry's Sandbar Google Account verbunden ✅
 - Erste echte Bewertungen eingelesen ✅
