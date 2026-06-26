@@ -9,6 +9,20 @@ interface TopicA {
   barOption: boolean // true wenn Bar/Stehtisch als naechster Schritt sinnvoll ist
 }
 
+interface Settings {
+  businessName?: string
+  salutation?: 'Du' | 'Sie'
+  contactEmail?: string
+  responseSignature?: string
+  responseLanguage?: 'Deutsch' | 'Englisch' | 'Sprache des Bewerters'
+  description?: string
+  restaurantType?: string
+  cuisineType?: string
+  restaurantAtmosphere?: string
+  uniqueSellingPoints?: string
+  priceRange?: string
+}
+
 interface Analysis {
   count: number
   points: string[]
@@ -54,6 +68,7 @@ function classify(rating: number, reviewText: string): string {
   const hasText = wordCount >= 6
   if (!hasText && rating >= 4) return 'EMPTY_POSITIVE'
   if (!hasText && rating <= 2) return 'EMPTY_NEGATIVE'
+  if (!hasText && rating === 3) return 'EMPTY_NEGATIVE'
   if (rating >= 4) return 'CONTENT_POSITIVE'
   if (rating === 3) return 'CONTENT_MIXED'
   return 'CONTENT_NEGATIVE'
@@ -61,7 +76,7 @@ function classify(rating: number, reviewText: string): string {
 
 // ─── SHARED: SETTINGS AUFLÖSEN ───────────────────────────────────────────────
 
-function resolveSettings(settings: any, reviewerName: string) {
+function resolveSettings(settings: Settings | undefined, reviewerName: string) {
   const {
     businessName = 'das Restaurant',
     salutation = 'Sie',
@@ -193,7 +208,7 @@ function buildPositivePrompt(
   reviewText: string,
   stars: number,
   reviewerName: string,
-  settings: any
+  settings: Settings
 ): string {
   const { signature, isDu, firstNameClean } = resolveSettings(settings, reviewerName)
   const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : ''
@@ -228,6 +243,19 @@ function pickGruss(signature: string): string {
 
 function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)]
+}
+
+function buildEmailAbschluss(isDu: boolean, contactEmail: string): string {
+  const optionen = isDu ? [
+    contactEmail ? `Meld dich gerne direkt bei uns unter ${contactEmail}, dann klären wir das gerne persönlich.` : 'Meld dich gerne direkt bei uns, dann klären wir das gerne persönlich.',
+    contactEmail ? `Meld dich gerne direkt bei uns unter ${contactEmail}, damit wir uns deiner Sache direkt annehmen können.` : 'Meld dich gerne direkt bei uns, damit wir uns deiner Sache direkt annehmen können.',
+    contactEmail ? `Meld dich gerne direkt bei uns unter ${contactEmail}, dann schauen wir gemeinsam drauf.` : 'Meld dich gerne direkt bei uns, dann schauen wir gemeinsam drauf.',
+  ] : [
+    contactEmail ? `Melden Sie sich gerne direkt bei uns unter ${contactEmail}, dann klären wir das gerne persönlich.` : 'Melden Sie sich gerne direkt bei uns, dann klären wir das gerne persönlich.',
+    contactEmail ? `Melden Sie sich gerne direkt bei uns unter ${contactEmail}, damit wir uns Ihrer Sache direkt annehmen können.` : 'Melden Sie sich gerne direkt bei uns, damit wir uns Ihrer Sache direkt annehmen können.',
+    contactEmail ? `Melden Sie sich gerne direkt bei uns unter ${contactEmail}, dann schauen wir gemeinsam drauf.` : 'Melden Sie sich gerne direkt bei uns, dann schauen wir gemeinsam drauf.',
+  ]
+  return pickRandom(optionen)
 }
 
 // ─── KATEGORIE-BLÖCKE (A / B / C) ────────────────────────────────────────────
@@ -334,7 +362,7 @@ function buildMixedPrompt(
   reviewText: string,
   stars: number,
   reviewerName: string,
-  settings: any,
+  settings: Settings,
   analysis?: Analysis
 ): string {
   const { signature, isDu, firstNameClean, contactEmail } = resolveSettings(settings, reviewerName)
@@ -354,19 +382,9 @@ function buildMixedPrompt(
   const kernSatz = buildKernSatz(hauptkat, nominativ, analysis?.isServiceComplaint || false, nominativArtikel, isPlural)
 
   // Abschluss: 3 Wege je nach Situation
-  const emailAbschlussOptionen = isDu ? [
-    contactEmail ? `Meld dich gerne direkt bei uns unter ${contactEmail}, dann klären wir das gerne persönlich.` : 'Meld dich gerne direkt bei uns, dann klären wir das gerne persönlich.',
-    contactEmail ? `Meld dich gerne direkt bei uns unter ${contactEmail}, damit wir uns deiner Sache direkt annehmen können.` : 'Meld dich gerne direkt bei uns, damit wir uns deiner Sache direkt annehmen können.',
-    contactEmail ? `Meld dich gerne direkt bei uns unter ${contactEmail}, dann schauen wir gemeinsam drauf.` : 'Meld dich gerne direkt bei uns, dann schauen wir gemeinsam drauf.',
-  ] : [
-    contactEmail ? `Melden Sie sich gerne direkt bei uns unter ${contactEmail}, dann klären wir das gerne persönlich.` : 'Melden Sie sich gerne direkt bei uns, dann klären wir das gerne persönlich.',
-    contactEmail ? `Melden Sie sich gerne direkt bei uns unter ${contactEmail}, damit wir uns Ihrer Sache direkt annehmen können.` : 'Melden Sie sich gerne direkt bei uns, damit wir uns Ihrer Sache direkt annehmen können.',
-    contactEmail ? `Melden Sie sich gerne direkt bei uns unter ${contactEmail}, dann schauen wir gemeinsam drauf.` : 'Melden Sie sich gerne direkt bei uns, dann schauen wir gemeinsam drauf.',
-  ]
-
   let abschluss: string
   if (analysis?.ambiguousB) {
-    abschluss = pickRandom(emailAbschlussOptionen)
+    abschluss = buildEmailAbschluss(isDu, contactEmail)
   } else if (analysis?.isServiceComplaint) {
     abschluss = getAbschlussWeg2(isDu)
   } else {
@@ -391,7 +409,7 @@ function buildComboPrompt(
   reviewText: string,
   stars: number,
   reviewerName: string,
-  settings: any,
+  settings: Settings,
   analysis: Analysis
 ): string {
   const { signature, duSie, isDu, firstNameClean, langInstruction, context, contactEmail } = resolveSettings(settings, reviewerName)
@@ -534,16 +552,7 @@ NACH DEM KONTAKT-SATZ: Direkt Grussformel. NICHTS mehr.`,
   const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : ''
 
   // E-Mail Abschluss-Varianten (rotierend)
-  const emailAbschlussOptionen = isDu ? [
-    contactEmail ? `Meld dich gerne direkt bei uns unter ${contactEmail}, dann klären wir das gerne persönlich.` : 'Meld dich gerne direkt bei uns, dann klären wir das gerne persönlich.',
-    contactEmail ? `Meld dich gerne direkt bei uns unter ${contactEmail}, damit wir uns deiner Sache direkt annehmen können.` : 'Meld dich gerne direkt bei uns, damit wir uns deiner Sache direkt annehmen können.',
-    contactEmail ? `Meld dich gerne direkt bei uns unter ${contactEmail}, dann schauen wir gemeinsam drauf.` : 'Meld dich gerne direkt bei uns, dann schauen wir gemeinsam drauf.',
-  ] : [
-    contactEmail ? `Melden Sie sich gerne direkt bei uns unter ${contactEmail}, dann klären wir das gerne persönlich.` : 'Melden Sie sich gerne direkt bei uns, dann klären wir das gerne persönlich.',
-    contactEmail ? `Melden Sie sich gerne direkt bei uns unter ${contactEmail}, damit wir uns Ihrer Sache direkt annehmen können.` : 'Melden Sie sich gerne direkt bei uns, damit wir uns Ihrer Sache direkt annehmen können.',
-    contactEmail ? `Melden Sie sich gerne direkt bei uns unter ${contactEmail}, dann schauen wir gemeinsam drauf.` : 'Melden Sie sich gerne direkt bei uns, dann schauen wir gemeinsam drauf.',
-  ]
-  const emailAbschluss = pickRandom(emailAbschlussOptionen)
+  const emailAbschluss = buildEmailAbschluss(isDu, contactEmail)
 
   // Abschluss-Satz je nach Combo
   const abschlussMap: Record<CategoryCombo, string> = {
@@ -604,7 +613,7 @@ function buildEmptyPositivePrompt(
   reviewText: string,
   stars: number,
   reviewerName: string,
-  settings: any
+  settings: Settings
 ): string {
   const { signature, isDu, firstNameClean } = resolveSettings(settings, reviewerName)
   const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : ''
@@ -616,35 +625,26 @@ function buildEmptyPositivePrompt(
 
 // ─── EMPTY NEGATIV: 3 feste Sätze + E-Mail immer drin ───────────────────────
 const KERN_EMPTY_NEGATIV: string[] = [
-  "Ein Stern ohne Text macht es schwer zu verstehen, was bei deinem Besuch nicht gestimmt hat.",
+  "Eine Bewertung ohne Text macht es schwer zu verstehen, was bei deinem Besuch nicht gestimmt hat.",
   "Schade, dass es nicht gepasst hat. Schreib uns kurz was los war, dann können wir helfen.",
-  "Ein Stern ist deutlich. Wir würden gerne wissen was passiert ist.",
+  "Wir würden gerne wissen was passiert ist.",
 ]
 const KERN_EMPTY_NEGATIV_SIE: string[] = [
-  "Ein Stern ohne Text macht es schwer zu verstehen, was bei Ihrem Besuch nicht gestimmt hat.",
+  "Eine Bewertung ohne Text macht es schwer zu verstehen, was bei Ihrem Besuch nicht gestimmt hat.",
   "Schade, dass es nicht gepasst hat. Schreiben Sie uns kurz was los war, dann können wir helfen.",
-  "Ein Stern ist deutlich. Wir würden gerne wissen was passiert ist.",
+  "Wir würden gerne wissen was passiert ist.",
 ]
 
 function buildEmptyNegativePrompt(
   reviewText: string,
   stars: number,
   reviewerName: string,
-  settings: any
+  settings: Settings
 ): string {
   const { signature, isDu, firstNameClean, contactEmail } = resolveSettings(settings, reviewerName)
   const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : ''
   const kernSatz = pickRandom(isDu ? KERN_EMPTY_NEGATIV : KERN_EMPTY_NEGATIV_SIE)
-  const emailOptionen = isDu ? [
-    contactEmail ? `Meld dich gerne direkt bei uns unter ${contactEmail}, dann klären wir das gerne persönlich.` : 'Meld dich gerne direkt bei uns, dann klären wir das gerne persönlich.',
-    contactEmail ? `Meld dich gerne direkt bei uns unter ${contactEmail}, damit wir uns deiner Sache direkt annehmen können.` : 'Meld dich gerne direkt bei uns, damit wir uns deiner Sache direkt annehmen können.',
-    contactEmail ? `Meld dich gerne direkt bei uns unter ${contactEmail}, dann schauen wir gemeinsam drauf.` : 'Meld dich gerne direkt bei uns, dann schauen wir gemeinsam drauf.',
-  ] : [
-    contactEmail ? `Melden Sie sich gerne direkt bei uns unter ${contactEmail}, dann klären wir das gerne persönlich.` : 'Melden Sie sich gerne direkt bei uns, dann klären wir das gerne persönlich.',
-    contactEmail ? `Melden Sie sich gerne direkt bei uns unter ${contactEmail}, damit wir uns Ihrer Sache direkt annehmen können.` : 'Melden Sie sich gerne direkt bei uns, damit wir uns Ihrer Sache direkt annehmen können.',
-    contactEmail ? `Melden Sie sich gerne direkt bei uns unter ${contactEmail}, dann schauen wir gemeinsam drauf.` : 'Melden Sie sich gerne direkt bei uns, dann schauen wir gemeinsam drauf.',
-  ]
-  const kontakt = pickRandom(emailOptionen)
+  const kontakt = buildEmailAbschluss(isDu, contactEmail)
   const gruss = pickGruss(signature)
   const teile = [begruessung, kernSatz, kontakt, gruss].filter(Boolean)
   return JSON.stringify({ _direct: teile.join(' ') })
@@ -657,7 +657,7 @@ function buildPrompt(
   reviewText: string,
   stars: number,
   reviewerName: string,
-  settings: any,
+  settings: Settings,
   analysis?: Analysis
 ): string {
   switch (mode) {
@@ -668,42 +668,6 @@ function buildPrompt(
     case 'CONTENT_NEGATIVE': return buildComboPrompt(resolveCombo(analysis!), reviewText, stars, reviewerName, settings, analysis!)
     default: return buildComboPrompt(resolveCombo(analysis!), reviewText, stars, reviewerName, settings, analysis!)
   }
-}
-
-// ─── RECOVERY PROMPT (1–2 Sterne, separater 4. Slot) ─────────────────────────
-
-function buildRecoveryPrompt(reviewText: string, reviewerName: string, settings: any): string {
-  const { signature, duSie, firstNameClean, langInstruction, context, contactEmail } = resolveSettings(settings, reviewerName)
-
-  const systemPrompt = `Erstelle eine deeskalierende, menschliche Antwort auf eine sehr negative Google-Bewertung.
-Schreibe wie ein aufmerksamer Gastronom — nicht wie Kundenservice oder KI.
-
-${FORMAT_RULES}
-
-VERBOTEN: "nehmen wir sehr ernst", "intern adressiert", "Massnahmen ergriffen", "Team sensibilisiert", "nicht das wofuer wir stehen".
-
-ZIEL: Vertrauen zurueckgewinnen und persoenliche Klaerung anbieten.
-LAENGE: 3-4 vollstaendige, fliessende Saetze.
-ERSTER SATZ: Kurze, ehrliche Gefuehls-Validierung — was hat sich fuer den Gast im Moment so angefuehlt? Kein Schuld-Eingestaendnis, nur echtes Verstaendnis.`
-
-  const userMessage = `${langInstruction} Anredeform: ${duSie}
-
-RESTAURANTPROFIL:
-${context}
-${contactEmail ? `Kontakt-E-Mail: ${contactEmail}` : ''}
-
-Bewertung von ${firstNameClean || 'einem Gast'} (1-2 Sterne):
-"${reviewText}"
-
-Schreibe EINE deeskalierende Antwort.
-${firstNameClean ? `Beginne mit "Hallo ${firstNameClean},"` : 'Kein Name — ohne persoenliche Anrede.'}
-${contactEmail ? `Kontaktangebot: Bitte melde dich kurz unter ${contactEmail}, damit wir das persoenlich klaeren koennen.` : ''}
-Endet mit: ${signature}
-
-AUSGABE — NUR dieses JSON:
-{"label":"Deeskalierend","text":"..."}`
-
-  return JSON.stringify({ _system: systemPrompt, _user: userMessage })
 }
 
 // ─── CLAUDE API CALL ──────────────────────────────────────────────────────────
@@ -890,7 +854,7 @@ Regeln:
    - "bar_option": true NUR wenn der Gast nach Ablauf der Tischzeit oder wegen Platzmangel weggeschickt wurde UND ein Weiterbleiben an Bar/Stehtischen eine sinnvolle Alternative waere. false bei Lautstaerke-Kritik oder anderen Konzeptregeln wo Bar keinen Sinn ergibt.`
 
   try {
-    const result = await callClaude(`Bewertung:\n"${reviewText}"`, systemPrompt, 'claude-sonnet-4-6', 0)
+    const result = await callClaude(`Bewertung:\n"${reviewText}"`, systemPrompt, 'claude-haiku-4-5-20251001', 0)
     const parsed = parseJson(result)
     const issues: Array<{text: string, cat: string, nominativ?: string, nominativArtikel?: string, isPlural?: boolean}> = parsed.issues || []
     const points = issues.map((i) => i.text)
@@ -918,8 +882,9 @@ Regeln:
       ambiguousB: parsed.ambiguous_b === true,
       topicA,
     }
-  } catch {
-    return { count: 0, points: [], nominative: [], nominativeArtikel: [], pluralFlags: [], categories: [], forceSummarize: false, lobpunkte: [], vorOrtErwaehnt: false, isServiceComplaint: false, ambiguousB: false }
+  } catch (e) {
+    console.error('analyzeReview fehlgeschlagen:', e)
+    throw new Error('Review-Analyse fehlgeschlagen. Bitte erneut versuchen.')
   }
 }
 
@@ -947,7 +912,7 @@ In ALLEN anderen Faellen (Service, Essen, Atmosphaere, Verhalten): OK.`
   try {
     const result = await callClaude(
       `RESTAURANTPROFIL:\n${description || '(keine Beschreibung)'}\n\nBEWERTUNG:\n"${reviewText}"\n\nAusreichend?`,
-      systemPrompt, 'claude-sonnet-4-6', 0
+      systemPrompt, 'claude-haiku-4-5-20251001', 0
     )
     const trimmed = result.trim()
     if (trimmed.startsWith('MISSING:')) {
@@ -956,27 +921,6 @@ In ALLEN anderen Faellen (Service, Essen, Atmosphaere, Verhalten): OK.`
     return { ok: true }
   } catch {
     return { ok: true }
-  }
-}
-
-// ─── RECOVERY VARIANT (separater 4. Slot, nur bei 1-2 Sternen) ───────────────
-
-async function buildRecoveryVariant(
-  reviewText: string,
-  reviewerName: string,
-  settings: any
-): Promise<{ label: string; text: string; isRecovery: true } | null> {
-  try {
-    const promptStr = buildRecoveryPrompt(reviewText, reviewerName, settings)
-    const parsed = JSON.parse(promptStr)
-    const raw = await callClaude(parsed._user, parsed._system)
-    const result = parseJson(raw)
-    if (result.text) {
-      return { label: result.label || 'Deeskalierend', text: cleanText(result.text), isRecovery: true }
-    }
-    return null
-  } catch {
-    return null
   }
 }
 
@@ -989,7 +933,7 @@ async function generateVariant(
   reviewText: string,
   stars: number,
   reviewerName: string,
-  settings: any,
+  settings: Settings,
   analysis: Analysis,
   signature: string
 ): Promise<{ label: string; text: string; isFreeTest: true } | null> {
@@ -1085,7 +1029,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (!ANTHROPIC_API_KEY) return res.status(500).json({ error: 'ANTHROPIC_API_KEY nicht konfiguriert' })
 
-  const { review, settings } = req.body
+  const { review, settings } = req.body as { review: any; settings: Settings | undefined }
   if (!review || typeof review !== 'object') return res.status(400).json({ error: 'review fehlt oder ist ungueltig' })
 
   const reviewText   = review.reviewText || ''
@@ -1111,23 +1055,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       : modeRaw
 
     const combo = mode === 'CONTENT_NEGATIVE' ? resolveCombo(analysis) : null
-    console.log('v6 mode:', mode, '| combo:', combo, '| analysis:', analysis)
+    console.log('v7 mode:', mode, '| combo:', combo, '| analysis:', analysis)
 
     // ── 2: Haupt-Variant + Recovery (parallel) ────────────────────────────────
-    const [mainVariant, recoveryVariant] = await Promise.all([
-      generateVariant(mode, reviewText, stars, reviewerName, settings, analysis, signature),
-      Promise.resolve(null), // Recovery deaktiviert — kein API-Call mehr, spart Kosten
-    ])
+    const mainVariant = await generateVariant(mode, reviewText, stars, reviewerName, settings, analysis, signature)
 
-    const answers: any[] = []
+    const answers: { label: string; text: string }[] = []
     if (mainVariant) answers.push(mainVariant)
-    if (recoveryVariant) answers.push(recoveryVariant)
 
     return res.status(200).json({ success: true, answers })
 
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error)
-    console.error('generate-replies-v6 FEHLER:', errMsg)
+    console.error('generate-replies-v7 FEHLER:', errMsg)
     return res.status(500).json({ error: 'Serverfehler', details: errMsg })
   }
 }
