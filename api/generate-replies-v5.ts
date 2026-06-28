@@ -32,6 +32,12 @@ interface Analysis {
   ambiguousB: boolean
 }
 
+interface BlockOptionen {
+  block1_einstieg: { v1: string; v2: string; v3: string }
+  block2_kern: { v1: string; v2: string; v3: string }
+  block3_abschluss: { v1: string; v2: string; v3: string }
+}
+
 // ─── CLASSIFY ─────────────────────────────────────────────────────────────────
 
 function classify(rating: number, reviewText: string): string {
@@ -152,7 +158,7 @@ Gib NUR ein valides JSON-Objekt zurück: { "ok": true, "missing": "" }`
 }
 
 async function analyzeReview(reviewText: string): Promise<Analysis> {
-  const systemPrompt = `Analysiere die Restaurant-Bewertung. Kategorien: A (Konzept/Struktur), B (Echter Fehler/Service), C (Subjektiv/Geschmack/Menge).
+  const systemPrompt = `Analysiere die Restaurant-Bewertung. Extrahiere alle Lob- und Kritikpunkte.
 Gib NUR valides JSON zurück:
 {
   "count": 1,
@@ -172,52 +178,81 @@ Gib NUR valides JSON zurück:
   return parseJson(raw)
 }
 
-// ─── 3 VOLLSTÄNDIGE ANTWORTEN GENERIEREN ─────────────────────────────────────
+// ─── BAUSTEIN-GENERATOR ───────────────────────────────────────────────────────
 
-async function generateThreeCompleteAnswers(
-  reviewText: string,
+async function generateAllBlocks(
   analysis: Analysis,
   settings: Settings,
-  reviewerName: string
-): Promise<{ label: string; text: string }[]> {
-  const { context, duSie, langInstruction, signature, firstNameClean, isDu } = resolveSettings(settings, reviewerName)
+  reviewerName: string,
+  reviewText: string
+): Promise<BlockOptionen> {
+  const { context, duSie, langInstruction } = resolveSettings(settings, reviewerName)
+  const alleKritikpunkte = analysis.points.length > 0 ? analysis.points.join(', ') : 'die gemachten Erfahrungen'
 
-  const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : d(isDu, 'Hallo,', 'Guten Tag,')
-  const grussFormel = d(isDu, 'Viele Grüße', 'Mit freundlichen Grüßen')
-
-  const systemPrompt = `Du bist ein erfahrener Gastronom, der persönlich auf Gästebewertungen antwortet. Schreibe exakt 3 unterschiedliche, vollständige Antwort-Varianten.
+  const systemPrompt = `Du bist das Text-Herzstück eines intelligenten Gastro-Systems. Generiere für 3 logische Textblöcke jeweils genau 3 unterschiedliche, präzise Satz-Varianten (v1, v2, v3).
 
 ${FORMAT_RULES}
-Anrede-Modus unbedingt einhalten: ${duSie}
+Anrede-Modus unbedingt beachten: ${duSie}
 ${langInstruction}
 
 Restaurant-Profilkontext:
 ${context}
 
-STRUKTUR JEDER VARIANTE:
-- Startet zwingend mit: "${begruessung}"
-- Geht auf ALLE Kritikpunkte aus der Bewertung ein — keinen auslassen
-- Endet zwingend mit: "${grussFormel},\n${signature}"
+WICHTIG — ALLES BEACHTEN:
+Die Analyse hat diese Punkte erkannt: "${alleKritikpunkte}".
+Original-Bewertung: "${reviewText}"
 
-STILISTISCHE AUSRICHTUNG:
-- Variante A (Ehrlich & Direkt): Gibt Fehler offen zu, kein Drumherumreden, klare Aussagen.
-- Variante B (Erklärend & Sachlich): Erklärt Hintergründe ruhig und gastfreundlich, ohne defensiv zu wirken.
-- Variante C (Charmant & Zukunftsorientiert): Herzlicher Ton, rückt das Positive in den Vordergrund, lädt zur Wiederkehr ein.
+In BLOCK 2 (Kern) musst du zwingend auf alle Aspekte der Kritik eingehen (z.B. Servicefehler UND Essen/Portionsgröße). Konzentriere dich nicht nur auf ein Wort. Verdrehe keine Fakten (wenn der Gast etwas lecker fand, erwähne das positiv, bevor du die Portionsgröße oder den Service ansprichst).
 
-Gib AUSSCHLIESSLICH valides JSON zurück:
+BLOCK-STRUKTUREN:
+- BLOCK 1 (Einstieg): Bedauern über das Misslingen des Besuchs aussprechen.
+  v1: Ehrlich, locker, direkt auf den Punkt.
+  v2: Elegant, herzlich, gastfreundlich.
+  v3: Minimalistisch, fokussiert.
+
+- BLOCK 2 (Kern): Antwort auf die Kritikpunkte (${alleKritikpunkte}).
+  v1: Ehrlich, gibt Fehler (z.B. beim Service) offen zu, wahrt das geschmackliche Lob.
+  v2: Erklärend, vermittelt Hintergründe (z.B. Küche/Kalkulation), bleibt hochprofessionell.
+  v3: Authentisch, nahbar, Fokus auf Handwerk und Team-Gastroalltag.
+
+- BLOCK 3 (Abschluss): Bindung für die Zukunft schaffen.
+  v1: Lockere Einladung oder Geste für das nächste Mal.
+  v2: Hinweis, beim nächsten Mal direkt vor Ort Bescheid zu geben.
+  v3: Herzlicher Abschied ohne Standardfloskeln.
+
+Jeder Satz maximal 15 Wörter. Gib AUSSCHLIESSLICH valides JSON zurück:
 {
-  "answers": [
-    { "label": "Variante A", "text": "..." },
-    { "label": "Variante B", "text": "..." },
-    { "label": "Variante C", "text": "..." }
-  ]
+  "block1_einstieg": { "v1": "...", "v2": "...", "v3": "..." },
+  "block2_kern": { "v1": "...", "v2": "...", "v3": "..." },
+  "block3_abschluss": { "v1": "...", "v2": "...", "v3": "..." }
 }`
 
-  const userMessage = `Erkannte Kritikpunkte: ${analysis.points.join(', ')}\n\nOriginal-Bewertung:\n${reviewText}`
-  const raw = await callClaude(userMessage, systemPrompt, 'claude-haiku-4-5-20251001', 0.2)
+  const raw = await callClaude(`Generiere die Bausteine für: ${reviewText}`, systemPrompt, 'claude-haiku-4-5-20251001', 0)
+  return parseJson(raw)
+}
 
-  const parsed = parseJson(raw)
-  return parsed.answers
+// ─── GLÄTTER ──────────────────────────────────────────────────────────────────
+
+async function finalizeAndSmooth(
+  settings: Settings,
+  reviewerName: string,
+  s1: string,
+  s2: string,
+  s3: string
+): Promise<string> {
+  const { isDu, signature, firstNameClean, duSie } = resolveSettings(settings, reviewerName)
+
+  const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : d(isDu, 'Hallo,', 'Guten Tag,')
+  const grussFormel = d(isDu, 'Viele Grüße', 'Mit freundlichen Grüßen')
+  const roherText = `${begruessung}\n\n${s1} ${s2} ${s3}\n\n${grussFormel},\n${signature}`
+
+  const systemPrompt = `Du bist ein präziser Text-Editor. Glätte nur die Übergänge zwischen den Sätzen durch Bindewörter, damit ein perfekt fließender Text entsteht.
+${FORMAT_RULES}
+Anrede-Modus: ${duSie}
+REGELN: Verändere niemals den Sinn. Füge keine neuen Floskeln hinzu. Gib NUR den finalen Text aus, ohne Metatext.`
+
+  const raw = await callClaude(roherText, systemPrompt, 'claude-haiku-4-5-20251001', 0)
+  return raw.trim() || roherText
 }
 
 // ─── HANDLER ──────────────────────────────────────────────────────────────────
@@ -248,16 +283,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const { signature, isDu, firstNameClean } = resolveSettings(settings, reviewerName)
       const begruessung = firstNameClean ? `Hallo ${firstNameClean},\n\n` : ''
       const kernSatz = d(isDu,
-        'Danke, das freut uns wirklich. Komm gerne wieder vorbei.',
-        'Danke, das freut uns wirklich. Kommen Sie gerne wieder vorbei.'
+        'Danke für das tolle Feedback. Komm gerne wieder vorbei.',
+        'Danke für das tolle Feedback. Kommen Sie gerne wieder vorbei.'
       )
       const gruss = d(isDu, 'Viele Grüße', 'Mit freundlichen Grüßen')
       const text = `${begruessung}${kernSatz}\n\n${gruss},\n${signature}`
       return res.status(200).json({ success: true, answers: [{ label: 'Antwort', text }] })
     }
 
-    // 4. 3 vollständige Antworten generieren
-    const answers = await generateThreeCompleteAnswers(reviewText, analysis, settings, reviewerName)
+    // 4. Bausteine generieren
+    const blocks = await generateAllBlocks(analysis, settings, reviewerName, reviewText)
+
+    // 5. Zusammensetzen und glätten
+    const combos = [
+      { label: 'Variante A', s1: blocks.block1_einstieg.v1, s2: blocks.block2_kern.v1, s3: blocks.block3_abschluss.v1 },
+      { label: 'Variante B', s1: blocks.block1_einstieg.v2, s2: blocks.block2_kern.v2, s3: blocks.block3_abschluss.v2 },
+      { label: 'Variante C', s1: blocks.block1_einstieg.v3, s2: blocks.block2_kern.v3, s3: blocks.block3_abschluss.v3 },
+    ]
+
+    const answers = await Promise.all(
+      combos.map(async ({ label, s1, s2, s3 }) => {
+        const text = await finalizeAndSmooth(settings, reviewerName, s1, s2, s3)
+        return { label, text }
+      })
+    )
 
     return res.status(200).json({ success: true, answers })
 
