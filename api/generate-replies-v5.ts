@@ -1,8 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import Anthropic from '@anthropic-ai/sdk'
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
-const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY })
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -111,55 +109,73 @@ function d(isDu: boolean, duText: string, sieText: string): string {
   return isDu ? duText : sieText
 }
 
+// ─── CLAUDE API CALL (wie v7 — kein SDK, nur fetch) ──────────────────────────
+
+async function callClaude(userMessage: string, systemPrompt?: string, model = 'claude-haiku-4-5-20251001', temperature = 0): Promise<string> {
+  const body: any = {
+    model,
+    max_tokens: 1000,
+    temperature,
+    messages: [{ role: 'user', content: userMessage }],
+  }
+  if (systemPrompt) body.system = systemPrompt
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': ANTHROPIC_API_KEY!,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify(body),
+  })
+
+  if (!response.ok) {
+    const err = await response.json()
+    throw new Error(`Claude API Fehler: ${JSON.stringify(err)}`)
+  }
+
+  const data = await response.json()
+  return data.content?.[0]?.text || ''
+}
+
+function parseJson(raw: string): any {
+  const s = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
+  const start = s.indexOf('{')
+  const end = s.lastIndexOf('}')
+  if (start === -1 || end === -1) throw new Error('Kein JSON gefunden: ' + raw)
+  return JSON.parse(s.substring(start, end + 1))
+}
+
 // ─── ANALYSE ──────────────────────────────────────────────────────────────────
 
 async function checkContext(reviewText: string, description: string): Promise<{ ok: boolean; missing?: string }> {
   const systemPrompt = `Analysiere, ob in der Bewertung Punkte kritisiert werden, deren genauer Hintergrund unklar ist.
-  Gib NUR ein valides JSON-Objekt zurück:
-  { "ok": true/false, "missing": "Kurze Beschreibung was fehlt oder leer" }`
+Gib NUR ein valides JSON-Objekt zurück: { "ok": true, "missing": "" }`
 
-  const response = await anthropic.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 200,
-    system: systemPrompt,
-    messages: [{ role: 'user', content: `Profil: ${description}\n\nBewertung: ${reviewText}` }]
-  })
-
-  const text = response.content[0].type === 'text' ? response.content[0].text : '{}'
-  try {
-    return JSON.parse(text)
-  } catch {
-    return { ok: true }
-  }
+  const raw = await callClaude(`Profil: ${description}\n\nBewertung: ${reviewText}`, systemPrompt)
+  try { return parseJson(raw) } catch { return { ok: true } }
 }
 
 async function analyzeReview(reviewText: string): Promise<Analysis> {
-  const systemPrompt = `Analysiere die Restaurant-Bewertung.
-  Kategorien: A (Konzept/Struktur), B (Echter Fehler/Service), C (Subjektiv/Geschmack/Menge).
-  Gib NUR valides JSON zurück:
-  {
-    "count": 1,
-    "points": ["Kritikpunkt"],
-    "nominative": ["Trüffelmayonnaise"],
-    "nominativeArtikel": ["die Trüffelmayonnaise"],
-    "pluralFlags": [false],
-    "categories": ["C"],
-    "forceSummarize": false,
-    "lobpunkte": [],
-    "vorOrtErwaehnt": false,
-    "isServiceComplaint": false,
-    "ambiguousB": false
-  }`
+  const systemPrompt = `Analysiere die Restaurant-Bewertung. Kategorien: A (Konzept/Struktur), B (Echter Fehler/Service), C (Subjektiv/Geschmack/Menge).
+Gib NUR valides JSON zurück:
+{
+  "count": 1,
+  "points": ["Kritikpunkt"],
+  "nominative": ["Trüffelmayonnaise"],
+  "nominativeArtikel": ["die Trüffelmayonnaise"],
+  "pluralFlags": [false],
+  "categories": ["C"],
+  "forceSummarize": false,
+  "lobpunkte": [],
+  "vorOrtErwaehnt": false,
+  "isServiceComplaint": false,
+  "ambiguousB": false
+}`
 
-  const response = await anthropic.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 600,
-    system: systemPrompt,
-    messages: [{ role: 'user', content: reviewText }]
-  })
-
-  const text = response.content[0].type === 'text' ? response.content[0].text : '{}'
-  return JSON.parse(text)
+  const raw = await callClaude(reviewText, systemPrompt)
+  return parseJson(raw)
 }
 
 // ─── BAUSTEIN-GENERATOR ───────────────────────────────────────────────────────
@@ -169,7 +185,7 @@ async function generateAllBlocks(
   settings: Settings,
   reviewerName: string
 ): Promise<BlockOptionen> {
-  const { isDu, context, duSie, langInstruction } = resolveSettings(settings, reviewerName)
+  const { context, duSie, langInstruction } = resolveSettings(settings, reviewerName)
 
   const kritischerPunkt = analysis.nominative[0] || 'der Aufenthalt'
   const artikelPunkt = analysis.nominativeArtikel[0] || 'den Besuch'
@@ -177,45 +193,38 @@ async function generateAllBlocks(
 
   const systemPrompt = `Du bist das Text-Herzstück eines intelligenten Gastro-Systems. Generiere für 3 logische Textblöcke jeweils genau 3 unterschiedliche Satz-Varianten (v1, v2, v3).
 
-  ${FORMAT_RULES}
-  Anrede-Modus: ${duSie}
-  ${langInstruction}
+${FORMAT_RULES}
+Anrede-Modus: ${duSie}
+${langInstruction}
 
-  Restaurant-Profilkontext:
-  ${context}
+Restaurant-Profilkontext:
+${context}
 
-  Kritisiertes Thema: "${artikelPunkt}" (Kategorie ${hauptkat})
+Kritisiertes Thema: "${artikelPunkt}" (Kategorie ${hauptkat})
 
-  BLOCK-STRUKTUREN:
-  - BLOCK 1 (Einstieg): Nenne das Bedauern über das Problem mit "${artikelPunkt}".
-    v1: Ehrlich, locker, direkt.
-    v2: Elegant, herzlich, gastfreundlich.
-    v3: Minimalistisch, fokussiert.
-  - BLOCK 2 (Kern): Erkläre die Situation um "${kritischerPunkt}".
-    v1: Erklärend, Fokus auf Qualitäts- oder Konzeptgründe.
-    v2: Kulant, einsichtig, fehlerzugebend.
-    v3: Authentisch, Fokus auf Gastronomie-Alltag oder Handwerk.
-  - BLOCK 3 (Abschluss): Schaffe positive Bindung für die Zukunft.
-    v1: Lockere Einladung.
-    v2: Hinweis, beim nächsten Besuch direkt Bescheid zu geben.
-    v3: Herzliche Verabschiedung ohne Floskeln.
+BLOCK-STRUKTUREN:
+- BLOCK 1 (Einstieg): Nenne das Bedauern über das Problem mit "${artikelPunkt}".
+  v1: Ehrlich, locker, direkt.
+  v2: Elegant, herzlich, gastfreundlich.
+  v3: Minimalistisch, fokussiert.
+- BLOCK 2 (Kern): Erkläre die Situation um "${kritischerPunkt}".
+  v1: Erklärend, Fokus auf Qualitäts- oder Konzeptgründe.
+  v2: Kulant, einsichtig, fehlerzugebend.
+  v3: Authentisch, Fokus auf Gastronomie-Alltag oder Handwerk.
+- BLOCK 3 (Abschluss): Schaffe positive Bindung für die Zukunft.
+  v1: Lockere Einladung.
+  v2: Hinweis, beim nächsten Besuch direkt Bescheid zu geben.
+  v3: Herzliche Verabschiedung ohne Floskeln.
 
-  Jeder Satz maximal 15 Wörter. Gib AUSSCHLIESSLICH valides JSON zurück:
-  {
-    "block1_einstieg": { "v1": "...", "v2": "...", "v3": "..." },
-    "block2_kern": { "v1": "...", "v2": "...", "v3": "..." },
-    "block3_abschluss": { "v1": "...", "v2": "...", "v3": "..." }
-  }`
+Jeder Satz maximal 15 Wörter. Gib AUSSCHLIESSLICH valides JSON zurück:
+{
+  "block1_einstieg": { "v1": "...", "v2": "...", "v3": "..." },
+  "block2_kern": { "v1": "...", "v2": "...", "v3": "..." },
+  "block3_abschluss": { "v1": "...", "v2": "...", "v3": "..." }
+}`
 
-  const response = await anthropic.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 1000,
-    system: systemPrompt,
-    messages: [{ role: 'user', content: `Generiere die 3x3 Matrix für: ${kritischerPunkt}` }]
-  })
-
-  const text = response.content[0].type === 'text' ? response.content[0].text : '{}'
-  return JSON.parse(text)
+  const raw = await callClaude(`Generiere die 3x3 Matrix für: ${kritischerPunkt}`, systemPrompt, 'claude-haiku-4-5-20251001', 0)
+  return parseJson(raw)
 }
 
 // ─── GLÄTTER ──────────────────────────────────────────────────────────────────
@@ -234,18 +243,12 @@ async function finalizeAndSmooth(
   const roherText = `${begruessung}\n\n${s1} ${s2} ${s3}\n\n${grussFormel},\n${signature}`
 
   const systemPrompt = `Du bist ein präziser Text-Editor. Glätte nur die Übergänge zwischen den Sätzen durch Bindewörter.
-  ${FORMAT_RULES}
-  Anrede-Modus: ${duSie}
-  REGELN: Verändere NIEMALS den Inhalt. Keine neuen Floskeln. Gib NUR den finalen Text aus, ohne Metatext.`
+${FORMAT_RULES}
+Anrede-Modus: ${duSie}
+REGELN: Verändere NIEMALS den Inhalt. Keine neuen Floskeln. Gib NUR den finalen Text aus, ohne Metatext.`
 
-  const response = await anthropic.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 400,
-    system: systemPrompt,
-    messages: [{ role: 'user', content: roherText }]
-  })
-
-  return response.content[0].type === 'text' ? response.content[0].text.trim() : roherText
+  const raw = await callClaude(roherText, systemPrompt, 'claude-haiku-4-5-20251001', 0)
+  return raw.trim() || roherText
 }
 
 // ─── HANDLER ──────────────────────────────────────────────────────────────────
@@ -287,7 +290,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 4. Bausteine generieren (3x3 Matrix)
     const blocks = await generateAllBlocks(analysis, settings, reviewerName)
 
-    // 5. 3 fertige Antworten aus je einer Variante zusammenbauen und glätten
+    // 5. 3 fertige Antworten zusammenbauen und glätten
     const combos = [
       { label: 'Variante A', s1: blocks.block1_einstieg.v1, s2: blocks.block2_kern.v1, s3: blocks.block3_abschluss.v1 },
       { label: 'Variante B', s1: blocks.block1_einstieg.v2, s2: blocks.block2_kern.v2, s3: blocks.block3_abschluss.v2 },
