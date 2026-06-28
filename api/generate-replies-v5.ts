@@ -6,11 +6,6 @@ const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY })
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
-interface TopicA {
-  situation: string  // Freie Beschreibung der A-Situation (1-2 Saetze von Haiku)
-  barOption: boolean // true wenn Bar/Stehtisch als naechster Schritt sinnvoll ist
-}
-
 interface Settings {
   businessName?: string
   salutation?: 'Du' | 'Sie'
@@ -37,7 +32,6 @@ interface Analysis {
   vorOrtErwaehnt: boolean
   isServiceComplaint: boolean
   ambiguousB: boolean
-  topicA?: TopicA
 }
 
 interface BlockOptionen {
@@ -89,7 +83,7 @@ function resolveSettings(settings: Settings | undefined, reviewerName: string) {
     responseLanguage === 'Sprache des Bewerters' ? 'Antworte in der Sprache der Bewertung.' :
     responseLanguage === 'Englisch' ? 'Respond in English only.' :
     'Antworte auf Deutsch.'
-  
+
   const context = [
     `Restaurant: ${businessName}`,
     description          && `Beschreibung: ${description}`,
@@ -103,7 +97,7 @@ function resolveSettings(settings: Settings | undefined, reviewerName: string) {
   return { businessName, salutation, contactEmail, signature, duSie, isDu, firstNameClean, langInstruction, context }
 }
 
-// ─── SHARED: FORMAT-REGELN ────────────────────────────────────────────────────
+// ─── FORMAT-REGELN ────────────────────────────────────────────────────────────
 
 const FORMAT_RULES = `ABSOLUTES VERBOT — GEDANKENSTRICHE: Verwende niemals "–", "—" oder langen Bindestrich. Ersetze durch Punkt oder Komma.
 ABSOLUTES VERBOT — TAGESZEITEN: Niemals "Abend", "Morgen", "Mittag", "Nacht", "Fruehstueck". Stattdessen "Besuch", "Aufenthalt", "Zeit bei uns".
@@ -117,15 +111,15 @@ function d(isDu: boolean, duText: string, sieText: string): string {
   return isDu ? duText : sieText
 }
 
-// ─── KI-HILFSFUNKTIONEN ───────────────────────────────────────────────────────
+// ─── ANALYSE ──────────────────────────────────────────────────────────────────
 
 async function checkContext(reviewText: string, description: string): Promise<{ ok: boolean; missing?: string }> {
-  const systemPrompt = `Analysiere, ob in der Bewertung Punkte kritisiert werden, deren genauer Hintergrund unklar ist (z.B. Kritik an einer Sauce oder Beilage, ohne zu sagen ob Geschmack, Konsistenz oder Menge das Problem war).
+  const systemPrompt = `Analysiere, ob in der Bewertung Punkte kritisiert werden, deren genauer Hintergrund unklar ist.
   Gib NUR ein valides JSON-Objekt zurück:
   { "ok": true/false, "missing": "Kurze Beschreibung was fehlt oder leer" }`
 
   const response = await anthropic.messages.create({
-    model: 'claude-3-haiku-20240307',
+    model: 'claude-haiku-4-5-20251001',
     max_tokens: 200,
     system: systemPrompt,
     messages: [{ role: 'user', content: `Profil: ${description}\n\nBewertung: ${reviewText}` }]
@@ -140,9 +134,9 @@ async function checkContext(reviewText: string, description: string): Promise<{ 
 }
 
 async function analyzeReview(reviewText: string): Promise<Analysis> {
-  const systemPrompt = `Analysiere die Restaurant-Bewertung syntaktisch und logisch.
-  Kategorien: A (Konzept/Struktur), B (Echter Fehler/Service/Einzelfall), C (Subjektiv/Geschmack/Menge).
-  Gib NUR ein valides JSON zurück, das dem Interface Analysis entspricht:
+  const systemPrompt = `Analysiere die Restaurant-Bewertung.
+  Kategorien: A (Konzept/Struktur), B (Echter Fehler/Service), C (Subjektiv/Geschmack/Menge).
+  Gib NUR valides JSON zurück:
   {
     "count": 1,
     "points": ["Kritikpunkt"],
@@ -158,7 +152,7 @@ async function analyzeReview(reviewText: string): Promise<Analysis> {
   }`
 
   const response = await anthropic.messages.create({
-    model: 'claude-3-5-sonnet-20240620',
+    model: 'claude-haiku-4-5-20251001',
     max_tokens: 600,
     system: systemPrompt,
     messages: [{ role: 'user', content: reviewText }]
@@ -168,54 +162,53 @@ async function analyzeReview(reviewText: string): Promise<Analysis> {
   return JSON.parse(text)
 }
 
-// ─── STUFE 1: BAUSTEIN-GENERATOR ENGINE ───────────────────────────────────────
+// ─── BAUSTEIN-GENERATOR ───────────────────────────────────────────────────────
 
 async function generateAllBlocks(
   analysis: Analysis,
   settings: Settings,
-  reviewerName: string,
-  userKontext?: string
+  reviewerName: string
 ): Promise<BlockOptionen> {
   const { isDu, context, duSie, langInstruction } = resolveSettings(settings, reviewerName)
-  
+
   const kritischerPunkt = analysis.nominative[0] || 'der Aufenthalt'
   const artikelPunkt = analysis.nominativeArtikel[0] || 'den Besuch'
   const hauptkat = analysis.categories[0] || 'C'
 
-  const systemPrompt = `Du bist das Text-Herzstück eines intelligenten Gastro-Systems. Deine Aufgabe ist es, für ein Gamification-UI ein modulares Antwort-Baukasten-System zu generieren.
-  
-  Anforderungen an das Antwort-Format:
-  Du musst für 3 logische Textblöcke jeweils genau 3 unterschiedliche, stilistisch starke Satz-Varianten (v1, v2, v3) ausgeben.
+  const systemPrompt = `Du bist das Text-Herzstück eines intelligenten Gastro-Systems. Generiere für 3 logische Textblöcke jeweils genau 3 unterschiedliche Satz-Varianten (v1, v2, v3).
 
   ${FORMAT_RULES}
   Anrede-Modus: ${duSie}
   ${langInstruction}
-  
+
   Restaurant-Profilkontext:
   ${context}
 
   Kritisiertes Thema: "${artikelPunkt}" (Kategorie ${hauptkat})
-  Zusatz-Kontext vom Gastronomen aus dem UI (falls vorhanden): "${userKontext || 'Kein Zusatzkontext geliefert'}"
 
-  BLOCK-STRUKTUREN DIE DU GENERIEREN MUSST:
-  - BLOCK 1 (Einstieg / Die Brücke): Nenne das Bedauern über das Problem mit "${artikelPunkt}".
-    v1: Ehrlich, locker, direkt auf den Punkt.
+  BLOCK-STRUKTUREN:
+  - BLOCK 1 (Einstieg): Nenne das Bedauern über das Problem mit "${artikelPunkt}".
+    v1: Ehrlich, locker, direkt.
     v2: Elegant, herzlich, gastfreundlich.
     v3: Minimalistisch, fokussiert.
-  - BLOCK 2 (Der Kern / Die Erklärung): Erkläre die Situation um "${kritischerPunkt}". Nutze den Zusatz-Kontext intensiv!
-    v1: Erklärend, Fokus auf Qualitäts- / Konzeptgründe (z.B. hausgemacht, Portionierung für die Balance).
-    v2: Kulant, einsichtig, fehlerzugebend (falls geschlampt wurde oder ein B-Fehler vorliegt).
-    v3: Authentisch, Fokus auf Gastronomie-Alltag, Frische oder Handwerk.
-  - BLOCK 3 (Der Abschluss / Der Ausblick): Schaffe eine positive Bindung für die Zukunft.
-    v1: Lockere Einladung (z.B. auf einen Espresso/Drink beim nächsten Mal).
-    v2: Serviceorientierter Hinweis, beim nächsten Besuch direkt vor Ort dem Personal Bescheid zu geben.
-    v3: Herzliche Verabschiedung ohne abgedroschene Phrasen.
+  - BLOCK 2 (Kern): Erkläre die Situation um "${kritischerPunkt}".
+    v1: Erklärend, Fokus auf Qualitäts- oder Konzeptgründe.
+    v2: Kulant, einsichtig, fehlerzugebend.
+    v3: Authentisch, Fokus auf Gastronomie-Alltag oder Handwerk.
+  - BLOCK 3 (Abschluss): Schaffe positive Bindung für die Zukunft.
+    v1: Lockere Einladung.
+    v2: Hinweis, beim nächsten Besuch direkt Bescheid zu geben.
+    v3: Herzliche Verabschiedung ohne Floskeln.
 
-  Jeder Satz muss eigenständig stehen können und darf maximal 15 Wörter lang sein.
-  Gib AUSSCHLIESSLICH ein sauberes, valides JSON-Objekt zurück. Kein Begleittext, keine Markdown-Wrapper außerhalb des JSON.`
+  Jeder Satz maximal 15 Wörter. Gib AUSSCHLIESSLICH valides JSON zurück:
+  {
+    "block1_einstieg": { "v1": "...", "v2": "...", "v3": "..." },
+    "block2_kern": { "v1": "...", "v2": "...", "v3": "..." },
+    "block3_abschluss": { "v1": "...", "v2": "...", "v3": "..." }
+  }`
 
   const response = await anthropic.messages.create({
-    model: 'claude-3-5-sonnet-20240620',
+    model: 'claude-haiku-4-5-20251001',
     max_tokens: 1000,
     system: systemPrompt,
     messages: [{ role: 'user', content: `Generiere die 3x3 Matrix für: ${kritischerPunkt}` }]
@@ -225,9 +218,9 @@ async function generateAllBlocks(
   return JSON.parse(text)
 }
 
-// ─── STUFE 2: DER REINE GLÄTTER-PROMPT ────────────────────────────────────────
+// ─── GLÄTTER ──────────────────────────────────────────────────────────────────
 
-async function finalizeAndSmoothSelection(
+async function finalizeAndSmooth(
   settings: Settings,
   reviewerName: string,
   s1: string,
@@ -235,26 +228,18 @@ async function finalizeAndSmoothSelection(
   s3: string
 ): Promise<string> {
   const { isDu, signature, firstNameClean, duSie } = resolveSettings(settings, reviewerName)
-  
-  const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : d(isDu, "Hallo,", "Guten Tag,")
-  const grussFormel = d(isDu, "Viele Grüße", "Mit freundlichen Grüßen")
-  
+
+  const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : d(isDu, 'Hallo,', 'Guten Tag,')
+  const grussFormel = d(isDu, 'Viele Grüße', 'Mit freundlichen Grüßen')
   const roherText = `${begruessung}\n\n${s1} ${s2} ${s3}\n\n${grussFormel},\n${signature}`
 
-  const systemPrompt = `Du bist ein präziser Text-Editor. Du erhältst eine Restaurant-Antwort, die aus drei ausgewählten Bausteinen zusammengesetzt wurde.
-  Deine Aufgabe ist es AUSSCHLIESSLICH, die Übergänge zwischen den Sätzen flüssig und harmonisch zu gestalten (z.B. durch Einfügen von Bindewörtern wie 'allerdings', 'daher' oder 'deshalb').
-
+  const systemPrompt = `Du bist ein präziser Text-Editor. Glätte nur die Übergänge zwischen den Sätzen durch Bindewörter.
   ${FORMAT_RULES}
-  Anrede-Modus beachten: ${duSie}
-
-  STRIKTE BEARBEITUNGS-REGELN:
-  1. Verändere NIEMALS den inhaltlichen Sinn oder die logische Aussage der Sätze.
-  2. Erfinde KEINE neuen Entschuldigungen, Floskeln oder Beschreibungen hinzu.
-  3. Kürze den Text nicht radikal, sondern optimiere nur den Lesefluss der 3 Kern-Sätze.
-  4. Gib NUR den finalen, bereinigten und flüssigen Text aus. Keinerlei Metatext oder Kommentare.`
+  Anrede-Modus: ${duSie}
+  REGELN: Verändere NIEMALS den Inhalt. Keine neuen Floskeln. Gib NUR den finalen Text aus, ohne Metatext.`
 
   const response = await anthropic.messages.create({
-    model: 'claude-3-5-sonnet-20240620',
+    model: 'claude-haiku-4-5-20251001',
     max_tokens: 400,
     system: systemPrompt,
     messages: [{ role: 'user', content: roherText }]
@@ -263,68 +248,60 @@ async function finalizeAndSmoothSelection(
   return response.content[0].type === 'text' ? response.content[0].text.trim() : roherText
 }
 
-// ─── VERCEL NODE HANDLER ──────────────────────────────────────────────────────
+// ─── HANDLER ──────────────────────────────────────────────────────────────────
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed')
 
-  const { action, reviewText, stars, reviewerName, settings, userKontext, selectedS1, selectedS2, selectedS3 } = req.body
+  const { review, settings } = req.body
+  if (!review) return res.status(400).json({ success: false, error: 'review fehlt' })
+
+  const reviewText   = review.reviewText || ''
+  const stars        = Number(review.stars) || 3
+  const reviewerName = review.reviewerName || ''
 
   try {
-    switch (action) {
-      
-      case 'analyze': {
-        if (!reviewText) return res.status(400).json({ success: false, error: 'Kein Bewertungstext geliefert.' })
-        
-        const contextCheck = await checkContext(reviewText, settings?.description || '')
-        if (!contextCheck.ok) {
-          return res.status(200).json({ 
-            success: false, 
-            missingContext: true, 
-            missingInfo: contextCheck.missing 
-          })
-        }
-
-        const modeRaw = classify(stars, reviewText)
-        const analysis = await analyzeReview(reviewText)
-
-        if (modeRaw === 'CONTENT_POSITIVE' && analysis.count === 0) {
-          const { signature, isDu, firstNameClean } = resolveSettings(settings, reviewerName)
-          const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : ''
-          const kernSatz = d(isDu, "Danke, das freut uns wirklich. Komm gerne wieder vorbei.", "Danke, das freut uns wirklich. Kommen Sie gerne wieder vorbei.")
-          const directText = `${begruessung} ${kernSatz}\n\nViele Grüße,\n${signature}`
-          return res.status(200).json({ success: true, route: 'direct', text: directText })
-        }
-
-        return res.status(200).json({ 
-          success: true, 
-          route: 'interactive', 
-          analysis 
-        })
-      }
-
-      case 'generate_blocks': {
-        const { analysis } = req.body
-        if (!analysis) return res.status(400).json({ success: false, error: 'Analysis-Objekt fehlt.' })
-
-        const blockMatrix = await generateAllBlocks(analysis, settings, reviewerName, userKontext)
-        
-        return res.status(200).json({ success: true, blocks: blockMatrix })
-      }
-
-      case 'finalize': {
-        if (!selectedS1 || !selectedS2 || !selectedS3) {
-          return res.status(400).json({ success: false, error: 'Es müssen Sätze aus allen 3 Blöcken ausgewählt sein.' })
-        }
-
-        const finalReviewText = await finalizeAndSmoothSelection(settings, reviewerName, selectedS1, selectedS2, selectedS3)
-        
-        return res.status(200).json({ success: true, finalReviewText })
-      }
-
-      default:
-        return res.status(400).json({ error: 'Aktion unbekannt oder nicht mitgegeben.' })
+    // 1. Context-Check
+    const contextCheck = await checkContext(reviewText, settings?.description || '')
+    if (!contextCheck.ok) {
+      return res.status(200).json({ success: false, missingContext: true, missingInfo: contextCheck.missing })
     }
+
+    // 2. Analyse
+    const mode = classify(stars, reviewText)
+    const analysis = await analyzeReview(reviewText)
+
+    // 3. Direkt-Route für rein positive Bewertungen
+    if (mode === 'CONTENT_POSITIVE' && analysis.count === 0) {
+      const { signature, isDu, firstNameClean } = resolveSettings(settings, reviewerName)
+      const begruessung = firstNameClean ? `Hallo ${firstNameClean},\n\n` : ''
+      const kernSatz = d(isDu,
+        'Danke, das freut uns wirklich. Komm gerne wieder vorbei.',
+        'Danke, das freut uns wirklich. Kommen Sie gerne wieder vorbei.'
+      )
+      const gruss = d(isDu, 'Viele Grüße', 'Mit freundlichen Grüßen')
+      const text = `${begruessung}${kernSatz}\n\n${gruss},\n${signature}`
+      return res.status(200).json({ success: true, answers: [{ label: 'Antwort', text }] })
+    }
+
+    // 4. Bausteine generieren (3x3 Matrix)
+    const blocks = await generateAllBlocks(analysis, settings, reviewerName)
+
+    // 5. 3 fertige Antworten aus je einer Variante zusammenbauen und glätten
+    const combos = [
+      { label: 'Variante A', s1: blocks.block1_einstieg.v1, s2: blocks.block2_kern.v1, s3: blocks.block3_abschluss.v1 },
+      { label: 'Variante B', s1: blocks.block1_einstieg.v2, s2: blocks.block2_kern.v2, s3: blocks.block3_abschluss.v2 },
+      { label: 'Variante C', s1: blocks.block1_einstieg.v3, s2: blocks.block2_kern.v3, s3: blocks.block3_abschluss.v3 },
+    ]
+
+    const answers = await Promise.all(
+      combos.map(async ({ label, s1, s2, s3 }) => {
+        const text = await finalizeAndSmooth(settings, reviewerName, s1, s2, s3)
+        return { label, text }
+      })
+    )
+
+    return res.status(200).json({ success: true, answers })
 
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error)
