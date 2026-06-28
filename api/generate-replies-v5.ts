@@ -32,12 +32,6 @@ interface Analysis {
   ambiguousB: boolean
 }
 
-interface BlockOptionen {
-  block1_einstieg: { v1: string; v2: string; v3: string }
-  block2_kern: { v1: string; v2: string; v3: string }
-  block3_abschluss: { v1: string; v2: string; v3: string }
-}
-
 // ─── CLASSIFY ─────────────────────────────────────────────────────────────────
 
 function classify(rating: number, reviewText: string): string {
@@ -109,12 +103,12 @@ function d(isDu: boolean, duText: string, sieText: string): string {
   return isDu ? duText : sieText
 }
 
-// ─── CLAUDE API CALL (wie v7 — kein SDK, nur fetch) ──────────────────────────
+// ─── CLAUDE API CALL ──────────────────────────────────────────────────────────
 
 async function callClaude(userMessage: string, systemPrompt?: string, model = 'claude-haiku-4-5-20251001', temperature = 0): Promise<string> {
   const body: any = {
     model,
-    max_tokens: 1000,
+    max_tokens: 1200,
     temperature,
     messages: [{ role: 'user', content: userMessage }],
   }
@@ -178,77 +172,52 @@ Gib NUR valides JSON zurück:
   return parseJson(raw)
 }
 
-// ─── BAUSTEIN-GENERATOR ───────────────────────────────────────────────────────
+// ─── 3 VOLLSTÄNDIGE ANTWORTEN GENERIEREN ─────────────────────────────────────
 
-async function generateAllBlocks(
+async function generateThreeCompleteAnswers(
+  reviewText: string,
   analysis: Analysis,
   settings: Settings,
   reviewerName: string
-): Promise<BlockOptionen> {
-  const { context, duSie, langInstruction } = resolveSettings(settings, reviewerName)
+): Promise<{ label: string; text: string }[]> {
+  const { context, duSie, langInstruction, signature, firstNameClean, isDu } = resolveSettings(settings, reviewerName)
 
-  const kritischerPunkt = analysis.nominative[0] || 'der Aufenthalt'
-  const artikelPunkt = analysis.nominativeArtikel[0] || 'den Besuch'
-  const hauptkat = analysis.categories[0] || 'C'
+  const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : d(isDu, 'Hallo,', 'Guten Tag,')
+  const grussFormel = d(isDu, 'Viele Grüße', 'Mit freundlichen Grüßen')
 
-  const systemPrompt = `Du bist das Text-Herzstück eines intelligenten Gastro-Systems. Generiere für 3 logische Textblöcke jeweils genau 3 unterschiedliche Satz-Varianten (v1, v2, v3).
+  const systemPrompt = `Du bist ein erfahrener Gastronom, der persönlich auf Gästebewertungen antwortet. Schreibe exakt 3 unterschiedliche, vollständige Antwort-Varianten.
 
 ${FORMAT_RULES}
-Anrede-Modus: ${duSie}
+Anrede-Modus unbedingt einhalten: ${duSie}
 ${langInstruction}
 
 Restaurant-Profilkontext:
 ${context}
 
-Kritisiertes Thema: "${artikelPunkt}" (Kategorie ${hauptkat})
+STRUKTUR JEDER VARIANTE:
+- Startet zwingend mit: "${begruessung}"
+- Geht auf ALLE Kritikpunkte aus der Bewertung ein — keinen auslassen
+- Endet zwingend mit: "${grussFormel},\n${signature}"
 
-BLOCK-STRUKTUREN:
-- BLOCK 1 (Einstieg): Nenne das Bedauern über das Problem mit "${artikelPunkt}".
-  v1: Ehrlich, locker, direkt.
-  v2: Elegant, herzlich, gastfreundlich.
-  v3: Minimalistisch, fokussiert.
-- BLOCK 2 (Kern): Erkläre die Situation um "${kritischerPunkt}".
-  v1: Erklärend, Fokus auf Qualitäts- oder Konzeptgründe.
-  v2: Kulant, einsichtig, fehlerzugebend.
-  v3: Authentisch, Fokus auf Gastronomie-Alltag oder Handwerk.
-- BLOCK 3 (Abschluss): Schaffe positive Bindung für die Zukunft.
-  v1: Lockere Einladung.
-  v2: Hinweis, beim nächsten Besuch direkt Bescheid zu geben.
-  v3: Herzliche Verabschiedung ohne Floskeln.
+STILISTISCHE AUSRICHTUNG:
+- Variante A (Ehrlich & Direkt): Gibt Fehler offen zu, kein Drumherumreden, klare Aussagen.
+- Variante B (Erklärend & Sachlich): Erklärt Hintergründe ruhig und gastfreundlich, ohne defensiv zu wirken.
+- Variante C (Charmant & Zukunftsorientiert): Herzlicher Ton, rückt das Positive in den Vordergrund, lädt zur Wiederkehr ein.
 
-Jeder Satz maximal 15 Wörter. Gib AUSSCHLIESSLICH valides JSON zurück:
+Gib AUSSCHLIESSLICH valides JSON zurück:
 {
-  "block1_einstieg": { "v1": "...", "v2": "...", "v3": "..." },
-  "block2_kern": { "v1": "...", "v2": "...", "v3": "..." },
-  "block3_abschluss": { "v1": "...", "v2": "...", "v3": "..." }
+  "answers": [
+    { "label": "Variante A", "text": "..." },
+    { "label": "Variante B", "text": "..." },
+    { "label": "Variante C", "text": "..." }
+  ]
 }`
 
-  const raw = await callClaude(`Generiere die 3x3 Matrix für: ${kritischerPunkt}`, systemPrompt, 'claude-haiku-4-5-20251001', 0)
-  return parseJson(raw)
-}
+  const userMessage = `Erkannte Kritikpunkte: ${analysis.points.join(', ')}\n\nOriginal-Bewertung:\n${reviewText}`
+  const raw = await callClaude(userMessage, systemPrompt, 'claude-haiku-4-5-20251001', 0.2)
 
-// ─── GLÄTTER ──────────────────────────────────────────────────────────────────
-
-async function finalizeAndSmooth(
-  settings: Settings,
-  reviewerName: string,
-  s1: string,
-  s2: string,
-  s3: string
-): Promise<string> {
-  const { isDu, signature, firstNameClean, duSie } = resolveSettings(settings, reviewerName)
-
-  const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : d(isDu, 'Hallo,', 'Guten Tag,')
-  const grussFormel = d(isDu, 'Viele Grüße', 'Mit freundlichen Grüßen')
-  const roherText = `${begruessung}\n\n${s1} ${s2} ${s3}\n\n${grussFormel},\n${signature}`
-
-  const systemPrompt = `Du bist ein präziser Text-Editor. Glätte nur die Übergänge zwischen den Sätzen durch Bindewörter.
-${FORMAT_RULES}
-Anrede-Modus: ${duSie}
-REGELN: Verändere NIEMALS den Inhalt. Keine neuen Floskeln. Gib NUR den finalen Text aus, ohne Metatext.`
-
-  const raw = await callClaude(roherText, systemPrompt, 'claude-haiku-4-5-20251001', 0)
-  return raw.trim() || roherText
+  const parsed = parseJson(raw)
+  return parsed.answers
 }
 
 // ─── HANDLER ──────────────────────────────────────────────────────────────────
@@ -287,22 +256,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ success: true, answers: [{ label: 'Antwort', text }] })
     }
 
-    // 4. Bausteine generieren (3x3 Matrix)
-    const blocks = await generateAllBlocks(analysis, settings, reviewerName)
-
-    // 5. 3 fertige Antworten zusammenbauen und glätten
-    const combos = [
-      { label: 'Variante A', s1: blocks.block1_einstieg.v1, s2: blocks.block2_kern.v1, s3: blocks.block3_abschluss.v1 },
-      { label: 'Variante B', s1: blocks.block1_einstieg.v2, s2: blocks.block2_kern.v2, s3: blocks.block3_abschluss.v2 },
-      { label: 'Variante C', s1: blocks.block1_einstieg.v3, s2: blocks.block2_kern.v3, s3: blocks.block3_abschluss.v3 },
-    ]
-
-    const answers = await Promise.all(
-      combos.map(async ({ label, s1, s2, s3 }) => {
-        const text = await finalizeAndSmooth(settings, reviewerName, s1, s2, s3)
-        return { label, text }
-      })
-    )
+    // 4. 3 vollständige Antworten generieren
+    const answers = await generateThreeCompleteAnswers(reviewText, analysis, settings, reviewerName)
 
     return res.status(200).json({ success: true, answers })
 
