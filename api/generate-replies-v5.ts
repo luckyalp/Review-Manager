@@ -1,6 +1,15 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import Anthropic from '@anthropic-ai/sdk'
 
-// ─── TYPES (Beibehalten und erweitert) ────────────────────────────────────────
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
+const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY })
+
+// ─── TYPES ────────────────────────────────────────────────────────────────────
+
+interface TopicA {
+  situation: string  // Freie Beschreibung der A-Situation (1-2 Saetze von Haiku)
+  barOption: boolean // true wenn Bar/Stehtisch als naechster Schritt sinnvoll ist
+}
 
 interface Settings {
   businessName?: string
@@ -19,18 +28,38 @@ interface Settings {
 interface Analysis {
   count: number
   points: string[]
-  nominative: string[]        // z.B. "Trüffelmayonnaise"
-  nominativeArtikel: string[] // z.B. "die Trüffelmayonnaise"
-  pluralFlags: boolean[]      // true wenn Plural
-  categories: string[]        // 'A' | 'B' | 'C'
+  nominative: string[]
+  nominativeArtikel: string[]
+  pluralFlags: boolean[]
+  categories: string[]
+  forceSummarize: boolean
+  lobpunkte: string[]
+  vorOrtErwaehnt: boolean
   isServiceComplaint: boolean
-  // ... weitere Felder aus v7
+  ambiguousB: boolean
+  topicA?: TopicA
 }
 
-// NEU: Repräsentiert die psychologische Haltung, die der Gastronom im UI wählt
-type GastronomHaltung = 'WERT_HIGHLIGHT' | 'FEHLER_KUECHE' | 'STANDARD_BETRIEB'
+interface BlockOptionen {
+  block1_einstieg: { v1: string; v2: string; v3: string }
+  block2_kern: { v1: string; v2: string; v3: string }
+  block3_abschluss: { v1: string; v2: string; v3: string }
+}
 
-// ─── SHARED HELPER (Dein Du/Sie-Konzept voll integriert) ────────────────────
+// ─── CLASSIFY ─────────────────────────────────────────────────────────────────
+
+function classify(rating: number, reviewText: string): string {
+  const wordCount = reviewText.trim().split(/\s+/).filter(Boolean).length
+  const hasText = wordCount >= 6
+  if (!hasText && rating >= 4) return 'EMPTY_POSITIVE'
+  if (!hasText && rating <= 2) return 'EMPTY_NEGATIVE'
+  if (!hasText && rating === 3) return 'EMPTY_NEGATIVE'
+  if (rating >= 4) return 'CONTENT_POSITIVE'
+  if (rating === 3) return 'CONTENT_MIXED'
+  return 'CONTENT_NEGATIVE'
+}
+
+// ─── SETTINGS RESOLVER ────────────────────────────────────────────────────────
 
 function resolveSettings(settings: Settings | undefined, reviewerName: string) {
   const {
@@ -38,166 +67,268 @@ function resolveSettings(settings: Settings | undefined, reviewerName: string) {
     salutation = 'Sie',
     contactEmail = '',
     responseSignature = '',
+    responseLanguage = 'Deutsch',
+    description = '',
+    restaurantType = '',
+    cuisineType = '',
+    restaurantAtmosphere = '',
+    uniqueSellingPoints = '',
+    priceRange = '',
   } = settings || {}
 
   const isDu = salutation === 'Du'
+  const duSie = isDu
+    ? 'Du/Dein (Duzen). Schreibe "du", "dir", "dein", "dich" klein.'
+    : 'Sie/Ihr (Siezen)'
   const signature = responseSignature || `Das Team von ${businessName}`
   const firstName = reviewerName ? reviewerName.split(' ')[0] : ''
   const firstNameClean = firstName
     ? firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase()
     : ''
+  const langInstruction =
+    responseLanguage === 'Sprache des Bewerters' ? 'Antworte in der Sprache der Bewertung.' :
+    responseLanguage === 'Englisch' ? 'Respond in English only.' :
+    'Antworte auf Deutsch.'
+  
+  const context = [
+    `Restaurant: ${businessName}`,
+    description          && `Beschreibung: ${description}`,
+    restaurantType       && `Typ: ${restaurantType}`,
+    cuisineType          && `Kueche: ${cuisineType}`,
+    priceRange           && `Preisklasse: ${priceRange}`,
+    restaurantAtmosphere && `Atmosphaere: ${restaurantAtmosphere}`,
+    uniqueSellingPoints  && `Besonderheiten: ${uniqueSellingPoints}`,
+  ].filter(Boolean).join('\n')
 
-  return { businessName, salutation, contactEmail, signature, isDu, firstNameClean }
+  return { businessName, salutation, contactEmail, signature, duSie, isDu, firstNameClean, langInstruction, context }
 }
+
+// ─── SHARED: FORMAT-REGELN ────────────────────────────────────────────────────
+
+const FORMAT_RULES = `ABSOLUTES VERBOT — GEDANKENSTRICHE: Verwende niemals "–", "—" oder langen Bindestrich. Ersetze durch Punkt oder Komma.
+ABSOLUTES VERBOT — TAGESZEITEN: Niemals "Abend", "Morgen", "Mittag", "Nacht", "Fruehstueck". Stattdessen "Besuch", "Aufenthalt", "Zeit bei uns".
+ABSOLUTES VERBOT — DOPPELPUNKT-LABEL: Kein "Zur Tischzeit:" oder aehnliche Ueberschriften. Durchgehende Saetze.
+VERBOTENE WOERTER: "frustrierend", "intern adressiert", "intern nachgeschaerft", "massnahmen ergriffen", "entspricht nicht unserem anspruch", "nehmen wir sehr ernst", "gib uns eine chance", "unannehmlichkeiten", "bedauern", "verständnis".
+UMLAUTE: Nutze ä, ö, ü, ß — niemals ae, oe, ue.
+RESTAURANTPROFIL: Nutze Angaben aus dem Restaurantprofil nur sinngemaess — niemals woertlich zitieren oder als Adjektiv-Kette einfuegen. Leite nichts aus dem Restaurantnamen ab.
+GRAMMATIK: Jeder Satz muss vollstaendig sein (Subjekt, Praedikat). Maximal zwei Kommas pro Satz — sonst aufteilen.`
 
 function d(isDu: boolean, duText: string, sieText: string): string {
   return isDu ? duText : sieText
 }
 
-// ─── NEU: DIE SCHABLONEN-MATRIX (Die logischen Schubladen) ────────────────────
-// Jede Kategorie (A, B, C) hat fundamentale Haltungen. Diese liefern die 
-// Prompts für Claude, um die 3 Swipe-Optionen zu generieren.
+// ─── KI-HILFSFUNKTIONEN ───────────────────────────────────────────────────────
 
-const HALTUNG_PROMPTS: Record<string, Record<GastronomHaltung, { du: string; sie: string }>> = {
-  C: { // Subjektiv / Geschmack / Menge
-    WERT_HIGHLIGHT: {
-      du: "Erkläre, dass [KERN] ein hausgemachtes, edles Extra-Highlight ist, das als feine Ergänzung dient und kein billiger Sattmacher ist. Biete an, beim nächsten Mal für mehr Hunger etwas Passenderes zu empfehlen.",
-      sie: "Erkläre, dass [KERN] ein hausgemachtes, edles Extra-Highlight ist, das als feine Ergänzung dient und kein billiger Sattmacher ist. Biete an, beim nächsten Mal für den größeren Appetit etwas Passenderes zu empfehlen."
-    },
-    FEHLER_KUECHE: {
-      du: "Gib offen zu, dass bei [KERN_ART] diesmal beim Portionieren oder der Zubereitung geschlampt wurde. Sag, dass das besser geht und lade auf ein neues Probieren ein.",
-      sie: "Gib offen zu, dass bei [KERN_ART] diesmal beim Portionieren oder der Zubereitung ein Fehler unterlaufen ist. Sagen Sie, dass dies unserem Anspruch widerspricht und laden Sie zu einem neuen Versuch ein."
-    },
-    STANDARD_BETRIEB: {
-      du: "Erkläre kurz und direkt, dass diese Portionierung unser fester, kalkulierter Standard für [KERN] ist, damit die Balance des Gerichts stimmt.",
-      sie: "Erkläre kurz und direkt, dass diese Portionierung unser fester, kalkulierter Standard für [KERN] ist, damit die feine Balance des Gesamtegerichts gewahrt bleibt."
-    }
-  },
-  B: { // Echter Fehler / Wartezeit
-    STANDARD_BETRIEB: { // Bei B oft "Auslastung"
-      du: "Gib zu, dass die Wartezeit auf [KERN_ART] zu lang war, weil die Küche in dem Moment geglüht hat. Bedanke dich für die Geduld.",
-      sie: "Gib zu, dass die Wartezeit auf [KERN_ART] zu lang war, weil unsere Küche zu diesem Zeitpunkt unter Volllast lief. Bedanken Sie sich für die Geduld der Gäste."
-    },
-    FEHLER_KUECHE: {
-      du: "Übernimm die volle Verantwortung dafür, dass [KERN_ART] misslungen oder falsch war. Kein Drumherumreden, sag einfach, dass wir da einen Fehler gemacht haben.",
-      sie: "Übernehmen Sie die volle Verantwortung dafür, dass [KERN_ART] nicht korrekt war. Ohne Rechtfertigung, drücken Sie aus, dass hier ein Fehler im Ablauf vorlag."
-    },
-    WERT_HIGHLIGHT: {
-      du: "Erkläre, dass [KERN_ART] frisch zubereitet wird und deshalb naturgemäß etwas Weile braucht, weil wir kein Fast-Food sind.",
-      sie: "Erkläre, dass [KERN_ART] frisch zubereitet wird und ein guter Ablauf auf dem Grill oder in der Küche Zeit benötigt, da wir großen Wert auf Frische legen."
-    }
-  },
-  A: { // Konzept / Struktur
-    WERT_HIGHLIGHT: {
-      du: "Erkläre den logischen, konzeptionellen Grund für [KERN] (z.B. warum es das Limit gibt). Biete als Option an, danach an die Bar oder an Stehtische zu wechseln.",
-      sie: "Erkläre den logischen, konzeptionellen Grund für [KERN] (z.B. den organisatorischen Ablauf des Zeitfensters). Bieten Sie die Option an, den Aufenthalt an der Bar zu verlängern."
-    },
-    FEHLER_KUECHE: { du: "", sie: "" }, // Für Konzept-Kritik meist irrelevant
-    STANDARD_BETRIEB: { du: "", sie: "" }
+async function checkContext(reviewText: string, description: string): Promise<{ ok: boolean; missing?: string }> {
+  const systemPrompt = `Analysiere, ob in der Bewertung Punkte kritisiert werden, deren genauer Hintergrund unklar ist (z.B. Kritik an einer Sauce oder Beilage, ohne zu sagen ob Geschmack, Konsistenz oder Menge das Problem war).
+  Gib NUR ein valides JSON-Objekt zurück:
+  { "ok": true/false, "missing": "Kurze Beschreibung was fehlt oder leer" }`
+
+  const response = await anthropic.messages.create({
+    model: 'claude-3-haiku-20240307',
+    max_tokens: 200,
+    system: systemPrompt,
+    messages: [{ role: 'user', content: `Profil: ${description}\n\nBewertung: ${reviewText}` }]
+  })
+
+  const text = response.content[0].type === 'text' ? response.content[0].text : '{}'
+  try {
+    return JSON.parse(text)
+  } catch {
+    return { ok: true }
   }
 }
 
-// ─── PHASE 2: ENGINE FÜR DIE SWIPE-OPTIONEN ──────────────────────────────────
-// Diese Funktion wird aufgerufen, sobald der Gastronom im UI eine Haltung klickt.
-// Sie füttert Claude mit einem extrem fokussierten, floskelgünstigen Prompt.
+async function analyzeReview(reviewText: string): Promise<Analysis> {
+  const systemPrompt = `Analysiere die Restaurant-Bewertung syntaktisch und logisch.
+  Kategorien: A (Konzept/Struktur), B (Echter Fehler/Service/Einzelfall), C (Subjektiv/Geschmack/Menge).
+  Gib NUR ein valides JSON zurück, das dem Interface Analysis entspricht:
+  {
+    "count": 1,
+    "points": ["Kritikpunkt"],
+    "nominative": ["Trüffelmayonnaise"],
+    "nominativeArtikel": ["die Trüffelmayonnaise"],
+    "pluralFlags": [false],
+    "categories": ["C"],
+    "forceSummarize": false,
+    "lobpunkte": [],
+    "vorOrtErwaehnt": false,
+    "isServiceComplaint": false,
+    "ambiguousB": false
+  }`
 
-export async function generateCoreOptions(
+  const response = await anthropic.messages.create({
+    model: 'claude-3-5-sonnet-20240620',
+    max_tokens: 600,
+    system: systemPrompt,
+    messages: [{ role: 'user', content: reviewText }]
+  })
+
+  const text = response.content[0].type === 'text' ? response.content[0].text : '{}'
+  return JSON.parse(text)
+}
+
+// ─── STUFE 1: BAUSTEIN-GENERATOR ENGINE ───────────────────────────────────────
+
+async function generateAllBlocks(
   analysis: Analysis,
   settings: Settings,
   reviewerName: string,
-  gewaehlteHaltung: GastronomHaltung
-): Promise<{ opt1: string; opt2: string; opt3: string }> {
+  userKontext?: string
+): Promise<BlockOptionen> {
+  const { isDu, context, duSie, langInstruction } = resolveSettings(settings, reviewerName)
   
-  const { isDu, businessName } = resolveSettings(settings, reviewerName)
+  const kritischerPunkt = analysis.nominative[0] || 'der Aufenthalt'
+  const artikelPunkt = analysis.nominativeArtikel[0] || 'den Besuch'
   const hauptkat = analysis.categories[0] || 'C'
-  const nominativ = analysis.nominative[0] || 'dieser Punkt'
-  const nominativArtikel = analysis.nominativeArtikel[0] || nominativ
 
-  // Richtige Du/Sie-Instruktion aus der Matrix ziehen
-  const anweisungTemplate = HALTUNG_PROMPTS[hauptkat]?.[gewaehlteHaltung]
-  if (!anweisungTemplate) {
-    throw new Error(`Keine Schablone für Kombination ${hauptkat} + ${gewaehlteHaltung} gefunden.`)
-  }
+  const systemPrompt = `Du bist das Text-Herzstück eines intelligenten Gastro-Systems. Deine Aufgabe ist es, für ein Gamification-UI ein modulares Antwort-Baukasten-System zu generieren.
   
-  const spezifischeAnweisung = isDu ? anweisungTemplate.du : anweisungTemplate.sie
-  const finaleAnweisung = spezifischeAnweisung
-    .replace('[KERN_ART]', nominativArtikel)
-    .replace('[KERN]', nominativ)
+  Anforderungen an das Antwort-Format:
+  Du musst für 3 logische Textblöcke jeweils genau 3 unterschiedliche, stilistisch starke Satz-Varianten (v1, v2, v3) ausgeben.
 
-  const duSieRegel = isDu 
-    ? 'Nutze konsequent die Du-Form (du, dir, dein, dich klein geschrieben). Spreche den Gast direkt an.' 
-    : 'Nutze konsequent die Sie-Form (Sie, Ihnen, Ihr). Bleibe professionell und höflich, aber distanziert.'
+  ${FORMAT_RULES}
+  Anrede-Modus: ${duSie}
+  ${langInstruction}
+  
+  Restaurant-Profilkontext:
+  ${context}
 
-  // Der hochfokussierte Prompt für Claude — Keine All-in-One Überlastung mehr
-  const prompt = `Du bist die Text-Engine eines hocherfolgreichen Gastronomen. Deine Aufgabe ist es, den KERN-SATZ für eine Bewertungsantwort zu schreiben.
-  
-  Gegenstand der Kritik: "${nominativArtikel}" (Kategorie ${hauptkat})
-  Deine strategische Ausrichtung für diesen Satz: ${finaleAnweisung}
-  
-  TONALITÄTS-REGELN:
-  - Antworte absolut floskelfrei.
-  - VERBOTENE WÖRTER: "entspricht nicht unserem anspruch", "nehmen wir sehr ernst", "Unannehmlichkeiten", "Bedauern", "Verständnis".
-  - Schreibe so ehrlich und direkt, als würde der Chef dem Gast das abends an der Bar erklären.
-  - ${duSieRegel}
-  - Jeder Satz muss kurz und auf den Punkt sein (maximal 15 Wörter pro Satz).
+  Kritisiertes Thema: "${artikelPunkt}" (Kategorie ${hauptkat})
+  Zusatz-Kontext vom Gastronomen aus dem UI (falls vorhanden): "${userKontext || 'Kein Zusatzkontext geliefert'}"
 
-  Generiere 3 völlig unterschiedliche, charakterstarke Varianten (z.B. Variante 1: sehr locker, Variante 2: extrem direkt, Variante 3: charmant/gastfreundlich).
-  
-  Gib AUSSCHLIESSLICH ein valides JSON-Objekt in diesem Format zurück:
-  {
-    "opt1": "Erste Textvariante...",
-    "opt2": "Zweite Textvariante...",
-    "opt3": "Dritte Textvariante..."
-  }`
+  BLOCK-STRUKTUREN DIE DU GENERIEREN MUSST:
+  - BLOCK 1 (Einstieg / Die Brücke): Nenne das Bedauern über das Problem mit "${artikelPunkt}".
+    v1: Ehrlich, locker, direkt auf den Punkt.
+    v2: Elegant, herzlich, gastfreundlich.
+    v3: Minimalistisch, fokussiert.
+  - BLOCK 2 (Der Kern / Die Erklärung): Erkläre die Situation um "${kritischerPunkt}". Nutze den Zusatz-Kontext intensiv!
+    v1: Erklärend, Fokus auf Qualitäts- / Konzeptgründe (z.B. hausgemacht, Portionierung für die Balance).
+    v2: Kulant, einsichtig, fehlerzugebend (falls geschlampt wurde oder ein B-Fehler vorliegt).
+    v3: Authentisch, Fokus auf Gastronomie-Alltag, Frische oder Handwerk.
+  - BLOCK 3 (Der Abschluss / Der Ausblick): Schaffe eine positive Bindung für die Zukunft.
+    v1: Lockere Einladung (z.B. auf einen Espresso/Drink beim nächsten Mal).
+    v2: Serviceorientierter Hinweis, beim nächsten Besuch direkt vor Ort dem Personal Bescheid zu geben.
+    v3: Herzliche Verabschiedung ohne abgedroschene Phrasen.
 
-  // HIER erfolgt der API-Aufruf an Claude (Anthropic API)
-  // const response = await claude.messages.create({ ... prompt ... })
-  
-  return JSON.parse("{/* Claude JSON Response */}")
+  Jeder Satz muss eigenständig stehen können und darf maximal 15 Wörter lang sein.
+  Gib AUSSCHLIESSLICH ein sauberes, valides JSON-Objekt zurück. Kein Begleittext, keine Markdown-Wrapper außerhalb des JSON.`
+
+  const response = await anthropic.messages.create({
+    model: 'claude-3-5-sonnet-20240620',
+    max_tokens: 1000,
+    system: systemPrompt,
+    messages: [{ role: 'user', content: `Generiere die 3x3 Matrix für: ${kritischerPunkt}` }]
+  })
+
+  const text = response.content[0].type === 'text' ? response.content[0].text : '{}'
+  return JSON.parse(text)
 }
 
-// ─── PHASE 3: DER KLEVENE "KLEBER & GLÄTTER" ──────────────────────────────────
-// Wenn der Gastronom seine Option gewählt hat, kleben wir die Fragmente (Begrüßung, 
-// der ausgewählte Core-Satz, der v7-Abschluss und Gruß) zusammen und glätten es.
+// ─── STUFE 2: DER REINE GLÄTTER-PROMPT ────────────────────────────────────────
 
-export async function finalizeAndSmoothResponse(
+async function finalizeAndSmoothSelection(
   settings: Settings,
   reviewerName: string,
-  selectedCoreOption: string,
-  analysis: Analysis
+  s1: string,
+  s2: string,
+  s3: string
 ): Promise<string> {
-  const { signature, isDu, firstNameClean } = resolveSettings(settings, reviewerName)
+  const { isDu, signature, firstNameClean, duSie } = resolveSettings(settings, reviewerName)
   
-  // 1. Begrüßung (Aus deinem v7-Konzept)
   const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : d(isDu, "Hallo,", "Guten Tag,")
+  const grussFormel = d(isDu, "Viele Grüße", "Mit freundlichen Grüßen")
   
-  // 2. Brücke (Aus deinem v7-Konzept)
-  const aberBruecke = analysis.categories[0] === 'C'
-    ? d(isDu, "schade, dass wir dich diesmal nicht ganz überzeugen konnten.", "schade, dass wir Sie diesmal nicht ganz überzeugen konnten.")
-    : d(isDu, "schade, dass bei deinem Besuch nicht alles rund gelaufen ist.", "schade, dass bei Ihrem Besuch nicht alles rund gelaufen ist.")
+  const roherText = `${begruessung}\n\n${s1} ${s2} ${s3}\n\n${grussFormel},\n${signature}`
 
-  // 3. Abschluss & Gruß (Aus deinem v7-Konzept)
-  const gruss = d(isDu, `Viele Grüße, ${signature}`, `Mit besten Grüßen, ${signature}`)
+  const systemPrompt = `Du bist ein präziser Text-Editor. Du erhältst eine Restaurant-Antwort, die aus drei ausgewählten Bausteinen zusammengesetzt wurde.
+  Deine Aufgabe ist es AUSSCHLIESSLICH, die Übergänge zwischen den Sätzen flüssig und harmonisch zu gestalten (z.B. durch Einfügen von Bindewörtern wie 'allerdings', 'daher' oder 'deshalb').
 
-  // Rohes Zusammenstecken der Blöcke im Code
-  const roherText = `${begruessung} ${aberBruecke} ${selectedCoreOption} ${gruss}`
+  ${FORMAT_RULES}
+  Anrede-Modus beachten: ${duSie}
 
-  // Claude fungiert jetzt NUR noch als smarter Klebstoff, der den Text flüssig macht,
-  // ohne neue Floskeln oder Inhalte dazuzuerfinden.
-  const smoothingPrompt = `Du bist ein High-End Text-Editor für Gastronomie-Betriebe.
-  Hier ist ein Entwurf für eine Antwort auf eine Bewertung:
-  "${roherText}"
-  
-  Deine einzige Aufgabe ist es, diesen Entwurf grammatikalisch zu glätten und die Übergänge flüssig zu machen (z.B. durch geschickte Bindewörter wie 'allerdings' oder 'deshalb').
-  
-  STRIKTE ENGINEREGELN:
-  1. Verändere NIEMALS die inhaltliche Aussage des mittleren Satzes.
-  2. Füge KEINE neuen Marketing-Floskeln oder Entschuldigungen hinzu.
-  3. Beachte strikt die vorgegebene Form: ${isDu ? 'Duzen (du, dir klein)' : 'Siezen (Sie, Ihnen)'}.
-  4. Gib als Antwort AUSSCHLIESSLICH den finalen, geglätteten Text aus, ohne Metatext.`
+  STRIKTE BEARBEITUNGS-REGELN:
+  1. Verändere NIEMALS den inhaltlichen Sinn oder die logische Aussage der Sätze.
+  2. Erfinde KEINE neuen Entschuldigungen, Floskeln oder Beschreibungen hinzu.
+  3. Kürze den Text nicht radikal, sondern optimiere nur den Lesefluss der 3 Kern-Sätze.
+  4. Gib NUR den finalen, bereinigten und flüssigen Text aus. Keinerlei Metatext oder Kommentare.`
 
-  // HIER API-Aufruf für das finale Glätten
-  // const finalOutput = await claude.messages.create({ ... smoothingPrompt ... })
-  
-  return "Der finale, glatte, wunderschöne Text."
+  const response = await anthropic.messages.create({
+    model: 'claude-3-5-sonnet-20240620',
+    max_tokens: 400,
+    system: systemPrompt,
+    messages: [{ role: 'user', content: roherText }]
+  })
+
+  return response.content[0].type === 'text' ? response.content[0].text.trim() : roherText
+}
+
+// ─── VERCEL NODE HANDLER ──────────────────────────────────────────────────────
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'POST') return res.status(405).send('Method Not Allowed')
+
+  const { action, reviewText, stars, reviewerName, settings, userKontext, selectedS1, selectedS2, selectedS3 } = req.body
+
+  try {
+    switch (action) {
+      
+      case 'analyze': {
+        if (!reviewText) return res.status(400).json({ success: false, error: 'Kein Bewertungstext geliefert.' })
+        
+        const contextCheck = await checkContext(reviewText, settings?.description || '')
+        if (!contextCheck.ok) {
+          return res.status(200).json({ 
+            success: false, 
+            missingContext: true, 
+            missingInfo: contextCheck.missing 
+          })
+        }
+
+        const modeRaw = classify(stars, reviewText)
+        const analysis = await analyzeReview(reviewText)
+
+        if (modeRaw === 'CONTENT_POSITIVE' && analysis.count === 0) {
+          const { signature, isDu, firstNameClean } = resolveSettings(settings, reviewerName)
+          const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : ''
+          const kernSatz = d(isDu, "Danke, das freut uns wirklich. Komm gerne wieder vorbei.", "Danke, das freut uns wirklich. Kommen Sie gerne wieder vorbei.")
+          const directText = `${begruessung} ${kernSatz}\n\nViele Grüße,\n${signature}`
+          return res.status(200).json({ success: true, route: 'direct', text: directText })
+        }
+
+        return res.status(200).json({ 
+          success: true, 
+          route: 'interactive', 
+          analysis 
+        })
+      }
+
+      case 'generate_blocks': {
+        const { analysis } = req.body
+        if (!analysis) return res.status(400).json({ success: false, error: 'Analysis-Objekt fehlt.' })
+
+        const blockMatrix = await generateAllBlocks(analysis, settings, reviewerName, userKontext)
+        
+        return res.status(200).json({ success: true, blocks: blockMatrix })
+      }
+
+      case 'finalize': {
+        if (!selectedS1 || !selectedS2 || !selectedS3) {
+          return res.status(400).json({ success: false, error: 'Es müssen Sätze aus allen 3 Blöcken ausgewählt sein.' })
+        }
+
+        const finalReviewText = await finalizeAndSmoothSelection(settings, reviewerName, selectedS1, selectedS2, selectedS3)
+        
+        return res.status(200).json({ success: true, finalReviewText })
+      }
+
+      default:
+        return res.status(400).json({ error: 'Aktion unbekannt oder nicht mitgegeben.' })
+    }
+
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : String(error)
+    console.error('generate-replies-v5 FEHLER:', errMsg)
+    return res.status(500).json({ success: false, error: errMsg })
+  }
 }
