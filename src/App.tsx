@@ -1240,10 +1240,9 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
         <>
           {answers.length === 0 && !aiLoading && !missingContext && (
             <div className="rd2-state-box">
-              <div className="rd2-state-icon">✨</div>
-              <div className="rd2-state-title">Noch keine Antworten generiert</div>
-              <div className="rd2-state-desc">Klick auf „Antworten generieren", um passende Antwortmöglichkeiten zu erstellen.</div>
-              <button onClick={() => generateReplies()} className="rd2-gen-btn">✨ Antworten generieren</button>
+              <div className="rd2-state-icon">🎙️</div>
+              <div className="rd2-state-title">Sprich zuerst ein — dann generieren</div>
+              <div className="rd2-state-desc">Deine Sicht macht den Unterschied. Sprich kurz ein und klick dann auf „Generieren mit Kontext".</div>
             </div>
           )}
           {aiLoading && (
@@ -1316,12 +1315,14 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
           {/* VOICE KONTEXT — immer sichtbar */}
           {!aiLoading && (
             <div style={{ margin: '0 0 14px 0', padding: '12px 14px', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-              <div style={{ fontSize: '13px', color: '#374151', marginBottom: '10px', fontWeight: 500, lineHeight: '1.5' }}>
-                🎙️ <strong>Sprich einfach, wie du mit einem lieben Menschen reden würdest.</strong>
-                <div style={{ marginTop: '8px', fontSize: '12px', color: '#6b7280', lineHeight: '1.8' }}>
-                  • Hand aufs Herz — wo hat der Gast recht, wo nicht?<br/>
-                  • Was lief hinter den Kulissen wirklich?<br/>
-                  • Wie biegen wir das wieder gerade?
+              <div style={{ textAlign: 'center', marginBottom: '14px', lineHeight: '1.6' }}>
+                <div style={{ fontSize: '15px', color: '#0f4c5c', fontWeight: '700', marginBottom: '10px' }}>
+                  Kein Publikum, kein Gast — nur du und die App.
+                </div>
+                <div style={{ fontSize: '13px', color: '#6b7280', lineHeight: '2' }}>
+                  Hand aufs Herz — wo hat der Gast recht, wo nicht?<br/>
+                  Was lief hinter den Kulissen wirklich?<br/>
+                  Wie biegen wir das wieder gerade?
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: ownerVoice ? '8px' : '0' }}>
