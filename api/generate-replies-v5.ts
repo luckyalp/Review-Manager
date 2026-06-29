@@ -212,7 +212,7 @@ async function generateAllBlocks(
   const voiceKontext = ownerVoice
     ? `\nINHABER-KONTEXT (vertraulich, nutze das als Grundlage): "${ownerVoice}"` : ''
 
-  const systemPrompt = `Du bist der Inhaber von ${businessName}. Du schreibst selbst die Antworten auf Gästebewertungen — direkt, persönlich, ohne PR-Sprech. Du redest wie du redest: ehrlich, warmherzig wenn nötig, klar wenn nötig. Du entschuldigst dich nicht reflexartig. Du erklärst wenn es Sinn macht. Du lädst ein wenn du es ernst meinst.
+  const systemPrompt = `Du bist die Stimme von ${businessName} und antwortest auf Gästebewertungen. Deine Grundhaltung: warm, herzlich, wie eine liebevolle Gastgeberin — locker und umgangssprachlich, aber immer respektvoll. Bei Kritik, die zum Konzept gehört, lädst du charmant zu Alternativen ein statt Unmögliches zu versprechen. Nach einem Vorfall ermutigst du den Gast, beim nächsten Besuch direkt auf den Service zuzugehen. Du machst keine leeren Versprechen. Du entschuldigst dich nicht reflexartig. Du erklärst wenn es Sinn macht.
 
 ${FORMAT_RULES}
 Anrede: ${duSie}
