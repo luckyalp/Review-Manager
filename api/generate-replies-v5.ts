@@ -199,21 +199,23 @@ Gib NUR valides JSON zurück:
 
 // ─── BAUSTEIN-GENERATOR (Sonnet + Persona + Few-Shot) ────────────────────────
 
-async function generateAllBlocks(
+// ─── DREI KOMPLETTE ANTWORTEN IN EINEM CALL ─────────────────────────────────
+
+async function generateThreeAnswers(
   analysis: Analysis,
   settings: Settings,
   reviewerName: string,
   reviewText: string,
   ownerVoice: string = ''
-): Promise<BlockOptionen> {
-  const { context, duSie, langInstruction, businessName } = resolveSettings(settings, reviewerName)
-  const alleKritikpunkte = analysis.points.length > 0 ? analysis.points.join(', ') : 'die gemachten Erfahrungen'
+): Promise<{ label: string; text: string }[]> {
+  const { context, duSie, langInstruction, businessName, signature, firstNameClean, isDu } = resolveSettings(settings, reviewerName)
   const lobpunkte = analysis.lobpunkte?.length > 0 ? analysis.lobpunkte.join(', ') : ''
-  const voiceKontext = ownerVoice
-    ? `\nINHABER-KONTEXT (vertraulich, nutze das als Grundlage): "${ownerVoice}"` : ''
+  const voiceKontext = ownerVoice ? `INHABER-KONTEXT (vertraulich): "${ownerVoice}"` : ''
   const isSummarize = analysis.forceSummarize || analysis.count >= 3
+  const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : (isDu ? 'Hallo,' : 'Guten Tag,')
+  const grussFormel = isDu ? 'Viele Grüße' : 'Mit freundlichen Grüßen'
 
-  const systemPrompt = `Du bist die Stimme von ${businessName} und antwortest auf Gästebewertungen. Deine Grundhaltung: warm, herzlich, wie eine liebevolle Gastgeberin — locker und umgangssprachlich, aber immer respektvoll. Bei Kritik, die zum Konzept gehört, lädst du charmant zu Alternativen ein statt Unmögliches zu versprechen. Nach einem Vorfall ermutigst du den Gast, beim nächsten Besuch direkt auf den Service zuzugehen. Du machst keine leeren Versprechen. Du entschuldigst dich nicht reflexartig. Du erklärst wenn es Sinn macht.
+  const systemPrompt = `Du bist die Stimme von ${businessName} und antwortest auf Gästebewertungen. Warm, herzlich, locker — aber immer respektvoll. Keine leeren Versprechen. Keine reflexartigen Entschuldigungen. Erkläre wenn es Sinn macht.
 
 ${FORMAT_RULES}
 Anrede: ${duSie}
@@ -222,57 +224,37 @@ ${langInstruction}
 ${context}
 ${voiceKontext}
 
-TONMUSTER — SO KLINGST DU (lerne den Stil, kopiere nicht wörtlich):
+TONMUSTER (Stil lernen, nicht kopieren):
+"Hallo [Name], ich freu mich dass dir unser Essen so geschmeckt hat. Dass die Wartezeit zu lang war, ist nicht das, was wir uns für deinen Besuch wünschen. Wenn du das nächste Mal bei uns bist, gib kurz Bescheid."
+"Hallo [Name], dass die Wartezeit so lang war, ist nicht das, was wir uns wünschen. Meld dich gerne direkt bei uns."
+"Hallo [Name], schön, dass dir bei uns etwas gefallen hat. Dass die Atmosphäre nicht ganz dein Ding war, ist schade. Am Ende ist Ambiente halt Geschmackssache."
 
-Beispiel 1 (gemischt — etwas gut, etwas schlecht):
-"Hallo [Name], ich freu mich dass dir unser Essen so geschmeckt hat. Dass die Wartezeit zu lang war, ist nicht das, was wir uns für deinen Besuch wünschen. Wenn du das nächste Mal bei uns bist, gib kurz Bescheid. Beste Grüße."
-
-Beispiel 2 (nur negativ):
-"Hallo [Name], dass die Wartezeit so lang war, ist nicht das, was wir uns für deinen Besuch wünschen. Meld dich gerne direkt bei uns. Beste Grüße."
-
-Beispiel 3 (nur positiv):
-"Hallo [Name], ich freu mich dass dir dein Besuch bei uns so gut gefallen hat. Wir freuen uns auf deinen nächsten Besuch. Beste Grüße."
-
-Beispiel 4 (Ambiente, gemischt):
-"Hallo [Name], schön, dass dir bei uns etwas gefallen hat. Dass die Atmosphäre nicht ganz dein Ding war, ist schade. Am Ende ist Ambiente halt Geschmackssache. Herzliche Grüße."
-
-Beispiel 5 (Preis, positiv):
-"Hallo [Name], das freut uns wirklich! Gutes Preis-Leistungs-Verhältnis bedeutet für uns echten Gegenwert fürs Geld. Genau das versuchen wir jeden Tag. Bis bald!"
-
-AUFGABE:
+AUFGABE: Schreibe 3 fertige, komplett unterschiedliche Antworten auf diese Bewertung.
 Bewertung: "${reviewText}"
-Kritikpunkte: ${alleKritikpunkte}
 ${lobpunkte ? `Lobpunkte: ${lobpunkte}` : ''}
 
-Generiere 3 Textblöcke mit je 3 Varianten (v1, v2, v3):
-- BLOCK 1 (Einstieg): Kein Dankeschön als Opener. Direkt rein.
-  v1: Locker, direkt, ehrlich.
-  v2: Herzlich, gastfreundlich.
-  v3: Kurz, ein Satz.
-${isSummarize ? `WICHTIG — VIELE KRITIKPUNKTE (${analysis.count} Stück):
-Gehe NICHT auf jeden Punkt einzeln ein. Das wirkt wie eine Checkliste und ist unpersönlich.
-Stattdessen:
-- Satz 1: Allgemein anerkennen dass einiges schiefgelaufen ist ("Da ist einiges nicht so gelaufen wie es sollte.")
-- Satz 2 (nur wenn Inhaber-Kontext oder Profil einen Hintergrund liefert): Kurz erklären. Wenn kein Kontext vorhanden → weglassen.
-- Satz 3: Einen konkreten Tipp für den nächsten Besuch.
-Maximal 3-4 Sätze für den gesamten Kern. Nicht mehr.` : `- BLOCK 2 (Kern): Alle Kritikpunkte ansprechen. Lob vorher aufgreifen wenn vorhanden.
-  v1: Offen, gibt Fehler zu wenn nötig.
-  v2: Erklärt ruhig den Hintergrund.
-  v3: Authentisch, Fokus auf Gastroalltag.`}
-- BLOCK 3 (Abschluss): Kein "Wir freuen uns auf Ihren nächsten Besuch".
-  v1: Lockere Einladung.
-  v2: Hinweis, beim nächsten Mal direkt Bescheid geben.
-  v3: Ein Satz, herzlich, kein Klischee.
+REGELN:
+- Jede Antwort startet mit "${begruessung}" und endet mit "${grussFormel},\n${signature}"
+- Kein Dankeschön als Einstieg — direkt ins Thema
+- Maximal 4 Sätze pro Antwort (ohne Begrüßung und Gruß)
+- Kein Satz darf sich innerhalb derselben Antwort inhaltlich wiederholen
+- Nie zweimal zum nächsten Besuch einladen in derselben Antwort
+${isSummarize ? '- Viele Kritikpunkte: NICHT jeden einzeln aufzählen. Ein Satz reicht ("Da ist einiges nicht gelaufen wie es sollte."), dann Kontext wenn vorhanden, dann ein Tipp.' : ''}
 
-Maximal 15 Wörter pro Satz. Gib AUSSCHLIESSLICH valides JSON zurück:
-{
-  "block1_einstieg": { "v1": "...", "v2": "...", "v3": "..." },
-  "block2_kern": { "v1": "...", "v2": "...", "v3": "..." },
-  "block3_abschluss": { "v1": "...", "v2": "...", "v3": "..." }
-}`
+Variante A: Direkt, ehrlich, klar.
+Variante B: Herzlich, warm, gastfreundlich.
+Variante C: Kurz, ein Satz pro Gedanke, kein Wort zu viel.
 
-  const raw = await callClaude(`Generiere Bausteine für: ${reviewText}`, systemPrompt, 'claude-sonnet-4-6', 0.3)
-  return parseJson(raw)
+Gib NUR valides JSON zurück:
+{"varA": "...", "varB": "...", "varC": "..."}`
+
+  const raw = await callClaude(`3 Antworten für: ${reviewText}`, systemPrompt, 'claude-sonnet-4-6', 0.3)
+  const parsed = parseJson(raw)
+  return [
+    { label: 'Variante A', text: parsed.varA },
+    { label: 'Variante B', text: parsed.varB },
+    { label: 'Variante C', text: parsed.varC },
+  ]
 }
 
 // ─── AUDIO TRANSKRIPTION (Groq Whisper) ──────────────────────────────────────
@@ -347,34 +329,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ success: true, answers: [{ label: 'Antwort', text }] })
     }
 
-    // 3. Bausteine generieren (Sonnet)
-    const blocks = await generateAllBlocks(analysis, settings, reviewerName, reviewText, ownerVoice || '')
+    // 3. Drei fertige Antworten in einem Call
+    const rawAnswers = await generateThreeAnswers(analysis, settings, reviewerName, reviewText, ownerVoice || '')
 
-    // 4. Zusammensetzen — kein Glätter-Call mehr nötig
-    const combos = [
-      { label: 'Variante A', s1: blocks.block1_einstieg.v1, s2: blocks.block2_kern.v1, s3: blocks.block3_abschluss.v1 },
-      { label: 'Variante B', s1: blocks.block1_einstieg.v2, s2: blocks.block2_kern.v2, s3: blocks.block3_abschluss.v2 },
-      { label: 'Variante C', s1: blocks.block1_einstieg.v3, s2: blocks.block2_kern.v3, s3: blocks.block3_abschluss.v3 },
+    // 4. Post-Processing — Floskel-Check
+    const answers = [
+      ...rawAnswers.filter(a => !hatVerbotenePhrase(a.text)),
+      ...rawAnswers.filter(a => hatVerbotenePhrase(a.text)),
     ]
 
-    const answers = combos.map(({ label, s1, s2, s3 }) => {
-      const text = `${begruessung}\n\n${s1} ${s2} ${s3}\n\n${grussFormel},\n${signature}`
-
-      // 5. Post-Processing — mechanischer Floskel-Check
-      if (hatVerbotenePhrase(text)) {
-        console.warn(`Floskel gefunden in ${label} — wird markiert`)
-      }
-
-      return { label, text, hasFloskel: hatVerbotenePhrase(text) }
-    })
-
-    // Varianten mit Floskeln ans Ende sortieren
-    const sorted = [
-      ...answers.filter(a => !a.hasFloskel),
-      ...answers.filter(a => a.hasFloskel),
-    ].map(({ label, text }) => ({ label, text }))
-
-    return res.status(200).json({ success: true, answers: sorted })
+    return res.status(200).json({ success: true, answers })
 
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error)
