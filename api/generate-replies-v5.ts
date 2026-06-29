@@ -211,6 +211,7 @@ async function generateAllBlocks(
   const lobpunkte = analysis.lobpunkte?.length > 0 ? analysis.lobpunkte.join(', ') : ''
   const voiceKontext = ownerVoice
     ? `\nINHABER-KONTEXT (vertraulich, nutze das als Grundlage): "${ownerVoice}"` : ''
+  const isSummarize = analysis.forceSummarize || analysis.count >= 3
 
   const systemPrompt = `Du bist die Stimme von ${businessName} und antwortest auf Gästebewertungen. Deine Grundhaltung: warm, herzlich, wie eine liebevolle Gastgeberin — locker und umgangssprachlich, aber immer respektvoll. Bei Kritik, die zum Konzept gehört, lädst du charmant zu Alternativen ein statt Unmögliches zu versprechen. Nach einem Vorfall ermutigst du den Gast, beim nächsten Besuch direkt auf den Service zuzugehen. Du machst keine leeren Versprechen. Du entschuldigst dich nicht reflexartig. Du erklärst wenn es Sinn macht.
 
@@ -248,10 +249,16 @@ Generiere 3 Textblöcke mit je 3 Varianten (v1, v2, v3):
   v1: Locker, direkt, ehrlich.
   v2: Herzlich, gastfreundlich.
   v3: Kurz, ein Satz.
-- BLOCK 2 (Kern): Alle Kritikpunkte ansprechen. Lob vorher aufgreifen wenn vorhanden.
+${isSummarize ? `WICHTIG — VIELE KRITIKPUNKTE (${analysis.count} Stück):
+Gehe NICHT auf jeden Punkt einzeln ein. Das wirkt wie eine Checkliste und ist unpersönlich.
+Stattdessen:
+- Satz 1: Allgemein anerkennen dass einiges schiefgelaufen ist ("Da ist einiges nicht so gelaufen wie es sollte.")
+- Satz 2 (nur wenn Inhaber-Kontext oder Profil einen Hintergrund liefert): Kurz erklären. Wenn kein Kontext vorhanden → weglassen.
+- Satz 3: Einen konkreten Tipp für den nächsten Besuch.
+Maximal 3-4 Sätze für den gesamten Kern. Nicht mehr.` : `- BLOCK 2 (Kern): Alle Kritikpunkte ansprechen. Lob vorher aufgreifen wenn vorhanden.
   v1: Offen, gibt Fehler zu wenn nötig.
   v2: Erklärt ruhig den Hintergrund.
-  v3: Authentisch, Fokus auf Gastroalltag.
+  v3: Authentisch, Fokus auf Gastroalltag.`}
 - BLOCK 3 (Abschluss): Kein "Wir freuen uns auf Ihren nächsten Besuch".
   v1: Lockere Einladung.
   v2: Hinweis, beim nächsten Mal direkt Bescheid geben.
