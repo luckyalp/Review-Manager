@@ -202,27 +202,46 @@ Restaurant-Profilkontext:
 ${context}
 ${voiceKontext}
 
-WICHTIG — ALLES BEACHTEN:
+TONMUSTER — SO KLINGT EINE GUTE ANTWORT (lerne den Stil, kopiere nicht wörtlich):
+
+Beispiel 1 (gemischt):
+"Hallo [Name], ich freu mich dass dir unser Essen so geschmeckt hat. Dass die Wartezeit zu lang war, ist nicht das, was wir uns für deinen Besuch wünschen. Wenn du das nächste Mal bei uns bist, gib kurz Bescheid. Beste Grüße."
+
+Beispiel 2 (nur schlecht):
+"Hallo [Name], dass die Wartezeit so lang war, ist nicht das, was wir uns für deinen Besuch wünschen. Meld dich gerne direkt bei uns. Beste Grüße."
+
+Beispiel 3 (nur positiv):
+"Hallo [Name], ich freu mich dass dir dein Besuch bei uns so gut gefallen hat. Wir freuen uns auf deinen nächsten Besuch. Beste Grüße."
+
+Beispiel 4 (Ambiente, gemischt):
+"Hallo [Name], schön, dass dir bei uns etwas gefallen hat. Dass die Atmosphäre nicht ganz dein Ding war, ist schade. Am Ende ist Ambiente halt Geschmackssache. Herzliche Grüße."
+
+Beispiel 5 (Preis, positiv):
+"Hallo [Name], das freut uns wirklich! Gutes Preis-Leistungs-Verhältnis bedeutet für uns echten Gegenwert fürs Geld. Genau das versuchen wir jeden Tag. Bis bald!"
+
+Was diese Beispiele gemeinsam haben: Kein Dankeschön als Einstieg. Direkt ins Thema. Kurze Sätze. Keine internen Versprechen. Kein PR-Sprech.
+
+WICHTIG:
 Die Analyse hat diese Punkte erkannt: "${alleKritikpunkte}".
 Original-Bewertung: "${reviewText}"
 
-In BLOCK 2 (Kern) musst du zwingend auf alle Aspekte der Kritik eingehen (z.B. Servicefehler UND Essen/Portionsgröße). Konzentriere dich nicht nur auf ein Wort. Verdrehe keine Fakten (wenn der Gast etwas lecker fand, erwähne das positiv, bevor du die Portionsgröße oder den Service ansprichst).
+In BLOCK 2 musst du auf alle Kritikpunkte eingehen. Wenn der Gast etwas gelobt hat, erwähne das positiv bevor du die Kritik ansprichst.
 
 BLOCK-STRUKTUREN:
-- BLOCK 1 (Einstieg): Bedauern über das Misslingen des Besuchs aussprechen.
-  v1: Ehrlich, locker, direkt auf den Punkt.
-  v2: Elegant, herzlich, gastfreundlich.
-  v3: Minimalistisch, fokussiert.
+- BLOCK 1 (Einstieg): Direkt ins Thema, kein "Vielen Dank", kein langer Anlauf.
+  v1: Ehrlich, locker, direkt.
+  v2: Herzlich, gastfreundlich.
+  v3: Minimalistisch, ein Satz.
 
-- BLOCK 2 (Kern): Antwort auf die Kritikpunkte (${alleKritikpunkte}).
-  v1: Ehrlich, gibt Fehler (z.B. beim Service) offen zu, wahrt das geschmackliche Lob.
-  v2: Erklärend, vermittelt Hintergründe (z.B. Küche/Kalkulation), bleibt hochprofessionell.
-  v3: Authentisch, nahbar, Fokus auf Handwerk und Team-Gastroalltag.
+- BLOCK 2 (Kern): Antwort auf (${alleKritikpunkte}).
+  v1: Gibt Fehler offen zu, wahrt positives Lob.
+  v2: Erklärt Hintergründe ruhig und sachlich.
+  v3: Authentisch, nahbar, Fokus auf Gastroalltag.
 
-- BLOCK 3 (Abschluss): Bindung für die Zukunft schaffen.
-  v1: Lockere Einladung oder Geste für das nächste Mal.
-  v2: Hinweis, beim nächsten Mal direkt vor Ort Bescheid zu geben.
-  v3: Herzlicher Abschied ohne Standardfloskeln.
+- BLOCK 3 (Abschluss): Kurz und echt, kein "Wir freuen uns auf Ihren nächsten Besuch".
+  v1: Lockere Einladung für das nächste Mal.
+  v2: Hinweis, beim nächsten Mal direkt Bescheid zu geben.
+  v3: Herzlicher Abschied, ein Satz, keine Floskel.
 
 Jeder Satz maximal 15 Wörter. Gib AUSSCHLIESSLICH valides JSON zurück:
 {
