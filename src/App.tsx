@@ -1238,13 +1238,7 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
 
       {review.status !== 'Beantwortet' && (
         <>
-          {answers.length === 0 && !aiLoading && !missingContext && (
-            <div className="rd2-state-box">
-              <div className="rd2-state-icon">🎙️</div>
-              <div className="rd2-state-title">Sprich zuerst ein — dann generieren</div>
-              <div className="rd2-state-desc">Deine Sicht macht den Unterschied. Sprich kurz ein und klick dann auf „Generieren mit Kontext".</div>
-            </div>
-          )}
+
           {aiLoading && (
             <div className="rd2-state-box">
               <div className="rd2-state-icon">⏳</div>
@@ -1314,20 +1308,18 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
           )}
           {/* VOICE KONTEXT — immer sichtbar */}
           {!aiLoading && (
-            <div style={{ margin: '0 0 14px 0', padding: '12px 14px', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-              <div style={{ textAlign: 'center', marginBottom: '14px', lineHeight: '1.6' }}>
-                <div style={{ fontSize: '15px', color: '#0f4c5c', fontWeight: '700', marginBottom: '10px' }}>
-                  Kein Publikum, kein Gast — nur du und die App.
-                </div>
-                <div style={{ fontSize: '13px', color: '#6b7280', lineHeight: '2' }}>
-                  Hand aufs Herz — wo hat der Gast recht, wo nicht?<br/>
-                  Was lief hinter den Kulissen wirklich?<br/>
-                  Wie biegen wir das wieder gerade?
-                </div>
+            <div style={{ margin: '0 0 14px 0', padding: '24px 20px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+              <div style={{ fontSize: '16px', color: '#0f4c5c', fontWeight: '700', marginBottom: '10px' }}>
+                Kein Publikum, kein Gast — nur du und die App.
               </div>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: ownerVoice ? '8px' : '0' }}>
+              <div style={{ fontSize: '13px', color: '#6b7280', lineHeight: '2', marginBottom: '16px' }}>
+                Hand aufs Herz — wo hat der Gast recht, wo nicht?<br/>
+                Was lief hinter den Kulissen wirklich?<br/>
+                Wie biegen wir das wieder gerade?
+              </div>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'center', marginBottom: ownerVoice ? '12px' : '0' }}>
                 {!isRecording ? (
-                  <button onClick={startRecording} disabled={isTranscribing} style={{ padding: '7px 12px', background: isTranscribing ? '#9ca3af' : '#0f4c5c', color: '#fff', border: 'none', borderRadius: '7px', cursor: isTranscribing ? 'default' : 'pointer', fontSize: '13px', fontFamily: 'inherit' }}>
+                  <button onClick={startRecording} disabled={isTranscribing} style={{ padding: '12px 24px', background: isTranscribing ? '#9ca3af' : '#0f4c5c', color: '#fff', border: 'none', borderRadius: '9px', cursor: isTranscribing ? 'default' : 'pointer', fontSize: '15px', fontWeight: '600', fontFamily: 'inherit' }}>
                     {isTranscribing ? '⏳ Transkribiere...' : '🎙️ Aufnahme starten'}
                   </button>
                 ) : (
