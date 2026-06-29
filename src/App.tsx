@@ -1243,34 +1243,6 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
               <div className="rd2-state-icon">✨</div>
               <div className="rd2-state-title">Noch keine Antworten generiert</div>
               <div className="rd2-state-desc">Klick auf „Antworten generieren", um passende Antwortmöglichkeiten zu erstellen.</div>
-
-              {/* VOICE KONTEXT */}
-              <div style={{ marginBottom: '14px', width: '100%' }}>
-                <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '8px', fontWeight: 500 }}>
-                  🎙️ Optional: Deine Sicht auf diese Bewertung einsprechen
-                </div>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
-                  {!isRecording ? (
-                    <button onClick={startRecording} disabled={isTranscribing} style={{ padding: '8px 14px', background: isTranscribing ? '#9ca3af' : '#0f4c5c', color: '#fff', border: 'none', borderRadius: '7px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit' }}>
-                      {isTranscribing ? '⏳ Transkribiere...' : '🎙️ Aufnahme starten'}
-                    </button>
-                  ) : (
-                    <button onClick={stopRecording} style={{ padding: '8px 14px', background: '#dc2626', color: '#fff', border: 'none', borderRadius: '7px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit' }}>
-                      ⏹️ Aufnahme stoppen
-                    </button>
-                  )}
-                  {ownerVoice && <span style={{ fontSize: '12px', color: '#16a34a' }}>✓ Kontext gespeichert</span>}
-                </div>
-                {ownerVoice && (
-                  <textarea
-                    value={ownerVoice}
-                    onChange={e => setOwnerVoice(e.target.value)}
-                    rows={3}
-                    style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', borderRadius: '7px', border: '1px solid #d1d5db', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical', color: '#374151', background: '#f9fafb' }}
-                  />
-                )}
-              </div>
-
               <button onClick={() => generateReplies()} className="rd2-gen-btn">✨ Antworten generieren</button>
             </div>
           )}
@@ -1341,6 +1313,42 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
               </button>
             </div>
           )}
+          {/* VOICE KONTEXT — immer sichtbar */}
+          {!aiLoading && (
+            <div style={{ margin: '0 0 14px 0', padding: '12px 14px', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+              <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '8px', fontWeight: 500 }}>
+                🎙️ Deine Sicht einsprechen (optional)
+              </div>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: ownerVoice ? '8px' : '0' }}>
+                {!isRecording ? (
+                  <button onClick={startRecording} disabled={isTranscribing} style={{ padding: '7px 12px', background: isTranscribing ? '#9ca3af' : '#0f4c5c', color: '#fff', border: 'none', borderRadius: '7px', cursor: isTranscribing ? 'default' : 'pointer', fontSize: '13px', fontFamily: 'inherit' }}>
+                    {isTranscribing ? '⏳ Transkribiere...' : '🎙️ Aufnahme starten'}
+                  </button>
+                ) : (
+                  <button onClick={stopRecording} style={{ padding: '7px 12px', background: '#dc2626', color: '#fff', border: 'none', borderRadius: '7px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit' }}>
+                    ⏹️ Stoppen
+                  </button>
+                )}
+                {ownerVoice && !isRecording && (
+                  <button onClick={() => generateReplies(true)} style={{ padding: '7px 12px', background: '#16a34a', color: '#fff', border: 'none', borderRadius: '7px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit' }}>
+                    ✨ Neu generieren mit Kontext
+                  </button>
+                )}
+              </div>
+              {ownerVoice && (
+                <>
+                  <div style={{ fontSize: '12px', color: '#16a34a', marginBottom: '4px' }}>✓ Transkript (bearbeitbar):</div>
+                  <textarea
+                    value={ownerVoice}
+                    onChange={e => setOwnerVoice(e.target.value)}
+                    rows={3}
+                    style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', borderRadius: '7px', border: '1px solid #bbf7d0', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical', color: '#374151', background: '#f0fdf4' }}
+                  />
+                </>
+              )}
+            </div>
+          )}
+
           {answers.length > 0 && (
             <>
               <div className="rd2-section-label">Antwort wählen — oder nach Auswahl anpassen</div>
