@@ -1028,6 +1028,11 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
   const [categoryAnswer, setCategoryAnswer] = useState('')
   const [categoryAnswerSaving, setCategoryAnswerSaving] = useState(false)
   const textareaRefs = useRef<Record<number, HTMLTextAreaElement | null>>({})
+  const [ownerVoice, setOwnerVoice] = useState<string>('')
+  const [isRecording, setIsRecording] = useState(false)
+  const [isTranscribing, setIsTranscribing] = useState(false)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
   const settings = JSON.parse(localStorage.getItem('rezpondSettings') || '{}')
 
   useEffect(() => {
@@ -1116,6 +1121,43 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
     generateReplies(false)
   }
 
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mediaRecorder = new MediaRecorder(stream)
+      mediaRecorderRef.current = mediaRecorder
+      audioChunksRef.current = []
+      mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunksRef.current.push(e.data) }
+      mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop())
+        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
+        setIsTranscribing(true)
+        try {
+          const base64 = await new Promise<string>((resolve) => {
+            const reader = new FileReader()
+            reader.onloadend = () => resolve((reader.result as string).split(',')[1])
+            reader.readAsDataURL(blob)
+          })
+          const resp = await fetch('/api/generate-replies-v5', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'transcribe', audioBase64: base64, mimeType: 'audio/webm' })
+          })
+          const data = await resp.json()
+          if (data.success && data.transcript) setOwnerVoice(data.transcript)
+        } catch (e) { console.error('Transkription fehlgeschlagen', e) }
+        setIsTranscribing(false)
+      }
+      mediaRecorder.start()
+      setIsRecording(true)
+    } catch (e) { alert('Mikrofon-Zugriff verweigert.') }
+  }
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop()
+    setIsRecording(false)
+  }
+
   const generateReplies = async (force = false) => {
     setAiLoading(true)
     setMissingContext(null)
@@ -1126,7 +1168,7 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
       const response = await fetch(_endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ review: { reviewerName: review.name, stars: review.stars, reviewText: review.text }, settings: currentSettings, force })
+        body: JSON.stringify({ review: { reviewerName: review.name, stars: review.stars, reviewText: review.text }, settings: currentSettings, force, ownerVoice: ownerVoice || undefined })
       })
       const data = await response.json()
       if (data.missingContext && data.isCategoryQuestion) {
@@ -1201,6 +1243,34 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
               <div className="rd2-state-icon">✨</div>
               <div className="rd2-state-title">Noch keine Antworten generiert</div>
               <div className="rd2-state-desc">Klick auf „Antworten generieren", um passende Antwortmöglichkeiten zu erstellen.</div>
+
+              {/* VOICE KONTEXT */}
+              <div style={{ marginBottom: '14px', width: '100%' }}>
+                <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '8px', fontWeight: 500 }}>
+                  🎙️ Optional: Deine Sicht auf diese Bewertung einsprechen
+                </div>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+                  {!isRecording ? (
+                    <button onClick={startRecording} disabled={isTranscribing} style={{ padding: '8px 14px', background: isTranscribing ? '#9ca3af' : '#0f4c5c', color: '#fff', border: 'none', borderRadius: '7px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit' }}>
+                      {isTranscribing ? '⏳ Transkribiere...' : '🎙️ Aufnahme starten'}
+                    </button>
+                  ) : (
+                    <button onClick={stopRecording} style={{ padding: '8px 14px', background: '#dc2626', color: '#fff', border: 'none', borderRadius: '7px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit' }}>
+                      ⏹️ Aufnahme stoppen
+                    </button>
+                  )}
+                  {ownerVoice && <span style={{ fontSize: '12px', color: '#16a34a' }}>✓ Kontext gespeichert</span>}
+                </div>
+                {ownerVoice && (
+                  <textarea
+                    value={ownerVoice}
+                    onChange={e => setOwnerVoice(e.target.value)}
+                    rows={3}
+                    style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', borderRadius: '7px', border: '1px solid #d1d5db', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical', color: '#374151', background: '#f9fafb' }}
+                  />
+                )}
+              </div>
+
               <button onClick={() => generateReplies()} className="rd2-gen-btn">✨ Antworten generieren</button>
             </div>
           )}

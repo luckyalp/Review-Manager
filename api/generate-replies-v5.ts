@@ -184,10 +184,12 @@ async function generateAllBlocks(
   analysis: Analysis,
   settings: Settings,
   reviewerName: string,
-  reviewText: string
+  reviewText: string,
+  ownerVoice: string = ''
 ): Promise<BlockOptionen> {
   const { context, duSie, langInstruction } = resolveSettings(settings, reviewerName)
   const alleKritikpunkte = analysis.points.length > 0 ? analysis.points.join(', ') : 'die gemachten Erfahrungen'
+  const voiceKontext = ownerVoice ? `\nINHABER-KONTEXT (Sprachnotiz, vertraulich): "${ownerVoice}"\nNutze diesen Kontext als Grundlage für die Antwort. Das ist die echte Sichtweise des Inhabers.` : ''
 
   const systemPrompt = `Du bist das Text-Herzstück eines intelligenten Gastro-Systems. Generiere für 3 logische Textblöcke jeweils genau 3 unterschiedliche, präzise Satz-Varianten (v1, v2, v3).
 
@@ -197,6 +199,7 @@ ${langInstruction}
 
 Restaurant-Profilkontext:
 ${context}
+${voiceKontext}
 
 WICHTIG — ALLES BEACHTEN:
 Die Analyse hat diese Punkte erkannt: "${alleKritikpunkte}".
@@ -255,12 +258,57 @@ REGELN: Verändere niemals den Sinn. Füge keine neuen Floskeln hinzu. Gib NUR d
   return raw.trim() || roherText
 }
 
+// ─── AUDIO TRANSKRIPTION ──────────────────────────────────────────────────────
+
+async function transcribeAudio(audioBase64: string, mimeType: string): Promise<string> {
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': ANTHROPIC_API_KEY!,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 1000,
+      messages: [{
+        role: 'user',
+        content: [
+          {
+            type: 'document',
+            source: { type: 'base64', media_type: mimeType, data: audioBase64 }
+          },
+          {
+            type: 'text',
+            text: 'Transkribiere diese Sprachaufnahme exakt. Gib nur den gesprochenen Text zurück, keine Kommentare oder Erklärungen.'
+          }
+        ]
+      }]
+    })
+  })
+  const data = await response.json()
+  return data.content?.[0]?.text?.trim() || ''
+}
+
 // ─── HANDLER ──────────────────────────────────────────────────────────────────
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed')
 
-  const { review, settings } = req.body
+  const { action, audioBase64, mimeType, review, settings, ownerVoice } = req.body
+
+  // ─── TRANSCRIBE ACTION ────────────────────────────────────────────────────
+  if (action === 'transcribe') {
+    if (!audioBase64) return res.status(400).json({ success: false, error: 'audioBase64 fehlt' })
+    try {
+      const transcript = await transcribeAudio(audioBase64, mimeType || 'audio/webm')
+      return res.status(200).json({ success: true, transcript })
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : String(error)
+      return res.status(500).json({ success: false, error: errMsg })
+    }
+  }
+
   if (!review) return res.status(400).json({ success: false, error: 'review fehlt' })
 
   const reviewText   = review.reviewText || ''
@@ -292,7 +340,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // 4. Bausteine generieren
-    const blocks = await generateAllBlocks(analysis, settings, reviewerName, reviewText)
+    const blocks = await generateAllBlocks(analysis, settings, reviewerName, reviewText, ownerVoice || '')
 
     // 5. Zusammensetzen und glätten
     const combos = [
