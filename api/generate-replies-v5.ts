@@ -98,13 +98,40 @@ function resolveSettings(settings: Settings | undefined, reviewerName: string) {
 
 // ─── FORMAT-REGELN ────────────────────────────────────────────────────────────
 
-const FORMAT_RULES = `ABSOLUTES VERBOT — GEDANKENSTRICHE: Verwende niemals "–", "—" oder langen Bindestrich. Ersetze durch Punkt oder Komma.
-ABSOLUTES VERBOT — TAGESZEITEN: Niemals "Abend", "Morgen", "Mittag", "Nacht", "Fruehstueck". Stattdessen "Besuch", "Aufenthalt", "Zeit bei uns".
-ABSOLUTES VERBOT — DOPPELPUNKT-LABEL: Kein "Zur Tischzeit:" oder aehnliche Ueberschriften. Durchgehende Saetze.
-VERBOTENE WOERTER: "frustrierend", "intern adressiert", "intern nachgeschaerft", "massnahmen ergriffen", "entspricht nicht unserem anspruch", "nehmen wir sehr ernst", "gib uns eine chance", "unannehmlichkeiten", "bedauern", "verständnis".
-UMLAUTE: Nutze ä, ö, ü, ß — niemals ae, oe, ue.
-RESTAURANTPROFIL: Nutze Angaben aus dem Restaurantprofil nur sinngemaess — niemals woertlich zitieren oder als Adjektiv-Kette einfuegen. Leite nichts aus dem Restaurantnamen ab.
-GRAMMATIK: Jeder Satz muss vollstaendig sein (Subjekt, Praedikat). Maximal zwei Kommas pro Satz — sonst aufteilen.`
+const FORMAT_RULES = `ABSOLUTES VERBOT — GEDANKENSTRICHE: Verwende niemals "–", "—" oder langen Bindestrich.
+ABSOLUTES VERBOT — TAGESZEITEN: Niemals "Abend", "Morgen", "Mittag". Stattdessen "Besuch", "Aufenthalt".
+ABSOLUTES VERBOT — DOPPELPUNKT-LABEL: Kein "Zum Service:" oder ähnliche Überschriften.
+VERBOTENE EINSTIEGE: Niemals "Vielen Dank für Ihr Feedback", "Danke für Ihre Rückmeldung", "Wir schätzen Ihre Bewertung".
+VERBOTENE FLOSKELN: "nehmen wir sehr ernst", "intern adressiert", "Unannehmlichkeiten", "bedauern", "wir werden überprüfen", "wir arbeiten daran", "wir kümmern uns darum".
+UMLAUTE: Nutze ä, ö, ü, ß.
+GRAMMATIK: Vollständige Sätze. Maximal zwei Kommas pro Satz.`
+
+// ─── POST-PROCESSING: FLOSKEL-FILTER ──────────────────────────────────────────
+
+const VERBOTENE_PHRASEN = [
+  'vielen dank für ihr feedback',
+  'vielen dank für ihre rückmeldung',
+  'wir schätzen ihre bewertung',
+  'nehmen wir sehr ernst',
+  'intern adressiert',
+  'intern nachgeschärft',
+  'unannehmlichkeiten',
+  'wir werden überprüfen',
+  'wir arbeiten daran',
+  'wir kümmern uns darum',
+  'entspricht nicht unserem anspruch',
+  'massnahmen ergriffen',
+  'team sensibilisiert',
+  'das nehmen wir mit',
+  'notiert',
+  'verständlicherweise',
+  'wir bedauern',
+]
+
+function hatVerbotenePhrase(text: string): boolean {
+  const lower = text.toLowerCase()
+  return VERBOTENE_PHRASEN.some(p => lower.includes(p))
+}
 
 function d(isDu: boolean, duText: string, sieText: string): string {
   return isDu ? duText : sieText
@@ -112,10 +139,10 @@ function d(isDu: boolean, duText: string, sieText: string): string {
 
 // ─── CLAUDE API CALL ──────────────────────────────────────────────────────────
 
-async function callClaude(userMessage: string, systemPrompt?: string, model = 'claude-haiku-4-5-20251001', temperature = 0): Promise<string> {
+async function callClaude(userMessage: string, systemPrompt?: string, model = 'claude-sonnet-4-6', temperature = 0): Promise<string> {
   const body: any = {
     model,
-    max_tokens: 1200,
+    max_tokens: 1500,
     temperature,
     messages: [{ role: 'user', content: userMessage }],
   }
@@ -150,36 +177,27 @@ function parseJson(raw: string): any {
 
 // ─── ANALYSE ──────────────────────────────────────────────────────────────────
 
-async function checkContext(reviewText: string, description: string): Promise<{ ok: boolean; missing?: string }> {
-  const systemPrompt = `Analysiere, ob in der Bewertung Punkte kritisiert werden, deren genauer Hintergrund unklar ist.
-Gib NUR ein valides JSON-Objekt zurück: { "ok": true, "missing": "" }`
-
-  const raw = await callClaude(`Profil: ${description}\n\nBewertung: ${reviewText}`, systemPrompt)
-  try { return parseJson(raw) } catch { return { ok: true } }
-}
-
 async function analyzeReview(reviewText: string): Promise<Analysis> {
   const systemPrompt = `Analysiere die Restaurant-Bewertung. Extrahiere alle Lob- und Kritikpunkte.
 Gib NUR valides JSON zurück:
 {
   "count": 1,
   "points": ["Kritikpunkt"],
-  "nominative": ["Trüffelmayonnaise"],
-  "nominativeArtikel": ["die Trüffelmayonnaise"],
+  "nominative": ["Begriff"],
+  "nominativeArtikel": ["der Begriff"],
   "pluralFlags": [false],
   "categories": ["C"],
   "forceSummarize": false,
-  "lobpunkte": [],
+  "lobpunkte": ["Lobpunkt"],
   "vorOrtErwaehnt": false,
   "isServiceComplaint": false,
   "ambiguousB": false
 }`
-
-  const raw = await callClaude(reviewText, systemPrompt)
+  const raw = await callClaude(reviewText, systemPrompt, 'claude-haiku-4-5-20251001', 0)
   return parseJson(raw)
 }
 
-// ─── BAUSTEIN-GENERATOR ───────────────────────────────────────────────────────
+// ─── BAUSTEIN-GENERATOR (Sonnet + Persona + Few-Shot) ────────────────────────
 
 async function generateAllBlocks(
   analysis: Analysis,
@@ -188,26 +206,27 @@ async function generateAllBlocks(
   reviewText: string,
   ownerVoice: string = ''
 ): Promise<BlockOptionen> {
-  const { context, duSie, langInstruction } = resolveSettings(settings, reviewerName)
+  const { context, duSie, langInstruction, businessName } = resolveSettings(settings, reviewerName)
   const alleKritikpunkte = analysis.points.length > 0 ? analysis.points.join(', ') : 'die gemachten Erfahrungen'
-  const voiceKontext = ownerVoice ? `\nINHABER-KONTEXT (Sprachnotiz, vertraulich): "${ownerVoice}"\nNutze diesen Kontext als Grundlage für die Antwort. Das ist die echte Sichtweise des Inhabers.` : ''
+  const lobpunkte = analysis.lobpunkte?.length > 0 ? analysis.lobpunkte.join(', ') : ''
+  const voiceKontext = ownerVoice
+    ? `\nINHABER-KONTEXT (vertraulich, nutze das als Grundlage): "${ownerVoice}"` : ''
 
-  const systemPrompt = `Du bist das Text-Herzstück eines intelligenten Gastro-Systems. Generiere für 3 logische Textblöcke jeweils genau 3 unterschiedliche, präzise Satz-Varianten (v1, v2, v3).
+  const systemPrompt = `Du bist der Inhaber von ${businessName}. Du schreibst selbst die Antworten auf Gästebewertungen — direkt, persönlich, ohne PR-Sprech. Du redest wie du redest: ehrlich, warmherzig wenn nötig, klar wenn nötig. Du entschuldigst dich nicht reflexartig. Du erklärst wenn es Sinn macht. Du lädst ein wenn du es ernst meinst.
 
 ${FORMAT_RULES}
-Anrede-Modus unbedingt beachten: ${duSie}
+Anrede: ${duSie}
 ${langInstruction}
 
-Restaurant-Profilkontext:
 ${context}
 ${voiceKontext}
 
-TONMUSTER — SO KLINGT EINE GUTE ANTWORT (lerne den Stil, kopiere nicht wörtlich):
+TONMUSTER — SO KLINGST DU (lerne den Stil, kopiere nicht wörtlich):
 
-Beispiel 1 (gemischt):
+Beispiel 1 (gemischt — etwas gut, etwas schlecht):
 "Hallo [Name], ich freu mich dass dir unser Essen so geschmeckt hat. Dass die Wartezeit zu lang war, ist nicht das, was wir uns für deinen Besuch wünschen. Wenn du das nächste Mal bei uns bist, gib kurz Bescheid. Beste Grüße."
 
-Beispiel 2 (nur schlecht):
+Beispiel 2 (nur negativ):
 "Hallo [Name], dass die Wartezeit so lang war, ist nicht das, was wir uns für deinen Besuch wünschen. Meld dich gerne direkt bei uns. Beste Grüße."
 
 Beispiel 3 (nur positiv):
@@ -219,63 +238,34 @@ Beispiel 4 (Ambiente, gemischt):
 Beispiel 5 (Preis, positiv):
 "Hallo [Name], das freut uns wirklich! Gutes Preis-Leistungs-Verhältnis bedeutet für uns echten Gegenwert fürs Geld. Genau das versuchen wir jeden Tag. Bis bald!"
 
-Was diese Beispiele gemeinsam haben: Kein Dankeschön als Einstieg. Direkt ins Thema. Kurze Sätze. Keine internen Versprechen. Kein PR-Sprech.
+AUFGABE:
+Bewertung: "${reviewText}"
+Kritikpunkte: ${alleKritikpunkte}
+${lobpunkte ? `Lobpunkte: ${lobpunkte}` : ''}
 
-WICHTIG:
-Die Analyse hat diese Punkte erkannt: "${alleKritikpunkte}".
-Original-Bewertung: "${reviewText}"
-
-In BLOCK 2 musst du auf alle Kritikpunkte eingehen. Wenn der Gast etwas gelobt hat, erwähne das positiv bevor du die Kritik ansprichst.
-
-BLOCK-STRUKTUREN:
-- BLOCK 1 (Einstieg): Direkt ins Thema, kein "Vielen Dank", kein langer Anlauf.
-  v1: Ehrlich, locker, direkt.
+Generiere 3 Textblöcke mit je 3 Varianten (v1, v2, v3):
+- BLOCK 1 (Einstieg): Kein Dankeschön als Opener. Direkt rein.
+  v1: Locker, direkt, ehrlich.
   v2: Herzlich, gastfreundlich.
-  v3: Minimalistisch, ein Satz.
+  v3: Kurz, ein Satz.
+- BLOCK 2 (Kern): Alle Kritikpunkte ansprechen. Lob vorher aufgreifen wenn vorhanden.
+  v1: Offen, gibt Fehler zu wenn nötig.
+  v2: Erklärt ruhig den Hintergrund.
+  v3: Authentisch, Fokus auf Gastroalltag.
+- BLOCK 3 (Abschluss): Kein "Wir freuen uns auf Ihren nächsten Besuch".
+  v1: Lockere Einladung.
+  v2: Hinweis, beim nächsten Mal direkt Bescheid geben.
+  v3: Ein Satz, herzlich, kein Klischee.
 
-- BLOCK 2 (Kern): Antwort auf (${alleKritikpunkte}).
-  v1: Gibt Fehler offen zu, wahrt positives Lob.
-  v2: Erklärt Hintergründe ruhig und sachlich.
-  v3: Authentisch, nahbar, Fokus auf Gastroalltag.
-
-- BLOCK 3 (Abschluss): Kurz und echt, kein "Wir freuen uns auf Ihren nächsten Besuch".
-  v1: Lockere Einladung für das nächste Mal.
-  v2: Hinweis, beim nächsten Mal direkt Bescheid zu geben.
-  v3: Herzlicher Abschied, ein Satz, keine Floskel.
-
-Jeder Satz maximal 15 Wörter. Gib AUSSCHLIESSLICH valides JSON zurück:
+Maximal 15 Wörter pro Satz. Gib AUSSCHLIESSLICH valides JSON zurück:
 {
   "block1_einstieg": { "v1": "...", "v2": "...", "v3": "..." },
   "block2_kern": { "v1": "...", "v2": "...", "v3": "..." },
   "block3_abschluss": { "v1": "...", "v2": "...", "v3": "..." }
 }`
 
-  const raw = await callClaude(`Generiere die Bausteine für: ${reviewText}`, systemPrompt, 'claude-haiku-4-5-20251001', 0)
+  const raw = await callClaude(`Generiere Bausteine für: ${reviewText}`, systemPrompt, 'claude-sonnet-4-6', 0.3)
   return parseJson(raw)
-}
-
-// ─── GLÄTTER ──────────────────────────────────────────────────────────────────
-
-async function finalizeAndSmooth(
-  settings: Settings,
-  reviewerName: string,
-  s1: string,
-  s2: string,
-  s3: string
-): Promise<string> {
-  const { isDu, signature, firstNameClean, duSie } = resolveSettings(settings, reviewerName)
-
-  const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : d(isDu, 'Hallo,', 'Guten Tag,')
-  const grussFormel = d(isDu, 'Viele Grüße', 'Mit freundlichen Grüßen')
-  const roherText = `${begruessung}\n\n${s1} ${s2} ${s3}\n\n${grussFormel},\n${signature}`
-
-  const systemPrompt = `Du bist ein präziser Text-Editor. Glätte nur die Übergänge zwischen den Sätzen durch Bindewörter, damit ein perfekt fließender Text entsteht.
-${FORMAT_RULES}
-Anrede-Modus: ${duSie}
-REGELN: Verändere niemals den Sinn. Füge keine neuen Floskeln hinzu. Gib NUR den finalen Text aus, ohne Metatext.`
-
-  const raw = await callClaude(roherText, systemPrompt, 'claude-haiku-4-5-20251001', 0)
-  return raw.trim() || roherText
 }
 
 // ─── AUDIO TRANSKRIPTION (Groq Whisper) ──────────────────────────────────────
@@ -313,7 +303,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const { action, audioBase64, mimeType, review, settings, ownerVoice } = req.body
 
-  // ─── TRANSCRIBE ACTION ────────────────────────────────────────────────────
+  // TRANSCRIBE
   if (action === 'transcribe') {
     if (!audioBase64) return res.status(400).json({ success: false, error: 'audioBase64 fehlt' })
     try {
@@ -332,47 +322,52 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const reviewerName = review.reviewerName || ''
 
   try {
-    // 1. Context-Check
-    const contextCheck = await checkContext(reviewText, settings?.description || '')
-    if (!contextCheck.ok) {
-      return res.status(200).json({ success: false, missingContext: true, missingInfo: contextCheck.missing })
-    }
-
-    // 2. Analyse
+    // 1. Analyse (Haiku — günstig und schnell)
     const mode = classify(stars, reviewText)
     const analysis = await analyzeReview(reviewText)
 
-    // 3. Direkt-Route für rein positive Bewertungen
+    const { signature, isDu, firstNameClean } = resolveSettings(settings, reviewerName)
+    const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : d(isDu, 'Hallo,', 'Guten Tag,')
+    const grussFormel = d(isDu, 'Viele Grüße', 'Mit freundlichen Grüßen')
+
+    // 2. Direkt-Route für rein positive Bewertungen
     if (mode === 'CONTENT_POSITIVE' && analysis.count === 0) {
-      const { signature, isDu, firstNameClean } = resolveSettings(settings, reviewerName)
-      const begruessung = firstNameClean ? `Hallo ${firstNameClean},\n\n` : ''
       const kernSatz = d(isDu,
-        'Danke für das tolle Feedback. Komm gerne wieder vorbei.',
-        'Danke für das tolle Feedback. Kommen Sie gerne wieder vorbei.'
+        'Ich freu mich dass dir dein Besuch bei uns so gut gefallen hat. Komm gerne wieder vorbei.',
+        'Es freut uns sehr, dass Ihnen Ihr Besuch bei uns so gut gefallen hat. Kommen Sie gerne wieder.'
       )
-      const gruss = d(isDu, 'Viele Grüße', 'Mit freundlichen Grüßen')
-      const text = `${begruessung}${kernSatz}\n\n${gruss},\n${signature}`
+      const text = `${begruessung}\n\n${kernSatz}\n\n${grussFormel},\n${signature}`
       return res.status(200).json({ success: true, answers: [{ label: 'Antwort', text }] })
     }
 
-    // 4. Bausteine generieren
+    // 3. Bausteine generieren (Sonnet)
     const blocks = await generateAllBlocks(analysis, settings, reviewerName, reviewText, ownerVoice || '')
 
-    // 5. Zusammensetzen und glätten
+    // 4. Zusammensetzen — kein Glätter-Call mehr nötig
     const combos = [
       { label: 'Variante A', s1: blocks.block1_einstieg.v1, s2: blocks.block2_kern.v1, s3: blocks.block3_abschluss.v1 },
       { label: 'Variante B', s1: blocks.block1_einstieg.v2, s2: blocks.block2_kern.v2, s3: blocks.block3_abschluss.v2 },
       { label: 'Variante C', s1: blocks.block1_einstieg.v3, s2: blocks.block2_kern.v3, s3: blocks.block3_abschluss.v3 },
     ]
 
-    const answers = await Promise.all(
-      combos.map(async ({ label, s1, s2, s3 }) => {
-        const text = await finalizeAndSmooth(settings, reviewerName, s1, s2, s3)
-        return { label, text }
-      })
-    )
+    const answers = combos.map(({ label, s1, s2, s3 }) => {
+      const text = `${begruessung}\n\n${s1} ${s2} ${s3}\n\n${grussFormel},\n${signature}`
 
-    return res.status(200).json({ success: true, answers })
+      // 5. Post-Processing — mechanischer Floskel-Check
+      if (hatVerbotenePhrase(text)) {
+        console.warn(`Floskel gefunden in ${label} — wird markiert`)
+      }
+
+      return { label, text, hasFloskel: hatVerbotenePhrase(text) }
+    })
+
+    // Varianten mit Floskeln ans Ende sortieren
+    const sorted = [
+      ...answers.filter(a => !a.hasFloskel),
+      ...answers.filter(a => a.hasFloskel),
+    ].map(({ label, text }) => ({ label, text }))
+
+    return res.status(200).json({ success: true, answers: sorted })
 
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error)
