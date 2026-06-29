@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
+const GROQ_API_KEY = process.env.GROQ_API_KEY
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -258,36 +259,32 @@ REGELN: Verändere niemals den Sinn. Füge keine neuen Floskeln hinzu. Gib NUR d
   return raw.trim() || roherText
 }
 
-// ─── AUDIO TRANSKRIPTION ──────────────────────────────────────────────────────
+// ─── AUDIO TRANSKRIPTION (Groq Whisper) ──────────────────────────────────────
 
 async function transcribeAudio(audioBase64: string, mimeType: string): Promise<string> {
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
+  const binaryStr = atob(audioBase64)
+  const bytes = new Uint8Array(binaryStr.length)
+  for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i)
+  const blob = new Blob([bytes], { type: mimeType })
+
+  const formData = new FormData()
+  formData.append('file', blob, 'audio.webm')
+  formData.append('model', 'whisper-large-v3')
+  formData.append('language', 'de')
+  formData.append('response_format', 'text')
+
+  const response = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': ANTHROPIC_API_KEY!,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1000,
-      messages: [{
-        role: 'user',
-        content: [
-          {
-            type: 'document',
-            source: { type: 'base64', media_type: mimeType, data: audioBase64 }
-          },
-          {
-            type: 'text',
-            text: 'Transkribiere diese Sprachaufnahme exakt. Gib nur den gesprochenen Text zurück, keine Kommentare oder Erklärungen.'
-          }
-        ]
-      }]
-    })
+    headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` },
+    body: formData,
   })
-  const data = await response.json()
-  return data.content?.[0]?.text?.trim() || ''
+
+  if (!response.ok) {
+    const err = await response.text()
+    throw new Error(`Groq Whisper Fehler: ${err}`)
+  }
+
+  return (await response.text()).trim()
 }
 
 // ─── HANDLER ──────────────────────────────────────────────────────────────────
