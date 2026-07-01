@@ -102,7 +102,9 @@ const FORMAT_RULES = `ABSOLUTES VERBOT — GEDANKENSTRICHE: Verwende niemals "�
 ABSOLUTES VERBOT — TAGESZEITEN: Niemals "Abend", "Morgen", "Mittag". Stattdessen "Besuch", "Aufenthalt".
 ABSOLUTES VERBOT — DOPPELPUNKT-LABEL: Kein "Zum Service:" oder ähnliche Überschriften.
 VERBOTENE EINSTIEGE: Niemals "Vielen Dank für Ihr Feedback", "Danke für Ihre Rückmeldung", "Wir schätzen Ihre Bewertung".
-VERBOTENE FLOSKELN: "nehmen wir sehr ernst", "intern adressiert", "Unannehmlichkeiten", "bedauern", "wir werden überprüfen", "wir arbeiten daran", "wir kümmern uns darum".
+VERBOTENE FLOSKELN: "nehmen wir sehr ernst", "intern adressiert", "Unannehmlichkeiten", "bedauern", "wir werden überprüfen", "wir arbeiten daran", "wir kümmern uns darum", "Wir hoffen dich/Sie bald wieder begrüßen zu dürfen" (in jeder Variante).
+VERBOTENES WORT: "Standard" in jeder Form (z.B. "unser Standard", "kein Standard") — beschreibe stattdessen konkret, wie es normalerweise abläuft.
+DOPPLUNGS-VERBOT: Nutze pro Antwort nur EIN Verständnis-Verb. Kombiniere niemals "verstehen" und "nachvollziehen" (oder deren Formen) in derselben Antwort.
 UMLAUTE: Nutze ä, ö, ü, ß.
 GRAMMATIK: Vollständige Sätze. Maximal zwei Kommas pro Satz.`
 
@@ -126,11 +128,32 @@ const VERBOTENE_PHRASEN = [
   'notiert',
   'verständlicherweise',
   'wir bedauern',
+  'wir hoffen dich bald wieder begrüßen zu dürfen',
+  'wir hoffen sie bald wieder begrüßen zu dürfen',
+  'wir hoffen, dich bald wieder begrüßen zu dürfen',
+  'wir hoffen, sie bald wieder begrüßen zu dürfen',
+  'standard',
 ]
 
 function hatVerbotenePhrase(text: string): boolean {
   const lower = text.toLowerCase()
   return VERBOTENE_PHRASEN.some(p => lower.includes(p))
+}
+
+// Dopplungs-Filter: "verstehen" und "nachvollziehen" (o.ä.) dürfen nicht gemeinsam
+// in derselben Antwort auftauchen — das ist das typische Todesgelaber-Muster.
+const VERSTEHEN_VARIANTEN = ['verstehe', 'verstehen', 'verständlich']
+const NACHVOLLZIEHEN_VARIANTEN = ['nachvollziehen', 'nachvollziehbar', 'nachempfinden']
+
+function hatDopplung(text: string): boolean {
+  const lower = text.toLowerCase()
+  const hatVerstehen = VERSTEHEN_VARIANTEN.some(w => lower.includes(w))
+  const hatNachvollziehen = NACHVOLLZIEHEN_VARIANTEN.some(w => lower.includes(w))
+  return hatVerstehen && hatNachvollziehen
+}
+
+function istProblematisch(text: string): boolean {
+  return hatVerbotenePhrase(text) || hatDopplung(text)
 }
 
 function d(isDu: boolean, duText: string, sieText: string): string {
@@ -223,6 +246,7 @@ ${langInstruction}
 
 ${context}
 ${voiceKontext}
+${voiceKontext ? 'WICHTIG: Der INHABER-KONTEXT oben ist die wichtigste Quelle für Ton und Wortwahl dieser Antwort und hat Vorrang vor dem TONMUSTER unten. Übernimm so weit wie möglich die eigenen Formulierungen, Ausdrücke und den Sprachstil des Inhabers, statt generischer Restaurant-Antwort-Sprache.' : ''}
 
 TONMUSTER (Stil lernen, nicht kopieren):
 "Hallo [Name], ich freu mich dass dir unser Essen so geschmeckt hat. Dass die Wartezeit zu lang war, ist nicht das, was wir uns für deinen Besuch wünschen. Wenn du das nächste Mal bei uns bist, gib kurz Bescheid."
@@ -254,6 +278,55 @@ Gib NUR valides JSON zurück:
     { label: 'Variante A', text: parsed.varA },
     { label: 'Variante B', text: parsed.varB },
     { label: 'Variante C', text: parsed.varC },
+  ]
+}
+
+// ─── A/B-TEST: STRUKTURIERTER SLOT-ANSATZ (nur zu Vergleichszwecken) ─────────
+// Erzwingt vier vollständige, vom LLM selbst formulierte Sätze (kein Platzhalter-
+// Ersatz, daher keine Kasus/Genus-Fehler) statt eines freien Fließtextblocks.
+// Läuft nur mit, wenn abTest=true im Request steht — beeinflusst answers nicht.
+
+async function generateStructuredAnswers(
+  analysis: Analysis,
+  settings: Settings,
+  reviewerName: string,
+  reviewText: string,
+  ownerVoice: string = ''
+): Promise<{ label: string; text: string }[]> {
+  const { context, duSie, langInstruction, businessName, signature, firstNameClean, isDu } = resolveSettings(settings, reviewerName)
+  const voiceKontext = ownerVoice ? `INHABER-KONTEXT (vertraulich): "${ownerVoice}"` : ''
+  const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : (isDu ? 'Hallo,' : 'Guten Tag,')
+  const grussFormel = isDu ? 'Viele Grüße' : 'Mit freundlichen Grüßen'
+
+  const systemPrompt = `Du bist die Stimme von ${businessName} und antwortest auf Gästebewertungen. Warm, herzlich, locker — aber immer respektvoll.
+
+${FORMAT_RULES}
+Anrede: ${duSie}
+${langInstruction}
+
+${context}
+${voiceKontext}
+${voiceKontext ? 'WICHTIG: Der INHABER-KONTEXT ist die wichtigste Quelle für Ton und Wortwahl und hat Vorrang vor generischen Formulierungen.' : ''}
+
+AUFGABE: Schreibe 3 komplett unterschiedliche Antworten auf diese Bewertung. Jede Antwort besteht aus vier vollständigen, grammatikalisch korrekten Sätzen (KEINE Platzhalter, KEINE Wort-Lücken — du formulierst jeden Satz frei):
+- einleitung: beginnt mit "${begruessung}" und nimmt kurz konkreten Bezug auf das Thema aus der Bewertung.
+- bruecke: maximal ein Nebensatz für Verständnis, gefolgt von einem Hauptsatz mit dem eigentlichen Fakt oder Kontext. Nicht schwafeln.
+- loesung: ein auf DIESE Bewertung zugeschnittener Vorschlag oder eine Einordnung, für jede der 3 Varianten neu und unterschiedlich formuliert — kein Textbaustein.
+- abschluss: "${grussFormel},\\n${signature}"
+
+Bewertung: "${reviewText}"
+
+Gib NUR valides JSON zurück:
+{"varA": {"einleitung": "...", "bruecke": "...", "loesung": "...", "abschluss": "..."}, "varB": {"einleitung": "...", "bruecke": "...", "loesung": "...", "abschluss": "..."}, "varC": {"einleitung": "...", "bruecke": "...", "loesung": "...", "abschluss": "..."}}`
+
+  const raw = await callClaude(`3 strukturierte Antworten für: ${reviewText}`, systemPrompt, 'claude-sonnet-4-6', 0.3)
+  const parsed = parseJson(raw)
+  const zusammenbauen = (v: { einleitung?: string; bruecke?: string; loesung?: string; abschluss?: string }) =>
+    [v?.einleitung, v?.bruecke, v?.loesung, v?.abschluss].filter(Boolean).join(' ')
+  return [
+    { label: 'Variante A (strukturiert)', text: zusammenbauen(parsed.varA) },
+    { label: 'Variante B (strukturiert)', text: zusammenbauen(parsed.varB) },
+    { label: 'Variante C (strukturiert)', text: zusammenbauen(parsed.varC) },
   ]
 }
 
@@ -290,7 +363,7 @@ async function transcribeAudio(audioBase64: string, mimeType: string): Promise<s
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed')
 
-  const { action, audioBase64, mimeType, review, settings, ownerVoice } = req.body
+  const { action, audioBase64, mimeType, review, settings, ownerVoice, abTest } = req.body
 
   // TRANSCRIBE
   if (action === 'transcribe') {
@@ -332,13 +405,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 3. Drei fertige Antworten in einem Call
     const rawAnswers = await generateThreeAnswers(analysis, settings, reviewerName, reviewText, ownerVoice || '')
 
-    // 4. Post-Processing — Floskel-Check
+    // 4. Post-Processing — Floskel- und Dopplungs-Check
     const answers = [
-      ...rawAnswers.filter(a => !hatVerbotenePhrase(a.text)),
-      ...rawAnswers.filter(a => hatVerbotenePhrase(a.text)),
+      ...rawAnswers.filter(a => !istProblematisch(a.text)),
+      ...rawAnswers.filter(a => istProblematisch(a.text)),
     ]
 
-    return res.status(200).json({ success: true, answers })
+    // 5. Optionaler A/B-Test: strukturierter Slot-Ansatz zum Vergleich, ohne
+    //    den Live-Pfad (answers) zu beeinflussen. Nur bei explizitem Flag.
+    let abTestStructured: { label: string; text: string }[] | undefined
+    if (abTest) {
+      try {
+        abTestStructured = await generateStructuredAnswers(analysis, settings, reviewerName, reviewText, ownerVoice || '')
+      } catch (err) {
+        console.error('generate-replies-v5 A/B-Test Fehler:', err instanceof Error ? err.message : String(err))
+      }
+    }
+
+    return res.status(200).json({ success: true, answers, ...(abTestStructured ? { abTestStructured } : {}) })
 
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error)
