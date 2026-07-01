@@ -442,9 +442,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 5. Einmaliger, gezielter Retry nur für FAIL-Varianten
     const geprueft = await Promise.all(rawAnswers.map(async (a, i) => {
       const result = guardrailResults[i]
+      console.log(`[Guardrail] ${a.label}: ${result.status}${result.grund ? ' — ' + result.grund : ''}`)
       if (result.status !== 'FAIL') return a
       try {
         const neuerText = await regenerateAnswer(a.text, result.grund || 'Floskel erkannt', settings, reviewerName, reviewText, ownerVoice || '')
+        console.log(`[Retry] ${a.label} neu formuliert.`)
         return { label: a.label, text: neuerText }
       } catch (err) {
         console.error(`generate-replies-v5 Retry-Fehler (${a.label}):`, err instanceof Error ? err.message : String(err))
