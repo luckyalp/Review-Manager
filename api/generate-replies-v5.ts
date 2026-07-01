@@ -281,18 +281,53 @@ Gib NUR valides JSON zurück:
   ]
 }
 
-// ─── A/B-TEST: STRUKTURIERTER SLOT-ANSATZ (nur zu Vergleichszwecken) ─────────
-// Erzwingt vier vollständige, vom LLM selbst formulierte Sätze (kein Platzhalter-
-// Ersatz, daher keine Kasus/Genus-Fehler) statt eines freien Fließtextblocks.
-// Läuft nur mit, wenn abTest=true im Request steht — beeinflusst answers nicht.
+// ─── GUARDRAIL: SEMANTISCHER FLOSKEL-VALIDATOR (Call 2) ──────────────────────
+// Prüft SINNGEMÄSS statt per Substring, damit Wortstellungs-/Flexions-Varianten
+// (z.B. "bedauern wir" statt "wir bedauern") nicht mehr durchrutschen.
 
-async function generateStructuredAnswers(
-  analysis: Analysis,
+interface GuardrailResult {
+  status: 'PASS' | 'FAIL'
+  grund?: string
+}
+
+async function validateAnswers(answers: { label: string; text: string }[]): Promise<GuardrailResult[]> {
+  const systemPrompt = `Du bist ein kompromissloser Qualitätsfilter für Google-Bewertungs-Antworten eines Restaurants.
+Analysiere jeden der folgenden Texte ausschließlich auf die Einhaltung unserer Anti-Floskel-Richtlinie.
+
+Ein Text erhält ein FAIL, wenn er SINNGEMÄSS (unabhängig von exakter Wortstellung oder Flexion) folgende Elemente enthält:
+- Eine formelle, sterile Dankes-Einleitung (z.B. sinngemäß "Danke für das Feedback/den Besuch").
+- Konzern-Bedauern (z.B. "wir bedauern", "bedauern wir", "tut uns leid für die Unannehmlichkeiten").
+- Die Floskel vom "üblichen Anspruch" oder "Standard".
+- Ein generisches, bettelndes Hoffen am Ende ("Wir hoffen, Sie bald...", "Wir hoffen, dass...").
+
+Sonst PASS.
+
+Texte:
+${answers.map((a, i) => `[${i}] ${a.text}`).join('\n\n')}
+
+Gib NUR valides JSON zurück, ein Eintrag pro Text in exakt gleicher Reihenfolge:
+{"ergebnisse": [{"status": "PASS"}, {"status": "FAIL", "grund": "kurze Begründung"}]}`
+
+  const raw = await callClaude('Validiere die Texte.', systemPrompt, 'claude-haiku-4-5-20251001', 0)
+  const parsed = parseJson(raw)
+  return answers.map((_, i) => {
+    const eintrag = parsed.ergebnisse?.[i]
+    return eintrag?.status === 'FAIL'
+      ? { status: 'FAIL' as const, grund: eintrag.grund }
+      : { status: 'PASS' as const }
+  })
+}
+
+// ─── RETRY: NEUFORMULIERUNG BEI FAIL (einmalig, gezielt pro Variante) ────────
+
+async function regenerateAnswer(
+  original: string,
+  grund: string,
   settings: Settings,
   reviewerName: string,
   reviewText: string,
-  ownerVoice: string = ''
-): Promise<{ label: string; text: string }[]> {
+  ownerVoice: string
+): Promise<string> {
   const { context, duSie, langInstruction, businessName, signature, firstNameClean, isDu } = resolveSettings(settings, reviewerName)
   const voiceKontext = ownerVoice ? `INHABER-KONTEXT (vertraulich): "${ownerVoice}"` : ''
   const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : (isDu ? 'Hallo,' : 'Guten Tag,')
@@ -306,28 +341,18 @@ ${langInstruction}
 
 ${context}
 ${voiceKontext}
-${voiceKontext ? 'WICHTIG: Der INHABER-KONTEXT ist die wichtigste Quelle für Ton und Wortwahl und hat Vorrang vor generischen Formulierungen.' : ''}
 
-AUFGABE: Schreibe 3 komplett unterschiedliche Antworten auf diese Bewertung. Jede Antwort besteht aus vier vollständigen, grammatikalisch korrekten Sätzen (KEINE Platzhalter, KEINE Wort-Lücken — du formulierst jeden Satz frei):
-- einleitung: beginnt mit "${begruessung}" und nimmt kurz konkreten Bezug auf das Thema aus der Bewertung.
-- bruecke: maximal ein Nebensatz für Verständnis, gefolgt von einem Hauptsatz mit dem eigentlichen Fakt oder Kontext. Nicht schwafeln.
-- loesung: ein auf DIESE Bewertung zugeschnittener Vorschlag oder eine Einordnung, für jede der 3 Varianten neu und unterschiedlich formuliert — kein Textbaustein.
-- abschluss: "${grussFormel},\\n${signature}"
+Diese Antwort wurde vom Qualitätsfilter abgelehnt, Grund: "${grund}"
+Abgelehnte Antwort: "${original}"
+
+AUFGABE: Formuliere die Antwort komplett neu und vermeide den genannten Grund konsequent — auch sinngemäß, nicht nur wörtlich. Beginnt mit "${begruessung}" und endet mit "${grussFormel},\n${signature}". Maximal 4 Sätze (ohne Begrüßung/Gruß).
 
 Bewertung: "${reviewText}"
 
-Gib NUR valides JSON zurück:
-{"varA": {"einleitung": "...", "bruecke": "...", "loesung": "...", "abschluss": "..."}, "varB": {"einleitung": "...", "bruecke": "...", "loesung": "...", "abschluss": "..."}, "varC": {"einleitung": "...", "bruecke": "...", "loesung": "...", "abschluss": "..."}}`
+Gib NUR den fertigen Antworttext zurück. Kein JSON, keine Anführungszeichen drumherum, keine Erklärung.`
 
-  const raw = await callClaude(`3 strukturierte Antworten für: ${reviewText}`, systemPrompt, 'claude-sonnet-4-6', 0.3)
-  const parsed = parseJson(raw)
-  const zusammenbauen = (v: { einleitung?: string; bruecke?: string; loesung?: string; abschluss?: string }) =>
-    [v?.einleitung, v?.bruecke, v?.loesung, v?.abschluss].filter(Boolean).join(' ')
-  return [
-    { label: 'Variante A (strukturiert)', text: zusammenbauen(parsed.varA) },
-    { label: 'Variante B (strukturiert)', text: zusammenbauen(parsed.varB) },
-    { label: 'Variante C (strukturiert)', text: zusammenbauen(parsed.varC) },
-  ]
+  const raw = await callClaude(`Neu formulieren wegen: ${grund}`, systemPrompt, 'claude-sonnet-4-6', 0.4)
+  return raw.trim()
 }
 
 // ─── AUDIO TRANSKRIPTION (Groq Whisper) ──────────────────────────────────────
@@ -363,7 +388,7 @@ async function transcribeAudio(audioBase64: string, mimeType: string): Promise<s
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed')
 
-  const { action, audioBase64, mimeType, review, settings, ownerVoice, abTest } = req.body
+  const { action, audioBase64, mimeType, review, settings, ownerVoice } = req.body
 
   // TRANSCRIBE
   if (action === 'transcribe') {
@@ -402,27 +427,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ success: true, answers: [{ label: 'Antwort', text }] })
     }
 
-    // 3. Drei fertige Antworten in einem Call
+    // 3. Call 1 — Generator: drei fertige Antworten in einem Call
     const rawAnswers = await generateThreeAnswers(analysis, settings, reviewerName, reviewText, ownerVoice || '')
 
-    // 4. Post-Processing — Floskel- und Dopplungs-Check
-    const answers = [
-      ...rawAnswers.filter(a => !istProblematisch(a.text)),
-      ...rawAnswers.filter(a => istProblematisch(a.text)),
-    ]
-
-    // 5. Optionaler A/B-Test: strukturierter Slot-Ansatz zum Vergleich, ohne
-    //    den Live-Pfad (answers) zu beeinflussen. Nur bei explizitem Flag.
-    let abTestStructured: { label: string; text: string }[] | undefined
-    if (abTest) {
-      try {
-        abTestStructured = await generateStructuredAnswers(analysis, settings, reviewerName, reviewText, ownerVoice || '')
-      } catch (err) {
-        console.error('generate-replies-v5 A/B-Test Fehler:', err instanceof Error ? err.message : String(err))
-      }
+    // 4. Call 2 — Guardrail: semantische Floskel-Prüfung (sinngemäß, nicht substring-basiert)
+    let guardrailResults: GuardrailResult[]
+    try {
+      guardrailResults = await validateAnswers(rawAnswers)
+    } catch (err) {
+      console.error('generate-replies-v5 Guardrail-Fehler:', err instanceof Error ? err.message : String(err))
+      guardrailResults = rawAnswers.map(() => ({ status: 'PASS' as const }))
     }
 
-    return res.status(200).json({ success: true, answers, ...(abTestStructured ? { abTestStructured } : {}) })
+    // 5. Einmaliger, gezielter Retry nur für FAIL-Varianten
+    const geprueft = await Promise.all(rawAnswers.map(async (a, i) => {
+      const result = guardrailResults[i]
+      if (result.status !== 'FAIL') return a
+      try {
+        const neuerText = await regenerateAnswer(a.text, result.grund || 'Floskel erkannt', settings, reviewerName, reviewText, ownerVoice || '')
+        return { label: a.label, text: neuerText }
+      } catch (err) {
+        console.error(`generate-replies-v5 Retry-Fehler (${a.label}):`, err instanceof Error ? err.message : String(err))
+        return a
+      }
+    }))
+
+    // 6. Post-Processing — bestehender Substring-Filter als letztes Sicherheitsnetz
+    const answers = [
+      ...geprueft.filter(a => !istProblematisch(a.text)),
+      ...geprueft.filter(a => istProblematisch(a.text)),
+    ]
+
+    return res.status(200).json({ success: true, answers })
 
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error)
