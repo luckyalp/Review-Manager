@@ -13,7 +13,12 @@ export const testCases: TestCase[] = [
       stars: 2,
       reviewerName: 'Melanie K',
     },
-    settings: { businessName: 'Henrys', salutation: 'Sie' },
+    settings: {
+      businessName: 'Henrys',
+      salutation: 'Sie',
+      description:
+        'Familiäres Restaurant mit Bar- und Loungebereich. Tische im Innenraum sind für Gäste reserviert, die auch etwas essen möchten; wer nur etwas trinken oder eine Kleinigkeit möchte, ist an der Bar oder den Stehtischen herzlich willkommen. Bei vollem Haus kann es zu Stoßzeiten lebhafter und lauter werden, da das Restaurant dann gut besucht ist.',
+    },
   },
   {
     name: '2) Formelle Sie-Beschwerde, zieht Richtung "Standard/Anspruch"',
@@ -22,7 +27,12 @@ export const testCases: TestCase[] = [
       stars: 2,
       reviewerName: 'Dr. Herbert Wagner',
     },
-    settings: { businessName: 'Henrys', salutation: 'Sie' },
+    settings: {
+      businessName: 'Henrys',
+      salutation: 'Sie',
+      description:
+        'Familiäres Restaurant mit Bar- und Loungebereich. Tische im Innenraum sind für Gäste reserviert, die auch etwas essen möchten; wer nur etwas trinken oder eine Kleinigkeit möchte, ist an der Bar oder den Stehtischen herzlich willkommen. Bei vollem Haus kann es zu Stoßzeiten lebhafter und lauter werden, da das Restaurant dann gut besucht ist.',
+    },
   },
   {
     name: '3) Zweideutige Kritik, zieht Richtung verstecktes "Wir hoffen..." am Schluss',
@@ -31,12 +41,22 @@ export const testCases: TestCase[] = [
       stars: 3,
       reviewerName: 'Jonas',
     },
-    settings: { businessName: 'Henrys', salutation: 'Du' },
+    settings: {
+      businessName: 'Henrys',
+      salutation: 'Du',
+      description:
+        'Familiäres Restaurant mit Bar- und Loungebereich. Tische im Innenraum sind für Gäste reserviert, die auch etwas essen möchten; wer nur etwas trinken oder eine Kleinigkeit möchte, ist an der Bar oder den Stehtischen herzlich willkommen. Bei vollem Haus kann es zu Stoßzeiten lebhafter und lauter werden, da das Restaurant dann gut besucht ist.',
+    },
   },
   {
     name: '4) Nonsense-Input / Test-Name (Regressionstest für "Aaa"-Verwechslung)',
     review: { reviewText: 'aaa schlecht aaa nie wieder aaa', stars: 1, reviewerName: 'AAA' },
-    settings: { businessName: 'Henrys', salutation: 'Du' },
+    settings: {
+      businessName: 'Henrys',
+      salutation: 'Du',
+      description:
+        'Familiäres Restaurant mit Bar- und Loungebereich. Tische im Innenraum sind für Gäste reserviert, die auch etwas essen möchten; wer nur etwas trinken oder eine Kleinigkeit möchte, ist an der Bar oder den Stehtischen herzlich willkommen. Bei vollem Haus kann es zu Stoßzeiten lebhafter und lauter werden, da das Restaurant dann gut besucht ist.',
+    },
   },
   {
     name: '5) Prompt-Injection-Versuch im Reviewtext',
@@ -45,7 +65,12 @@ export const testCases: TestCase[] = [
       stars: 3,
       reviewerName: 'Test Injection',
     },
-    settings: { businessName: 'Henrys', salutation: 'Du' },
+    settings: {
+      businessName: 'Henrys',
+      salutation: 'Du',
+      description:
+        'Familiäres Restaurant mit Bar- und Loungebereich. Tische im Innenraum sind für Gäste reserviert, die auch etwas essen möchten; wer nur etwas trinken oder eine Kleinigkeit möchte, ist an der Bar oder den Stehtischen herzlich willkommen. Bei vollem Haus kann es zu Stoßzeiten lebhafter und lauter werden, da das Restaurant dann gut besucht ist.',
+    },
   },
   {
     name: '6) Inhaber-Voice schmuggelt selbst eine Floskel ein',
@@ -54,7 +79,15 @@ export const testCases: TestCase[] = [
       stars: 2,
       reviewerName: 'Sabine',
     },
-    settings: { businessName: 'Henrys', salutation: 'Sie' },
+    settings: {
+      businessName: 'Henrys',
+      salutation: 'Sie',
+      description:
+        'Familiäres Restaurant mit Bar- und Loungebereich. Tische im Innenraum sind für Gäste reserviert, die auch etwas essen möchten; wer nur etwas trinken oder eine Kleinigkeit möchte, ist an der Bar oder den Stehtischen herzlich willkommen. Bei vollem Haus kann es zu Stoßzeiten lebhafter und lauter werden, da das Restaurant dann gut besucht ist.',
+    },
+    // Hinweis: ownerVoice wird nur von generate-replies-v5 ausgewertet (siehe
+    // scripts/test-pipeline.ts). Die v7-Baseline (scripts/run-baseline.ts)
+    // ignoriert dieses Feld aktuell, da v7 keinen ownerVoice-Parameter kennt.
     ownerVoice: 'Ja das stimmt, wir bedauern das aufrichtig, das entspricht nicht unserem üblichen Standard, wir hoffen sie trotzdem bald wieder begrüßen zu dürfen.',
   },
   {
@@ -64,6 +97,11 @@ export const testCases: TestCase[] = [
       stars: 1,
       reviewerName: 'Frank Ostermann',
     },
-    settings: { businessName: 'Henrys', salutation: 'Sie' },
+    settings: {
+      businessName: 'Henrys',
+      salutation: 'Sie',
+      description:
+        'Familiäres Restaurant mit Bar- und Loungebereich. Tische im Innenraum sind für Gäste reserviert, die auch etwas essen möchten; wer nur etwas trinken oder eine Kleinigkeit möchte, ist an der Bar oder den Stehtischen herzlich willkommen. Bei vollem Haus kann es zu Stoßzeiten lebhafter und lauter werden, da das Restaurant dann gut besucht ist.',
+    },
   },
 ]

@@ -8,7 +8,12 @@ export const manualRealCases: TestCase[] = [
       stars: 3,
       reviewerName: '',
     },
-    settings: { businessName: 'Henrys', salutation: 'Sie' },
+    settings: {
+      businessName: 'Henrys',
+      salutation: 'Sie',
+      description:
+        'Familiäres Restaurant mit Bar- und Loungebereich. Tische im Innenraum sind für Gäste reserviert, die auch etwas essen möchten; wer nur etwas trinken oder eine Kleinigkeit möchte, ist an der Bar oder den Stehtischen herzlich willkommen. Bei vollem Haus kann es zu Stoßzeiten lebhafter und lauter werden, da das Restaurant dann gut besucht ist.',
+    },
   },
   {
     name: 'Echt (manuell): 3 Sterne — Gruppe, unkoordinierter Service, Preis-Leistung',
@@ -17,7 +22,12 @@ export const manualRealCases: TestCase[] = [
       stars: 3,
       reviewerName: '',
     },
-    settings: { businessName: 'Henrys', salutation: 'Sie' },
+    settings: {
+      businessName: 'Henrys',
+      salutation: 'Sie',
+      description:
+        'Familiäres Restaurant mit Bar- und Loungebereich. Tische im Innenraum sind für Gäste reserviert, die auch etwas essen möchten; wer nur etwas trinken oder eine Kleinigkeit möchte, ist an der Bar oder den Stehtischen herzlich willkommen. Bei vollem Haus kann es zu Stoßzeiten lebhafter und lauter werden, da das Restaurant dann gut besucht ist.',
+    },
   },
   {
     name: 'Echt (manuell): 2 Sterne — Konzept "nur Essen, keine Getränke"',
@@ -26,7 +36,12 @@ export const manualRealCases: TestCase[] = [
       stars: 2,
       reviewerName: '',
     },
-    settings: { businessName: 'Henrys', salutation: 'Sie' },
+    settings: {
+      businessName: 'Henrys',
+      salutation: 'Sie',
+      description:
+        'Familiäres Restaurant mit Bar- und Loungebereich. Tische im Innenraum sind für Gäste reserviert, die auch etwas essen möchten; wer nur etwas trinken oder eine Kleinigkeit möchte, ist an der Bar oder den Stehtischen herzlich willkommen. Bei vollem Haus kann es zu Stoßzeiten lebhafter und lauter werden, da das Restaurant dann gut besucht ist.',
+    },
   },
   {
     name: 'Echt (manuell): 1 Stern — abgewiesen trotz leerem Restaurant, unfreundlicher Chef',
@@ -35,7 +50,12 @@ export const manualRealCases: TestCase[] = [
       stars: 1,
       reviewerName: '',
     },
-    settings: { businessName: 'Henrys', salutation: 'Sie' },
+    settings: {
+      businessName: 'Henrys',
+      salutation: 'Sie',
+      description:
+        'Familiäres Restaurant mit Bar- und Loungebereich. Tische im Innenraum sind für Gäste reserviert, die auch etwas essen möchten; wer nur etwas trinken oder eine Kleinigkeit möchte, ist an der Bar oder den Stehtischen herzlich willkommen. Bei vollem Haus kann es zu Stoßzeiten lebhafter und lauter werden, da das Restaurant dann gut besucht ist.',
+    },
   },
   {
     name: 'Echt (manuell): 1 Stern — Bestelldruck, Geschlechtertrennung an der Bar',
@@ -44,7 +64,12 @@ export const manualRealCases: TestCase[] = [
       stars: 1,
       reviewerName: '',
     },
-    settings: { businessName: 'Henrys', salutation: 'Sie' },
+    settings: {
+      businessName: 'Henrys',
+      salutation: 'Sie',
+      description:
+        'Familiäres Restaurant mit Bar- und Loungebereich. Tische im Innenraum sind für Gäste reserviert, die auch etwas essen möchten; wer nur etwas trinken oder eine Kleinigkeit möchte, ist an der Bar oder den Stehtischen herzlich willkommen. Bei vollem Haus kann es zu Stoßzeiten lebhafter und lauter werden, da das Restaurant dann gut besucht ist.',
+    },
   },
   {
     name: 'Echt (manuell): 2 Sterne — kein Platz für spontanen Kaffee, Rauswurf',
@@ -53,6 +78,11 @@ export const manualRealCases: TestCase[] = [
       stars: 2,
       reviewerName: '',
     },
-    settings: { businessName: 'Henrys', salutation: 'Sie' },
+    settings: {
+      businessName: 'Henrys',
+      salutation: 'Sie',
+      description:
+        'Familiäres Restaurant mit Bar- und Loungebereich. Tische im Innenraum sind für Gäste reserviert, die auch etwas essen möchten; wer nur etwas trinken oder eine Kleinigkeit möchte, ist an der Bar oder den Stehtischen herzlich willkommen. Bei vollem Haus kann es zu Stoßzeiten lebhafter und lauter werden, da das Restaurant dann gut besucht ist.',
+    },
   },
 ]
