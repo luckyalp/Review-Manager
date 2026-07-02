@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test:pipeline": "tsx scripts/test-pipeline.ts"
+    "test:pipeline": "tsx scripts/test-pipeline.ts",
+    "baseline:collect": "tsx scripts/collect-baseline-cases.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
