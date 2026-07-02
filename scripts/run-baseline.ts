@@ -27,8 +27,15 @@ function mockRes() {
 }
 
 async function run() {
-  const raw = readFileSync('scripts/baseline-cases.json', 'utf-8')
-  const cases: TestCase[] = JSON.parse(raw)
+  let cases: TestCase[]
+  try {
+    const raw = readFileSync('scripts/baseline-cases.json', 'utf-8')
+    cases = JSON.parse(raw)
+  } catch (err) {
+    console.error('scripts/baseline-cases.json konnte nicht gelesen werden. Bitte zuerst "npm run baseline:collect" ausführen.')
+    console.error(err instanceof Error ? err.message : String(err))
+    return
+  }
   const { default: handler } = await import('../api/generate-replies-v7.ts')
 
   const lines: string[] = [
@@ -45,14 +52,16 @@ async function run() {
     lines.push(
       '---', '',
       `## ${tc.name}`, '',
-      `**Bewertung (${tc.review.stars}★, ${tc.review.reviewerName}):**`, '',
+      `**Bewertung (${tc.review.stars}★, ${tc.review.reviewerName || 'Anonym'}):**`, '',
       `> ${tc.review.reviewText || '(kein Text)'}`, ''
     )
 
     const req = { method: 'POST', body: { review: tc.review, settings: tc.settings } }
     const res = mockRes()
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await handler(req as any, res as any)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { body } = res.result as { body: any }
       if (body?.success && body.answers?.length) {
         for (const a of body.answers) {
@@ -65,6 +74,8 @@ async function run() {
             ''
           )
         }
+      } else if (body?.missingContext) {
+        lines.push(`**Keine Antwort möglich — Restaurantprofil unvollständig:** ${body.missingInfo || 'keine Details angegeben'}`, '')
       } else {
         lines.push(`**Kein Ergebnis:** ${JSON.stringify(body)}`, '')
       }
