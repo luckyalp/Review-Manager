@@ -26,12 +26,15 @@ interface ReviewRow {
 }
 
 async function loadRestaurantSettings(supabase: ReturnType<typeof createClient>, userId: string): Promise<Record<string, unknown> | undefined> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('settings')
     .select('value')
     .eq('key', 'restaurant_profile')
     .eq('user_id', userId)
     .single()
+  if (error) {
+    console.warn(`Restaurant-Profil für user_id ${userId} konnte nicht geladen werden: ${error.message}`)
+  }
   return data?.value
 }
 
