@@ -49,9 +49,15 @@ async function callClaude(
   const body: any = {
     model,
     max_tokens: APP_CONFIG.maxTokens,
-    temperature,
     messages: [{ role: 'user', content: userMessage }],
   }
+  // Claude Sonnet 5 lehnt den temperature-Parameter grundsätzlich ab (400 Fehler),
+  // unabhängig vom Wert. Nur für andere Modelle (z.B. Haiku) mitschicken.
+  if (!model.startsWith('claude-sonnet-5')) body.temperature = temperature
+  // Adaptive Thinking ist bei Sonnet 5 standardmäßig an, brauchen wir für kurze
+  // Antworttexte nicht, kostet nur Tokens/Zeit und ändert die Struktur der Antwort
+  // (zusätzliche "thinking"-Blöcke vor dem Text). Explizit deaktivieren.
+  if (model.startsWith('claude-sonnet-5')) body.thinking = { type: 'disabled' }
   if (systemPrompt) body.system = systemPrompt
 
   const response = await fetch(APP_CONFIG.anthropicApiUrl, {
@@ -70,7 +76,8 @@ async function callClaude(
   }
 
   const data = await response.json()
-  return data.content?.[0]?.text || ''
+  const textBlock = data.content?.find((block: any) => block.type === 'text')
+  return textBlock?.text || ''
 }
 
 // ─── AUDIO TRANSKRIPTION (Groq Whisper) ──────────────────────────────────────
