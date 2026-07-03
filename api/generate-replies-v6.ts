@@ -336,6 +336,8 @@ const CATEGORY_ABLAUF: Record<KategorieKey, string> = {
 
 const AUSGABE_REGELN = `Anrede und Grußformel werden separat vom System ergänzt, gib nur diesen mittleren Teil inklusive Lob-Einstieg (falls vorhanden) und Ausstieg aus.
 
+Die mitgelieferte Sternebewertung gibt dir ein Gefühl für die Schwere der Situation: bei 3 Sternen darf der Ton spürbar gelassener und knapper ausfallen als bei 1 Stern. Die Grundhaltung bleibt in beiden Fällen gleich, kein Bedauern, kein Kriechen, nur die Intensität passt sich an.
+
 Wenn du im Text selbst etwas wörtlich zitieren willst (z. B. einen unglücklichen Satz), nutze deutsche Anführungszeichen „..." oder einfache Anführungszeichen '...', niemals gerade doppelte Anführungszeichen ".
 
 Gib NUR den fertigen Fließtext zurück, ohne Anrede-Zeile, ohne Grußformel, ohne Anführungszeichen drumherum, nur den reinen Text.`
@@ -465,7 +467,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const urPrompt = buildUrPrompt(explanation, isDu, langInstruction, kategorie)
     const raw = await callClaude(
-      `Bewertung des Gasts: "${reviewText}"\nKritikpunkte: ${analysis.points.join(', ') || 'keine konkreten, allgemeiner Unmut'}\nLobpunkte: ${analysis.lobpunkte.join(', ') || 'keine'}`,
+      `Bewertung des Gasts: "${reviewText}"\nSternebewertung: ${stars} von 5\nKritikpunkte: ${analysis.points.join(', ') || 'keine konkreten, allgemeiner Unmut'}\nLobpunkte: ${analysis.lobpunkte.join(', ') || 'keine'}`,
       urPrompt,
       APP_CONFIG.models.generation,
       APP_CONFIG.temperature.generation
