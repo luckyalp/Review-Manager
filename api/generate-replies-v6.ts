@@ -197,6 +197,26 @@ function pickGreeting(isDu: boolean, name: string): string {
   return name ? `Hallo ${name},` : 'Guten Tag,'
 }
 
+// Feste Antwort für positive Bewertungen ohne Kritik: braucht keinen Sonnet-Call, aber
+// soll sich trotzdem nicht jedes Mal identisch anfühlen. Warmer, persönlicher Ton,
+// nicht albern, keine Firmen-Floskeln.
+function pickPositivKernsatz(isDu: boolean): string {
+  const poolDu = [
+    'Ich freu mich, dass dir dein Besuch bei uns so gut gefallen hat. Komm gerne wieder vorbei.',
+    'Das freut mich richtig. Schön, dass es bei uns so gut angekommen ist, bis zum nächsten Mal.',
+    'Sowas les ich immer gern. Danke dir, und komm bald wieder vorbei.',
+    'Freut mich sehr, dass dir dein Besuch so gut gefallen hat. Wir freuen uns schon aufs nächste Mal.',
+  ]
+  const poolSie = [
+    'Es freut uns sehr, dass Ihnen Ihr Besuch bei uns so gut gefallen hat. Kommen Sie gerne wieder.',
+    'Das freut uns wirklich. Schön, dass es bei Ihnen so gut angekommen ist, wir freuen uns auf Ihren nächsten Besuch.',
+    'Solche Zeilen lesen wir immer gern. Vielen Dank dafür, und bis bald bei uns.',
+    'Es freut uns außerordentlich, dass Ihnen der Besuch so gut gefallen hat. Wir freuen uns schon auf Ihr nächstes Mal.',
+  ]
+  const pool = isDu ? poolDu : poolSie
+  return pool[Math.floor(Math.random() * pool.length)]
+}
+
 function d(isDu: boolean, duText: string, sieText: string): string {
   return isDu ? duText : sieText
 }
@@ -419,10 +439,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (mode === 'CONTENT_POSITIVE' || mode === 'EMPTY_POSITIVE') {
       const analysis = mode === 'CONTENT_POSITIVE' ? await analyzeReview(reviewText) : null
       if (!analysis || analysis.count === 0) {
-        const kernSatz = d(isDu,
-          'Ich freu mich, dass dir dein Besuch bei uns so gut gefallen hat. Komm gerne wieder vorbei.',
-          'Es freut uns sehr, dass Ihnen Ihr Besuch bei uns so gut gefallen hat. Kommen Sie gerne wieder.'
-        )
+        const kernSatz = pickPositivKernsatz(isDu)
         const text = `${begruessung}\n\n${kernSatz}\n\n${grussFormel},\n${signature}`
         return res.status(200).json({ success: true, answers: [{ label: 'Frei (Test)', text }] })
       }
