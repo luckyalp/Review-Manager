@@ -997,6 +997,14 @@ const rdStyles = `
   .rd2-answer-card.rd2-selected .rd2-answer-textarea { cursor: text; }
   .rd2-edit-hint { display: none; padding: 0 15px 11px 47px; font-size: 11px; color: var(--rd2-sand); font-style: italic; line-height: 1.4; }
   .rd2-answer-card.rd2-selected .rd2-edit-hint { display: block; }
+  .rd2-skalpell-row { padding: 4px 15px 12px 47px; display: flex; flex-direction: column; gap: 6px; }
+  .rd2-skalpell-hint { font-size: 11px; color: var(--rd2-sand); font-style: italic; margin-bottom: 2px; }
+  .rd2-skalpell-satz { display: flex; align-items: flex-start; gap: 8px; background: #f7f5f2; border: 1px solid #e2ddd8; border-radius: 8px; padding: 6px 8px; }
+  .rd2-skalpell-satztext { flex: 1; font-size: 13px; line-height: 1.4; color: #1a1a1a; }
+  .rd2-skalpell-mic { flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; border: none; background: #0f4c5c; color: #fff; cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; }
+  .rd2-skalpell-mic:disabled { opacity: 0.4; cursor: not-allowed; }
+  .rd2-skalpell-mic-active { background: #dc2626; animation: rd2-pulse 1.2s infinite; }
+  @keyframes rd2-pulse { 0% { box-shadow: 0 0 0 0 rgba(220,38,38,0.5); } 70% { box-shadow: 0 0 0 8px rgba(220,38,38,0); } 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0); } }
   .rd2-recovery-note { font-size: 11px; color: var(--rd2-teal); margin-bottom: 4px; line-height: 1.4; opacity: 0.85; }
   .rd2-recovery-separator { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
   .rd2-recovery-separator-line { flex: 1; height: 1px; background: var(--rd2-border); }
@@ -1033,6 +1041,11 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
   const [isTranscribing, setIsTranscribing] = useState(false)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
+  const [skalpellTarget, setSkalpellTarget] = useState<string | null>(null) // "answerIdx-sentenceIdx"
+  const [skalpellRecording, setSkalpellRecording] = useState(false)
+  const [skalpellProcessing, setSkalpellProcessing] = useState(false)
+  const skalpellMediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const skalpellAudioChunksRef = useRef<Blob[]>([])
   const settings = JSON.parse(localStorage.getItem('rezpondSettings') || '{}')
 
   useEffect(() => {
@@ -1043,6 +1056,17 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
   }, [])
 
   const autoResize = (el: HTMLTextAreaElement) => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px' }
+
+  // Zerlegt den Antworttext in einzelne Sätze fürs Skalpell (Klick + Sprachkorrektur pro Satz).
+  // Einfache Heuristik: Satzende bei . ! ? gefolgt von Leerzeichen. Reicht für kurze,
+  // klare Gastro-Antworten aus, ist aber keine vollständige Satzgrenzenerkennung
+  // (z.B. "z.B." wird faelschlich als Satzende erkannt bei Abkuerzungen mit Punkt).
+  const splitIntoSentences = (text: string): string[] => {
+    return text
+      .split(/(?<=[.!?])\s+(?=[A-ZÄÖÜ])/)
+      .map(s => s.trim())
+      .filter(Boolean)
+  }
 
   useEffect(() => { Object.values(textareaRefs.current).forEach(el => { if (el) autoResize(el) }) }, [answers])
 
@@ -1158,6 +1182,87 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
     setIsRecording(false)
   }
 
+  // ─── SKALPELL: Satz antippen, Korrektur einsprechen, nur dieser Satz wird ersetzt ───
+
+  // Skalpell ist aktuell nur in v6 implementiert, deshalb fest verdrahtet
+  // (unabhängig davon, welche Engine für die Haupt-Generierung gewählt ist).
+  const skalpellEndpoint = '/api/generate-replies-v6'
+
+  const startSkalpellRecording = async (answerIdx: number, sentenceIdx: number) => {
+    const key = `${answerIdx}-${sentenceIdx}`
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mediaRecorder = new MediaRecorder(stream)
+      skalpellMediaRecorderRef.current = mediaRecorder
+      skalpellAudioChunksRef.current = []
+      mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) skalpellAudioChunksRef.current.push(e.data) }
+      mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop())
+        const blob = new Blob(skalpellAudioChunksRef.current, { type: 'audio/webm' })
+        setSkalpellProcessing(true)
+        try {
+          const sentences = splitIntoSentences(answers[answerIdx].text)
+          const originalSatz = sentences[sentenceIdx]
+
+          const base64 = await new Promise<string>((resolve) => {
+            const reader = new FileReader()
+            reader.onloadend = () => resolve((reader.result as string).split(',')[1])
+            reader.readAsDataURL(blob)
+          })
+
+          const transcribeResp = await fetch(skalpellEndpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'transcribe', audioBase64: base64, mimeType: 'audio/webm' })
+          })
+          const transcribeData = await transcribeResp.json()
+          if (!transcribeData.success || !transcribeData.transcript) throw new Error('Transkription fehlgeschlagen')
+
+          const skalpellResp = await fetch(skalpellEndpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'skalpell',
+              markierterSatzOriginal: originalSatz,
+              gesprocheneAnweisung: transcribeData.transcript,
+            })
+          })
+          const skalpellData = await skalpellResp.json()
+          if (skalpellData.success && skalpellData.korrigierterSatz) {
+            const neueSaetze = [...sentences]
+            neueSaetze[sentenceIdx] = skalpellData.korrigierterSatz
+            const neuerText = neueSaetze.join(' ')
+            setAnswers(prev => prev.map((a, i) => i === answerIdx ? { ...a, text: neuerText } : a))
+          }
+        } catch (e) {
+          console.error('Skalpell fehlgeschlagen', e)
+        }
+        setSkalpellProcessing(false)
+        setSkalpellTarget(null)
+        setSkalpellRecording(false)
+      }
+      mediaRecorder.start()
+      skalpellMediaRecorderRef.current = mediaRecorder
+      setSkalpellTarget(key)
+      setSkalpellRecording(true)
+    } catch (e) {
+      alert('Mikrofon-Zugriff verweigert.')
+    }
+  }
+
+  const stopSkalpellRecording = () => {
+    skalpellMediaRecorderRef.current?.stop()
+  }
+
+  const handleSentenceMicClick = (answerIdx: number, sentenceIdx: number) => {
+    const key = `${answerIdx}-${sentenceIdx}`
+    if (skalpellRecording && skalpellTarget === key) {
+      stopSkalpellRecording()
+    } else if (!skalpellRecording && !skalpellProcessing) {
+      startSkalpellRecording(answerIdx, sentenceIdx)
+    }
+  }
+
   const generateReplies = async (force = false) => {
     setAiLoading(true)
     setMissingContext(null)
@@ -1209,6 +1314,30 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
               onChange={e => handleTextChange(idx, e.target.value)}
               onClick={e => { if (isSelected) e.stopPropagation() }}
             />
+            {isSelected && (
+              <div className="rd2-skalpell-row" onClick={e => e.stopPropagation()}>
+                <div className="rd2-skalpell-hint">Satz per Sprache korrigieren, auf das Mikrofon beim gewünschten Satz tippen:</div>
+                {splitIntoSentences(answer.text).map((satz, sIdx) => {
+                  const key = `${idx}-${sIdx}`
+                  const isThisRecording = skalpellRecording && skalpellTarget === key
+                  const isThisProcessing = skalpellProcessing && skalpellTarget === key
+                  return (
+                    <div key={sIdx} className="rd2-skalpell-satz">
+                      <span className="rd2-skalpell-satztext">{satz}</span>
+                      <button
+                        type="button"
+                        className={`rd2-skalpell-mic${isThisRecording ? ' rd2-skalpell-mic-active' : ''}`}
+                        disabled={skalpellProcessing || (skalpellRecording && !isThisRecording)}
+                        onClick={() => handleSentenceMicClick(idx, sIdx)}
+                        title={isThisRecording ? 'Aufnahme stoppen' : 'Korrektur einsprechen'}
+                      >
+                        {isThisProcessing ? '…' : isThisRecording ? '⏹' : '🎙'}
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
         </div>
         <div className="rd2-edit-hint">Direkt im Text anpassen, falls gewünscht.</div>
