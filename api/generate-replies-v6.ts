@@ -338,7 +338,7 @@ const ABLAUF_SERVICE = `Ablauf der Antwort (Kategorie SERVICE, Personal):
 1. Der nette Gastgeber: Falls Lobpunkte vorhanden sind, greif sie in ein bis zwei Sätzen auf, kurz und ehrlich. Wenn keine Lobpunkte da sind, direkt mit Schritt 2 starten.
 2. Der gestandene Inhaber (Team-Schutzschild): Stell dich vor deine Crew. Bestätige nie die Verhaltens-Anschuldigung selbst als Fakt, sondern nur den Eindruck des Gastes. Signalisiere, dass jeder Vorfall intern in Ruhe besprochen wird, ohne euch öffentlich schuldig zu bekennen, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Mein Team arbeitet hart, und wenn bei dir der Eindruck entstanden ist, dass da was nicht gepasst hat, besprechen wir das intern in Ruhe."
 3. Falls zutreffend: das kurze Statement zum Ton (maximal zwei Sätze).
-4. Der lockere Kumpel (Umlenkung ins Private): Biete keine Bühne für öffentliche Diskussionen, sondern lenk das Gespräch konsequent und konkret ins Private, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Lass uns das nicht hier öffentlich austragen, das bringt niemandem was. Schreib mir kurz an die hinterlegte Adresse oder sprich mich beim nächsten Besuch direkt an, dann klären wir das unter uns."
+4. Der lockere Kumpel (Umlenkung ins Private): Biete keine Bühne für öffentliche Diskussionen, sondern lenk das Gespräch konsequent und konkret ins Private, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Lass uns das nicht hier öffentlich austragen. Schreib mir kurz an die hinterlegte Adresse oder sprich mich beim nächsten Besuch direkt an, dann klären wir das unter uns."
 Alle Schritte fließen in einem einzigen, zusammenhängenden Absatz ineinander.`
 
 const CATEGORY_ABLAUF: Record<KategorieKey, string> = {
