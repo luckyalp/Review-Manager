@@ -173,6 +173,7 @@ function resolveSettings(settings: Settings | undefined, reviewerName: string) {
     responseSignature = '',
     responseLanguage = 'Deutsch',
     description = '',
+    contactEmail = '',
   } = settings || {}
 
   const isDu = salutation === 'Du'
@@ -186,7 +187,7 @@ function resolveSettings(settings: Settings | undefined, reviewerName: string) {
     responseLanguage === 'Englisch' ? 'Respond in English only.' :
     'Antworte auf Deutsch.'
 
-  return { businessName, isDu, signature, firstNameClean, langInstruction, description }
+  return { businessName, isDu, signature, firstNameClean, langInstruction, description, contactEmail }
 }
 
 function pickGreeting(isDu: boolean, name: string): string {
@@ -223,10 +224,18 @@ function d(isDu: boolean, duText: string, sieText: string): string {
 
 // Feste Antwort für negative Bewertungen ohne Text: keine Analyse, kein Ur-Prompt,
 // keine API-Calls nötig, weil es inhaltlich nichts zu analysieren gibt.
-function getBoilerplateResponse(isDu: boolean): string {
+// contactEmail kommt dynamisch aus dem Restaurantprofil, nie fest im Code.
+function getBoilerplateResponse(isDu: boolean, contactEmail: string): string {
+  const kontaktDu = contactEmail
+    ? `Meld dich doch gerne unter ${contactEmail}, dann schauen wir uns das gemeinsam an.`
+    : 'Meld dich doch gerne direkt bei uns, dann schauen wir uns das gemeinsam an.'
+  const kontaktSie = contactEmail
+    ? `Melden Sie sich doch gerne unter ${contactEmail}, dann schauen wir uns das gemeinsam an.`
+    : 'Melden Sie sich doch gerne direkt bei uns, dann schauen wir uns das gemeinsam an.'
+
   return d(isDu,
-    'Schade, dass es nicht gepasst hat. Du hast leider keinen Text zu deiner Bewertung hinterlassen, magst du dich direkt bei uns melden, dann schauen wir uns das gemeinsam an?',
-    'Schade, dass es nicht gepasst hat. Sie haben leider keinen Text zu Ihrer Bewertung hinterlassen, mögen Sie sich direkt bei uns melden, dann schauen wir uns das gemeinsam an?'
+    `Schade, dass es nicht gepasst hat. Du hast leider keinen Text zu deiner Bewertung hinterlassen, dadurch wissen wir nicht, was genau los war. ${kontaktDu}`,
+    `Schade, dass es nicht gepasst hat. Sie haben leider keinen Text zu Ihrer Bewertung hinterlassen, dadurch wissen wir nicht, was genau los war. ${kontaktSie}`
   )
 }
 
@@ -425,13 +434,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const mode = classify(stars, reviewText)
-    const { signature, isDu, firstNameClean, langInstruction, description } = resolveSettings(settings, reviewerName)
+    const { signature, isDu, firstNameClean, langInstruction, description, contactEmail } = resolveSettings(settings, reviewerName)
     const begruessung = pickGreeting(isDu, firstNameClean)
     const grussFormel = d(isDu, 'Viele Grüße', 'Mit freundlichen Grüßen')
 
     // Negative Bewertung ohne Text: nichts zu analysieren, direkt Boilerplate, kein API-Call
     if (mode === 'EMPTY_NEGATIVE') {
-      const text = `${begruessung}\n\n${getBoilerplateResponse(isDu)}\n\n${grussFormel},\n${signature}`
+      const text = `${begruessung}\n\n${getBoilerplateResponse(isDu, contactEmail)}\n\n${grussFormel},\n${signature}`
       return res.status(200).json({ success: true, answers: [{ label: 'Frei (Test)', text }] })
     }
 
