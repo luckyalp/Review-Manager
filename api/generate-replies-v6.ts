@@ -231,18 +231,34 @@ const ABLAUF_KATEGORIE_A = `Ablauf der Antwort:
    Passe Formulierung, Du/Sie und Sprache jeweils an.
 Alle Schritte fließen in einem einzigen, zusammenhängenden Absatz ineinander, kein Abschnittswechsel, keine Zwischenüberschriften.`
 
-// TODO (Alp): eigener Ablauf für Kategorie B (Küchen-/Prozessfehler, Distanzierungssatz
-// statt Regel-Erklärung). Bis der geschrieben ist, läuft B über den A-Ablauf mit.
-const ABLAUF_KATEGORIE_B = ABLAUF_KATEGORIE_A
+// Ablauf Kategorie B: Fehler im Ablauf, Küche oder Zubereitung (echter Fehler).
+// Ziel: Größe zeigen, den Fehler ehrlich einräumen und sich distanzieren, ohne künstlich zu kriechen.
+const ABLAUF_KATEGORIE_B = `Ablauf der Antwort:
+1. Falls Lobpunkte vorhanden sind: greif sie in ein bis zwei Sätzen auf, kurz und ehrlich. Wenn keine Lobpunkte da sind, direkt mit Schritt 2 starten.
+2. Fehler-Eingeständnis: Geh direkt auf das Missgeschick ein und ziehe eine klare Grenze zu deinem eigentlichen Qualitätsanspruch, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Dass das Steak kalt war, entspricht absolut nicht unserem Standard, da ist uns in der Küche schlicht die Koordination abgerissen." Kein langes Herumreden, kein "Es tut uns unendlich leid".
+3. Falls zutreffend: das kurze Statement zum Ton (maximal zwei Sätze).
+4. Der großzügige, unkomplizierte Ausstieg: Biete eine direkte, handfeste Wiedergutmachung an, die zeigt, dass du zu deinem Wort stehst, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Beim nächsten Mal geht die erste Runde auf mich, sprich mich einfach direkt im Laden an, dann brennt da auch nichts an."
+Alle Schritte fließen in einem einzigen, zusammenhängenden Absatz ineinander.`
 
-// TODO (Alp): eigener Ablauf für Kategorie C (Geschmack/Menge/Preis/Auswahl,
-// "nicht deinen Geschmack getroffen" statt objektiver Fehler). Platzhalter = A.
-const ABLAUF_KATEGORIE_C = ABLAUF_KATEGORIE_A
+// Ablauf Kategorie C: Geschmack, Menge, Preis oder Auswahl (persönliche Präferenz).
+// Ziel: Stolz auf der eigenen Linie bleiben, dem Gast seine Meinung lassen, aber das eigene Konzept
+// verteidigen. WICHTIG: nie als objektiven Fehler framen, immer als individuelle Präferenz, und nie
+// pauschal mit "Geschmäcker sind verschieden" o.ä. abtun, das isoliert den Gast statt ihn ernst zu nehmen.
+const ABLAUF_KATEGORIE_C = `Ablauf der Antwort:
+1. Falls Lobpunkte vorhanden sind: greif sie in ein bis zwei Sätzen auf, kurz und ehrlich. Wenn keine Lobpunkte da sind, direkt mit Schritt 2 starten.
+2. Konzept-Klartext: Erkenne die persönliche Präferenz des Gastes ausdrücklich an, ohne sie pauschal mit "Geschmäcker sind verschieden" oder ähnlichen Floskeln abzutun, und bleib gleichzeitig stolz auf dem eigenen Weg, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Dass dir das nicht getroffen hat, kann ich nachvollziehen, bei uns geht die Linie bewusst in Richtung Klasse statt Masse, das ist kein Zufall, sondern Konzept." Keine Entschuldigung, keine Rechtfertigung.
+3. Falls zutreffend: das kurze Statement zum Ton (maximal zwei Sätze).
+4. Der gelassene Ausstieg: Reiche dem Gast souverän die Hand, ohne belehrend zu wirken oder um Wiederkehr zu betteln, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Wir verstellen uns da nicht, entweder es passt oder es passt nicht. Falls du uns noch mal eine Chance gibst und in der Erklärung oben eine Alternative genannt wird, probier die gerne, vielleicht trifft das eher deinen Nerv."
+Alle Schritte fließen in einem einzigen, zusammenhängenden Absatz ineinander.`
 
-// TODO (Alp): eigener Ablauf für Service-Beschwerden (soll laut Vorgabe auf
-// private Kontaktaufnahme lenken statt das Verhalten selbst zu bestätigen).
-// Platzhalter = A, bis der eigene Text steht.
-const ABLAUF_SERVICE = ABLAUF_KATEGORIE_A
+// Ablauf Kategorie SERVICE: Beschwerden über Personal oder Service-Ton.
+// Ziel: Das eigene Team schützen, deeskalieren und das Gespräch aus der Öffentlichkeit holen.
+const ABLAUF_SERVICE = `Ablauf der Antwort:
+1. Falls Lobpunkte vorhanden sind: greif sie in ein bis zwei Sätzen auf, kurz und ehrlich. Wenn keine Lobpunkte da sind, direkt mit Schritt 2 starten.
+2. Team-Schutzschild: Stell dich vor deine Crew. Signalisiere, dass Fehler intern besprochen werden, aber ein respektloser Ton oder Pauschalkritik nicht stehen bleibt, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Mein Team arbeitet hart, und wir besprechen jeden Vorfall intern, aber Missverständnisse passieren im Stress." Bestätige dabei nie die Verhaltens-Anschuldigung selbst direkt, nur den Eindruck des Gastes.
+3. Falls zutreffend: das kurze Statement zum Ton (maximal zwei Sätze).
+4. Der private Ausstieg: Biete keine Bühne für öffentliche Diskussionen, sondern lenk das Gespräch konsequent ins Private, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Lass uns das nicht hier öffentlich klären, das bringt niemandem was. Schreib mir kurz an die in den Einstellungen hinterlegte Adresse, dann schauen wir uns das gemeinsam an."
+Alle Schritte fließen in einem einzigen, zusammenhängenden Absatz ineinander.`
 
 const CATEGORY_ABLAUF: Record<KategorieKey, string> = {
   A: ABLAUF_KATEGORIE_A,
