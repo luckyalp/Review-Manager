@@ -251,9 +251,11 @@ async function analyzeReview(reviewText: string): Promise<Analysis> {
   const systemPrompt = `Analysiere die Restaurant-Bewertung. Extrahiere Kritik- und Lobpunkte.
 
 Kategorien:
-A = betrifft eine feste betriebliche Regel/Struktur (z.B. Tischzeit, Lautstärke bei vollem Haus, Öffnungszeiten)
+A = betrifft eine feste betriebliche Regel/Struktur (z.B. Tischzeit, Lautstärke bei vollem Haus, Öffnungszeiten). Gilt auch dann, wenn der Gast die Durchsetzung der Regel emotional beschreibt (z.B. "wie am Fließband", "unpersönlich"), solange sich die Kritik auf die Regel selbst richtet, nicht auf einzelne Personen.
 B = Fehler im Ablauf, Küche oder Zubereitung (etwas ging schief, das nicht hätte passieren sollen)
 C = Geschmack, Menge, Preis oder Auswahl (persönliche Präferenz, kein objektiver Fehler)
+
+isServiceComplaint = true NUR wenn sich die Kritik konkret auf das Verhalten, den Ton oder die Art einzelner Mitarbeiter richtet (z.B. unfreundlich, unhöflich, überfordert, respektlos). Eine Beschwerde über eine Regel oder ein Konzept ist KEIN Service-Fall, auch wenn ein Mitarbeiter die Regel durchgesetzt hat, das bleibt Kategorie A.
 
 Gib NUR valides JSON zurück:
 {
@@ -352,7 +354,7 @@ Die mitgelieferte Sternebewertung gibt dir ein Gefühl für die Schwere der Situ
 
 Wenn du im Text selbst etwas wörtlich zitieren willst (z. B. einen unglücklichen Satz), nutze deutsche Anführungszeichen „..." oder einfache Anführungszeichen '...', niemals gerade doppelte Anführungszeichen ".
 
-Gib NUR den fertigen Fließtext zurück, ohne Anrede-Zeile, ohne Grußformel, ohne Anführungszeichen drumherum, nur den reinen Text.`
+Gib NUR den fertigen Fließtext zurück, ohne Anrede-Zeile, ohne Grußformel, ohne Anführungszeichen drumherum, nur den reinen Text. Beginne den Text immer mit einem Großbuchstaben.`
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ─── VERKETTUNG (reine Technik, keine Prompt-Formulierung) ──────────────────
@@ -373,7 +375,8 @@ function buildUrPrompt(
   explanation: string,
   isDu: boolean,
   langInstruction: string,
-  kategorie: KategorieKey
+  kategorie: KategorieKey,
+  contactEmail: string
 ): string {
   const anrede = isDu
     ? 'Du duzt den Gast. Schreibe "du", "dir", "dein", "dich" klein.'
@@ -381,12 +384,17 @@ function buildUrPrompt(
 
   const ablauf = CATEGORY_ABLAUF[kategorie]
 
+  const kontaktHinweis = contactEmail
+    ? `Falls du im Text auf eine Kontaktmöglichkeit verweist, nutze diese Adresse: ${contactEmail}`
+    : `Es ist aktuell KEINE Kontakt-E-Mail hinterlegt. Verweise NIEMALS auf "die hinterlegte Adresse" oder eine E-Mail-Adresse. Formuliere stattdessen allgemein, z.B. "melde dich direkt bei uns" oder "sprich mich beim nächsten Besuch an".`
+
   return [
     PERSONA_INTRO,
     `Hier ist die Hausregel/betriebliche Vorgabe für diesen Fall, die du dem Gast erklärst: "${explanation}"`,
     `${anrede}\n${langInstruction}`,
     HARTE_STRUKTUR_REGELN,
     ablauf,
+    kontaktHinweis,
     AUSGABE_REGELN,
   ].join('\n\n')
 }
@@ -397,11 +405,14 @@ function buildUrPrompt(
 // falls das Modell trotzdem mal Codeblock-Markierungen oder umschließende
 // Anführungszeichen dranhängt. Kein JSON-Parsing mehr.
 function cleanResponseText(raw: string): string {
-  return raw
+  const cleaned = raw
     .replace(/```[a-z]*\s*/gi, '')
     .trim()
     .replace(/^["']|["']$/g, '')
     .trim()
+  // Erster Buchstabe immer groß, unabhängig davon, wie die KI den Satz beginnt.
+  // Landet direkt nach der Begrüßung im Text, ein kleingeschriebener Anfang fällt sofort auf.
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1)
 }
 
 // ─── HANDLER ──────────────────────────────────────────────────────────────────
@@ -477,7 +488,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ? ownerVoice.trim()
       : (description || 'Erkläre kurz und sachlich, ohne dich zu rechtfertigen.')
 
-    const urPrompt = buildUrPrompt(explanation, isDu, langInstruction, kategorie)
+    const urPrompt = buildUrPrompt(explanation, isDu, langInstruction, kategorie, contactEmail)
     const raw = await callClaude(
       `Bewertung des Gasts: "${reviewText}"\nSternebewertung: ${stars} von 5\nKritikpunkte: ${analysis.points.join(', ') || 'keine konkreten, allgemeiner Unmut'}\nLobpunkte: ${analysis.lobpunkte.join(', ') || 'keine'}`,
       urPrompt,
