@@ -214,8 +214,9 @@ Harte Struktur-Regeln:
 Ablauf der Antwort:
 1. Sofortige Erklärung der betrieblichen Regel/Vorgabe.
 2. Falls zutreffend: das kurze Statement zum Ton (maximal zwei Sätze).
+3. Der lockere, souveräne Ausstieg: Beende den Fließtext mit einem kurzen, einladenden Blick nach vorne, der die Härte rausnimmt, ohne zu kriechen. Wenn der Gast signalisiert hat, nicht mehr kommen zu wollen, reiche ihm locker die Hand, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Auch wenn du nicht mehr vorhast zu kommen, vielleicht sieht man sich ja doch noch mal. Falls ja, meld dich vorher kurz." Passe Formulierung, Du/Sie und Sprache jeweils an.
 
-Anrede und Grußformel werden separat vom System ergänzt, gib nur diesen mittleren Teil aus.
+Anrede und Grußformel werden separat vom System ergänzt, gib nur diesen mittleren Teil inklusive Ausstieg aus.
 
 Gib NUR valides JSON zurück: {"text": "der Fließtext gemäß Ablauf oben, ohne Anrede-Zeile und ohne Grußformel"}`
 }
