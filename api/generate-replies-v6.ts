@@ -1,13 +1,98 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { callClaude, handleTranscribeAction, handleSkalpellAction } from './_lib/voice-helpers'
 
 // ─── v6 ── NEUE ENGINE: KURZER UR-PROMPT ALS KERNSTÜCK ───────────────────────
 // Ersetzt die vorherige v6 (Kategorie-Router ohne Lego-Bausteine, war Vorstufe
 // von v7 ohne Eigenwert). Statt fester Bausteine bekommt Claude hier den
 // kurzen Persona-Prompt ("Stell dir vor, du bist der Inhaber...") + den
 // harten Struktur-Käfig, 1:1 wie vorgegeben, inklusive Ton-Limit-Klausel.
+//
+// Alles in EINER Datei, kein Import aus anderen Dateien. Der vorherige Versuch
+// mit ausgelagertem voice-helpers.ts in api/_lib ist am Vercel-Deployment
+// gescheitert (ERR_MODULE_NOT_FOUND). Deshalb zurück zum bewährten Muster:
+// jede Engine-Datei ist komplett eigenständig, genau wie v5 und v7.
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
+const GROQ_API_KEY = process.env.GROQ_API_KEY
+
+// ─── CLAUDE API CALL ──────────────────────────────────────────────────────────
+
+async function callClaude(
+  userMessage: string,
+  systemPrompt?: string,
+  model = 'claude-sonnet-4-6',
+  temperature = 0
+): Promise<string> {
+  const body: any = {
+    model,
+    max_tokens: 1000,
+    temperature,
+    messages: [{ role: 'user', content: userMessage }],
+  }
+  if (systemPrompt) body.system = systemPrompt
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': ANTHROPIC_API_KEY!,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify(body),
+  })
+
+  if (!response.ok) {
+    const err = await response.json()
+    throw new Error(`Claude API Fehler: ${JSON.stringify(err)}`)
+  }
+
+  const data = await response.json()
+  return data.content?.[0]?.text || ''
+}
+
+// ─── AUDIO TRANSKRIPTION (Groq Whisper) ──────────────────────────────────────
+
+async function transcribeAudio(audioBase64: string, mimeType: string): Promise<string> {
+  const binaryStr = atob(audioBase64)
+  const bytes = new Uint8Array(binaryStr.length)
+  for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i)
+  const blob = new Blob([bytes], { type: mimeType })
+
+  const formData = new FormData()
+  formData.append('file', blob, 'audio.webm')
+  formData.append('model', 'whisper-large-v3')
+  formData.append('language', 'de')
+  formData.append('response_format', 'text')
+
+  const response = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` },
+    body: formData,
+  })
+
+  if (!response.ok) {
+    const err = await response.text()
+    throw new Error(`Groq Whisper Fehler: ${err}`)
+  }
+
+  return (await response.text()).trim()
+}
+
+// ─── SKALPELL: EINZELNEN SATZ PER SPRACHBEFEHL KORRIGIEREN ──────────────────
+
+async function korrigiereSatz(markierterSatzOriginal: string, gesprocheneAnweisung: string): Promise<string> {
+  const systemPrompt = `Du bist ein präzises Text-Skalpell für eine Gastronomie-Software. Deine einzige Aufgabe ist es, einen einzelnen Satz stilistisch zu korrigieren, den ein Gastronom per Sprachbefehl anpassen möchte.
+
+Deine harten Arbeitsregeln:
+1. Formuliere NUR diesen einen Satz exakt nach den Wünschen des Nutzers um.
+2. Behalte den Charakter des Inhabers bei: Er ist ein gestandener Gastronom, er redet nicht um den heißen Brei herum, aber er setzt die gewünschte Anpassung präzise um.
+3. Nutze NIEMALS Gedankenstriche (— oder –) in deiner Antwort.
+4. Keine Entschuldigung, kein Bedauern, keine Floskeln.
+5. WICHTIG: Gib als Output AUSSCHLIESSLICH den neu formulierten Satz zurück. Keine Einleitung, keine Anführungszeichen.`
+
+  const userMessage = `Aktueller Satz:\n"${markierterSatzOriginal}"\n\nGesprochene Anweisung:\n"${gesprocheneAnweisung}"`
+  const raw = await callClaude(userMessage, systemPrompt, 'claude-sonnet-4-6', 0.2)
+  return raw.trim().replace(/^["']|["']$/g, '')
+}
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -162,14 +247,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Mikrofon-Transkription
   if (action === 'transcribe') {
-    const result = await handleTranscribeAction(audioBase64, mimeType)
-    return res.status(result.status).json(result.body)
+    if (!audioBase64) return res.status(400).json({ success: false, error: 'audioBase64 fehlt' })
+    try {
+      const transcript = await transcribeAudio(audioBase64, mimeType || 'audio/webm')
+      return res.status(200).json({ success: true, transcript })
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : String(error)
+      return res.status(500).json({ success: false, error: errMsg })
+    }
   }
 
   // Skalpell: einzelnen Satz per Sprachbefehl korrigieren
   if (action === 'skalpell') {
-    const result = await handleSkalpellAction(markierterSatzOriginal, gesprocheneAnweisung)
-    return res.status(result.status).json(result.body)
+    if (!markierterSatzOriginal || !gesprocheneAnweisung) {
+      return res.status(400).json({ success: false, error: 'markierterSatzOriginal oder gesprocheneAnweisung fehlt' })
+    }
+    try {
+      const korrigiert = await korrigiereSatz(markierterSatzOriginal, gesprocheneAnweisung)
+      return res.status(200).json({ success: true, korrigierterSatz: korrigiert })
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : String(error)
+      return res.status(500).json({ success: false, error: errMsg })
+    }
   }
 
   if (!review) return res.status(400).json({ success: false, error: 'review fehlt' })
