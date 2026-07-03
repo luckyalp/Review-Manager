@@ -1222,7 +1222,10 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
             reader.onloadend = () => resolve((reader.result as string).split(',')[1])
             reader.readAsDataURL(blob)
           })
-          const resp = await fetch('/api/generate-replies-v5', {
+          // Fest auf v6, weil das die aktiv gepflegte Engine mit bestätigter
+          // transcribe-Unterstützung ist. v2/v3/v7 haben diese Action evtl. gar
+          // nicht implementiert, dynamisches Umschalten wäre daher riskant.
+          const resp = await fetch('/api/generate-replies-v6', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'transcribe', audioBase64: base64, mimeType: 'audio/webm' })
