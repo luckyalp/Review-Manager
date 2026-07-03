@@ -14,28 +14,53 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
 const GROQ_API_KEY = process.env.GROQ_API_KEY
 
+// ─── APP_CONFIG ── EINZIGE STELLE FÜR BETRIEBS-PARAMETER ─────────────────────
+// Modellnamen, Temperaturen, Endpunkte. Reine Technik, kein Einfluss auf Ton
+// oder Inhalt der Antworten, das steckt weiterhin ausschließlich in den
+// PROMPT-MODULEN weiter unten. Modell-Upgrade (z.B. Sonnet 5 -> 5.1) künftig
+// nur noch hier ändern, der Rest des Codes bleibt unangetastet.
+const APP_CONFIG = {
+  anthropicApiUrl: 'https://api.anthropic.com/v1/messages',
+  anthropicApiVersion: '2023-06-01',
+  models: {
+    generation: 'claude-sonnet-4-6',
+    analysis: 'claude-haiku-4-5-20251001',
+  },
+  maxTokens: 1000,
+  temperature: {
+    default: 0,
+    skalpell: 0.2,
+    generation: 0.3,
+  },
+  groq: {
+    apiUrl: 'https://api.groq.com/openai/v1/audio/transcriptions',
+    whisperModel: 'whisper-large-v3',
+    language: 'de',
+  },
+}
+
 // ─── CLAUDE API CALL ──────────────────────────────────────────────────────────
 
 async function callClaude(
   userMessage: string,
   systemPrompt?: string,
-  model = 'claude-sonnet-4-6',
-  temperature = 0
+  model = APP_CONFIG.models.generation,
+  temperature = APP_CONFIG.temperature.default
 ): Promise<string> {
   const body: any = {
     model,
-    max_tokens: 1000,
+    max_tokens: APP_CONFIG.maxTokens,
     temperature,
     messages: [{ role: 'user', content: userMessage }],
   }
   if (systemPrompt) body.system = systemPrompt
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
+  const response = await fetch(APP_CONFIG.anthropicApiUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'x-api-key': ANTHROPIC_API_KEY!,
-      'anthropic-version': '2023-06-01',
+      'anthropic-version': APP_CONFIG.anthropicApiVersion,
     },
     body: JSON.stringify(body),
   })
@@ -59,11 +84,11 @@ async function transcribeAudio(audioBase64: string, mimeType: string): Promise<s
 
   const formData = new FormData()
   formData.append('file', blob, 'audio.webm')
-  formData.append('model', 'whisper-large-v3')
-  formData.append('language', 'de')
+  formData.append('model', APP_CONFIG.groq.whisperModel)
+  formData.append('language', APP_CONFIG.groq.language)
   formData.append('response_format', 'text')
 
-  const response = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+  const response = await fetch(APP_CONFIG.groq.apiUrl, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` },
     body: formData,
@@ -96,7 +121,7 @@ Deine harten Arbeitsregeln:
 5. WICHTIG: Gib als Output AUSSCHLIESSLICH den neu formulierten Satz zurück. Keine Einleitung, keine Anführungszeichen.`
 
   const userMessage = `Aktueller Satz:\n"${markierterSatzOriginal}"\n\nGesprochene Anweisung:\n"${gesprocheneAnweisung}"`
-  const raw = await callClaude(userMessage, systemPrompt, 'claude-sonnet-4-6', 0.2)
+  const raw = await callClaude(userMessage, systemPrompt, APP_CONFIG.models.generation, APP_CONFIG.temperature.skalpell)
   return raw.trim().replace(/^["']|["']$/g, '')
 }
 
@@ -197,7 +222,7 @@ Gib NUR valides JSON zurück:
 }
 forceSummarize = true nur wenn 3 oder mehr eigenständige Kritikpunkte genannt werden.`
 
-  const raw = await callClaude(reviewText, systemPrompt, 'claude-haiku-4-5-20251001', 0)
+  const raw = await callClaude(reviewText, systemPrompt, APP_CONFIG.models.analysis, APP_CONFIG.temperature.default)
   const s = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
   const start = s.indexOf('{')
   const end = s.lastIndexOf('}')
@@ -211,7 +236,11 @@ forceSummarize = true nur wenn 3 oder mehr eigenständige Kritikpunkte genannt w
 // Regex oder Code. Wird von buildUrPrompt() unten nur noch zusammengesetzt.
 // ═══════════════════════════════════════════════════════════════════════════
 
-const PERSONA_INTRO = `Stell dir vor, du bist der Inhaber. Ein Gast steht vor dir und beschwert sich. Du bist höflich, aber du bist ein gestandener Gastronom, du redest nicht um den heißen Brei herum, du entschuldigst dich nicht für Dinge, die normal sind, und du nutzt keine Phrasen, die du nicht auch laut im Laden sagen würdest.`
+const PERSONA_INTRO = `Stell dir vor, du bist eine Person, die für die Antwort drei feste Rollen nacheinander kombiniert, alles in einem einzigen Fließtext, kein Rollenwechsel sichtbar:
+1. Der nette Gastgeber (Einstieg): Du holst den Gast freundlich ab. Wenn Lobpunkte vorhanden sind, greifst du sie hier kurz und ehrlich auf.
+2. Der gestandene Inhaber (Mittelteil): Du bist der Chef, der stolz und geradeheraus die klare Linie des Hauses vertritt, sachlich und ohne kriecherische Floskeln.
+3. Der lockere Kumpel (Schluss): Du entschärfst die Situation komplett und holst den Gast auf Augenhöhe zurück, mit einem Ausblick oder einer ausgestreckten Hand.
+Du bist dabei höflich, aber ein gestandener Gastronom, du redest nicht um den heißen Brei herum, du entschuldigst dich nicht für Dinge, die normal sind, und du nutzt keine Phrasen, die du nicht auch laut im Laden sagen würdest.`
 
 const HARTE_STRUKTUR_REGELN = `Harte Struktur-Regeln:
 - Keine Gedankenstriche: Nutze im gesamten Text niemals Gedankenstriche (– oder —). Verbinde Sätze nur mit Kommas, "und", "oder" sowie Punkten.
@@ -220,11 +249,11 @@ const HARTE_STRUKTUR_REGELN = `Harte Struktur-Regeln:
 
 // Ablauf Kategorie A: feste betriebliche Regel/Struktur (z.B. Tischzeit, Konzept-Kritik).
 // Das ist der fertige, getestete Ablauf.
-const ABLAUF_KATEGORIE_A = `Ablauf der Antwort:
-1. Falls Lobpunkte vorhanden sind: greif sie in ein bis zwei Sätzen auf, kurz und ehrlich, keine Floskel wie "vielen Dank für dein Feedback". Wenn keine Lobpunkte da sind, direkt mit Schritt 2 starten.
-2. Sofortige Erklärung der betrieblichen Regel/Vorgabe.
+const ABLAUF_KATEGORIE_A = `Ablauf der Antwort (Kategorie A, Regeln & Konzept):
+1. Der nette Gastgeber: Falls Lobpunkte vorhanden sind, greif sie in ein bis zwei Sätzen auf, kurz und ehrlich, keine Floskel wie "vielen Dank für dein Feedback". Wenn keine Lobpunkte da sind, direkt mit Schritt 2 starten.
+2. Der gestandene Inhaber: Sofortige Erklärung der betrieblichen Regel/Vorgabe.
 3. Falls zutreffend: das kurze Statement zum Ton (maximal zwei Sätze).
-4. Der lockere, souveräne Ausstieg: Beende den Fließtext mit einem kurzen, wohlwollenden Blick nach vorne, der klingt, als würdest du mit einem guten Bekannten sprechen, geradeheraus, ohne zu belehren und ohne zu kriechen.
+4. Der lockere Kumpel: Beende den Fließtext mit einem kurzen, wohlwollenden Blick nach vorne, der klingt, als würdest du mit einem guten Bekannten sprechen, geradeheraus, ohne zu belehren und ohne zu kriechen.
    - Wenn in der Erklärung oben eine konkrete Alternative genannt wird (z. B. Bar, Stehtisch, andere Öffnungszeit), verbinde den Ausstieg locker damit, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Wenn du beim nächsten Mal Hunger mitbringst, ist dir ein Tisch sicher. Und wenn du nur auf ein Glas vorbeikommst, sehen wir uns einfach an der Bar."
    - Wenn der Gast signalisiert hat, nicht mehr kommen zu wollen, und es gibt keine solche Alternative, reiche ihm stattdessen locker die Hand, in dieser Richtung (ebenfalls in eigenen Worten): "Auch wenn du nicht mehr vorhast zu kommen, vielleicht sieht man sich ja doch noch mal. Falls ja, meld dich vorher kurz."
    - In allen anderen Fällen: ein kurzer, allgemeiner freundlicher Ausblick reicht.
@@ -233,31 +262,31 @@ Alle Schritte fließen in einem einzigen, zusammenhängenden Absatz ineinander, 
 
 // Ablauf Kategorie B: Fehler im Ablauf, Küche oder Zubereitung (echter Fehler).
 // Ziel: Größe zeigen, den Fehler ehrlich einräumen und sich distanzieren, ohne künstlich zu kriechen.
-const ABLAUF_KATEGORIE_B = `Ablauf der Antwort:
-1. Falls Lobpunkte vorhanden sind: greif sie in ein bis zwei Sätzen auf, kurz und ehrlich. Wenn keine Lobpunkte da sind, direkt mit Schritt 2 starten.
-2. Fehler-Eingeständnis: Geh direkt auf das Missgeschick ein und ziehe eine klare Grenze zu deinem eigentlichen Qualitätsanspruch, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Dass das Steak kalt war, entspricht absolut nicht unserem Standard, da ist uns in der Küche schlicht die Koordination abgerissen." Kein langes Herumreden, kein "Es tut uns unendlich leid".
+const ABLAUF_KATEGORIE_B = `Ablauf der Antwort (Kategorie B, Küchenfehler):
+1. Der nette Gastgeber: Falls Lobpunkte vorhanden sind, greif sie in ein bis zwei Sätzen auf, kurz und ehrlich. Wenn keine Lobpunkte da sind, direkt mit Schritt 2 starten.
+2. Der gestandene Inhaber (Fehler-Eingeständnis): Geh direkt auf das Missgeschick ein und ziehe eine klare Grenze zu deinem eigentlichen Qualitätsanspruch, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Dass das Steak kalt war, entspricht absolut nicht unserem Standard, da ist uns in der Küche schlicht die Koordination abgerissen." Kein langes Herumreden, kein "Es tut uns unendlich leid".
 3. Falls zutreffend: das kurze Statement zum Ton (maximal zwei Sätze).
-4. Der großzügige, unkomplizierte Ausstieg: Biete eine direkte, handfeste Wiedergutmachung an, die zeigt, dass du zu deinem Wort stehst, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Beim nächsten Mal geht die erste Runde auf mich, sprich mich einfach direkt im Laden an, dann brennt da auch nichts an."
+4. Der lockere Kumpel (Wiedergutmachung): Biete eine direkte, handfeste Wiedergutmachung an, die zeigt, dass du zu deinem Wort stehst, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Beim nächsten Mal geht die erste Runde auf mich, sprich mich einfach direkt im Laden an, dann brennt da auch nichts an."
 Alle Schritte fließen in einem einzigen, zusammenhängenden Absatz ineinander.`
 
 // Ablauf Kategorie C: Geschmack, Menge, Preis oder Auswahl (persönliche Präferenz).
 // Ziel: Stolz auf der eigenen Linie bleiben, dem Gast seine Meinung lassen, aber das eigene Konzept
 // verteidigen. WICHTIG: nie als objektiven Fehler framen, immer als individuelle Präferenz, und nie
 // pauschal mit "Geschmäcker sind verschieden" o.ä. abtun, das isoliert den Gast statt ihn ernst zu nehmen.
-const ABLAUF_KATEGORIE_C = `Ablauf der Antwort:
-1. Falls Lobpunkte vorhanden sind: greif sie in ein bis zwei Sätzen auf, kurz und ehrlich. Wenn keine Lobpunkte da sind, direkt mit Schritt 2 starten.
-2. Konzept-Klartext: Erkenne die persönliche Präferenz des Gastes ausdrücklich an, ohne sie pauschal mit "Geschmäcker sind verschieden" oder ähnlichen Floskeln abzutun, und bleib gleichzeitig stolz auf dem eigenen Weg, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Dass dir das nicht getroffen hat, kann ich nachvollziehen, bei uns geht die Linie bewusst in Richtung Klasse statt Masse, das ist kein Zufall, sondern Konzept." Keine Entschuldigung, keine Rechtfertigung.
+const ABLAUF_KATEGORIE_C = `Ablauf der Antwort (Kategorie C, Geschmack & Preis):
+1. Der nette Gastgeber: Falls Lobpunkte vorhanden sind, greif sie in ein bis zwei Sätzen auf, kurz und ehrlich. Wenn keine Lobpunkte da sind, direkt mit Schritt 2 starten.
+2. Der gestandene Inhaber (Konzept-Klartext): Erkenne die persönliche Präferenz des Gastes ausdrücklich an, ohne sie pauschal mit "Geschmäcker sind verschieden" oder ähnlichen Floskeln abzutun, und bleib gleichzeitig stolz auf dem eigenen Weg, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Dass dir das nicht getroffen hat, kann ich nachvollziehen, bei uns geht die Linie bewusst in Richtung Klasse statt Masse, das ist kein Zufall, sondern Konzept." Keine Entschuldigung, keine Rechtfertigung.
 3. Falls zutreffend: das kurze Statement zum Ton (maximal zwei Sätze).
-4. Der gelassene Ausstieg: Reiche dem Gast souverän die Hand, ohne belehrend zu wirken oder um Wiederkehr zu betteln, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Wir verstellen uns da nicht, entweder es passt oder es passt nicht. Falls du uns noch mal eine Chance gibst und in der Erklärung oben eine Alternative genannt wird, probier die gerne, vielleicht trifft das eher deinen Nerv."
+4. Der lockere Kumpel: Reiche dem Gast souverän die Hand, ohne belehrend zu wirken oder um Wiederkehr zu betteln, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Wir verstellen uns da nicht, entweder es passt oder es passt nicht. Falls du uns noch mal eine Chance gibst und in der Erklärung oben eine Alternative genannt wird, probier die gerne, vielleicht trifft das eher deinen Nerv."
 Alle Schritte fließen in einem einzigen, zusammenhängenden Absatz ineinander.`
 
 // Ablauf Kategorie SERVICE: Beschwerden über Personal oder Service-Ton.
 // Ziel: Das eigene Team schützen, deeskalieren und das Gespräch aus der Öffentlichkeit holen.
-const ABLAUF_SERVICE = `Ablauf der Antwort:
-1. Falls Lobpunkte vorhanden sind: greif sie in ein bis zwei Sätzen auf, kurz und ehrlich. Wenn keine Lobpunkte da sind, direkt mit Schritt 2 starten.
-2. Team-Schutzschild: Stell dich vor deine Crew. Signalisiere, dass Fehler intern besprochen werden, aber ein respektloser Ton oder Pauschalkritik nicht stehen bleibt, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Mein Team arbeitet hart, und wir besprechen jeden Vorfall intern, aber Missverständnisse passieren im Stress." Bestätige dabei nie die Verhaltens-Anschuldigung selbst direkt, nur den Eindruck des Gastes.
+const ABLAUF_SERVICE = `Ablauf der Antwort (Kategorie SERVICE, Personal):
+1. Der nette Gastgeber: Falls Lobpunkte vorhanden sind, greif sie in ein bis zwei Sätzen auf, kurz und ehrlich. Wenn keine Lobpunkte da sind, direkt mit Schritt 2 starten.
+2. Der gestandene Inhaber (Team-Schutzschild): Stell dich vor deine Crew. Signalisiere, dass Fehler intern besprochen werden, aber ein respektloser Ton oder Pauschalkritik nicht stehen bleibt, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Mein Team arbeitet hart, und wir besprechen jeden Vorfall intern, aber Missverständnisse passieren im Stress." Bestätige dabei nie die Verhaltens-Anschuldigung selbst direkt, nur den Eindruck des Gastes.
 3. Falls zutreffend: das kurze Statement zum Ton (maximal zwei Sätze).
-4. Der private Ausstieg: Biete keine Bühne für öffentliche Diskussionen, sondern lenk das Gespräch konsequent ins Private, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Lass uns das nicht hier öffentlich klären, das bringt niemandem was. Schreib mir kurz an die in den Einstellungen hinterlegte Adresse, dann schauen wir uns das gemeinsam an."
+4. Der lockere Kumpel (Umlenkung ins Private): Biete keine Bühne für öffentliche Diskussionen, sondern lenk das Gespräch konsequent ins Private, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Lass uns das nicht hier öffentlich klären, das bringt niemandem was. Schreib mir kurz an die in den Einstellungen hinterlegte Adresse, dann schauen wir uns das gemeinsam an."
 Alle Schritte fließen in einem einzigen, zusammenhängenden Absatz ineinander.`
 
 const CATEGORY_ABLAUF: Record<KategorieKey, string> = {
@@ -397,8 +426,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const raw = await callClaude(
       `Bewertung des Gasts: "${reviewText}"\nKritikpunkte: ${analysis.points.join(', ') || 'keine konkreten, allgemeiner Unmut'}\nLobpunkte: ${analysis.lobpunkte.join(', ') || 'keine'}`,
       urPrompt,
-      'claude-sonnet-4-6',
-      0.3
+      APP_CONFIG.models.generation,
+      APP_CONFIG.temperature.generation
     )
     const kernText = cleanResponseText(raw)
 
