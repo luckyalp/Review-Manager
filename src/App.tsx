@@ -997,7 +997,7 @@ const rdStyles = `
   .rd2-answer-card.rd2-selected .rd2-answer-textarea { cursor: text; }
   .rd2-edit-hint { display: none; padding: 0 15px 11px 47px; font-size: 11px; color: var(--rd2-sand); font-style: italic; line-height: 1.4; }
   .rd2-answer-card.rd2-selected .rd2-edit-hint { display: block; }
-  .rd2-skalpell-row { padding: 4px 15px 12px 47px; display: flex; flex-direction: column; gap: 8px; }
+  .rd2-skalpell-row { padding: 4px 15px 12px 15px; display: flex; flex-direction: column; gap: 8px; }
   .rd2-skalpell-hint { font-size: 11px; color: var(--rd2-sand); font-style: italic; margin-bottom: 2px; }
   .rd2-skalpell-satz { display: flex; align-items: center; gap: 8px; background: #f7f5f2; border: 1px solid #e2ddd8; border-radius: 10px; padding: 14px 12px; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
   .rd2-skalpell-satztext { flex: 1; font-size: 14px; line-height: 1.5; color: #1a1a1a; }
@@ -1007,7 +1007,7 @@ const rdStyles = `
   .rd2-skalpell-mic:disabled { opacity: 0.4; cursor: not-allowed; }
   .rd2-skalpell-mic-active { background: #dc2626; animation: rd2-pulse 1.2s infinite; }
   @keyframes rd2-pulse { 0% { box-shadow: 0 0 0 0 rgba(220,38,38,0.5); } 70% { box-shadow: 0 0 0 8px rgba(220,38,38,0); } 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0); } }
-  .rd2-skalpell-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; background: #fff; border-top: 1px solid #e2ddd8; box-shadow: 0 -4px 16px rgba(0,0,0,0.08); padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 8px; }
+  .rd2-skalpell-bar { position: fixed; left: 0; right: 0; bottom: 64px; z-index: 250; background: #fff; border-top: 1px solid #e2ddd8; box-shadow: 0 -4px 16px rgba(0,0,0,0.12); padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 8px; }
   .rd2-skalpell-bar-satz { font-size: 12px; color: #6b7280; line-height: 1.4; max-height: 40px; overflow: hidden; text-overflow: ellipsis; }
   .rd2-skalpell-bar-mic { width: 100%; padding: 16px; border-radius: 12px; border: none; background: #0f4c5c; color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; }
   .rd2-skalpell-bar-mic:disabled { opacity: 0.5; cursor: not-allowed; }
