@@ -230,20 +230,27 @@ Alle Schritte fließen in einem einzigen, zusammenhängenden Absatz ineinander, 
 
 Anrede und Grußformel werden separat vom System ergänzt, gib nur diesen mittleren Teil inklusive Lob-Einstieg (falls vorhanden) und Ausstieg aus.
 
-Gib NUR valides JSON zurück: {"text": "der Fließtext gemäß Ablauf oben, ohne Anrede-Zeile und ohne Grußformel"}`
+Wenn du im Text selbst etwas wörtlich zitieren willst (z. B. einen unglücklichen Satz), nutze deutsche Anführungszeichen „..." oder einfache Anführungszeichen '...', niemals gerade doppelte Anführungszeichen ".
+
+Gib NUR den fertigen Fließtext zurück, ohne Anrede-Zeile, ohne Grußformel, ohne Anführungszeichen drumherum, ohne JSON, ohne Code-Block, nur den reinen Text.`
 }
 
 function parseUrPromptResponse(raw: string): string {
-  const s = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
-  const start = s.indexOf('{')
-  const end = s.lastIndexOf('}')
-  if (start === -1 || end === -1) return s
-  try {
-    const parsed = JSON.parse(s.substring(start, end + 1))
-    return parsed.text || s
-  } catch {
-    return s
+  let s = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
+  // Sicherheitsnetz: falls die KI trotz Anweisung doch JSON zurückgibt, versuchen zu extrahieren.
+  // Schlägt die Extraktion fehl (z.B. wegen Anführungszeichen im Text), wird die rohe Antwort
+  // von den äußeren {"text": "..."} Resten befreit statt sie ungefiltert anzuzeigen.
+  if (s.startsWith('{') && s.includes('"text"')) {
+    const start = s.indexOf('{')
+    const end = s.lastIndexOf('}')
+    try {
+      const parsed = JSON.parse(s.substring(start, end + 1))
+      if (parsed.text) return parsed.text
+    } catch {
+      s = s.replace(/^\{\s*"text"\s*:\s*"/, '').replace(/"\s*\}\s*$/, '')
+    }
   }
+  return s.replace(/^["']|["']$/g, '').trim()
 }
 
 function d(isDu: boolean, duText: string, sieText: string): string {
