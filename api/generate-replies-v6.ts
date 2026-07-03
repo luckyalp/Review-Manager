@@ -1,12 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 // ─── v6 ── NEUE ENGINE: KURZER UR-PROMPT ALS KERNSTÜCK ───────────────────────
-// Architektur ab diesem Umbau: Technik und Prompt-Texte sind strikt getrennt.
-// Alle Prompt-Bausteine stehen unten als eigene, unangetastete Variablen im
-// Abschnitt "PROMPT-MODULE". Der Code verkettet sie nur noch, formuliert nichts
-// selbst. Die 4-Kategorien-Weiche (A/B/C/Service) ist vorbereitet, aktuell
-// nutzen B/C/Service noch den A-Ablauf (Konzept-Kritik) als Platzhalter, bis
-// die drei fehlenden Prompts geschrieben sind.
+// Architektur: Technik und Prompt-Texte sind strikt getrennt. Alle Prompt-
+// Bausteine stehen unten als eigene Variablen im Abschnitt "PROMPT-MODULE".
+// Der Code verkettet sie nur noch, formuliert nichts selbst. Die 4-Kategorien-
+// Weiche (A/B/C/Service) ist vollständig aktiv, jede Kategorie hat ihren
+// eigenen Ablauf.
 //
 // Alles weiterhin in EINER Datei, kein Import aus anderen Dateien (siehe
 // gescheiterter _lib-Versuch, ERR_MODULE_NOT_FOUND).
@@ -313,18 +312,20 @@ Alle Schritte fließen in einem einzigen, zusammenhängenden Absatz ineinander.`
 // pauschal mit "Geschmäcker sind verschieden" o.ä. abtun, das isoliert den Gast statt ihn ernst zu nehmen.
 const ABLAUF_KATEGORIE_C = `Ablauf der Antwort (Kategorie C, Geschmack & Preis):
 1. Der nette Gastgeber: Falls Lobpunkte vorhanden sind, greif sie in ein bis zwei Sätzen auf, kurz und ehrlich. Wenn keine Lobpunkte da sind, direkt mit Schritt 2 starten.
-2. Der gestandene Inhaber (Konzept-Klartext): Erkenne die persönliche Präferenz des Gastes ausdrücklich an, ohne sie pauschal mit "Geschmäcker sind verschieden" oder ähnlichen Floskeln abzutun, und bleib gleichzeitig stolz auf dem eigenen Weg, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Dass dir das nicht getroffen hat, kann ich nachvollziehen, bei uns geht die Linie bewusst in Richtung Klasse statt Masse, das ist kein Zufall, sondern Konzept." Keine Entschuldigung, keine Rechtfertigung.
+2. Der gestandene Inhaber (Konzept-Klartext): Erkenne die persönliche Präferenz des Gastes ausdrücklich an, ohne sie pauschal mit "Geschmäcker sind verschieden" oder ähnlichen Floskeln abzutun. Verteidige stattdessen die eigene handwerkliche Linie, egal ob es um Geschmack, Menge, Auswahl oder Preis ging, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Dass dir das nicht getroffen hat, kann ich nachvollziehen. Wie wir kochen und kalkulieren, ist bei uns bewusst so, das ist Konzept und kein Zufall." Keine Entschuldigung, keine Rechtfertigung.
 3. Falls zutreffend: das kurze Statement zum Ton (maximal zwei Sätze).
-4. Der lockere Kumpel: Reiche dem Gast souverän die Hand, ohne belehrend zu wirken oder um Wiederkehr zu betteln, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Wir verstellen uns da nicht, entweder es passt oder es passt nicht. Falls du uns noch mal eine Chance gibst und in der Erklärung oben eine Alternative genannt wird, probier die gerne, vielleicht trifft das eher deinen Nerv."
+4. Der lockere Kumpel: Reiche dem Gast souverän die Hand, ohne belehrend zu wirken oder um Wiederkehr zu betteln, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Falls es diesmal nicht gepasst hat, probier beim nächsten Mal gerne etwas anderes von der Karte. Falls in der Erklärung oben eine Alternative genannt wird, probier die, vielleicht trifft das eher deinen Nerv."
 Alle Schritte fließen in einem einzigen, zusammenhängenden Absatz ineinander.`
 
 // Ablauf Kategorie SERVICE: Beschwerden über Personal oder Service-Ton.
 // Ziel: Das eigene Team schützen, deeskalieren und das Gespräch aus der Öffentlichkeit holen.
+// WICHTIG: nie die Verhaltens-Anschuldigung selbst als Fakt bestätigen, nur den Eindruck
+// des Gastes. Das Team wird verteidigt, nicht öffentlich vorverurteilt.
 const ABLAUF_SERVICE = `Ablauf der Antwort (Kategorie SERVICE, Personal):
 1. Der nette Gastgeber: Falls Lobpunkte vorhanden sind, greif sie in ein bis zwei Sätzen auf, kurz und ehrlich. Wenn keine Lobpunkte da sind, direkt mit Schritt 2 starten.
-2. Der gestandene Inhaber (Team-Schutzschild): Stell dich vor deine Crew. Signalisiere, dass Fehler intern besprochen werden, aber ein respektloser Ton oder Pauschalkritik nicht stehen bleibt, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Mein Team arbeitet hart, und wir besprechen jeden Vorfall intern, aber Missverständnisse passieren im Stress." Bestätige dabei nie die Verhaltens-Anschuldigung selbst direkt, nur den Eindruck des Gastes.
+2. Der gestandene Inhaber (Team-Schutzschild): Stell dich vor deine Crew. Bestätige nie die Verhaltens-Anschuldigung selbst als Fakt, sondern nur den Eindruck des Gastes. Signalisiere, dass jeder Vorfall intern in Ruhe besprochen wird, ohne euch öffentlich schuldig zu bekennen, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Mein Team arbeitet hart, und wenn bei dir der Eindruck entstanden ist, dass da was nicht gepasst hat, besprechen wir das intern in Ruhe."
 3. Falls zutreffend: das kurze Statement zum Ton (maximal zwei Sätze).
-4. Der lockere Kumpel (Umlenkung ins Private): Biete keine Bühne für öffentliche Diskussionen, sondern lenk das Gespräch konsequent ins Private, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Lass uns das nicht hier öffentlich klären, das bringt niemandem was. Schreib mir kurz an die in den Einstellungen hinterlegte Adresse, dann schauen wir uns das gemeinsam an."
+4. Der lockere Kumpel (Umlenkung ins Private): Biete keine Bühne für öffentliche Diskussionen, sondern lenk das Gespräch konsequent und konkret ins Private, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Lass uns das nicht hier öffentlich austragen, das bringt niemandem was. Schreib mir kurz an die hinterlegte Adresse oder sprich mich beim nächsten Besuch direkt an, dann klären wir das unter uns."
 Alle Schritte fließen in einem einzigen, zusammenhängenden Absatz ineinander.`
 
 const CATEGORY_ABLAUF: Record<KategorieKey, string> = {
