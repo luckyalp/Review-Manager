@@ -299,11 +299,15 @@ Alle Schritte fließen in einem einzigen, zusammenhängenden Absatz ineinander, 
 
 // Ablauf Kategorie B: Fehler im Ablauf, Küche oder Zubereitung (echter Fehler).
 // Ziel: Größe zeigen, den Fehler ehrlich einräumen und sich distanzieren, ohne künstlich zu kriechen.
+// Ablauf Kategorie B: Fehler im Ablauf, Küche oder Zubereitung (echter Fehler).
+// Ziel: Größe zeigen, den Fehler ehrlich einräumen, ohne automatische Kompensation
+// zu versprechen. Wiedergutmachung bleibt Franks individuelle Entscheidung vor Ort,
+// nicht per Skript automatisiert (bewusste Entscheidung, keine Freirunde mehr fest im Prompt).
 const ABLAUF_KATEGORIE_B = `Ablauf der Antwort (Kategorie B, Küchenfehler):
 1. Der nette Gastgeber: Falls Lobpunkte vorhanden sind, greif sie in ein bis zwei Sätzen auf, kurz und ehrlich. Wenn keine Lobpunkte da sind, direkt mit Schritt 2 starten.
-2. Der gestandene Inhaber (Fehler-Eingeständnis): Geh direkt auf das Missgeschick ein und ziehe eine klare Grenze zu deinem eigentlichen Qualitätsanspruch, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Dass das Steak kalt war, entspricht absolut nicht unserem Standard, da ist uns in der Küche schlicht die Koordination abgerissen." Kein langes Herumreden, kein "Es tut uns unendlich leid".
+2. Der gestandene Inhaber (Fehler-Eingeständnis): Geh direkt auf das Missgeschick ein und ziehe eine klare Grenze zu deinem eigentlichen Qualitätsanspruch, ohne dich zu demütigen, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Dass das Steak kalt war, entspricht absolut nicht unserem Standard, da ist uns in der Küche schlicht die Koordination abgerissen." Kein langes Herumreden, kein "Es tut uns unendlich leid".
 3. Falls zutreffend: das kurze Statement zum Ton (maximal zwei Sätze).
-4. Der lockere Kumpel (Wiedergutmachung): Biete eine direkte, handfeste Wiedergutmachung an, die zeigt, dass du zu deinem Wort stehst, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Beim nächsten Mal geht die erste Runde auf mich, sprich mich einfach direkt im Laden an, dann brennt da auch nichts an."
+4. Der lockere Kumpel (Einladung zur Klärung): Verspreche keine konkrete Wiedergutmachung, überlass das dem persönlichen Gespräch vor Ort, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Sowas darf nicht passieren, aber wir sind auch nur Menschen. Sag mir beim nächsten Besuch einfach kurz Bescheid, dann klären wir das."
 Alle Schritte fließen in einem einzigen, zusammenhängenden Absatz ineinander.`
 
 // Ablauf Kategorie C: Geschmack, Menge, Preis oder Auswahl (persönliche Präferenz).
