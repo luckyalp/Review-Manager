@@ -997,14 +997,24 @@ const rdStyles = `
   .rd2-answer-card.rd2-selected .rd2-answer-textarea { cursor: text; }
   .rd2-edit-hint { display: none; padding: 0 15px 11px 47px; font-size: 11px; color: var(--rd2-sand); font-style: italic; line-height: 1.4; }
   .rd2-answer-card.rd2-selected .rd2-edit-hint { display: block; }
-  .rd2-skalpell-row { padding: 4px 15px 12px 47px; display: flex; flex-direction: column; gap: 6px; }
+  .rd2-skalpell-row { padding: 4px 15px 12px 47px; display: flex; flex-direction: column; gap: 8px; }
   .rd2-skalpell-hint { font-size: 11px; color: var(--rd2-sand); font-style: italic; margin-bottom: 2px; }
-  .rd2-skalpell-satz { display: flex; align-items: flex-start; gap: 8px; background: #f7f5f2; border: 1px solid #e2ddd8; border-radius: 8px; padding: 6px 8px; }
-  .rd2-skalpell-satztext { flex: 1; font-size: 13px; line-height: 1.4; color: #1a1a1a; }
-  .rd2-skalpell-mic { flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; border: none; background: #0f4c5c; color: #fff; cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; }
+  .rd2-skalpell-satz { display: flex; align-items: center; gap: 8px; background: #f7f5f2; border: 1px solid #e2ddd8; border-radius: 10px; padding: 14px 12px; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+  .rd2-skalpell-satztext { flex: 1; font-size: 14px; line-height: 1.5; color: #1a1a1a; }
+  .rd2-skalpell-satz-focused { border-color: #0f4c5c; border-width: 2px; background: #eef6f7; }
+  .rd2-skalpell-satz-recording { border-color: #dc2626; border-width: 2px; background: #fef2f2; }
+  .rd2-skalpell-mic { flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; border: none; background: #0f4c5c; color: #fff; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
   .rd2-skalpell-mic:disabled { opacity: 0.4; cursor: not-allowed; }
   .rd2-skalpell-mic-active { background: #dc2626; animation: rd2-pulse 1.2s infinite; }
   @keyframes rd2-pulse { 0% { box-shadow: 0 0 0 0 rgba(220,38,38,0.5); } 70% { box-shadow: 0 0 0 8px rgba(220,38,38,0); } 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0); } }
+  .rd2-skalpell-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; background: #fff; border-top: 1px solid #e2ddd8; box-shadow: 0 -4px 16px rgba(0,0,0,0.08); padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 8px; }
+  .rd2-skalpell-bar-satz { font-size: 12px; color: #6b7280; line-height: 1.4; max-height: 40px; overflow: hidden; text-overflow: ellipsis; }
+  .rd2-skalpell-bar-mic { width: 100%; padding: 16px; border-radius: 12px; border: none; background: #0f4c5c; color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; }
+  .rd2-skalpell-bar-mic:disabled { opacity: 0.5; cursor: not-allowed; }
+  .rd2-skalpell-bar-mic-active { background: #dc2626; }
+  @media (min-width: 640px) {
+    .rd2-skalpell-bar { max-width: 620px; left: 50%; transform: translateX(-50%); border-radius: 12px 12px 0 0; }
+  }
   .rd2-recovery-note { font-size: 11px; color: var(--rd2-teal); margin-bottom: 4px; line-height: 1.4; opacity: 0.85; }
   .rd2-recovery-separator { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
   .rd2-recovery-separator-line { flex: 1; height: 1px; background: var(--rd2-border); }
@@ -1044,6 +1054,7 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
   const [skalpellTarget, setSkalpellTarget] = useState<string | null>(null) // "answerIdx-sentenceIdx"
   const [skalpellRecording, setSkalpellRecording] = useState(false)
   const [skalpellProcessing, setSkalpellProcessing] = useState(false)
+  const [focusedSegment, setFocusedSegment] = useState<string | null>(null) // "answerIdx-sentenceIdx", fuer mobile Tap-to-focus
   const skalpellMediaRecorderRef = useRef<MediaRecorder | null>(null)
   const skalpellAudioChunksRef = useRef<Blob[]>([])
   const settings = JSON.parse(localStorage.getItem('rezpondSettings') || '{}')
@@ -1266,7 +1277,7 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
           const transcribeData = await transcribeResp.json()
           if (!transcribeData.success || !transcribeData.transcript) {
             alert('Transkription fehlgeschlagen: ' + (transcribeData.error || 'Kein Text erkannt. Bitte nochmal versuchen.'))
-            setSkalpellProcessing(false); setSkalpellTarget(null); setSkalpellRecording(false)
+            setSkalpellProcessing(false); setSkalpellTarget(null); setSkalpellRecording(false); setFocusedSegment(null)
             return
           }
 
@@ -1293,6 +1304,7 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
         setSkalpellProcessing(false)
         setSkalpellTarget(null)
         setSkalpellRecording(false)
+        setFocusedSegment(null)
       }
       mediaRecorder.start()
       skalpellMediaRecorderRef.current = mediaRecorder
@@ -1312,8 +1324,17 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
     if (skalpellRecording && skalpellTarget === key) {
       stopSkalpellRecording()
     } else if (!skalpellRecording && !skalpellProcessing) {
+      setFocusedSegment(key)
       startSkalpellRecording(answerIdx, sentenceIdx)
     }
+  }
+
+  // Zeile antippen fokussiert sie (fürs mobile "Riesen-Mikrofon" unten am Bildschirmrand).
+  // Nochmaliges Antippen der bereits fokussierten Zeile hebt den Fokus wieder auf.
+  const handleSentenceRowTap = (answerIdx: number, sentenceIdx: number) => {
+    const key = `${answerIdx}-${sentenceIdx}`
+    if (skalpellRecording) return // waehrend Aufnahme nicht umschalten
+    setFocusedSegment(prev => prev === key ? null : key)
   }
 
   const generateReplies = async (force = false) => {
@@ -1369,19 +1390,24 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
             />
             {isSelected && (
               <div className="rd2-skalpell-row" onClick={e => e.stopPropagation()}>
-                <div className="rd2-skalpell-hint">Satz per Sprache korrigieren, auf das Mikrofon beim gewünschten Satz tippen:</div>
+                <div className="rd2-skalpell-hint">Satz antippen, dann unten aufnehmen, um ihn per Sprache zu korrigieren:</div>
                 {getCombinedSegments(answer.text).map((satz, sIdx) => {
                   const key = `${idx}-${sIdx}`
                   const isThisRecording = skalpellRecording && skalpellTarget === key
                   const isThisProcessing = skalpellProcessing && skalpellTarget === key
+                  const isThisFocused = focusedSegment === key
                   return (
-                    <div key={sIdx} className="rd2-skalpell-satz">
+                    <div
+                      key={sIdx}
+                      className={`rd2-skalpell-satz${isThisFocused ? ' rd2-skalpell-satz-focused' : ''}${isThisRecording ? ' rd2-skalpell-satz-recording' : ''}`}
+                      onClick={() => handleSentenceRowTap(idx, sIdx)}
+                    >
                       <span className="rd2-skalpell-satztext">{satz}</span>
                       <button
                         type="button"
                         className={`rd2-skalpell-mic${isThisRecording ? ' rd2-skalpell-mic-active' : ''}`}
                         disabled={skalpellProcessing || (skalpellRecording && !isThisRecording)}
-                        onClick={() => handleSentenceMicClick(idx, sIdx)}
+                        onClick={e => { e.stopPropagation(); handleSentenceMicClick(idx, sIdx) }}
                         title={isThisRecording ? 'Aufnahme stoppen' : 'Korrektur einsprechen'}
                       >
                         {isThisProcessing ? '…' : isThisRecording ? '⏹' : '🎙'}
@@ -1555,6 +1581,27 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
           )}
         </>
       )}
+      {focusedSegment && (() => {
+        const [ansIdxStr, segIdxStr] = focusedSegment.split('-')
+        const ansIdx = Number(ansIdxStr)
+        const segIdx = Number(segIdxStr)
+        const satzText = answers[ansIdx] ? getCombinedSegments(answers[ansIdx].text)[segIdx] : ''
+        const isThisRecording = skalpellRecording && skalpellTarget === focusedSegment
+        const isThisProcessing = skalpellProcessing && skalpellTarget === focusedSegment
+        return (
+          <div className="rd2-skalpell-bar">
+            <div className="rd2-skalpell-bar-satz">{satzText}</div>
+            <button
+              type="button"
+              className={`rd2-skalpell-bar-mic${isThisRecording ? ' rd2-skalpell-bar-mic-active' : ''}`}
+              disabled={isThisProcessing || (skalpellRecording && !isThisRecording)}
+              onClick={() => handleSentenceMicClick(ansIdx, segIdx)}
+            >
+              {isThisProcessing ? 'Verarbeite…' : isThisRecording ? '⏹ Aufnahme stoppen' : '🎙 Korrektur einsprechen'}
+            </button>
+          </div>
+        )
+      })()}
       <div className={`rd2-toast${showToast ? ' rd2-toast-show' : ''}`}>✓ Antwort wurde gesendet</div>
     </div>
   )
