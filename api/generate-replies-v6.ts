@@ -201,6 +201,15 @@ function d(isDu: boolean, duText: string, sieText: string): string {
   return isDu ? duText : sieText
 }
 
+// Feste Antwort für negative Bewertungen ohne Text: keine Analyse, kein Ur-Prompt,
+// keine API-Calls nötig, weil es inhaltlich nichts zu analysieren gibt.
+function getBoilerplateResponse(isDu: boolean): string {
+  return d(isDu,
+    'Schade, dass es nicht gepasst hat. Du hast leider keinen Text zu deiner Bewertung hinterlassen, magst du dich direkt bei uns melden, dann schauen wir uns das gemeinsam an?',
+    'Schade, dass es nicht gepasst hat. Sie haben leider keinen Text zu Ihrer Bewertung hinterlassen, mögen Sie sich direkt bei uns melden, dann schauen wir uns das gemeinsam an?'
+  )
+}
+
 // ─── HAIKU: ANALYSE DER BEWERTUNG ─────────────────────────────────────────────
 
 async function analyzeReview(reviewText: string): Promise<Analysis> {
@@ -399,6 +408,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { signature, isDu, firstNameClean, langInstruction, description } = resolveSettings(settings, reviewerName)
     const begruessung = pickGreeting(isDu, firstNameClean)
     const grussFormel = d(isDu, 'Viele Grüße', 'Mit freundlichen Grüßen')
+
+    // Negative Bewertung ohne Text: nichts zu analysieren, direkt Boilerplate, kein API-Call
+    if (mode === 'EMPTY_NEGATIVE') {
+      const text = `${begruessung}\n\n${getBoilerplateResponse(isDu)}\n\n${grussFormel},\n${signature}`
+      return res.status(200).json({ success: true, answers: [{ label: 'Frei (Test)', text }] })
+    }
 
     // Rein positive Bewertung ohne Kritik: kurzer direkter Weg, kein Ur-Prompt nötig
     if (mode === 'CONTENT_POSITIVE' || mode === 'EMPTY_POSITIVE') {
