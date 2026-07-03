@@ -1,15 +1,15 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 // ─── v6 ── NEUE ENGINE: KURZER UR-PROMPT ALS KERNSTÜCK ───────────────────────
-// Ersetzt die vorherige v6 (Kategorie-Router ohne Lego-Bausteine, war Vorstufe
-// von v7 ohne Eigenwert). Statt fester Bausteine bekommt Claude hier den
-// kurzen Persona-Prompt ("Stell dir vor, du bist der Inhaber...") + den
-// harten Struktur-Käfig, 1:1 wie vorgegeben, inklusive Ton-Limit-Klausel.
+// Architektur ab diesem Umbau: Technik und Prompt-Texte sind strikt getrennt.
+// Alle Prompt-Bausteine stehen unten als eigene, unangetastete Variablen im
+// Abschnitt "PROMPT-MODULE". Der Code verkettet sie nur noch, formuliert nichts
+// selbst. Die 4-Kategorien-Weiche (A/B/C/Service) ist vorbereitet, aktuell
+// nutzen B/C/Service noch den A-Ablauf (Konzept-Kritik) als Platzhalter, bis
+// die drei fehlenden Prompts geschrieben sind.
 //
-// Alles in EINER Datei, kein Import aus anderen Dateien. Der vorherige Versuch
-// mit ausgelagertem voice-helpers.ts in api/_lib ist am Vercel-Deployment
-// gescheitert (ERR_MODULE_NOT_FOUND). Deshalb zurück zum bewährten Muster:
-// jede Engine-Datei ist komplett eigenständig, genau wie v5 und v7.
+// Alles weiterhin in EINER Datei, kein Import aus anderen Dateien (siehe
+// gescheiterter _lib-Versuch, ERR_MODULE_NOT_FOUND).
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
 const GROQ_API_KEY = process.env.GROQ_API_KEY
@@ -125,6 +125,8 @@ interface Analysis {
   isServiceComplaint: boolean
 }
 
+type KategorieKey = 'A' | 'B' | 'C' | 'SERVICE'
+
 // ─── CLASSIFY ─────────────────────────────────────────────────────────────────
 
 function classify(rating: number, reviewText: string): string {
@@ -162,6 +164,18 @@ function resolveSettings(settings: Settings | undefined, reviewerName: string) {
   return { businessName, isDu, signature, firstNameClean, langInstruction, description }
 }
 
+function pickGreeting(isDu: boolean, name: string): string {
+  if (isDu) {
+    const pool = name ? [`Hallo ${name},`, `Hey ${name},`] : ['Hallo,', 'Hey,']
+    return pool[Math.floor(Math.random() * pool.length)]
+  }
+  return name ? `Hallo ${name},` : 'Guten Tag,'
+}
+
+function d(isDu: boolean, duText: string, sieText: string): string {
+  return isDu ? duText : sieText
+}
+
 // ─── HAIKU: ANALYSE DER BEWERTUNG ─────────────────────────────────────────────
 
 async function analyzeReview(reviewText: string): Promise<Analysis> {
@@ -191,33 +205,22 @@ forceSummarize = true nur wenn 3 oder mehr eigenständige Kritikpunkte genannt w
   return JSON.parse(s.substring(start, end + 1))
 }
 
-// ─── DER KURZE UR-PROMPT (Kernstück v8) ──────────────────────────────────────
-// explanation = das, was der Inhaber dem Gast erklärt. Kommt primär aus der
-// Inhaber-Stimme (ownerVoice, per Mikrofon eingesprochen). Fällt darauf
-// zurück, sollte kein ownerVoice vorliegen: Restaurantprofil-Beschreibung.
+// ═══════════════════════════════════════════════════════════════════════════
+// ─── PROMPT-MODULE ────────────────────────────────────────────────────────
+// Reine Text-Bausteine, keine Logik. Nichts hier drin weiß etwas von JSON,
+// Regex oder Code. Wird von buildUrPrompt() unten nur noch zusammengesetzt.
+// ═══════════════════════════════════════════════════════════════════════════
 
-function buildUrPrompt(
-  explanation: string,
-  isDu: boolean,
-  langInstruction: string
-): string {
-  const anrede = isDu
-    ? 'Du duzt den Gast. Schreibe "du", "dir", "dein", "dich" klein.'
-    : 'Du siezt den Gast.'
+const PERSONA_INTRO = `Stell dir vor, du bist der Inhaber. Ein Gast steht vor dir und beschwert sich. Du bist höflich, aber du bist ein gestandener Gastronom, du redest nicht um den heißen Brei herum, du entschuldigst dich nicht für Dinge, die normal sind, und du nutzt keine Phrasen, die du nicht auch laut im Laden sagen würdest.`
 
-  return `Stell dir vor, du bist der Inhaber. Ein Gast steht vor dir und beschwert sich. Du bist höflich, aber du bist ein gestandener Gastronom, du redest nicht um den heißen Brei herum, du entschuldigst dich nicht für Dinge, die normal sind, und du nutzt keine Phrasen, die du nicht auch laut im Laden sagen würdest.
-
-Hier ist die Hausregel/betriebliche Vorgabe für diesen Fall, die du dem Gast erklärst: "${explanation}"
-
-${anrede}
-${langInstruction}
-
-Harte Struktur-Regeln:
+const HARTE_STRUKTUR_REGELN = `Harte Struktur-Regeln:
 - Keine Gedankenstriche: Nutze im gesamten Text niemals Gedankenstriche (– oder —). Verbinde Sätze nur mit Kommas, "und", "oder" sowie Punkten.
 - Keine Floskeln: Steige sofort ohne einleitendes "Vielen Dank für das Feedback" oder "Schade, dass..." ein.
-- Das Ton-Limit: Wenn der Ton vor Ort zu scharf war, gestehst du das in maximal ein bis zwei Sätzen ein (z. B. dass es im Eifer des Gefechts unglücklich formuliert war), ohne dich danach weiter zu rechtfertigen, dich zu demütigen oder dich in aller Form zu entschuldigen. Nur wenn das aus der Erklärung oben hervorgeht, sonst weglassen.
+- Das Ton-Limit: Wenn der Ton vor Ort zu scharf war, gestehst du das in maximal ein bis zwei Sätzen ein (z. B. dass es im Eifer des Gefechts unglücklich formuliert war), ohne dich danach weiter zu rechtfertigen, dich zu demütigen oder dich in aller Form zu entschuldigen. Nur wenn das aus der Erklärung hervorgeht, sonst weglassen.`
 
-Ablauf der Antwort:
+// Ablauf Kategorie A: feste betriebliche Regel/Struktur (z.B. Tischzeit, Konzept-Kritik).
+// Das ist der fertige, getestete Ablauf.
+const ABLAUF_KATEGORIE_A = `Ablauf der Antwort:
 1. Falls Lobpunkte vorhanden sind: greif sie in ein bis zwei Sätzen auf, kurz und ehrlich, keine Floskel wie "vielen Dank für dein Feedback". Wenn keine Lobpunkte da sind, direkt mit Schritt 2 starten.
 2. Sofortige Erklärung der betrieblichen Regel/Vorgabe.
 3. Falls zutreffend: das kurze Statement zum Ton (maximal zwei Sätze).
@@ -226,35 +229,82 @@ Ablauf der Antwort:
    - Wenn der Gast signalisiert hat, nicht mehr kommen zu wollen, und es gibt keine solche Alternative, reiche ihm stattdessen locker die Hand, in dieser Richtung (ebenfalls in eigenen Worten): "Auch wenn du nicht mehr vorhast zu kommen, vielleicht sieht man sich ja doch noch mal. Falls ja, meld dich vorher kurz."
    - In allen anderen Fällen: ein kurzer, allgemeiner freundlicher Ausblick reicht.
    Passe Formulierung, Du/Sie und Sprache jeweils an.
-Alle Schritte fließen in einem einzigen, zusammenhängenden Absatz ineinander, kein Abschnittswechsel, keine Zwischenüberschriften.
+Alle Schritte fließen in einem einzigen, zusammenhängenden Absatz ineinander, kein Abschnittswechsel, keine Zwischenüberschriften.`
 
-Anrede und Grußformel werden separat vom System ergänzt, gib nur diesen mittleren Teil inklusive Lob-Einstieg (falls vorhanden) und Ausstieg aus.
+// TODO (Alp): eigener Ablauf für Kategorie B (Küchen-/Prozessfehler, Distanzierungssatz
+// statt Regel-Erklärung). Bis der geschrieben ist, läuft B über den A-Ablauf mit.
+const ABLAUF_KATEGORIE_B = ABLAUF_KATEGORIE_A
+
+// TODO (Alp): eigener Ablauf für Kategorie C (Geschmack/Menge/Preis/Auswahl,
+// "nicht deinen Geschmack getroffen" statt objektiver Fehler). Platzhalter = A.
+const ABLAUF_KATEGORIE_C = ABLAUF_KATEGORIE_A
+
+// TODO (Alp): eigener Ablauf für Service-Beschwerden (soll laut Vorgabe auf
+// private Kontaktaufnahme lenken statt das Verhalten selbst zu bestätigen).
+// Platzhalter = A, bis der eigene Text steht.
+const ABLAUF_SERVICE = ABLAUF_KATEGORIE_A
+
+const CATEGORY_ABLAUF: Record<KategorieKey, string> = {
+  A: ABLAUF_KATEGORIE_A,
+  B: ABLAUF_KATEGORIE_B,
+  C: ABLAUF_KATEGORIE_C,
+  SERVICE: ABLAUF_SERVICE,
+}
+
+const AUSGABE_REGELN = `Anrede und Grußformel werden separat vom System ergänzt, gib nur diesen mittleren Teil inklusive Lob-Einstieg (falls vorhanden) und Ausstieg aus.
 
 Wenn du im Text selbst etwas wörtlich zitieren willst (z. B. einen unglücklichen Satz), nutze deutsche Anführungszeichen „..." oder einfache Anführungszeichen '...', niemals gerade doppelte Anführungszeichen ".
 
-Gib NUR den fertigen Fließtext zurück, ohne Anrede-Zeile, ohne Grußformel, ohne Anführungszeichen drumherum, ohne JSON, ohne Code-Block, nur den reinen Text.`
+Gib NUR den fertigen Fließtext zurück, ohne Anrede-Zeile, ohne Grußformel, ohne Anführungszeichen drumherum, nur den reinen Text.`
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ─── VERKETTUNG (reine Technik, keine Prompt-Formulierung) ──────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Wählt die Kategorie für die Prompt-Weiche. Service geht vor, weil eine
+// Service-Beschwerde laut Vorgabe immer auf private Kontaktaufnahme zielt,
+// unabhängig davon, welche inhaltliche Kategorie Haiku sonst noch erkannt hat.
+function pickKategorie(analysis: Analysis): KategorieKey {
+  if (analysis.isServiceComplaint) return 'SERVICE'
+  if (analysis.categories?.includes('A')) return 'A'
+  if (analysis.categories?.includes('B')) return 'B'
+  if (analysis.categories?.includes('C')) return 'C'
+  return 'A'
 }
 
-function parseUrPromptResponse(raw: string): string {
-  let s = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
-  // Sicherheitsnetz: falls die KI trotz Anweisung doch JSON zurückgibt, versuchen zu extrahieren.
-  // Schlägt die Extraktion fehl (z.B. wegen Anführungszeichen im Text), wird die rohe Antwort
-  // von den äußeren {"text": "..."} Resten befreit statt sie ungefiltert anzuzeigen.
-  if (s.startsWith('{') && s.includes('"text"')) {
-    const start = s.indexOf('{')
-    const end = s.lastIndexOf('}')
-    try {
-      const parsed = JSON.parse(s.substring(start, end + 1))
-      if (parsed.text) return parsed.text
-    } catch {
-      s = s.replace(/^\{\s*"text"\s*:\s*"/, '').replace(/"\s*\}\s*$/, '')
-    }
-  }
-  return s.replace(/^["']|["']$/g, '').trim()
+function buildUrPrompt(
+  explanation: string,
+  isDu: boolean,
+  langInstruction: string,
+  kategorie: KategorieKey
+): string {
+  const anrede = isDu
+    ? 'Du duzt den Gast. Schreibe "du", "dir", "dein", "dich" klein.'
+    : 'Du siezt den Gast.'
+
+  const ablauf = CATEGORY_ABLAUF[kategorie]
+
+  return [
+    PERSONA_INTRO,
+    `Hier ist die Hausregel/betriebliche Vorgabe für diesen Fall, die du dem Gast erklärst: "${explanation}"`,
+    `${anrede}\n${langInstruction}`,
+    HARTE_STRUKTUR_REGELN,
+    ablauf,
+    AUSGABE_REGELN,
+  ].join('\n\n')
 }
 
-function d(isDu: boolean, duText: string, sieText: string): string {
-  return isDu ? duText : sieText
+// Räumt die Modell-Antwort auf. Wir fordern nie JSON an (siehe AUSGABE_REGELN),
+// deshalb ist der Normalfall: raw ist bereits reiner Text. Die Zeilen darunter
+// sind ein billiges, unsichtbares Sicherheitsnetz im Code, nicht im Prompt,
+// falls das Modell trotzdem mal Codeblock-Markierungen oder umschließende
+// Anführungszeichen dranhängt. Kein JSON-Parsing mehr.
+function cleanResponseText(raw: string): string {
+  return raw
+    .replace(/```[a-z]*\s*/gi, '')
+    .trim()
+    .replace(/^["']|["']$/g, '')
+    .trim()
 }
 
 // ─── HANDLER ──────────────────────────────────────────────────────────────────
@@ -302,13 +352,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const mode = classify(stars, reviewText)
     const { signature, isDu, firstNameClean, langInstruction, description } = resolveSettings(settings, reviewerName)
-    const pickGreeting = (isDu: boolean, name: string): string => {
-      if (isDu) {
-        const pool = name ? [`Hallo ${name},`, `Hey ${name},`] : ['Hallo,', 'Hey,']
-        return pool[Math.floor(Math.random() * pool.length)]
-      }
-      return name ? `Hallo ${name},` : 'Guten Tag,'
-    }
     const begruessung = pickGreeting(isDu, firstNameClean)
     const grussFormel = d(isDu, 'Viele Grüße', 'Mit freundlichen Grüßen')
 
@@ -327,20 +370,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Alles mit Kritik (negativ, gemischt, leer-negativ): über den Ur-Prompt
     const analysis = await analyzeReview(reviewText)
+    const kategorie = pickKategorie(analysis)
 
     // Die "Erklärung" für den Ur-Prompt: primär die Inhaber-Stimme, sonst Profil-Beschreibung
     const explanation = (ownerVoice && ownerVoice.trim())
       ? ownerVoice.trim()
       : (description || 'Erkläre kurz und sachlich, ohne dich zu rechtfertigen.')
 
-    const urPrompt = buildUrPrompt(explanation, isDu, langInstruction)
+    const urPrompt = buildUrPrompt(explanation, isDu, langInstruction, kategorie)
     const raw = await callClaude(
       `Bewertung des Gasts: "${reviewText}"\nKritikpunkte: ${analysis.points.join(', ') || 'keine konkreten, allgemeiner Unmut'}\nLobpunkte: ${analysis.lobpunkte.join(', ') || 'keine'}`,
       urPrompt,
       'claude-sonnet-4-6',
       0.3
     )
-    const kernText = parseUrPromptResponse(raw)
+    const kernText = cleanResponseText(raw)
 
     const text = `${begruessung}\n\n${kernText}\n\n${grussFormel},\n${signature}`
     return res.status(200).json({ success: true, answers: [{ label: 'Frei (Test)', text }] })
