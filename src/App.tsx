@@ -1068,6 +1068,18 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
       .filter(Boolean)
   }
 
+  // Zerlegt den kompletten Antworttext in Begrüßung / Fließtext (Kern) / Grußformel-Block.
+  // Erwartetes Format vom Backend: "Begrüßung\n\nFließtext\n\nGrußformel,\nSignatur".
+  // Skalpell darf nur den Fließtext anfassen, Begrüßung und Grußformel sind fix.
+  const splitAnswerParts = (text: string): { begruessung: string; kern: string; grussBlock: string } => {
+    const parts = text.split('\n\n')
+    if (parts.length >= 3) {
+      return { begruessung: parts[0], kern: parts.slice(1, -1).join('\n\n'), grussBlock: parts[parts.length - 1] }
+    }
+    // Fallback falls das Format mal abweicht: alles als Kern behandeln, nichts sperren.
+    return { begruessung: '', kern: text, grussBlock: '' }
+  }
+
   useEffect(() => { Object.values(textareaRefs.current).forEach(el => { if (el) autoResize(el) }) }, [answers])
 
   const handleSelect = (idx: number) => {
@@ -1201,7 +1213,8 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
         const blob = new Blob(skalpellAudioChunksRef.current, { type: 'audio/webm' })
         setSkalpellProcessing(true)
         try {
-          const sentences = splitIntoSentences(answers[answerIdx].text)
+          const { begruessung, kern, grussBlock } = splitAnswerParts(answers[answerIdx].text)
+          const sentences = splitIntoSentences(kern)
           const originalSatz = sentences[sentenceIdx]
 
           const base64 = await new Promise<string>((resolve) => {
@@ -1216,7 +1229,11 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
             body: JSON.stringify({ action: 'transcribe', audioBase64: base64, mimeType: 'audio/webm' })
           })
           const transcribeData = await transcribeResp.json()
-          if (!transcribeData.success || !transcribeData.transcript) throw new Error('Transkription fehlgeschlagen')
+          if (!transcribeData.success || !transcribeData.transcript) {
+            alert('Transkription fehlgeschlagen: ' + (transcribeData.error || 'Kein Text erkannt. Bitte nochmal versuchen.'))
+            setSkalpellProcessing(false); setSkalpellTarget(null); setSkalpellRecording(false)
+            return
+          }
 
           const skalpellResp = await fetch(skalpellEndpoint, {
             method: 'POST',
@@ -1231,10 +1248,14 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
           if (skalpellData.success && skalpellData.korrigierterSatz) {
             const neueSaetze = [...sentences]
             neueSaetze[sentenceIdx] = skalpellData.korrigierterSatz
-            const neuerText = neueSaetze.join(' ')
+            const neuerKern = neueSaetze.join(' ')
+            const neuerText = [begruessung, neuerKern, grussBlock].filter(Boolean).join('\n\n')
             setAnswers(prev => prev.map((a, i) => i === answerIdx ? { ...a, text: neuerText } : a))
+          } else {
+            alert('Korrektur fehlgeschlagen: ' + (skalpellData.error || 'Unbekannter Fehler.'))
           }
         } catch (e) {
+          alert('Etwas ist schiefgelaufen bei der Sprachkorrektur. Bitte nochmal versuchen.')
           console.error('Skalpell fehlgeschlagen', e)
         }
         setSkalpellProcessing(false)
@@ -1317,7 +1338,7 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
             {isSelected && (
               <div className="rd2-skalpell-row" onClick={e => e.stopPropagation()}>
                 <div className="rd2-skalpell-hint">Satz per Sprache korrigieren, auf das Mikrofon beim gewünschten Satz tippen:</div>
-                {splitIntoSentences(answer.text).map((satz, sIdx) => {
+                {splitIntoSentences(splitAnswerParts(answer.text).kern).map((satz, sIdx) => {
                   const key = `${idx}-${sIdx}`
                   const isThisRecording = skalpellRecording && skalpellTarget === key
                   const isThisProcessing = skalpellProcessing && skalpellTarget === key

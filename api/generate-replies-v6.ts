@@ -79,8 +79,14 @@ async function transcribeAudio(audioBase64: string, mimeType: string): Promise<s
 
 // ─── SKALPELL: EINZELNEN SATZ PER SPRACHBEFEHL KORRIGIEREN ──────────────────
 
-async function korrigiereSatz(markierterSatzOriginal: string, gesprocheneAnweisung: string): Promise<string> {
+async function korrigiereSatz(markierterSatzOriginal: string, gesprocheneAnweisung: string, isDu: boolean): Promise<string> {
+  const anrede = isDu
+    ? 'Der Text duzt den Gast durchgehend. Schreibe "du", "dir", "dein", "dich" klein und bleib beim Duzen.'
+    : 'Der Text siezt den Gast durchgehend. Bleib beim Siezen.'
+
   const systemPrompt = `Du bist ein präzises Text-Skalpell für eine Gastronomie-Software. Deine einzige Aufgabe ist es, einen einzelnen Satz stilistisch zu korrigieren, den ein Gastronom per Sprachbefehl anpassen möchte.
+
+${anrede}
 
 Deine harten Arbeitsregeln:
 1. Formuliere NUR diesen einen Satz exakt nach den Wünschen des Nutzers um.
@@ -264,10 +270,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ success: false, error: 'markierterSatzOriginal oder gesprocheneAnweisung fehlt' })
     }
     try {
-      const korrigiert = await korrigiereSatz(markierterSatzOriginal, gesprocheneAnweisung)
+      const { isDu } = resolveSettings(settings, '')
+      const korrigiert = await korrigiereSatz(markierterSatzOriginal, gesprocheneAnweisung, isDu)
       return res.status(200).json({ success: true, korrigierterSatz: korrigiert })
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : String(error)
+      console.error('Skalpell FEHLER:', errMsg)
       return res.status(500).json({ success: false, error: errMsg })
     }
   }
