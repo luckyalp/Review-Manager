@@ -1070,7 +1070,6 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
 
   // Zerlegt den kompletten Antworttext in Begrüßung / Fließtext (Kern) / Grußformel-Block.
   // Erwartetes Format vom Backend: "Begrüßung\n\nFließtext\n\nGrußformel,\nSignatur".
-  // Skalpell darf nur den Fließtext anfassen, Begrüßung und Grußformel sind fix.
   const splitAnswerParts = (text: string): { begruessung: string; kern: string; grussBlock: string } => {
     const parts = text.split('\n\n')
     if (parts.length >= 3) {
@@ -1078,6 +1077,44 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
     }
     // Fallback falls das Format mal abweicht: alles als Kern behandeln, nichts sperren.
     return { begruessung: '', kern: text, grussBlock: '' }
+  }
+
+  // Zerlegt die Antwort in einzelne editierbare Segmente: Begrüßung, jeder Satz des
+  // Fließtexts, und die Grußformel-Zeile (z.B. "Viele Grüße,"). Die Signatur-Zeile
+  // (z.B. "Henrys") bleibt fix und wird nie zur Bearbeitung angeboten.
+  const getEditableSegments = (text: string): { begruessung: string; kernSentences: string[]; grussLine: string; signaturLine: string } => {
+    const { begruessung, kern, grussBlock } = splitAnswerParts(text)
+    const grussLines = grussBlock.split('\n')
+    const grussLine = grussLines[0] || ''
+    const signaturLine = grussLines.slice(1).join('\n')
+    const kernSentences = splitIntoSentences(kern)
+    return { begruessung, kernSentences, grussLine, signaturLine }
+  }
+
+  // Baut aus den (ggf. korrigierten) Segmenten wieder den vollständigen Antworttext zusammen.
+  const joinEditableSegments = (segs: { begruessung: string; kernSentences: string[]; grussLine: string; signaturLine: string }): string => {
+    const grussBlock = [segs.grussLine, segs.signaturLine].filter(Boolean).join('\n')
+    return [segs.begruessung, segs.kernSentences.join(' '), grussBlock].filter(Boolean).join('\n\n')
+  }
+
+  // Flache Liste aller editierbaren Segmente in Reihenfolge: Begrüßung, dann jeder
+  // Kernsatz, dann die Grußformel-Zeile. Die Signatur bleibt immer außen vor.
+  const getCombinedSegments = (text: string): string[] => {
+    const segs = getEditableSegments(text)
+    return [segs.begruessung, ...segs.kernSentences, segs.grussLine]
+  }
+
+  // Ersetzt genau ein Segment (per Index in getCombinedSegments) und baut den Text neu zusammen.
+  const replaceSegment = (text: string, segIdx: number, newValue: string): string => {
+    const segs = getEditableSegments(text)
+    const combined = getCombinedSegments(text)
+    combined[segIdx] = newValue
+    return joinEditableSegments({
+      begruessung: combined[0],
+      kernSentences: combined.slice(1, combined.length - 1),
+      grussLine: combined[combined.length - 1],
+      signaturLine: segs.signaturLine,
+    })
   }
 
   useEffect(() => { Object.values(textareaRefs.current).forEach(el => { if (el) autoResize(el) }) }, [answers])
@@ -1213,9 +1250,7 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
         const blob = new Blob(skalpellAudioChunksRef.current, { type: 'audio/webm' })
         setSkalpellProcessing(true)
         try {
-          const { begruessung, kern, grussBlock } = splitAnswerParts(answers[answerIdx].text)
-          const sentences = splitIntoSentences(kern)
-          const originalSatz = sentences[sentenceIdx]
+          const originalSatz = getCombinedSegments(answers[answerIdx].text)[sentenceIdx]
 
           const base64 = await new Promise<string>((resolve) => {
             const reader = new FileReader()
@@ -1246,10 +1281,7 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
           })
           const skalpellData = await skalpellResp.json()
           if (skalpellData.success && skalpellData.korrigierterSatz) {
-            const neueSaetze = [...sentences]
-            neueSaetze[sentenceIdx] = skalpellData.korrigierterSatz
-            const neuerKern = neueSaetze.join(' ')
-            const neuerText = [begruessung, neuerKern, grussBlock].filter(Boolean).join('\n\n')
+            const neuerText = replaceSegment(answers[answerIdx].text, sentenceIdx, skalpellData.korrigierterSatz)
             setAnswers(prev => prev.map((a, i) => i === answerIdx ? { ...a, text: neuerText } : a))
           } else {
             alert('Korrektur fehlgeschlagen: ' + (skalpellData.error || 'Unbekannter Fehler.'))
@@ -1338,7 +1370,7 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
             {isSelected && (
               <div className="rd2-skalpell-row" onClick={e => e.stopPropagation()}>
                 <div className="rd2-skalpell-hint">Satz per Sprache korrigieren, auf das Mikrofon beim gewünschten Satz tippen:</div>
-                {splitIntoSentences(splitAnswerParts(answer.text).kern).map((satz, sIdx) => {
+                {getCombinedSegments(answer.text).map((satz, sIdx) => {
                   const key = `${idx}-${sIdx}`
                   const isThisRecording = skalpellRecording && skalpellTarget === key
                   const isThisProcessing = skalpellProcessing && skalpellTarget === key
