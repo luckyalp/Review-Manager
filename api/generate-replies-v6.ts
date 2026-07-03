@@ -289,7 +289,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const mode = classify(stars, reviewText)
     const { signature, isDu, firstNameClean, langInstruction, description } = resolveSettings(settings, reviewerName)
-    const begruessung = firstNameClean ? `Hallo ${firstNameClean},` : d(isDu, 'Hallo,', 'Guten Tag,')
+    const pickGreeting = (isDu: boolean, name: string): string => {
+      if (isDu) {
+        const pool = name ? [`Hallo ${name},`, `Hey ${name},`] : ['Hallo,', 'Hey,']
+        return pool[Math.floor(Math.random() * pool.length)]
+      }
+      return name ? `Hallo ${name},` : 'Guten Tag,'
+    }
+    const begruessung = pickGreeting(isDu, firstNameClean)
     const grussFormel = d(isDu, 'Viele Grüße', 'Mit freundlichen Grüßen')
 
     // Rein positive Bewertung ohne Kritik: kurzer direkter Weg, kein Ur-Prompt nötig
