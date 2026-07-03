@@ -1525,7 +1525,12 @@ function ReviewDetail({ review, onStatusChange, onBack, onNavigateSettings, engi
                 Was lief hinter den Kulissen wirklich?<br/>
                 Wie biegen wir das wieder gerade?
               </div>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'center', marginBottom: ownerVoice ? '12px' : '0' }}>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', marginBottom: ownerVoice ? '12px' : '0' }}>
+                {!isRecording && (
+                  <button onClick={() => generateReplies(true)} disabled={isTranscribing} style={{ padding: '12px 22px', background: '#374151', color: '#fff', border: 'none', borderRadius: '9px', cursor: 'pointer', fontSize: '15px', fontWeight: '600', fontFamily: 'inherit' }}>
+                    ✨ Antwort generieren
+                  </button>
+                )}
                 {!isRecording ? (
                   <button onClick={startRecording} disabled={isTranscribing} style={{ padding: '12px 24px', background: isTranscribing ? '#9ca3af' : '#0f4c5c', color: '#fff', border: 'none', borderRadius: '9px', cursor: isTranscribing ? 'default' : 'pointer', fontSize: '15px', fontWeight: '600', fontFamily: 'inherit' }}>
                     {isTranscribing ? '⏳ Transkribiere...' : '🎙️ Aufnahme starten'}
