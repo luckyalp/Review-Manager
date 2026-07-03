@@ -23,7 +23,7 @@ const APP_CONFIG = {
   anthropicApiUrl: 'https://api.anthropic.com/v1/messages',
   anthropicApiVersion: '2023-06-01',
   models: {
-    generation: 'claude-sonnet-4-6',
+    generation: 'claude-sonnet-5',
     analysis: 'claude-haiku-4-5-20251001',
   },
   maxTokens: 1000,
