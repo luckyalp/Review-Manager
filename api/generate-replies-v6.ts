@@ -218,15 +218,17 @@ Harte Struktur-Regeln:
 - Das Ton-Limit: Wenn der Ton vor Ort zu scharf war, gestehst du das in maximal ein bis zwei Sätzen ein (z. B. dass es im Eifer des Gefechts unglücklich formuliert war), ohne dich danach weiter zu rechtfertigen, dich zu demütigen oder dich in aller Form zu entschuldigen. Nur wenn das aus der Erklärung oben hervorgeht, sonst weglassen.
 
 Ablauf der Antwort:
-1. Sofortige Erklärung der betrieblichen Regel/Vorgabe.
-2. Falls zutreffend: das kurze Statement zum Ton (maximal zwei Sätze).
-3. Der lockere, souveräne Ausstieg: Beende den Fließtext mit einem kurzen, wohlwollenden Blick nach vorne, der klingt, als würdest du mit einem guten Bekannten sprechen, geradeheraus, ohne zu belehren und ohne zu kriechen.
+1. Falls Lobpunkte vorhanden sind: greif sie in ein bis zwei Sätzen auf, kurz und ehrlich, keine Floskel wie "vielen Dank für dein Feedback". Wenn keine Lobpunkte da sind, direkt mit Schritt 2 starten.
+2. Sofortige Erklärung der betrieblichen Regel/Vorgabe.
+3. Falls zutreffend: das kurze Statement zum Ton (maximal zwei Sätze).
+4. Der lockere, souveräne Ausstieg: Beende den Fließtext mit einem kurzen, wohlwollenden Blick nach vorne, der klingt, als würdest du mit einem guten Bekannten sprechen, geradeheraus, ohne zu belehren und ohne zu kriechen.
    - Wenn in der Erklärung oben eine konkrete Alternative genannt wird (z. B. Bar, Stehtisch, andere Öffnungszeit), verbinde den Ausstieg locker damit, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Wenn du beim nächsten Mal Hunger mitbringst, ist dir ein Tisch sicher. Und wenn du nur auf ein Glas vorbeikommst, sehen wir uns einfach an der Bar."
    - Wenn der Gast signalisiert hat, nicht mehr kommen zu wollen, und es gibt keine solche Alternative, reiche ihm stattdessen locker die Hand, in dieser Richtung (ebenfalls in eigenen Worten): "Auch wenn du nicht mehr vorhast zu kommen, vielleicht sieht man sich ja doch noch mal. Falls ja, meld dich vorher kurz."
    - In allen anderen Fällen: ein kurzer, allgemeiner freundlicher Ausblick reicht.
    Passe Formulierung, Du/Sie und Sprache jeweils an.
+Alle Schritte fließen in einem einzigen, zusammenhängenden Absatz ineinander, kein Abschnittswechsel, keine Zwischenüberschriften.
 
-Anrede und Grußformel werden separat vom System ergänzt, gib nur diesen mittleren Teil inklusive Ausstieg aus.
+Anrede und Grußformel werden separat vom System ergänzt, gib nur diesen mittleren Teil inklusive Lob-Einstieg (falls vorhanden) und Ausstieg aus.
 
 Gib NUR valides JSON zurück: {"text": "der Fließtext gemäß Ablauf oben, ohne Anrede-Zeile und ohne Grußformel"}`
 }
@@ -326,7 +328,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const urPrompt = buildUrPrompt(explanation, isDu, langInstruction)
     const raw = await callClaude(
-      `Bewertung des Gasts: "${reviewText}"\nKritikpunkte: ${analysis.points.join(', ') || 'keine konkreten, allgemeiner Unmut'}`,
+      `Bewertung des Gasts: "${reviewText}"\nKritikpunkte: ${analysis.points.join(', ') || 'keine konkreten, allgemeiner Unmut'}\nLobpunkte: ${analysis.lobpunkte.join(', ') || 'keine'}`,
       urPrompt,
       'claude-sonnet-4-6',
       0.3
