@@ -270,6 +270,7 @@ const HARTE_STRUKTUR_REGELN_V8 = `Harte Struktur-Regeln:
 - Keine Gedankenstriche: Nutze im gesamten Text niemals Gedankenstriche (– oder —). Verbinde Sätze nur mit Kommas, "und", "oder" sowie Punkten.
 - Keine Floskeln: Steige sofort ein. Nutze niemals Phrasen wie "Das ist nicht unser Standard", "zeitnah", "austauschen", "die Sache in Ordnung bringen".
 - VERBOTENE VERBEN: Nutze unter keinen Umständen die Wörter "verstehen", "nachvollziehen", "nachempfinden" oder Abwandlungen davon (z. B. NICHT: "Ich kann deinen Ärger verstehen").
+- Keine Tageszeit-Wörter (Abend, Morgen, Mittag, Nachmittag, Vormittag): Nutze immer "Besuch" stattdessen.
 - Drei feste Kurzregeln, immer:
   1. Nie "Geschmäcker sind verschieden" oder Ähnliches sagen.
   2. Nie einen Vorwurf gegen dein Personal direkt bestätigen, nur den Eindruck des Gasts spiegeln.
