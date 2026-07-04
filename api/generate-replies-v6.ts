@@ -291,20 +291,16 @@ const HARTE_STRUKTUR_REGELN = `Harte Struktur-Regeln:
 - Das Ton-Limit: Wenn der Ton vor Ort zu scharf war, gestehst du das in maximal ein bis zwei Sätzen ein (z. B. dass es im Eifer des Gefechts unglücklich formuliert war), ohne dich danach weiter zu rechtfertigen, dich zu demütigen oder dich in aller Form zu entschuldigen. Nur wenn das aus der Erklärung hervorgeht, sonst weglassen.`
 
 const ABLAUF_STANDARD = `Ablauf der Antwort:
-1. Der nette Gastgeber: Falls Lobpunkte vorhanden sind, greif sie in ein bis zwei Sätzen auf, kurz und ehrlich, keine Floskel wie "vielen Dank für dein Feedback". Wenn keine Lobpunkte da sind, direkt mit Schritt 2 starten.
-2. Der gestandene Inhaber: Erkläre oder kläre den Vorfall direkt und ehrlich, stolz aber nicht kriecherisch. Wähle je nach Art der Kritik die passende Haltung:
-   - Geht es um eine feste Regel oder das Konzept des Hauses (z. B. Tischzeit, Öffnungszeiten): erkläre die Regel sachlich und stehe dahinter.
-   - War es ein echter Fehler (z. B. Küche, Ablauf): räume ihn klar ein, ohne dich zu demütigen, aber ohne eine konkrete Wiedergutmachung zu versprechen, das bleibt eine persönliche Entscheidung vor Ort, nicht Teil dieser Antwort.
-   - Geht es um Geschmack, Menge, Auswahl oder Preis: erkenne die persönliche Präferenz des Gastes an, ohne sie pauschal mit "Geschmäcker sind verschieden" oder ähnlichen Floskeln abzutun, und bleib stolz auf der eigenen handwerklichen Linie.
-   - Geht es um das Verhalten oder den Ton von Personal: bestätige NIE die Verhaltens-Anschuldigung selbst als Fakt, sondern nur den Eindruck des Gastes, und stell dich hinter dein Team.
-3. Falls zutreffend: das kurze Statement zum Ton (maximal zwei Sätze).
-4. Der lockere Kumpel: Beende den Fließtext mit einem kurzen, wohlwollenden Blick nach vorne, der klingt, als würdest du mit einem guten Bekannten sprechen, geradeheraus, ohne zu belehren und ohne zu kriechen.
-   - Wenn in der Erklärung oben eine konkrete Alternative genannt wird (z. B. Bar, Stehtisch, andere Karte, andere Öffnungszeit), verbinde den Ausstieg locker damit, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Wenn du beim nächsten Mal Hunger mitbringst, ist dir ein Tisch sicher. Und wenn du nur auf ein Glas vorbeikommst, sehen wir uns einfach an der Bar."
-   - Ging es um Personal-Verhalten: lenk das Gespräch statt einer weiteren öffentlichen Diskussion ins Private, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Lass uns das nicht hier öffentlich austragen. Schreib mir kurz an die hinterlegte Adresse oder sprich mich beim nächsten Besuch direkt an, dann klären wir das unter uns."
-   - Wenn der Gast signalisiert hat, nicht mehr kommen zu wollen, und es gibt keine Alternative: reiche ihm stattdessen locker die Hand, in dieser Richtung (ebenfalls in eigenen Worten): "Auch wenn du nicht mehr vorhast zu kommen, vielleicht sieht man sich ja doch noch mal. Falls ja, meld dich vorher kurz."
-   - In allen anderen Fällen: ein kurzer, allgemeiner freundlicher Ausblick reicht.
-   Passe Formulierung, Du/Sie und Sprache jeweils an.
-Alle Schritte fließen in einem einzigen, zusammenhängenden Absatz ineinander, kein Abschnittswechsel, keine Zwischenüberschriften.`
+1. Gastgeber: Lob kurz aufgreifen, falls vorhanden. Wenn keins da ist, direkt mit Schritt 2 starten.
+2. Inhaber: Erkläre den Vorfall trocken, ehrlich und stolz, ohne dich zu rechtfertigen oder zu demütigen.
+3. Kumpel: Blick locker nach vorne, wie zu einem Bekannten. Nenn eine Alternative, wenn eine in der Erklärung genannt wurde, sonst reicht ein kurzer Ausblick. Wenn der Gast nicht mehr kommen will, reich ihm trotzdem locker die Hand.
+
+Drei feste Kurzregeln, immer:
+- Nie "Geschmäcker sind verschieden" oder Ähnliches sagen.
+- Nie einen Vorwurf gegen dein Personal direkt bestätigen, nur den Eindruck des Gastes.
+- Nie eine konkrete Wiedergutmachung (Rabatt, Freirunde) versprechen, das bleibt eine persönliche Entscheidung vor Ort.
+
+Alles ein zusammenhängender Absatz, kein Abschnittswechsel, keine Zwischenüberschriften.`
 
 const AUSGABE_REGELN = `Anrede und Grußformel werden separat vom System ergänzt, gib nur diesen mittleren Teil inklusive Lob-Einstieg (falls vorhanden) und Ausstieg aus.
 
@@ -431,7 +427,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ? ownerVoice.trim()
       : (description || 'Erkläre kurz und sachlich, ohne dich zu rechtfertigen.')
 
-    const urPrompt = buildUrPrompt(explanation, isDu, langInstruction, contactEmail)
+    // Kontakt-Email nur bei 1-2 Sternen tatsächlich weitergeben. Ab 3 Sternen
+    // wird sie im Prompt so behandelt, als wäre keine hinterlegt, private
+    // Kontaktaufnahme per konkreter Adresse ist bewusst der ernsten Lage
+    // vorbehalten, nicht jeder kleineren Kritik.
+    const contactEmailFuerPrompt = stars <= 2 ? contactEmail : ''
+
+    const urPrompt = buildUrPrompt(explanation, isDu, langInstruction, contactEmailFuerPrompt)
     const raw = await callClaude(
       `Bewertung des Gasts: "${reviewText}"\nSternebewertung: ${stars} von 5\nKritikpunkte: ${analysis.points.join(', ') || 'keine konkreten, allgemeiner Unmut'}\nLobpunkte: ${analysis.lobpunkte.join(', ') || 'keine'}`,
       urPrompt,
