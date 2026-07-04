@@ -3,9 +3,15 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 // ─── v6 ── NEUE ENGINE: KURZER UR-PROMPT ALS KERNSTÜCK ───────────────────────
 // Architektur: Technik und Prompt-Texte sind strikt getrennt. Alle Prompt-
 // Bausteine stehen unten als eigene Variablen im Abschnitt "PROMPT-MODULE".
-// Der Code verkettet sie nur noch, formuliert nichts selbst. Die 4-Kategorien-
-// Weiche (A/B/C/Service) ist vollständig aktiv, jede Kategorie hat ihren
-// eigenen Ablauf.
+// Der Code verkettet sie nur noch, formuliert nichts selbst.
+//
+// Rückbau (bewusste Entscheidung): Die vorherige 4-Kategorien-Weiche (A/B/C/
+// Service) mit vier getrennten Abläufen wurde wieder auf EINEN gemeinsamen
+// Ablauf mit den drei festen Rollen (Gastgeber/Inhaber/Kumpel) reduziert. Das
+// war zu viel Verzweigung für zu wenig Nutzen. Alle Schutzmechanismen, die in
+// den vier Kategorien erarbeitet wurden (kein "Geschmäcker sind verschieden",
+// keine automatische Freirunde, nie Vorwürfe gegen Personal bestätigen), sind
+// im gemeinsamen Ablauf erhalten, nur nicht mehr hart nach Kategorie verzweigt.
 //
 // Alles weiterhin in EINER Datei, kein Import aus anderen Dateien (siehe
 // gescheiterter _lib-Versuch, ERR_MODULE_NOT_FOUND).
@@ -150,13 +156,9 @@ interface Settings {
 interface Analysis {
   count: number
   points: string[]
-  categories: string[]        // 'A' | 'B' | 'C'
   forceSummarize: boolean
   lobpunkte: string[]
-  isServiceComplaint: boolean
 }
-
-type KategorieKey = 'A' | 'B' | 'C' | 'SERVICE'
 
 // ─── CLASSIFY ─────────────────────────────────────────────────────────────────
 
@@ -246,25 +248,19 @@ function getBoilerplateResponse(isDu: boolean, contactEmail: string): string {
 }
 
 // ─── HAIKU: ANALYSE DER BEWERTUNG ─────────────────────────────────────────────
+// Vereinfacht: nur noch das extrahieren, was wirklich gebraucht wird (Kritik-
+// und Lobpunkte, Zusammenfassungs-Trigger). Keine Kategorie-Klassifizierung
+// mehr, seit die 4-Kategorien-Weiche zurückgebaut wurde.
 
 async function analyzeReview(reviewText: string): Promise<Analysis> {
   const systemPrompt = `Analysiere die Restaurant-Bewertung. Extrahiere Kritik- und Lobpunkte.
-
-Kategorien:
-A = betrifft eine feste betriebliche Regel/Struktur (z.B. Tischzeit, Lautstärke bei vollem Haus, Öffnungszeiten). Gilt auch dann, wenn der Gast die Durchsetzung der Regel emotional beschreibt (z.B. "wie am Fließband", "unpersönlich"), solange sich die Kritik auf die Regel selbst richtet, nicht auf einzelne Personen.
-B = Fehler im Ablauf, Küche oder Zubereitung (etwas ging schief, das nicht hätte passieren sollen)
-C = Geschmack, Menge, Preis oder Auswahl (persönliche Präferenz, kein objektiver Fehler)
-
-isServiceComplaint = true NUR wenn sich die Kritik konkret auf das Verhalten, den Ton oder die Art einzelner Mitarbeiter richtet (z.B. unfreundlich, unhöflich, überfordert, respektlos). Eine Beschwerde über eine Regel oder ein Konzept ist KEIN Service-Fall, auch wenn ein Mitarbeiter die Regel durchgesetzt hat, das bleibt Kategorie A.
 
 Gib NUR valides JSON zurück:
 {
   "count": 1,
   "points": ["Kritikpunkt in wenigen Worten"],
-  "categories": ["B"],
   "forceSummarize": false,
-  "lobpunkte": ["Lobpunkt falls vorhanden"],
-  "isServiceComplaint": false
+  "lobpunkte": ["Lobpunkt falls vorhanden"]
 }
 forceSummarize = true nur wenn 3 oder mehr eigenständige Kritikpunkte genannt werden.`
 
@@ -278,8 +274,9 @@ forceSummarize = true nur wenn 3 oder mehr eigenständige Kritikpunkte genannt w
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ─── PROMPT-MODULE ────────────────────────────────────────────────────────
-// Reine Text-Bausteine, keine Logik. Nichts hier drin weiß etwas von JSON,
-// Regex oder Code. Wird von buildUrPrompt() unten nur noch zusammengesetzt.
+// Reine Text-Bausteine, keine Logik. Ein gemeinsamer Ablauf für alle Fälle,
+// mit den drei festen Rollen. Alle Schutzmechanismen aus der ehemaligen
+// 4-Kategorien-Version sind hier zusammengeführt, nicht mehr hart verzweigt.
 // ═══════════════════════════════════════════════════════════════════════════
 
 const PERSONA_INTRO = `Stell dir vor, du bist eine Person, die für die Antwort drei feste Rollen nacheinander kombiniert, alles in einem einzigen Fließtext, kein Rollenwechsel sichtbar:
@@ -291,63 +288,23 @@ Du bist dabei höflich, aber ein gestandener Gastronom, du redest nicht um den h
 const HARTE_STRUKTUR_REGELN = `Harte Struktur-Regeln:
 - Keine Gedankenstriche: Nutze im gesamten Text niemals Gedankenstriche (– oder —). Verbinde Sätze nur mit Kommas, "und", "oder" sowie Punkten.
 - Keine Floskeln: Steige sofort ohne einleitendes "Vielen Dank für das Feedback" oder "Schade, dass..." ein.
-- Das Ton-Limit: Wenn der Ton vor Ort zu scharf war, gestehst du das in maximal ein bis zwei Sätzen ein (z. B. dass es im Eifer des Gefechts unglücklich formuliert war), ohne dich danach weiter zu rechtfertigen, dich zu demütigen oder dich in aller Form zu entschuldigen. Nur wenn das aus der Erklärung hervorgeht, sonst weglassen.
-- Länge der Antwort: Der gesamte Antworttext ist strikt auf maximal 4 bis 5 Sätze begrenzt. Fasse dich kurz und präzise.`
+- Das Ton-Limit: Wenn der Ton vor Ort zu scharf war, gestehst du das in maximal ein bis zwei Sätzen ein (z. B. dass es im Eifer des Gefechts unglücklich formuliert war), ohne dich danach weiter zu rechtfertigen, dich zu demütigen oder dich in aller Form zu entschuldigen. Nur wenn das aus der Erklärung hervorgeht, sonst weglassen.`
 
-// Ablauf Kategorie A: feste betriebliche Regel/Struktur (z.B. Tischzeit, Konzept-Kritik).
-// Das ist der fertige, getestete Ablauf.
-const ABLAUF_KATEGORIE_A = `Ablauf der Antwort (Kategorie A, Regeln & Konzept):
+const ABLAUF_STANDARD = `Ablauf der Antwort:
 1. Der nette Gastgeber: Falls Lobpunkte vorhanden sind, greif sie in ein bis zwei Sätzen auf, kurz und ehrlich, keine Floskel wie "vielen Dank für dein Feedback". Wenn keine Lobpunkte da sind, direkt mit Schritt 2 starten.
-2. Der gestandene Inhaber: Sofortige Erklärung der betrieblichen Regel/Vorgabe.
+2. Der gestandene Inhaber: Erkläre oder kläre den Vorfall direkt und ehrlich, stolz aber nicht kriecherisch. Wähle je nach Art der Kritik die passende Haltung:
+   - Geht es um eine feste Regel oder das Konzept des Hauses (z. B. Tischzeit, Öffnungszeiten): erkläre die Regel sachlich und stehe dahinter.
+   - War es ein echter Fehler (z. B. Küche, Ablauf): räume ihn klar ein, ohne dich zu demütigen, aber ohne eine konkrete Wiedergutmachung zu versprechen, das bleibt eine persönliche Entscheidung vor Ort, nicht Teil dieser Antwort.
+   - Geht es um Geschmack, Menge, Auswahl oder Preis: erkenne die persönliche Präferenz des Gastes an, ohne sie pauschal mit "Geschmäcker sind verschieden" oder ähnlichen Floskeln abzutun, und bleib stolz auf der eigenen handwerklichen Linie.
+   - Geht es um das Verhalten oder den Ton von Personal: bestätige NIE die Verhaltens-Anschuldigung selbst als Fakt, sondern nur den Eindruck des Gastes, und stell dich hinter dein Team.
 3. Falls zutreffend: das kurze Statement zum Ton (maximal zwei Sätze).
 4. Der lockere Kumpel: Beende den Fließtext mit einem kurzen, wohlwollenden Blick nach vorne, der klingt, als würdest du mit einem guten Bekannten sprechen, geradeheraus, ohne zu belehren und ohne zu kriechen.
-   - Wenn in der Erklärung oben eine konkrete Alternative genannt wird (z. B. Bar, Stehtisch, andere Öffnungszeit), verbinde den Ausstieg locker damit, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Wenn du beim nächsten Mal Hunger mitbringst, ist dir ein Tisch sicher. Und wenn du nur auf ein Glas vorbeikommst, sehen wir uns einfach an der Bar."
-   - Wenn der Gast signalisiert hat, nicht mehr kommen zu wollen, und es gibt keine solche Alternative, reiche ihm stattdessen locker die Hand, in dieser Richtung (ebenfalls in eigenen Worten): "Auch wenn du nicht mehr vorhast zu kommen, vielleicht sieht man sich ja doch noch mal. Falls ja, meld dich vorher kurz."
+   - Wenn in der Erklärung oben eine konkrete Alternative genannt wird (z. B. Bar, Stehtisch, andere Karte, andere Öffnungszeit), verbinde den Ausstieg locker damit, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Wenn du beim nächsten Mal Hunger mitbringst, ist dir ein Tisch sicher. Und wenn du nur auf ein Glas vorbeikommst, sehen wir uns einfach an der Bar."
+   - Ging es um Personal-Verhalten: lenk das Gespräch statt einer weiteren öffentlichen Diskussion ins Private, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Lass uns das nicht hier öffentlich austragen. Schreib mir kurz an die hinterlegte Adresse oder sprich mich beim nächsten Besuch direkt an, dann klären wir das unter uns."
+   - Wenn der Gast signalisiert hat, nicht mehr kommen zu wollen, und es gibt keine Alternative: reiche ihm stattdessen locker die Hand, in dieser Richtung (ebenfalls in eigenen Worten): "Auch wenn du nicht mehr vorhast zu kommen, vielleicht sieht man sich ja doch noch mal. Falls ja, meld dich vorher kurz."
    - In allen anderen Fällen: ein kurzer, allgemeiner freundlicher Ausblick reicht.
    Passe Formulierung, Du/Sie und Sprache jeweils an.
 Alle Schritte fließen in einem einzigen, zusammenhängenden Absatz ineinander, kein Abschnittswechsel, keine Zwischenüberschriften.`
-
-// Ablauf Kategorie B: Fehler im Ablauf, Küche oder Zubereitung (echter Fehler).
-// Ziel: Größe zeigen, den Fehler ehrlich einräumen und sich distanzieren, ohne künstlich zu kriechen.
-// Ablauf Kategorie B: Fehler im Ablauf, Küche oder Zubereitung (echter Fehler).
-// Ziel: Größe zeigen, den Fehler ehrlich einräumen, ohne automatische Kompensation
-// zu versprechen. Wiedergutmachung bleibt Franks individuelle Entscheidung vor Ort,
-// nicht per Skript automatisiert (bewusste Entscheidung, keine Freirunde mehr fest im Prompt).
-const ABLAUF_KATEGORIE_B = `Ablauf der Antwort (Kategorie B, Küchenfehler):
-1. Der nette Gastgeber: Falls Lobpunkte vorhanden sind, greif sie in ein bis zwei Sätzen auf, kurz und ehrlich. Wenn keine Lobpunkte da sind, direkt mit Schritt 2 starten.
-2. Der gestandene Inhaber (Fehler-Eingeständnis): Geh direkt auf das Missgeschick ein und ziehe eine klare Grenze zu deinem eigentlichen Qualitätsanspruch, ohne dich zu demütigen, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Dass das Steak kalt war, entspricht absolut nicht unserem Standard, da ist uns in der Küche schlicht die Koordination abgerissen." Kein langes Herumreden, kein "Es tut uns unendlich leid".
-3. Falls zutreffend: das kurze Statement zum Ton (maximal zwei Sätze).
-4. Der lockere Kumpel (Einladung zur Klärung): Verspreche keine konkrete Wiedergutmachung, überlass das dem persönlichen Gespräch vor Ort, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Sowas darf nicht passieren, aber wir sind auch nur Menschen. Sag mir beim nächsten Besuch einfach kurz Bescheid, dann klären wir das."
-Alle Schritte fließen in einem einzigen, zusammenhängenden Absatz ineinander.`
-
-// Ablauf Kategorie C: Geschmack, Menge, Preis oder Auswahl (persönliche Präferenz).
-// Ziel: Stolz auf der eigenen Linie bleiben, dem Gast seine Meinung lassen, aber das eigene Konzept
-// verteidigen. WICHTIG: nie als objektiven Fehler framen, immer als individuelle Präferenz, und nie
-// pauschal mit "Geschmäcker sind verschieden" o.ä. abtun, das isoliert den Gast statt ihn ernst zu nehmen.
-const ABLAUF_KATEGORIE_C = `Ablauf der Antwort (Kategorie C, Geschmack & Preis):
-1. Der nette Gastgeber: Falls Lobpunkte vorhanden sind, greif sie in ein bis zwei Sätzen auf, kurz und ehrlich. Wenn keine Lobpunkte da sind, direkt mit Schritt 2 starten.
-2. Der gestandene Inhaber (Konzept-Klartext): Erkenne die persönliche Präferenz des Gastes ausdrücklich an, ohne sie pauschal mit "Geschmäcker sind verschieden" oder ähnlichen Floskeln abzutun. Verteidige stattdessen die eigene handwerkliche Linie, egal ob es um Geschmack, Menge, Auswahl oder Preis ging, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Dass dir das nicht getroffen hat, kann ich nachvollziehen. Wie wir kochen und kalkulieren, ist bei uns bewusst so, das ist Konzept und kein Zufall." Keine Entschuldigung, keine Rechtfertigung.
-3. Falls zutreffend: das kurze Statement zum Ton (maximal zwei Sätze).
-4. Der lockere Kumpel: Reiche dem Gast souverän die Hand, ohne belehrend zu wirken oder um Wiederkehr zu betteln, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Falls es diesmal nicht gepasst hat, probier beim nächsten Mal gerne etwas anderes von der Karte. Falls in der Erklärung oben eine Alternative genannt wird, probier die, vielleicht trifft das eher deinen Nerv."
-Alle Schritte fließen in einem einzigen, zusammenhängenden Absatz ineinander.`
-
-// Ablauf Kategorie SERVICE: Beschwerden über Personal oder Service-Ton.
-// Ziel: Das eigene Team schützen, deeskalieren und das Gespräch aus der Öffentlichkeit holen.
-// WICHTIG: nie die Verhaltens-Anschuldigung selbst als Fakt bestätigen, nur den Eindruck
-// des Gastes. Das Team wird verteidigt, nicht öffentlich vorverurteilt.
-const ABLAUF_SERVICE = `Ablauf der Antwort (Kategorie SERVICE, Personal):
-1. Der nette Gastgeber: Falls Lobpunkte vorhanden sind, greif sie in ein bis zwei Sätzen auf, kurz und ehrlich. Wenn keine Lobpunkte da sind, direkt mit Schritt 2 starten.
-2. Der gestandene Inhaber (Team-Schutzschild): Stell dich vor deine Crew. Bestätige nie die Verhaltens-Anschuldigung selbst als Fakt, sondern nur den Eindruck des Gastes. Signalisiere, dass jeder Vorfall intern in Ruhe besprochen wird, ohne euch öffentlich schuldig zu bekennen, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Mein Team arbeitet hart, und wenn bei dir der Eindruck entstanden ist, dass da was nicht gepasst hat, besprechen wir das intern in Ruhe."
-3. Falls zutreffend: das kurze Statement zum Ton (maximal zwei Sätze).
-4. Der lockere Kumpel (Umlenkung ins Private): Biete keine Bühne für öffentliche Diskussionen, sondern lenk das Gespräch konsequent und konkret ins Private, in dieser Richtung (in eigenen Worten, nicht wörtlich kopieren): "Lass uns das nicht hier öffentlich austragen. Schreib mir kurz an die hinterlegte Adresse oder sprich mich beim nächsten Besuch direkt an, dann klären wir das unter uns."
-Alle Schritte fließen in einem einzigen, zusammenhängenden Absatz ineinander.`
-
-const CATEGORY_ABLAUF: Record<KategorieKey, string> = {
-  A: ABLAUF_KATEGORIE_A,
-  B: ABLAUF_KATEGORIE_B,
-  C: ABLAUF_KATEGORIE_C,
-  SERVICE: ABLAUF_SERVICE,
-}
 
 const AUSGABE_REGELN = `Anrede und Grußformel werden separat vom System ergänzt, gib nur diesen mittleren Teil inklusive Lob-Einstieg (falls vorhanden) und Ausstieg aus.
 
@@ -361,29 +318,15 @@ Gib NUR den fertigen Fließtext zurück, ohne Anrede-Zeile, ohne Grußformel, oh
 // ─── VERKETTUNG (reine Technik, keine Prompt-Formulierung) ──────────────────
 // ═══════════════════════════════════════════════════════════════════════════
 
-// Wählt die Kategorie für die Prompt-Weiche. Service geht vor, weil eine
-// Service-Beschwerde laut Vorgabe immer auf private Kontaktaufnahme zielt,
-// unabhängig davon, welche inhaltliche Kategorie Haiku sonst noch erkannt hat.
-function pickKategorie(analysis: Analysis): KategorieKey {
-  if (analysis.isServiceComplaint) return 'SERVICE'
-  if (analysis.categories?.includes('A')) return 'A'
-  if (analysis.categories?.includes('B')) return 'B'
-  if (analysis.categories?.includes('C')) return 'C'
-  return 'A'
-}
-
 function buildUrPrompt(
   explanation: string,
   isDu: boolean,
   langInstruction: string,
-  kategorie: KategorieKey,
   contactEmail: string
 ): string {
   const anrede = isDu
     ? 'Du duzt den Gast. Schreibe "du", "dir", "dein", "dich" klein.'
     : 'Du siezt den Gast.'
-
-  const ablauf = CATEGORY_ABLAUF[kategorie]
 
   const kontaktHinweis = contactEmail
     ? `Falls du im Text auf eine Kontaktmöglichkeit verweist, nutze diese Adresse: ${contactEmail}`
@@ -394,7 +337,7 @@ function buildUrPrompt(
     `Hier ist die Hausregel/betriebliche Vorgabe für diesen Fall, die du dem Gast erklärst: "${explanation}"`,
     `${anrede}\n${langInstruction}`,
     HARTE_STRUKTUR_REGELN,
-    ablauf,
+    ABLAUF_STANDARD,
     kontaktHinweis,
     AUSGABE_REGELN,
   ].join('\n\n')
@@ -482,14 +425,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Alles mit Kritik (negativ, gemischt, leer-negativ): über den Ur-Prompt
     const analysis = await analyzeReview(reviewText)
-    const kategorie = pickKategorie(analysis)
 
     // Die "Erklärung" für den Ur-Prompt: primär die Inhaber-Stimme, sonst Profil-Beschreibung
     const explanation = (ownerVoice && ownerVoice.trim())
       ? ownerVoice.trim()
       : (description || 'Erkläre kurz und sachlich, ohne dich zu rechtfertigen.')
 
-    const urPrompt = buildUrPrompt(explanation, isDu, langInstruction, kategorie, contactEmail)
+    const urPrompt = buildUrPrompt(explanation, isDu, langInstruction, contactEmail)
     const raw = await callClaude(
       `Bewertung des Gasts: "${reviewText}"\nSternebewertung: ${stars} von 5\nKritikpunkte: ${analysis.points.join(', ') || 'keine konkreten, allgemeiner Unmut'}\nLobpunkte: ${analysis.lobpunkte.join(', ') || 'keine'}`,
       urPrompt,
