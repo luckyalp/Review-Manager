@@ -158,6 +158,7 @@ interface Analysis {
   points: string[]
   forceSummarize: boolean
   lobpunkte: string[]
+  relevantContext?: string
 }
 
 // ─── CLASSIFY ─────────────────────────────────────────────────────────────────
@@ -252,15 +253,21 @@ function getBoilerplateResponse(isDu: boolean, contactEmail: string): string {
 // und Lobpunkte, Zusammenfassungs-Trigger). Keine Kategorie-Klassifizierung
 // mehr, seit die 4-Kategorien-Weiche zurückgebaut wurde.
 
-async function analyzeReview(reviewText: string): Promise<Analysis> {
+async function analyzeReview(reviewText: string, profileDescription: string): Promise<Analysis> {
   const systemPrompt = `Analysiere die Restaurant-Bewertung. Extrahiere Kritik- und Lobpunkte.
+
+Zusätzlich bekommst du unten den kompletten Profiltext des Restaurants (Hausregeln, Besonderheiten). Der Text enthält oft mehrere unabhängige Regeln. Wähle NUR die Zeile(n) aus, die zur konkreten Kritik in dieser Bewertung passen. Wenn nichts davon passt, gib einen leeren String zurück. Erfinde nichts, was nicht im Profiltext steht.
+
+Profiltext des Restaurants:
+"${profileDescription || 'kein Profiltext hinterlegt'}"
 
 Gib NUR valides JSON zurück:
 {
   "count": 1,
   "points": ["Kritikpunkt in wenigen Worten"],
   "forceSummarize": false,
-  "lobpunkte": ["Lobpunkt falls vorhanden"]
+  "lobpunkte": ["Lobpunkt falls vorhanden"],
+  "relevantContext": "nur die zur Kritik passende(n) Zeile(n) aus dem Profiltext, oder leerer String"
 }
 forceSummarize = true nur wenn 3 oder mehr eigenständige Kritikpunkte genannt werden.`
 
@@ -411,7 +418,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Rein positive Bewertung ohne Kritik: kurzer direkter Weg, kein Ur-Prompt nötig
     if (mode === 'CONTENT_POSITIVE' || mode === 'EMPTY_POSITIVE') {
-      const analysis = mode === 'CONTENT_POSITIVE' ? await analyzeReview(reviewText) : null
+      const analysis = mode === 'CONTENT_POSITIVE' ? await analyzeReview(reviewText, description) : null
       if (!analysis || analysis.count === 0) {
         const kernSatz = pickPositivKernsatz(isDu)
         const text = `${begruessung}\n\n${kernSatz}\n\n${grussFormel},\n${signature}`
@@ -420,12 +427,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Alles mit Kritik (negativ, gemischt, leer-negativ): über den Ur-Prompt
-    const analysis = await analyzeReview(reviewText)
+    const analysis = await analyzeReview(reviewText, description)
 
-    // Die "Erklärung" für den Ur-Prompt: primär die Inhaber-Stimme, sonst Profil-Beschreibung
+    // Die "Erklärung" für den Ur-Prompt: primär die Inhaber-Stimme, sonst NUR der
+    // Teil des Profiltextes, den Haiku als tatsächlich relevant für diese konkrete
+    // Kritik ausgewählt hat, nie der komplette Profiltext ungefiltert.
     const explanation = (ownerVoice && ownerVoice.trim())
       ? ownerVoice.trim()
-      : (description || 'Erkläre kurz und sachlich, ohne dich zu rechtfertigen.')
+      : (analysis.relevantContext?.trim() || 'Erkläre kurz und sachlich, ohne dich zu rechtfertigen.')
 
     // Kontakt-Email nur bei 1-2 Sternen tatsächlich weitergeben. Ab 3 Sternen
     // wird sie im Prompt so behandelt, als wäre keine hinterlegt, private
