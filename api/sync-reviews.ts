@@ -1,6 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { createClient } from '@supabase/supabase-js'
 
+// ─── AKTIVE ENGINE ── EINZIGER ORT ZUM ÄNDERN ────────────────────────────────
+// Wenn die Engine gewechselt wird (z.B. v8 -> v9), nur diese eine Zeile anpassen.
+const ACTIVE_ENGINE = 'v8'
+const GENERATE_REPLIES_ENDPOINT = `/api/generate-replies-${ACTIVE_ENGINE}`
+
 const supabase = createClient(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -169,11 +174,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
           // KI-Antworten generieren
           const baseUrl = 'https://review-manager-mu.vercel.app'
-          const repliesRes = await fetch(`${baseUrl}/api/generate-replies`, {
+          const repliesRes = await fetch(`${baseUrl}${GENERATE_REPLIES_ENDPOINT}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ review: reviewData, settings }),
           })
+
+          if (!repliesRes.ok) {
+            const errText = await repliesRes.text()
+            console.error(`generate-replies Fehler (Status ${repliesRes.status}) bei Endpoint ${GENERATE_REPLIES_ENDPOINT}:`, errText)
+            continue
+          }
+
           const repliesData = await repliesRes.json()
 
           if (repliesData.missingContext) {
