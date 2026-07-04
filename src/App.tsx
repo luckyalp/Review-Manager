@@ -63,7 +63,7 @@ const supabase = createClient(
 function App() {
   const [page, setPage] = useState('dashboard')
   const [engine, setEngine] = useState<'v2' | 'v3' | 'v5' | 'v6' | 'v7'>(() => {
-    return (localStorage.getItem('rezpondEngine') as 'v2' | 'v3' | 'v5' | 'v6' | 'v7') || 'v7'
+    return (localStorage.getItem('rezpondEngine') as 'v2' | 'v3' | 'v5' | 'v6' | 'v7') || 'v6'
   })
   const [reviews, setReviews] = useState<Review[]>([])
   const [reviewsLoading, setReviewsLoading] = useState(true)
