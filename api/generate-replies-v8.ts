@@ -1,13 +1,15 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
-// ─── v8 ── DIE PRÄZISIONS-ENGINE: SPICKZETTEL & JSON-PROFIL ──────────────────
+// ─── v8.5 ── DIE PRÄZISIONS-ENGINE: SPICKZETTEL & JSON-PROFIL ────────────────
 // Architektur: Technik und Prompt-Texte sind strikt getrennt. Alle Prompt-
 // Bausteine stehen unten als eigene Variablen im Abschnitt "PROMPT-MODULE".
 //
-// Das 3-Rollen-Modell wurde durch die klare, unmissverständliche Rolle des
-// stolzen Gastro-Chefs ersetzt. Der Mittelteil wird jetzt über messerscharfe
-// Spickzettel gesteuert, die sich die echten Fakten direkt aus dem JSON-Profil ziehen.
-// Alle technischen Hilfsfunktionen (Skalpell, Transkription, Weichen) sind geschützt.
+// Diese Version basiert 1:1 auf der bestehenden, funktionierenden v8-Architektur
+// (alle Weichen, Sterne-Schutz, API-Sicherheit, answers-Array-Format bleiben
+// unverändert) und ergänzt ausschließlich geprüfte Prompt-Verbesserungen:
+// Anti-Double-Deviation, spezifische Validierung, Service Recovery Paradox (SRP)
+// und ein deterministisches Sicherheitsnetz gegen Tageszeit-Wörter im Code.
+// Alle technischen Hilfsfunktionen (Skalpell, Transkription, Weichen) sind unangetastet.
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
 const GROQ_API_KEY = process.env.GROQ_API_KEY
@@ -261,20 +263,22 @@ forceSummarize = true nur wenn 3 oder mehr eigenständige Kritikpunkte genannt w
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// ─── PROMPT-MODULE & SPICKZETTEL (V8 PRÄZISIONSMATERIAL) ──────────────────
+// ─── PROMPT-MODULE & SPICKZETTEL (V8.5 PRÄZISIONSMATERIAL) ──────────────────
 // ═══════════════════════════════════════════════════════════════════════════
 
 const PERSONA_INTRO_V8 = `Du bist ein erfahrener, direkt sprechender Gastronom (Chef). Antworte auf die Bewertung am Ende dieses Textes in einem einzigen, kurzen Fließtext ohne Absätze. Schreib konsequent in kurzen, klaren Hauptsätzen. Vermeide jegliche Schachtelsätze. Der Ton ist stolz, souverän, geradeheraus und nahbar. Du vertrittst die klare Linie des Hauses selbstbewusst nach außen und entschuldigst dich niemals für Dinge, die im Betrieb normal sind.`
 
 const HARTE_STRUKTUR_REGELN_V8 = `Harte Struktur-Regeln:
+- KEINE DOUBLE DEVIATION: Greife JEDEN einzelnen Kritikpunkt aus der Analyse kurz auf und spiegle ihn (z.B. "Dass die Suppe kalt war..."). Werden Punkte einfach ignoriert, fühlt sich der Gast unfair behandelt. Bei 3 oder mehr Kritikpunkten (forceSummarize) fasse stattdessen sachlich zusammen, statt jeden einzeln aufzuzählen.
+- SPEZIFISCHE VALIDIERUNG: Baue zwingend ein konkretes Detail aus der Bewertung ein (z.B. ein Gericht, den Wochentag oder eine genannte Situation), um Copy-Paste-Verdacht zu vermeiden.
 - Keine Gedankenstriche: Nutze im gesamten Text niemals Gedankenstriche (– oder —). Trenne eigenständige Hauptsätze mit Punkten. Kommas nur innerhalb eines Satzes, nie um mehrere komplette Sätze aneinanderzureihen.
-- Keine Floskeln: Steige sofort ein. Nutze niemals Phrasen wie "Das ist nicht unser Standard", "zeitnah", "austauschen", "die Sache in Ordnung bringen", "handwerklich".
+- Keine Floskeln: Steige sofort ein. Nutze niemals Phrasen wie "Das ist nicht unser Standard", "Wir bessern uns", "zeitnah", "austauschen", "die Sache in Ordnung bringen", "handwerklich".
 - VERBOTENE VERBEN: Nutze unter keinen Umständen die Wörter "verstehen", "nachvollziehen", "nachempfinden" oder Abwandlungen davon (z. B. NICHT: "Ich kann deinen Ärger verstehen").
 - Keine Tageszeit-Wörter (Abend, Morgen, Mittag, Nachmittag, Vormittag): Nutze immer "Besuch" stattdessen.
 - Drei feste Kurzregeln, immer:
   1. Nie "Geschmäcker sind verschieden" oder Ähnliches sagen.
   2. Nie einen Vorwurf gegen dein Personal direkt bestätigen, nur den Eindruck des Gasts spiegeln.
-  3. Nie eine konkrete Wiedergutmachung (Rabatt, Freirunde) versprechen, das bleibt eine persönliche Entscheidung live vor Ort.`
+  3. Nie eine konkrete Wiedergutmachung (Rabatt, Freirunde) versprechen. Nutze stattdessen das Prinzip "live vor Ort lösen": Lade den Gast ein, sich beim nächsten Mal direkt bei dir bemerkbar zu machen, damit du persönlich reagieren kannst. Das bleibt eine Entscheidung vor Ort, keine öffentliche Zusage.`
 
 const AUSGABE_REGELN_V8 = `Anrede und Grußformel werden separat vom System ergänzt, gib nur diesen mittleren Teil inklusive Lob-Einstieg (falls vorhanden) und Ausstieg aus.
 Wenn du im Text selbst etwas wörtlich zitieren willst, nutze deutsche Anführungszeichen „..." oder einfache Anführungszeichen '...', niemals gerade doppelte Anführungszeichen ".
@@ -283,7 +287,7 @@ Gib NUR den fertigen Fließtext zurück, ohne Anrede-Zeile, ohne Grußformel, oh
 // DIE SPICKZETTEL-DATENBANK
 const SPICKZETTEL_BAUKASTEN: Record<string, string> = {
   akustik_konzept: 'Erkläre pragmatisch, dass ein gutgehendes, volles Haus eben lebendig ist und eine dementsprechende Geräuschkulisse einfach dazu gehört. Entschuldige dich nicht dafür. Schau im RESTAURANT_PROFIL unter "fakten.ruhige_tage" oder "fakten.ruhige_uhrzeiten" nach und gib diese als unverbindlichen Tipp für den nächsten Besuch mit. Falls diese Daten fehlen oder der Gast genau an diesen Tagen da war, empfiehl allgemein Zeiten außerhalb der Hauptstoßzeiten. Biete niemals eine Tisch- oder Ecken-Garantie an.',
-  fehler_kueche_service: 'Stell klar, dass bei eurem Besuch bei uns ordentlich was schiefgelaufen ist. Bleib absolut gelassen und ohne kriecherisches Drama. Betone, dass wir Fehler am liebsten sofort live vor Ort im Laden lösen. Gib den Appell mit, uns beim nächsten Mal direkt vor Ort Bescheid zu geben, damit unser Team sofort reagieren und nachbessern kann. Schau im RESTAURANT_PROFIL unter "fakten.spezifische_regel_fehler" für optionale Details.',
+  fehler_kueche_service: 'Stell klar, dass bei eurem Besuch bei uns ordentlich was schiefgelaufen ist. Bleib absolut gelassen und ohne kriecherisches Drama. Betone, dass wir Fehler am liebsten sofort live vor Ort im Laden lösen (Service Recovery Prinzip). Gib den Appell mit, uns beim nächsten Mal direkt vor Ort Bescheid zu geben, damit unser Team sofort reagieren, nachbessern und den Gast persönlich positiv überraschen kann. Schau im RESTAURANT_PROFIL unter "fakten.spezifische_regel_fehler" für optionale Details.',
   essen_geschmack: 'Nimm das Feedback zum Essen sachlich entgegen. Mach kein Drama daraus, dass es dem Gast nicht perfekt geschmeckt hat oder zu intensiv gewürzt war. Erkläre kurz, wie das Gericht bei euch normalerweise zubereitet wird, falls im RESTAURANT_PROFIL nützliche Details stehen. Lade ihn ein, beim nächsten Mal vor der Bestellung kurz Bescheid zu geben, damit die Küche die Würzung flexibel anpassen kann.',
   preis_leistung: 'Tritt selbstbewusst für eure Preise ein. Verweise auf die Qualität der Zutaten, den Wareneinsatz oder faire Löhne, falls im RESTAURANT_PROFIL hinterlegt (z.B. Beschreibung). Bleib gastfreundlich, aber knicke nicht ein.',
   reinheit_ambiente: 'Nimm den Hinweis dankend und ohne Umschweife auf. Erkläre kurz und trocken, dass Sauberkeit oberste Priorität hat und du das direkt mit dem Team für die tägliche Routine nachjustierst.'
@@ -319,12 +323,44 @@ function buildV8Prompt(
   ].join('\n\n')
 }
 
+// ─── CLEANER MIT DETERMINISTISCHEM ZEITANGABEN-SICHERHEITSNETZ ──────────────
+// Prompt-Regeln sind bei Temperature 0.3 nicht 100% zuverlässig. Als
+// zusätzliches Sicherheitsnetz werden Tageszeit-Wörter hart im Code ersetzt,
+// falls die KI die Prompt-Regel trotzdem verletzt.
+
 function cleanResponseText(raw: string): string {
-  const cleaned = raw
+  let cleaned = raw
     .replace(/```[a-z]*\s*/gi, '')
     .trim()
     .replace(/^["']|["']$/g, '')
     .trim()
+
+  const timeWordReplacements: [RegExp, string][] = [
+    [/\bAbends\b/g, 'Beim Besuch'],
+    [/\babends\b/g, 'beim Besuch'],
+    [/\bMorgens\b/g, 'Beim Besuch'],
+    [/\bmorgens\b/g, 'beim Besuch'],
+    [/\bVormittags\b/g, 'Beim Besuch'],
+    [/\bvormittags\b/g, 'beim Besuch'],
+    [/\bNachmittags\b/g, 'Beim Besuch'],
+    [/\bnachmittags\b/g, 'beim Besuch'],
+    [/\bMittags\b/g, 'Beim Besuch'],
+    [/\bmittags\b/g, 'beim Besuch'],
+    [/\bAbend\b/g, 'Besuch'],
+    [/\babend\b/g, 'besuch'],
+    [/\bMorgen\b/g, 'Besuch'],
+    [/\bmorgen\b/g, 'besuch'],
+    [/\bVormittag\b/g, 'Besuch'],
+    [/\bvormittag\b/g, 'besuch'],
+    [/\bNachmittag\b/g, 'Besuch'],
+    [/\bnachmittag\b/g, 'besuch'],
+    [/\bMittag\b/g, 'Besuch'],
+    [/\bmittag\b/g, 'besuch'],
+  ]
+  timeWordReplacements.forEach(([regex, replacement]) => {
+    cleaned = cleaned.replace(regex, replacement)
+  })
+
   return cleaned.charAt(0).toUpperCase() + cleaned.slice(1)
 }
 
@@ -394,7 +430,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // ─── AB HIER SCHLÄGT DIE V8-ENGINE ZU (Kritik-Zweig) ─────────────────────
 
-    // 1. Haiku analysiert und weißt Fokus-Kategorien zu
+    // 1. Haiku analysiert und weist Fokus-Kategorien zu
     const analysis = await analyzeReview(reviewText)
 
     // 2. Passende Spickzettel dynamisch aus dem Baukasten laden
@@ -421,9 +457,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 4. Den fokussierten V8 Prompt verketten
     const v8Prompt = buildV8Prompt(restaurantProfileJson, aktivierteSpickzettel, isDu, langInstruction, contactEmailFuerPrompt)
 
-    // 5. Claude Sonnet 5 generiert den perfekten Mittelteil basierend auf dem Spickzettel
+    // 5. Claude Sonnet generiert den perfekten Mittelteil basierend auf dem Spickzettel
+    //    Kritik-, Lob- und Zusammenfassungshinweis werden explizit mitgegeben,
+    //    damit die Anti-Double-Deviation-Regel greifen kann.
     const raw = await callClaude(
-      `Bewertung des Gasts: "${reviewText}"\nSternebewertung: ${stars} von 5\nKritikpunkte: ${analysis.points.join(', ') || 'allgemeiner Unmut'}\nLobpunkte: ${analysis.lobpunkte.join(', ') || 'keine'}`,
+      `Bewertung des Gasts: "${reviewText}"\nSternebewertung: ${stars} von 5\nKritikpunkte: ${analysis.points.join(', ') || 'allgemeiner Unmut'}\nLobpunkte: ${analysis.lobpunkte.join(', ') || 'keine'}\nZusammenfassen statt einzeln auflisten (3+ Kritikpunkte): ${analysis.forceSummarize ? 'ja' : 'nein'}`,
       v8Prompt,
       APP_CONFIG.models.generation,
       APP_CONFIG.temperature.generation
