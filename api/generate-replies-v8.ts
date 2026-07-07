@@ -270,7 +270,7 @@ forceSummarize = true nur wenn 3 oder mehr eigenständige Kritikpunkte genannt w
 const PERSONA_INTRO_V8 = `Du bist ein erfahrener, direkt sprechender Gastronom (Chef). Antworte auf die Bewertung am Ende dieses Textes in einem einzigen, kurzen Fließtext ohne Absätze. Schreib konsequent in kurzen, klaren Hauptsätzen. Vermeide jegliche Schachtelsätze. Der Ton ist stolz, souverän, geradeheraus und nahbar. Du vertrittst die klare Linie des Hauses selbstbewusst nach außen und entschuldigst dich niemals für Dinge, die im Betrieb normal sind.`
 
 const HARTE_STRUKTUR_REGELN_V8 = `Harte Struktur-Regeln:
-- KEINE DOUBLE DEVIATION: Greife JEDEN einzelnen Kritikpunkt aus der Analyse kurz auf und spiegle ihn (z.B. "Dass die Suppe kalt war..."). Werden Punkte einfach ignoriert, fühlt sich der Gast unfair behandelt. Bei 3 oder mehr Kritikpunkten (forceSummarize) fasse stattdessen sachlich zusammen, statt jeden einzeln aufzuzählen.
+- KEINE DOUBLE DEVIATION: Greife JEDEN einzelnen Kritikpunkt aus der Analyse kurz auf und spiegle ihn (z.B. "Dass die Suppe kalt war..."). Werden Punkte einfach ignoriert, fühlt sich der Gast unfair behandelt. Bei 3 oder mehr Kritikpunkten (forceSummarize) fasse zusammen statt jeden einzeln aufzuzählen, aber verteile die Zusammenfassung auf 2 kurze Sätze statt alle Punkte in einen einzigen langen Aufzählungssatz zu packen.
 - SPEZIFISCHE VALIDIERUNG: Baue zwingend ein konkretes Detail aus der Bewertung ein (z.B. ein Gericht, den Wochentag oder eine genannte Situation), um Copy-Paste-Verdacht zu vermeiden.
 - Keine Gedankenstriche: Nutze im gesamten Text niemals Gedankenstriche (– oder —). Trenne eigenständige Hauptsätze mit Punkten. Kommas nur innerhalb eines Satzes, nie um mehrere komplette Sätze aneinanderzureihen.
 - Keine Floskeln: Steige sofort ein. Nutze niemals Phrasen wie "Das ist nicht unser Standard", "Wir bessern uns", "zeitnah", "austauschen", "die Sache in Ordnung bringen", "handwerklich".
@@ -376,10 +376,24 @@ function cleanResponseText(raw: string): string {
   // Zusätzliches Sicherheitsnetz für die häufigsten wiederkehrenden Nomen dieser
   // Domäne, falls sie mitten im Satz kleingeschrieben durchrutschen. Deckt nicht
   // jedes mögliche Nomen ab, der eigentliche Fix ist die Regel in AUSGABE_REGELN_V8.
-  const domainNouns = ['besuch', 'suppe', 'wartezeit', 'hauptgericht', 'service', 'team', 'regel', 'gast', 'gäste', 'küche', 'personal', 'laden', 'restaurant', 'bewertung', 'tisch', 'tische', 'qualität', 'atmosphäre', 'lautstärke']
+  const domainNouns = ['besuch', 'suppe', 'wartezeit', 'hauptgericht', 'service', 'team', 'regel', 'gast', 'gäste', 'küche', 'personal', 'laden', 'restaurant', 'bewertung', 'tisch', 'tische', 'qualität', 'atmosphäre', 'lautstärke', 'betrieb', 'minute', 'minuten']
   domainNouns.forEach(noun => {
     const regex = new RegExp(`\\b${noun}\\b`, 'g')
     cleaned = cleaned.replace(regex, noun.charAt(0).toUpperCase() + noun.slice(1))
+  })
+
+  // Wörter mit doppelter Rolle (z.B. "mal" als Partikel vs. "Mal" als Nomen,
+  // "frage" als Verbform vs. "Frage" als Nomen) nur in eindeutigen Wendungen fixen,
+  // damit korrekte Kleinschreibung (z.B. "sag mal", "ich frage mich") nicht kaputtgeht.
+  const ambiguousPhrases: [RegExp, string][] = [
+    [/\bvor ort\b/gi, 'vor Ort'],
+    [/\bkeine frage\b/gi, 'keine Frage'],
+    [/\bnächsten mal\b/gi, 'nächsten Mal'],
+    [/\bnächstes mal\b/gi, 'nächstes Mal'],
+    [/\bletzten mal\b/gi, 'letzten Mal'],
+  ]
+  ambiguousPhrases.forEach(([regex, replacement]) => {
+    cleaned = cleaned.replace(regex, replacement)
   })
 
   return cleaned
