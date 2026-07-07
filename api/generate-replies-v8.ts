@@ -369,7 +369,7 @@ function cleanResponseText(raw: string): string {
   // Zusätzliches Sicherheitsnetz für die häufigsten wiederkehrenden Nomen dieser
   // Domäne, falls sie mitten im Satz kleingeschrieben durchrutschen. Deckt nicht
   // jedes mögliche Nomen ab, der eigentliche Fix ist die Regel in AUSGABE_REGELN_V8.
-  const domainNouns = ['besuch', 'suppe', 'wartezeit', 'hauptgericht', 'service', 'team', 'regel', 'gast', 'gäste', 'küche', 'personal', 'laden', 'restaurant', 'bewertung', 'tisch', 'tische', 'qualität', 'atmosphäre', 'lautstärke', 'betrieb', 'minute', 'minuten']
+  const domainNouns = ['besuch', 'suppe', 'wartezeit', 'hauptgericht', 'service', 'team', 'regel', 'gast', 'gäste', 'küche', 'personal', 'laden', 'restaurant', 'bewertung', 'tisch', 'tische', 'qualität', 'atmosphäre', 'lautstärke', 'betrieb', 'minute', 'minuten', 'location']
   domainNouns.forEach(noun => {
     const regex = new RegExp(`\\b${noun}\\b`, 'g')
     cleaned = cleaned.replace(regex, noun.charAt(0).toUpperCase() + noun.slice(1))
