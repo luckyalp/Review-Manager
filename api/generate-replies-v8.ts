@@ -48,7 +48,7 @@ async function callClaude(
     max_tokens: APP_CONFIG.maxTokens,
     messages: [{ role: 'user', content: userMessage }],
   }
-  body.temperature = temperature
+  if (!model.startsWith('claude-sonnet-5')) body.temperature = temperature
   if (model.startsWith('claude-sonnet-5')) body.thinking = { type: 'disabled' }
   if (systemPrompt) body.system = systemPrompt
 
