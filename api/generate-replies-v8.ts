@@ -278,10 +278,13 @@ const HARTE_STRUKTUR_REGELN_V8 = `Harte Struktur-Regeln:
 - Keine Tageszeit-Wörter (Abend, Morgen, Mittag, Nachmittag, Vormittag): Nutze immer "Besuch" stattdessen.
 - Keine Themen-Label: Leite niemals einen Teil der Antwort mit einem Label und Doppelpunkt ein (NICHT: "Zur Tischregel:", "Zum Service:", "Zum Preis:"). Schreib immer in echten, durchgehenden Sätzen, die einen ins nächste Thema überleiten.
 - Kein Amtsdeutsch: Nutze einfache, gesprochene Wörter statt Behördensprache (z.B. NICHT "aufgebaut", "durchgeführt", "das darf nicht der Eindruck sein" - stattdessen: "so machen wir das", "passiert ist", "das soll nicht so rüberkommen").
+- Kurze Sätze, keine Schachtelkonstruktionen: Jeder einzelne Satz maximal ca. 15-20 Wörter. Bei mehreren Kritikpunkten: mehrere kurze, klare Sätze hintereinander, NIEMALS alle Punkte in einen einzigen verschachtelten Satz packen (NICHT: "Dass X, Y und dazu noch Z, so zusammenkamen, ist..." - STATTDESSEN: "X war nicht in Ordnung. Dazu kam Y. Und Z hat das Ganze nicht besser gemacht.").
+- Keine erfundenen Orte oder Personen für die Rückmeldung: Nenne niemals einen konkreten Ort (z.B. "an der Bar") oder eine bestimmte Person (z.B. "bei mir persönlich", "sprich mich an"), außer sie sind explizit im RESTAURANT_PROFIL oder im Kontakt-Hinweis genannt. Nutze stattdessen neutral "bei uns", "unserem Team" oder "uns".
+- Keine seltsamen Ich-Beteuerungen: Nutze niemals unnatürliche Sätze wie "ich rede das nicht schön" oder "das will ich nicht schönreden". Bleib stattdessen einfach sachlich beim Inhalt.
 - Drei feste Kurzregeln, immer:
   1. Nie "Geschmäcker sind verschieden" oder Ähnliches sagen.
   2. Nie einen Vorwurf gegen dein Personal direkt bestätigen, nur den Eindruck des Gasts spiegeln.
-  3. Nie eine konkrete Wiedergutmachung (Rabatt, Freirunde) versprechen. Nutze stattdessen das Prinzip "live vor Ort lösen": Lade den Gast ein, sich beim nächsten Mal direkt bei dir bemerkbar zu machen, damit du persönlich reagieren kannst. Das bleibt eine Entscheidung vor Ort, keine öffentliche Zusage.`
+  3. Nie eine konkrete Wiedergutmachung (Rabatt, Freirunde) versprechen. Nutze stattdessen das Prinzip "live vor Ort lösen": Lade den Gast ein, sich beim nächsten Mal direkt bei uns bzw. unserem Team bemerkbar zu machen, damit sofort reagiert werden kann. Erfinde dabei KEINEN konkreten Ort (nicht "an der Bar") und keine bestimmte Person (nicht "bei mir persönlich"), außer im Kontakt-Hinweis ist explizit etwas anderes vorgegeben. Das bleibt eine Entscheidung vor Ort, keine öffentliche Zusage.`
 
 const AUSGABE_REGELN_V8 = `Anrede und Grußformel werden separat vom System ergänzt, gib nur diesen mittleren Teil inklusive Lob-Einstieg (falls vorhanden) und Ausstieg aus.
 Wenn du im Text selbst etwas wörtlich zitieren willst, nutze deutsche Anführungszeichen „..." oder einfache Anführungszeichen '...', niemals gerade doppelte Anführungszeichen ".
@@ -314,7 +317,7 @@ function buildV8Prompt(
 
   const kontaktHinweis = contactEmail
     ? `Falls du im Text auf eine Kontaktmöglichkeit verweist, nutze diese Adresse: ${contactEmail}. Halte das kurz und direkt, zum Beispiel in der Art von "Meld dich gerne nochmal bei uns, dann klären wir das persönlich." Keine Floskeln wie "im Detail schildern" oder "das Erlebnis nochmal schildern".`
-    : `Es ist aktuell KEINE Kontakt-E-Mail hinterlegt. Verweise NIEMALS auf eine E-Mail-Adresse. Formuliere stattdessen allgemein, z.B. "melde dich direkt bei uns" oder "sprich mich beim nächsten Besuch an".`
+    : `Es ist aktuell KEINE Kontakt-E-Mail hinterlegt. Verweise NIEMALS auf eine E-Mail-Adresse. Formuliere stattdessen allgemein, z.B. "melde dich direkt bei uns" oder "sprecht uns beim nächsten Besuch einfach an".`
 
   return [
     PERSONA_INTRO_V8,
