@@ -243,6 +243,7 @@ KATEGORIEN:
 - "essen_geschmack" (Geschmackssache, zu salzig, schmeckt nicht, langweilig gewürzt)
 - "preis_leistung" (Zu teuer, Portionen zu klein für das Geld)
 - "reinheit_ambiente" (Dreckig, klebrig, ungemütliches Licht, kaputtes Inventar)
+- "hausregeln_konzept" (Kritik an einer bewussten Betriebsregel, z.B. Tischvergabe nur mit Bestellung eines Hauptgerichts, Reservierungspflicht, Mindestbestellwert, Sitzzeit-Begrenzung. Der Gast empfindet die Regel selbst als unfreundlich oder unnötig kompliziert, nicht einen Fehler.)
 
 Gib AUSSCHLIESSLICH valides JSON zurück:
 {
@@ -290,7 +291,8 @@ const SPICKZETTEL_BAUKASTEN: Record<string, string> = {
   fehler_kueche_service: 'Stell klar, dass bei eurem Besuch bei uns ordentlich was schiefgelaufen ist. Bleib absolut gelassen und ohne kriecherisches Drama. Betone, dass wir Fehler am liebsten sofort live vor Ort im Laden lösen (Service Recovery Prinzip). Gib den Appell mit, uns beim nächsten Mal direkt vor Ort Bescheid zu geben, damit unser Team sofort reagieren, nachbessern und den Gast persönlich positiv überraschen kann. Schau im RESTAURANT_PROFIL unter "fakten.spezifische_regel_fehler" für optionale Details.',
   essen_geschmack: 'Nimm das Feedback zum Essen sachlich entgegen. Mach kein Drama daraus, dass es dem Gast nicht perfekt geschmeckt hat oder zu intensiv gewürzt war. Erkläre kurz, wie das Gericht bei euch normalerweise zubereitet wird, falls im RESTAURANT_PROFIL nützliche Details stehen. Lade ihn ein, beim nächsten Mal vor der Bestellung kurz Bescheid zu geben, damit die Küche die Würzung flexibel anpassen kann.',
   preis_leistung: 'Tritt selbstbewusst für eure Preise ein. Verweise auf die Qualität der Zutaten, den Wareneinsatz oder faire Löhne, falls im RESTAURANT_PROFIL hinterlegt (z.B. Beschreibung). Bleib gastfreundlich, aber knicke nicht ein.',
-  reinheit_ambiente: 'Nimm den Hinweis dankend und ohne Umschweife auf. Erkläre kurz und trocken, dass Sauberkeit oberste Priorität hat und du das direkt mit dem Team für die tägliche Routine nachjustierst.'
+  reinheit_ambiente: 'Nimm den Hinweis dankend und ohne Umschweife auf. Erkläre kurz und trocken, dass Sauberkeit oberste Priorität hat und du das direkt mit dem Team für die tägliche Routine nachjustierst.',
+  hausregeln_konzept: 'Erkläre die Hausregel (z.B. Tischvergabe nur mit Bestellung eines Hauptgerichts) als bewusste, funktionale Entscheidung, keine Schikane. Nenne den nachvollziehbaren Grund dahinter (z.B. damit Gäste mit Hunger verlässlich einen Platz bekommen, statt dass Tische durch reine Getränke-Gäste blockiert werden). Entschuldige dich nicht für die Regel selbst, allenfalls für ein Missverständnis in der Kommunikation davon vor Ort. Wirke sachlich erklärend, nicht rechtfertigend oder kleinlaut.'
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
