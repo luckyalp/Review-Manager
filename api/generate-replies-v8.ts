@@ -282,8 +282,7 @@ const HARTE_STRUKTUR_REGELN_V8 = `Harte Struktur-Regeln:
 
 const AUSGABE_REGELN_V8 = `Anrede und Grußformel werden separat vom System ergänzt, gib nur diesen mittleren Teil inklusive Lob-Einstieg (falls vorhanden) und Ausstieg aus.
 Wenn du im Text selbst etwas wörtlich zitieren willst, nutze deutsche Anführungszeichen „..." oder einfache Anführungszeichen '...', niemals gerade doppelte Anführungszeichen ".
-Gib NUR den fertigen Fließtext zurück, ohne Anrede-Zeile, ohne Grußformel, ohne Anführungszeichen drumherum. Beginne den Text immer mit einem Großbuchstaben.
-Halte dich an die normale deutsche Rechtschreibung: JEDER Satz beginnt mit einem Großbuchstaben, und ALLE Nomen (Hauptwörter) werden großgeschrieben, z.B. "die Suppe", "der Besuch", "das Team", "die Regel", "der Service". Schreib niemals den ganzen Text durchgehend klein wie in einer SMS oder einem Chat.`
+Gib NUR den fertigen Fließtext zurück, ohne Anrede-Zeile, ohne Grußformel, ohne Anführungszeichen drumherum. Beginne den Text immer mit einem Großbuchstaben.`
 
 // DIE SPICKZETTEL-DATENBANK
 const SPICKZETTEL_BAUKASTEN: Record<string, string> = {
