@@ -1,5 +1,16 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
+// ─── v8.6 ── DIE PRÄZISIONS-ENGINE: GOLD-BEISPIELE STATT VERBOTSLISTEN ──────
+// Änderungen v8.6 (Architektur unangetastet):
+// 1. TEMPERATUR-BUG: temperature wurde für claude-sonnet-5 nie gesendet,
+//    Generierung lief real auf 1.0 statt 0.3. Jetzt wird sie immer gesendet.
+// 2. GOLD_BEISPIELE_V8: 6 Ton-Vorbilder (Bewertung → Antwort) im Prompt.
+//    Stil kommt jetzt aus Beispielen, nicht aus Verbotslisten.
+// 3. HARTE_STRUKTUR_REGELN_V8 auf 5 Regeln gekürzt, Satzrhythmus-Variation
+//    statt starrer 15-20-Wörter-Regel (monotoner Stakkato war KI-Erkennungsmerkmal).
+// 4. CLEANER-BUGS: "morgen"-Ersetzung ("bis morgen" → "bis besuch") und
+//    'laden'/'regel' in domainNouns ("wir laden dich ein" → "wir Laden dich ein") behoben.
+//
 // ─── v8.5 ── DIE PRÄZISIONS-ENGINE: SPICKZETTEL & JSON-PROFIL ────────────────
 // Architektur: Technik und Prompt-Texte sind strikt getrennt. Alle Prompt-
 // Bausteine stehen unten als eigene Variablen im Abschnitt "PROMPT-MODULE".
@@ -48,7 +59,10 @@ async function callClaude(
     max_tokens: APP_CONFIG.maxTokens,
     messages: [{ role: 'user', content: userMessage }],
   }
-  if (!model.startsWith('claude-sonnet-5')) body.temperature = temperature
+  // v8.6 FIX: Temperatur wurde für claude-sonnet-5 nie mitgesendet, dadurch
+  // lief die Generierung real auf Default 1.0 statt 0.3 (Ursache der Inkonstanz).
+  // Thinking ist deaktiviert, damit ist temperature für sonnet-5 erlaubt.
+  body.temperature = temperature
   if (model.startsWith('claude-sonnet-5')) body.thinking = { type: 'disabled' }
   if (systemPrompt) body.system = systemPrompt
 
@@ -269,16 +283,38 @@ forceSummarize = true nur wenn 3 oder mehr eigenständige Kritikpunkte genannt w
 
 const PERSONA_INTRO_V8 = `Du bist ein erfahrener, direkt sprechender Gastronom (Chef). Antworte auf die Bewertung am Ende dieses Textes in einem einzigen, kurzen Fließtext ohne Absätze. Schreib konsequent in kurzen, klaren Hauptsätzen. Vermeide jegliche Schachtelsätze. Der Ton ist stolz, souverän, geradeheraus und nahbar. Du vertrittst die klare Linie des Hauses selbstbewusst nach außen und entschuldigst dich niemals für Dinge, die im Betrieb normal sind.`
 
-const HARTE_STRUKTUR_REGELN_V8 = `Harte Struktur-Regeln:
-- KEINE DOUBLE DEVIATION: Greife JEDEN einzelnen Kritikpunkt aus der Analyse kurz auf und spiegle ihn (z.B. "Dass die Suppe kalt war..."). Werden Punkte einfach ignoriert, fühlt sich der Gast unfair behandelt. Bei 3 oder mehr Kritikpunkten (forceSummarize) fasse zusammen statt jeden einzeln aufzuzählen, aber verteile die Zusammenfassung auf 2 kurze Sätze statt alle Punkte in einen einzigen langen Aufzählungssatz zu packen.
-- SPEZIFISCHE VALIDIERUNG: Baue zwingend ein konkretes Detail aus der Bewertung ein (z.B. ein Gericht, den Wochentag oder eine genannte Situation), um Copy-Paste-Verdacht zu vermeiden.
-- SATZBAU: Kurze, klare Hauptsätze, jeder Satz maximal ca. 15-20 Wörter. Keine Gedankenstriche (– oder —), Hauptsätze werden mit Punkten getrennt, Kommas nur innerhalb eines Satzes. Keine Themen-Label mit Doppelpunkt (NICHT: "Zur Tischregel:", "Zum Service:", "Zum Preis:" - schreib stattdessen in echten, durchgehenden Sätzen). Bei mehreren Kritikpunkten: mehrere kurze Sätze hintereinander statt ein einziger langer Schachtelsatz mit vielen Kommas und Nebensätzen.
-- VERBOTENE SPRACHE: Keine Floskeln ("Das ist nicht unser Standard.", "Wir bessern uns.", "Das machen wir zeitnah.", "Wir tauschen das aus.", "Wir bringen die Sache in Ordnung.", "Das ist handwerklich bedingt."). Keine der Wörter "verstehen", "nachvollziehen", "nachempfinden" oder Abwandlungen (NICHT: "Ich kann deinen Ärger verstehen."). Kein Amtsdeutsch (NICHT: "Das wurde so aufgebaut." / "Das haben wir durchgeführt." / "Das darf nicht der Eindruck sein." - STATTDESSEN: "So machen wir das." / "Das ist passiert." / "Das soll nicht so rüberkommen."). Keine unnatürlichen Ich-Beteuerungen (NICHT: "Ich rede das nicht schön." / "Das will ich nicht schönreden.").
-- Keine Tageszeit-Wörter (Abend, Morgen, Mittag, Nachmittag, Vormittag): Nutze immer "Besuch" stattdessen.
-- Drei feste Kurzregeln, immer:
-  1. Nie "Geschmäcker sind verschieden" oder Ähnliches sagen.
-  2. Nie einen Vorwurf gegen dein Personal direkt bestätigen, nur den Eindruck des Gasts spiegeln.
-  3. Nie eine konkrete Wiedergutmachung (Rabatt, Freirunde) versprechen. Nutze stattdessen das Prinzip "Live vor Ort lösen": Lade den Gast ein, sich beim nächsten Mal direkt bei uns bzw. unserem Team bemerkbar zu machen, damit sofort reagiert werden kann. Erfinde dabei KEINEN konkreten Ort (nicht "An der Bar") und keine bestimmte Person (nicht "Bei mir persönlich"), außer im Kontakt-Hinweis ist explizit etwas anderes vorgegeben. Das bleibt eine Entscheidung vor Ort, keine öffentliche Zusage.`
+// v8.6: Verbotsliste radikal gekürzt. Stil wird nicht mehr über Verbote
+// erzwungen (Floskel-Whack-a-Mole), sondern über die GOLD_BEISPIELE_V8 unten.
+// Hier stehen nur noch die 5 harten Regeln, die inhaltlich kritisch sind.
+const HARTE_STRUKTUR_REGELN_V8 = `Fünf harte Regeln:
+1. KEINE DOUBLE DEVIATION: Greife jeden Kritikpunkt kurz auf, ignoriere keinen. Baue mindestens ein konkretes Detail aus der Bewertung ein (Gericht, Situation). Bei 3 oder mehr Kritikpunkten (forceSummarize) fasse in 2 kurzen Sätzen zusammen statt aufzuzählen.
+2. SATZRHYTHMUS: Kurze, klare Hauptsätze, aber variiere die Länge, mal 5 Wörter, mal 20. Kein monotoner Stakkato-Rhythmus. Keine Gedankenstriche (– oder —), keine Themen-Label mit Doppelpunkt (NICHT: "Zur Tischregel:").
+3. Nie "Geschmäcker sind verschieden" oder Ähnliches. Keine Empathie-Floskeln wie "Ich kann das verstehen/nachvollziehen". Keine Tageszeit-Wörter (Abend, Morgen, Mittag), schreib stattdessen "Besuch".
+4. Nie einen Vorwurf gegen dein Personal direkt bestätigen, nur den Eindruck des Gasts spiegeln.
+5. Nie eine konkrete Wiedergutmachung (Rabatt, Freirunde) versprechen. Prinzip "Live vor Ort lösen": Lade den Gast ein, sich beim nächsten Mal direkt bemerkbar zu machen. Erfinde dabei keinen konkreten Ort und keine Person, außer der Kontakt-Hinweis gibt etwas vor.`
+
+// v8.6 NEU: Gold-Beispiele. Stil transferiert über Vorbilder, nicht über
+// Adjektive und Verbotslisten. Diese Beispiele definieren den Zielton.
+const GOLD_BEISPIELE_V8 = `### GOLD-BEISPIELE (Zielton)
+So klingen perfekte Antworten (nur der Mittelteil, ohne Anrede und Gruß). Die Beispiele duzen, übernimm aber die Anrede aus der Regel oben. WICHTIG: Das sind Ton-Vorbilder. Übernimm Haltung und Rhythmus, aber NIE ganze Formulierungen wörtlich, sonst wiederholen sich deine Antworten über mehrere Bewertungen hinweg.
+
+Bewertung (3 Sterne): "Essen war lecker, aber es war so laut, dass wir uns kaum unterhalten konnten."
+Antwort: "Schön, dass dir das Essen geschmeckt hat. Ja, bei uns ist ordentlich was los, ein voller Laden bringt nun mal Geräuschkulisse mit. Wenn ihr es ruhiger mögt, kommt am besten früh unter der Woche vorbei, da könnt ihr euch beim Essen deutlich besser unterhalten."
+
+Bewertung (2 Sterne): "Suppe war kalt, danach 25 Minuten auf das Hauptgericht gewartet. Kellner hat sich nicht mehr blicken lassen."
+Antwort: "Kalte Suppe und dann 25 Minuten aufs Hauptgericht warten, das ärgert mich selbst. Da ist bei eurem Besuch einiges schiefgelaufen. Sag beim nächsten Mal bitte sofort Bescheid, dann regeln wir das direkt am Tisch und du musst den Ärger nicht mit nach Hause nehmen."
+
+Bewertung (3 Sterne): "Alles frisch, aber das Curry war mir viel zu scharf gewürzt."
+Antwort: "Freut mich, dass die Frische gepasst hat. Unser Curry ist tatsächlich kräftig gewürzt, das ist Absicht, aber nicht jedermanns Sache. Sag bei der Bestellung einfach kurz, dass du es milder magst, die Küche passt das gerne an."
+
+Bewertung (3 Sterne): "Schöne Location, aber für die Portionsgröße echt zu teuer."
+Antwort: "Danke für das Lob zur Location. Bei den Preisen bleib ich ehrlich: Wir kaufen ordentliche Ware ein und zahlen unser Team fair, das hat seinen Preis. Wenn du richtig Hunger mitbringst, sag beim Bestellen Bescheid, dann findet unser Team was Passendes für dich."
+
+Bewertung (2 Sterne): "Toilette war leider ziemlich dreckig, Tisch klebrig beim Hinsetzen."
+Antwort: "Dreckige Toilette und klebriger Tisch, das geht nicht, da gibt es nichts zu diskutieren. Danke für den klaren Hinweis. Das habe ich direkt mit dem Team für die tägliche Runde nachgeschärft."
+
+Bewertung (1 Stern): "Laut, Essen kalt, Kellner unfreundlich, und dann noch overpriced. Nie wieder."
+Antwort: "Lautstärke, kaltes Essen, der Eindruck vom Service und dann noch der Preis, da ist bei eurem Besuch einiges zusammengekommen. Das ärgert mich, keine Frage. Gib uns sowas beim nächsten Mal direkt vor Ort mit, dann kümmern wir uns sofort drum."`
 
 const AUSGABE_REGELN_V8 = `Anrede und Grußformel werden separat vom System ergänzt, gib nur diesen mittleren Teil inklusive Lob-Einstieg (falls vorhanden) und Ausstieg aus.
 Wenn du im Text selbst etwas wörtlich zitieren willst, nutze deutsche Anführungszeichen „..." oder einfache Anführungszeichen '...', niemals gerade doppelte Anführungszeichen ".
@@ -317,6 +353,7 @@ function buildV8Prompt(
     PERSONA_INTRO_V8,
     `${anrede}\n${langInstruction}`,
     HARTE_STRUKTUR_REGELN_V8,
+    GOLD_BEISPIELE_V8,
     `### RESTAURANT_PROFIL\n${restaurantProfileJson}`,
     `### ARBEITSANWEISUNG FÜR DIE ARGUMENTATION\n1. Falls Lobpunkte vorhanden sind, greife sie ganz kurz und locker auf.\n2. Behandle die aufgetretene Kritik strikt nach diesen spezifischen Spickzettel-Vorgaben:\n${aktivierteSpickzettel}`,
     kontaktHinweis,
@@ -349,8 +386,12 @@ function cleanResponseText(raw: string): string {
     [/\bmittags\b/g, 'beim Besuch'],
     [/\bAbend\b/g, 'Besuch'],
     [/\babend\b/g, 'besuch'],
-    [/\bMorgen\b/g, 'Besuch'],
-    [/\bmorgen\b/g, 'besuch'],
+    // v8.6 FIX: "morgen" nicht mehr pauschal ersetzen. "morgen" heißt meist
+    // "tomorrow" ("bis morgen" wurde zu "bis besuch"). Nur eindeutige
+    // Tageszeit-Wendungen werden ersetzt:
+    [/\bam Morgen\b/g, 'beim Besuch'],
+    [/\bheute Morgen\b/g, 'beim Besuch'],
+    [/\bjeden Morgen\b/g, 'bei jedem Besuch'],
     [/\bVormittag\b/g, 'Besuch'],
     [/\bvormittag\b/g, 'besuch'],
     [/\bNachmittag\b/g, 'Besuch'],
@@ -369,7 +410,11 @@ function cleanResponseText(raw: string): string {
   // Zusätzliches Sicherheitsnetz für die häufigsten wiederkehrenden Nomen dieser
   // Domäne, falls sie mitten im Satz kleingeschrieben durchrutschen. Deckt nicht
   // jedes mögliche Nomen ab, der eigentliche Fix ist die Regel in AUSGABE_REGELN_V8.
-  const domainNouns = ['besuch', 'suppe', 'wartezeit', 'hauptgericht', 'service', 'team', 'regel', 'gast', 'gäste', 'küche', 'personal', 'laden', 'restaurant', 'bewertung', 'tisch', 'tische', 'qualität', 'atmosphäre', 'lautstärke', 'betrieb', 'minute', 'minuten', 'location']
+  // v8.6 FIX: 'laden' und 'regel' entfernt. Beide sind auch Verbformen
+  // ("wir laden dich ein" wurde zu "wir Laden dich ein", "ich regel das"
+  // würde zu "ich Regel das"). Der Schaden durch falsche Großschreibung
+  // mitten im Satz ist größer als der Nutzen des Sicherheitsnetzes.
+  const domainNouns = ['besuch', 'suppe', 'wartezeit', 'hauptgericht', 'service', 'team', 'gast', 'gäste', 'küche', 'personal', 'restaurant', 'bewertung', 'tisch', 'tische', 'qualität', 'atmosphäre', 'lautstärke', 'betrieb', 'minute', 'minuten', 'location']
   domainNouns.forEach(noun => {
     const regex = new RegExp(`\\b${noun}\\b`, 'g')
     cleaned = cleaned.replace(regex, noun.charAt(0).toUpperCase() + noun.slice(1))
@@ -506,3 +551,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({ success: false, error: errMsg })
   }
 }
+// v8.6 Ende
