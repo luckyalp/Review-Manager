@@ -1,5 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
+// ─── v8.7 ── MOTOR-WECHSEL: ANTHROPIC → GEMINI ──────────────────────────────
+// Nur die API-Anbindung wurde getauscht (callClaude → callGemini, neue
+// Modellnamen, neuer Env-Var-Name GEMINI_API_KEY). Alle Prompts, Regeln,
+// Spickzettel und die komplette Ablauflogik sind 1:1 unverändert wie in v8.6.
+// Analyse läuft jetzt auf gemini-2.5-flash-lite, Text-Generierung auf
+// gemini-3.5-flash.
+//
 // ─── v8.6 ── DIE PRÄZISIONS-ENGINE: GOLD-BEISPIELE STATT VERBOTSLISTEN ──────
 // Änderungen v8.6 (Architektur unangetastet):
 // 1. TEMPERATUR-BUG: temperature wurde für claude-sonnet-5 nie gesendet,
@@ -22,16 +29,15 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 // und ein deterministisches Sicherheitsnetz gegen Tageszeit-Wörter im Code.
 // Alle technischen Hilfsfunktionen (Skalpell, Transkription, Weichen) sind unangetastet.
 
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY
 const GROQ_API_KEY = process.env.GROQ_API_KEY
 
 // ─── APP_CONFIG ── BETRIEBS-PARAMETER ────────────────────────────────────────
 const APP_CONFIG = {
-  anthropicApiUrl: 'https://api.anthropic.com/v1/messages',
-  anthropicApiVersion: '2023-06-01',
+  geminiApiUrl: 'https://generativelanguage.googleapis.com/v1beta/models',
   models: {
-    generation: 'claude-sonnet-5',
-    analysis: 'claude-haiku-4-5-20251001',
+    generation: 'gemini-3.5-flash',
+    analysis: 'gemini-2.5-flash-lite',
   },
   maxTokens: 1000,
   temperature: {
@@ -46,44 +52,55 @@ const APP_CONFIG = {
   },
 }
 
-// ─── CLAUDE API CALL ──────────────────────────────────────────────────────────
+// ─── GEMINI API CALL ──────────────────────────────────────────────────────────
+// Ersetzt callClaude(). Gleiche Aufgabe, andere Verpackung:
+// - System-Prompt geht separat als "systemInstruction" mit, nicht im Fließtext
+// - Antwort kommt unter candidates[0].content.parts[...].text zurück
+// - jsonMode erzwingt bei Google direkt valides JSON (nützlich für die Analyse)
 
-async function callClaude(
+async function callGemini(
   userMessage: string,
   systemPrompt?: string,
   model = APP_CONFIG.models.generation,
-  temperature = APP_CONFIG.temperature.default
+  temperature = APP_CONFIG.temperature.default,
+  jsonMode = false
 ): Promise<string> {
-  const body: any = {
-    model,
-    max_tokens: APP_CONFIG.maxTokens,
-    messages: [{ role: 'user', content: userMessage }],
+  const generationConfig: any = {
+    temperature,
+    maxOutputTokens: APP_CONFIG.maxTokens,
   }
-  // v8.6 FIX: Temperatur wurde für claude-sonnet-5 nie mitgesendet, dadurch
-  // lief die Generierung real auf Default 1.0 statt 0.3 (Ursache der Inkonstanz).
-  // Thinking ist deaktiviert, damit ist temperature für sonnet-5 erlaubt.
-  body.temperature = temperature
-  if (model.startsWith('claude-sonnet-5')) body.thinking = { type: 'disabled' }
-  if (systemPrompt) body.system = systemPrompt
+  // Entspricht der alten "thinking: disabled"-Zeile für Sonnet: verhindert,
+  // dass das Modell unnötig "nachdenkt" und dabei Kosten/Zeit verbraucht bzw.
+  // die feste Temperature aushebelt. Gemini 3.x nutzt thinkingLevel (String),
+  // Gemini 2.5 nutzt thinkingBudget (Zahl, 0 = aus).
+  generationConfig.thinkingConfig = model.startsWith('gemini-3')
+    ? { thinkingLevel: 'low' }
+    : { thinkingBudget: 0 }
+  if (jsonMode) generationConfig.responseMimeType = 'application/json'
 
-  const response = await fetch(APP_CONFIG.anthropicApiUrl, {
+  const body: any = {
+    contents: [{ role: 'user', parts: [{ text: userMessage }] }],
+    generationConfig,
+  }
+  if (systemPrompt) body.systemInstruction = { parts: [{ text: systemPrompt }] }
+
+  const response = await fetch(`${APP_CONFIG.geminiApiUrl}/${model}:generateContent`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': ANTHROPIC_API_KEY!,
-      'anthropic-version': APP_CONFIG.anthropicApiVersion,
+      'x-goog-api-key': GEMINI_API_KEY!,
     },
     body: JSON.stringify(body),
   })
 
   if (!response.ok) {
     const err = await response.json()
-    throw new Error(`Claude API Fehler: ${JSON.stringify(err)}`)
+    throw new Error(`Gemini API Fehler: ${JSON.stringify(err)}`)
   }
 
   const data = await response.json()
-  const textBlock = data.content?.find((block: any) => block.type === 'text')
-  return textBlock?.text || ''
+  const parts = data.candidates?.[0]?.content?.parts || []
+  return parts.map((p: any) => p.text || '').join('')
 }
 
 // ─── AUDIO TRANSKRIPTION (Groq Whisper) ──────────────────────────────────────
@@ -133,7 +150,7 @@ Deine harten Arbeitsregeln:
 5. WICHTIG: Gib als Output AUSSCHLIESSLICH den neu formulierten Satz zurück. Keine Einleitung, keine Anführungszeichen.`
 
   const userMessage = `Aktueller Satz:\n"${markierterSatzOriginal}"\n\nGesprochene Anweisung:\n"${gesprocheneAnweisung}"`
-  const raw = await callClaude(userMessage, systemPrompt, APP_CONFIG.models.generation, APP_CONFIG.temperature.skalpell)
+  const raw = await callGemini(userMessage, systemPrompt, APP_CONFIG.models.generation, APP_CONFIG.temperature.skalpell)
   return raw.trim().replace(/^["']|["']$/g, '')
 }
 
@@ -269,7 +286,7 @@ Gib AUSSCHLIESSLICH valides JSON zurück:
 }
 forceSummarize = true nur wenn 3 oder mehr eigenständige Kritikpunkte genannt werden.`
 
-  const raw = await callClaude(reviewText, systemPrompt, APP_CONFIG.models.analysis, APP_CONFIG.temperature.default)
+  const raw = await callGemini(reviewText, systemPrompt, APP_CONFIG.models.analysis, APP_CONFIG.temperature.default, true)
   const s = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
   const start = s.indexOf('{')
   const end = s.lastIndexOf('}')
@@ -441,7 +458,7 @@ function cleanResponseText(raw: string): string {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
-  if (!ANTHROPIC_API_KEY) return res.status(500).json({ error: 'ANTHROPIC_API_KEY nicht konfiguriert' })
+  if (!GEMINI_API_KEY) return res.status(500).json({ error: 'GEMINI_API_KEY nicht konfiguriert' })
 
   const { action, audioBase64, mimeType, markierterSatzOriginal, gesprocheneAnweisung, review, settings, ownerVoice } = req.body
 
@@ -533,7 +550,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 5. Claude Sonnet generiert den perfekten Mittelteil basierend auf dem Spickzettel
     //    Kritik-, Lob- und Zusammenfassungshinweis werden explizit mitgegeben,
     //    damit die Anti-Double-Deviation-Regel greifen kann.
-    const raw = await callClaude(
+    const raw = await callGemini(
       `Bewertung des Gasts: "${reviewText}"\nSternebewertung: ${stars} von 5\nKritikpunkte: ${analysis.points.join(', ') || 'allgemeiner Unmut'}\nLobpunkte: ${analysis.lobpunkte.join(', ') || 'keine'}\nZusammenfassen statt einzeln auflisten (3+ Kritikpunkte): ${analysis.forceSummarize ? 'ja' : 'nein'}`,
       v8Prompt,
       APP_CONFIG.models.generation,
